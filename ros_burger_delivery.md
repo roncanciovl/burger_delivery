@@ -121,15 +121,19 @@ map
 ## 5.1. Fuentes de Transformaciones
 
 - **Visión**: `vision_tag_pose` publica `overhead_camera_link -> robot_X/base_link` (o `apriltag_map`) usando los AprilTags colocados en cada robot y en la estación de bandejas. El frame de la cámara se fija respecto a `map` para conocer su altura y campos de visión.
-- **Kinova**: `kinova_driver_node` actualiza `kinova_base_link -> kinova_tool_frame` con cinemática directa. Un `static_transform_publisher` fija la posición del pedestal respecto al mapa (`map -> kinova_base_link`).
+- **Kinova**: `kinova_driver_node` actualiza `kinova_base_link -> kinova_tool_frame` con cinemática directa. Dos `static_transform_publisher` encadenan la base al mapa (`map -> table_link` y `table_link -> kinova_base_link`) para respetar la geometría de la mesa.
 - **Robots diferenciales**: cada ESP32 envía su odometría como `robot_X/odom -> robot_X/base_link`. Un nodo en el PC Maestro (`robot_state_publisher` o `tf2_ros::TransformBroadcaster`) enlaza `map -> robot_X/odom`.
 
 ## 5.2. Ejemplo de transformaciones estáticas
 
 ```bash
 ros2 run tf2_ros static_transform_publisher \
-  1.20 0.30 0.00 0 0 0 \
-  map kinova_base_link
+  0.80 -1.00 0.80 0 0 0 \
+  map table_link
+
+ros2 run tf2_ros static_transform_publisher \
+  1.20 0.30 0.50 0 0 0 \
+  table_link kinova_base_link
 
 ros2 run tf2_ros static_transform_publisher \
   0.80 0.00 0.00 0 0 0 \
@@ -148,7 +152,7 @@ ros2 run tf2_ros static_transform_publisher \
 
 ## 5.4. Frame `staging_area` y URDF del árbol de transformaciones
 
-El frame `staging_area` se fija en la estructura de la mesa donde se ubican las bandejas, pero su posición se expresa respecto al origen `map`, que está en el piso. Asimismo se define `overhead_camera_link`, solidario a la cámara aérea montada sobre la estación. De esta forma:
+El frame `staging_area` se fija en la estructura de la mesa donde se ubican las bandejas, pero su posición se expresa respecto al origen `map`, que está en el piso. Para representar la mesa física se incorporó el frame `table_link`, que queda a `(0.80, -1.00, 0.80)` respecto a `map` y actúa como padre tanto del Kinova como del frame `world` del URDF oficial. El frame `map` permanece como referencia global para navegación y visión; `world` es un frame auxiliar requerido por el URDF original del Kinova para declarar `world -> gen3_base_link` y mantener la cadena de articulaciones del brazo. Al incluir `table_link` entre ambos frames (`map -> table_link -> world -> gen3_base_link`) ubicamos el brazo siguiendo la geometría real de la mesa sin perder compatibilidad con los paquetes oficiales de Kinova. Asimismo se define `overhead_camera_link`, solidario a la cámara aérea montada sobre la estación. De esta forma:
 
 - El Kinova y los robots comparten un plano de referencia común (`map`) que coincide con el suelo donde se desplazan los diferenciales.
 - Los robots reciben objetivos expresados en frames derivados del mapa (`delivery_slot_i`) para alinearse exactamente donde el Kinova depositará la hamburguesa en su bandeja.
@@ -161,6 +165,7 @@ Un URDF mínimo que codifica este árbol de transformaciones puede lucir así (t
 <?xml version="1.0"?>
 <robot name="burger_delivery_frames">
   <link name="map"/>
+  <link name="table_link"/>
   <link name="staging_area"/>
   <link name="delivery_slot_1"/>
   <link name="kinova_base_link"/>
@@ -171,6 +176,13 @@ Un URDF mínimo que codifica este árbol de transformaciones puede lucir así (t
   <link name="robot_b_base_link"/>
   <link name="robot_b_tray_frame"/>
   <link name="overhead_camera_link"/>
+  <link name="world"/>
+
+  <joint name="map_to_table" type="fixed">
+    <parent link="map"/>
+    <child link="table_link"/>
+    <origin xyz="0.80 -1.00 0.80" rpy="0 0 0"/>
+  </joint>
 
   <joint name="map_to_staging" type="fixed">
     <parent link="map"/>
@@ -179,38 +191,39 @@ Un URDF mínimo que codifica este árbol de transformaciones puede lucir así (t
   </joint>
 
   <joint name="map_to_kinova_base" type="fixed">
-    <parent link="map"/>
+    <parent link="table_link"/>
     <child link="kinova_base_link"/>
-    <origin xyz="1.20 0.30 0.00" rpy="0 0 0"/>
+    <origin xyz="1.20 0.30 0.50" rpy="0 0 0"/>
   </joint>
 
   <joint name="map_to_robot_a_base" type="fixed">
     <parent link="map"/>
     <child link="robot_a_base_link"/>
-    <origin xyz="-0.40 0.60 0.00" rpy="0 0 0"/>
+    <origin xyz="1.20 0.80 0.00" rpy="0 0 0"/>
   </joint>
 
   <joint name="map_to_robot_b_base" type="fixed">
     <parent link="map"/>
     <child link="robot_b_base_link"/>
-    <origin xyz="-0.40 -0.60 0.00" rpy="0 0 0"/>
+    <origin xyz="1.20 1.30 0.00" rpy="0 0 0"/>
   </joint>
 
   <joint name="map_to_camera" type="fixed">
     <parent link="map"/>
     <child link="overhead_camera_link"/>
-    <origin xyz="0.50 0.00 2.50" rpy="-1.5708 0 1.5708"/>
+    <origin xyz="0.50 0.00 2.00" rpy="-1.5708 0 1.5708"/>
   </joint>
 
   <joint name="staging_to_delivery_slot_1" type="fixed">
     <parent link="staging_area"/>
     <child link="delivery_slot_1"/>
-    <origin xyz="0.00 0.40 0.90" rpy="0 0 0"/>
+    <origin xyz="0.00 0.40 0.50" rpy="0 0 0"/>
   </joint>
 
-  <joint name="kinova_base_to_tool" type="floating">
+  <joint name="kinova_base_to_tool" type="fixed">
     <parent link="kinova_base_link"/>
     <child link="kinova_tool_frame"/>
+    <origin xyz="0 0 0.00" rpy="0 0 0"/>
   </joint>
 
   <joint name="tool_to_grip" type="fixed">
@@ -230,10 +243,24 @@ Un URDF mínimo que codifica este árbol de transformaciones puede lucir así (t
     <child link="robot_b_tray_frame"/>
     <origin xyz="0.00 0.00 0.15" rpy="0 0 0"/>
   </joint>
+
+  <joint name="map_to_world" type="fixed">
+    <parent link="table_link"/>
+    <child link="world"/>
+    <origin xyz="0.20 0.30 0.00" rpy="0 0 0"/>
+  </joint>
 </robot>
 ```
 
 Este URDF puede cargarse con `robot_state_publisher` para validar el árbol de `tf` en RViz y garantizar que `map -> kinova_base_link -> burger_grip_frame`, los `delivery_slot_i`, el frame `overhead_camera_link` y los frames de cada robot diferencial se alinean con la disposición física del laboratorio. Kinova usa los slots como objetivos de colocación, los robots se alinean con ellos antes de recibir la bandeja y la cámara proyecta sus detecciones directamente al mapa.
+
+**Uso práctico del URDF para obtener transformaciones en línea:** al lanzar `robot_state_publisher` con `burger_delivery_gen3.urdf` y los `static_transform_publisher` mencionados arriba, tf2 mantiene continuamente todas las transformaciones disponibles. Si la cámara publica detecciones en su propio frame (`overhead_camera_link`), basta con hacer:
+
+```bash
+ros2 run tf2_ros tf2_echo map overhead_camera_link
+```
+
+para inspeccionar la transformada y, en código (C++/Python), invocar `tf_buffer.transform()` de `geometry_msgs/msg/PoseStamped` o `PointStamped`. Así convertimos una detección 3D de la cámara al plano XY del mapa (`map`), que es el mismo plano de navegación usado por Nav2 y los robots diferenciales. El URDF garantiza que estas relaciones se mantengan actualizadas incluso mientras el Kinova se mueve, ya que `robot_state_publisher` publica continuamente `map -> table_link -> world -> gen3_base_link -> ... -> burger_grip_frame` y los drivers añaden las articulaciones dinámicas del brazo.
 
 ## 5.5. Descripción de frames (TF)
 
@@ -242,21 +269,22 @@ La siguiente tabla resume cada frame del árbol y su función. Las poses indicad
 | Frame | Padre | Joint | Propósito | Pose (xyz, rpy) |
 | :--- | :--- | :--- | :--- | :--- |
 | `map` | — | — | Origen común en el piso (plano de navegación). | — |
+| `table_link` | `map` | fixed | Mesa física donde se monta Kinova y staging. | (0.80, -1.00, 0.80), (0,0,0) |
 | `staging_area` | `map` | fixed | Referencia de la mesa/zona de preparación. | (0.80, 0.00, 0.00), (0,0,0) |
-| `delivery_slot_1` | `staging_area` | fixed | Slot donde el Kinova deposita la bandeja. | (0.00, 0.40, 0.90), (0,0,0) |
-| `world` | `map` | fixed | Frame auxiliar del URDF oficial Kinova (solo escena compuesta). | (1.20, 0.30, 1.00), (0,0,0) |
-| `kinova_base_link` | `map` o `world` | fixed | Base del Kinova Gen3; origen de la cinemática. | Visual: con `map` a (1.20, 0.30, 1.00); Compuesta: con `world` a (0,0,0). |
+| `delivery_slot_1` | `staging_area` | fixed | Slot donde el Kinova deposita la bandeja. | (0.00, 0.40, 0.50), (0,0,0) |
+| `world` | `table_link` | fixed | Frame auxiliar del URDF oficial Kinova (solo escena compuesta). | (0.20, 0.30, 0.00), (0,0,0) |
+| `kinova_base_link` | `table_link` | fixed | Base del Kinova Gen3 (versión visual). | (1.20, 0.30, 0.50), (0,0,0) |
 | `kinova_tool_frame` | `kinova_base_link` | floating/fixed | Brida/herramienta del brazo. | En demo visual: fijo (0,0,0); en hardware: variable (cinemática). |
 | `burger_grip_frame` | `kinova_tool_frame` | fixed | Frame de pinzado; offset del tool para grasp/place. | (0, 0, 0.18), (0,0,0) |
 | `robot_a_base_link` | `map` | fixed | Base del robot A (móvil). | Visual: (1.20, 0.80, 0.00), (0,0,0) |
 | `robot_a_tray_frame` | `robot_a_base_link` | fixed | Centro de la bandeja sobre A. | (0.00, 0.00, 0.15), (0,0,0) |
 | `robot_b_base_link` | `map` | fixed | Base del robot B (móvil). | Visual: (1.20, 1.30, 0.00), (0,0,0) |
 | `robot_b_tray_frame` | `robot_b_base_link` | fixed | Centro de la bandeja sobre B. | (0.00, 0.00, 0.15), (0,0,0) |
-| `overhead_camera_link` | `map` | fixed | Cámara aérea (detección de poses). | (0.50, 0.00, 2.50), (-1.5708, 0, 1.5708) |
+| `overhead_camera_link` | `map` | fixed | Cámara aérea (detección de poses). | (0.50, 0.00, 2.00), (-1.5708, 0, 1.5708) |
 
 Notas:
-- En la escena compuesta con el URDF oficial de Kinova, el frame `world` es necesario porque el modelo declara `world -> gen3_base_link`; lo posicionamos desde `map` para ubicar el brazo sobre la mesa a 1.0 m.
-- En el archivo de solo frames (minimal), `map -> kinova_base_link` puede fijarse directo (sin `world`).
+- En la escena compuesta con el URDF oficial de Kinova, el frame `world` se fija ahora desde `table_link` para respetar la geometría de la mesa antes de conectar `world -> gen3_base_link`.
+- En el archivo de solo frames (minimal) puedes omitir `world` y conectar `map -> kinova_base_link` directo si no necesitas importar el URDF oficial completo, pero en `burger_delivery_gen3.urdf` se mantiene el anclaje `map -> table_link -> world` para alinear el brazo con la mesa.
 - Para compatibilidad con el visor web, algunos joints se han fijado (por ejemplo, `kinova_base_to_tool`) para asegurar visualización estable. En ROS, esos joints serán dinámicos (driver/cinemática).
 
 ## 5.6. Frames internos del Kinova Gen3 (y gripper)
@@ -292,7 +320,7 @@ TCP recomendado y frames de herramienta:
 - Ajusta el offset del TCP según la garra real: grosor de dedos, centro de agarre y altura de contacto.
 
 Notas prácticas:
-- En RViz, verifica que `map → world → gen3_base_link → … → end_effector_link → burger_grip_frame` se mantiene consistente al mover el brazo (drivers activos) antes de ejecutar pick & place.
+- En RViz, verifica que `map → table_link → world → gen3_base_link → … → end_effector_link → burger_grip_frame` se mantiene consistente al mover el brazo (drivers activos) antes de ejecutar pick & place.
 - Para MoveIt, configura el frame de planificación/tarea en el TCP efectivo (aquí `burger_grip_frame`) para que las trayectorias y metas cartesianas sean correctas.
 
 
