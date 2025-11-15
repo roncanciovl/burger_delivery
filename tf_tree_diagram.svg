@@ -1,0 +1,136 @@
+<svg width="800" height="650" viewBox="0 0 800 650" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="14">
+    <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#333" />
+        </marker>
+        <marker id="arrow-red" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="red"/></marker>
+        <marker id="arrow-green" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="green"/></marker>
+        <marker id="arrow-blue" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="blue"/></marker>
+        <style>
+            .frame-text { font-size: 14px; font-weight: bold; fill: #2c3e50; text-anchor: middle; }
+            .transform-static { stroke: #2c3e50; stroke-width: 2; marker-end: url(#arrow); }
+            .transform-dynamic { stroke: #e67e22; stroke-width: 2; stroke-dasharray: 6, 3; marker-end: url(#arrow); }
+            .transform-result { stroke: #27ae60; stroke-width: 3; stroke-dasharray: 8, 4; marker-end: url(#arrow); }
+            .transform-label { font-size: 11px; font-style: italic; }
+            .axis-x { stroke: red; stroke-width: 2; marker-end: url(#arrow-red); }
+            .axis-y { stroke: green; stroke-width: 2; marker-end: url(#arrow-green); }
+            .axis-z { stroke: blue; stroke-width: 2; marker-end: url(#arrow-blue); }
+        </style>
+    </defs>
+
+    <rect width="100%" height="100%" fill="white"/>
+
+    <!-- Título -->
+    <text x="400" y="30" font-size="20" font-weight="bold" text-anchor="middle">Árbol de Transformadas 3D (TF2)</text>
+
+    <!-- Suelo y Grid -->
+    <path d="M 50 600 L 350 450 L 750 450 L 550 600 Z" fill="#f0f0f0" stroke="#d0d0d0"/>
+    <line x1="200" y1="525" x2="550" y2="525" stroke="#ccc"/>
+    <line x1="375" y1="600" x2="562.5" y2="450" stroke="#ccc"/>
+
+    <!-- Frame: map -->
+    <g id="map-frame" transform="translate(200, 525)">
+        <line x1="0" y1="0" x2="50" y2="0" class="axis-x"/>
+        <line x1="0" y1="0" x2="-25" y2="37.5" class="axis-y"/>
+        <line x1="0" y1="0" x2="0" y2="-50" class="axis-z"/>
+        <text x="0" y="20" class="frame-text">map</text>
+    </g>
+
+    <!-- Cámara -->
+    <g id="camera-object" transform="translate(400, 100)">
+        <polygon points="-50,-20 -40,-40 60,-40 50,-20" fill="#555"/> <!-- Cara superior -->
+        <polygon points="50,-20 60,-40 60,20 50,40" fill="#444"/> <!-- Cara lateral -->
+        <rect x="-50" y="-20" width="100" height="60" fill="#333" rx="5"/> <!-- Cara frontal -->
+        <ellipse cx="0" cy="10" rx="20" ry="18" fill="#555" stroke="white" stroke-width="2"/> <!-- Lente -->
+        <ellipse cx="0" cy="10" rx="10" ry="9" fill="#777"/> <!-- Lente interior -->
+    </g>
+    <!-- Frame: overhead_camera_link -->
+    <g id="camera-frame" transform="translate(400, 110) rotate(-30)">
+        <line x1="0" y1="0" x2="40" y2="0" class="axis-x"/>
+        <line x1="0" y1="0" x2="0" y2="40" class="axis-y"/>
+        <line x1="0" y1="0" x2="0" y2="-40" class="axis-z"/>
+        <text x="30" y="-50" class="frame-text" transform="rotate(30)">overhead_camera_link</text>
+    </g>
+
+    <!-- Robot -->
+    <g id="robot-object" transform="translate(600, 500)">
+        <!-- Ruedas del robot diferencial -->
+        <ellipse cx="-10" cy="15" rx="15" ry="5" fill="#34495e" stroke="#2c3e50"/>
+        <ellipse cx="10" cy="-15" rx="15" ry="5" fill="#34495e" stroke="#2c3e50"/>
+        <!-- Base circular del robot -->
+        <ellipse cx="0" cy="0" rx="50" ry="25" fill="#bdc3c7" stroke="#7f8c8d"/>
+    </g>
+    <!-- Frame: robot_A/base_link -->
+    <g id="robot-frame" transform="translate(600, 500)">
+        <line x1="0" y1="0" x2="50" y2="0" class="axis-x"/>
+        <line x1="0" y1="0" x2="-25" y2="37.5" class="axis-y"/>
+        <line x1="0" y1="0" x2="0" y2="-50" class="axis-z"/>
+        <text x="0" y="-60" class="frame-text">robot_A/base_link</text>
+    </g>
+
+    <!-- Tag Fijo en el Suelo -->
+    <g id="tag0-object" transform="translate(200, 525)">
+        <path d="M 0 0 L 20 0 L 10 15 L -10 15 Z" fill="black" stroke="white" stroke-width="2"/>
+    </g>
+    <!-- Frame: tag_0 -->
+    <g id="tag0-frame" transform="translate(200, 525)">
+        <line x1="0" y1="0" x2="30" y2="0" class="axis-x"/>
+        <line x1="0" y1="0" x2="-15" y2="22.5" class="axis-y"/>
+        <line x1="0" y1="0" x2="0" y2="-30" class="axis-z"/>
+        <text x="0" y="40" class="frame-text">tag_0 (at map origin)</text>
+    </g>
+
+    <!-- Tag en el Robot -->
+    <g id="tag100-object" transform="translate(600, 494)">
+        <path d="M 0 0 L 15 0 L 7.5 11.25 L -7.5 11.25 Z" fill="black" stroke="white" stroke-width="1.5"/>
+    </g>
+    <!-- Frame: tag_100 -->
+    <g id="tag100-frame" transform="translate(600, 495)">
+        <line x1="0" y1="0" x2="30" y2="0" class="axis-x"/>
+        <line x1="0" y1="0" x2="-15" y2="22.5" class="axis-y"/>
+        <line x1="0" y1="0" x2="0" y2="-30" class="axis-z"/>
+        <text x="0" y="-40" class="frame-text">tag_100</text>
+    </g>
+
+    <!-- Transformadas (Flechas) -->
+    <g id="transforms">
+        <!-- T1: map -> tag_0 (Estática, Identidad) -->
+        <!-- La flecha se omite ya que los frames son coincidentes -->
+        <text x="200" y="580" class="transform-label" text-anchor="middle">Static (map is defined by tag_0)</text>
+
+        <!-- T2: robot_A/base_link -> tag_100 (Estática) -->
+        <line x1="600" y1="500" x2="600" y2="494" class="transform-static"/>
+        <text x="630" y="460" class="transform-label" text-anchor="middle">Static (Robot Geometry, z=6cm)</text>
+
+        <!-- T3: map -> overhead_camera_link (Estática) -->
+        <path d="M 220 525 C 260 400, 320 250, 400 120" class="transform-static" fill="none"/>
+        <text x="300" y="300" class="transform-label">Static (Mount pose)</text>
+
+        <!-- T4: overhead_camera_link -> tag_0 (Dinámica) -->
+        <path d="M 400 140 Q 300 300 200 525" stroke-width="2" class="transform-dynamic" fill="none"/>
+        <text x="330" y="350" class="transform-label" fill="#c0392b">Dynamic (Detection)</text>
+
+        <!-- T5: overhead_camera_link -> tag_100 (Dinámica) -->
+        <path d="M 400 150 Q 500 300 600 495" stroke-width="2" class="transform-dynamic" fill="none"/>
+        <text x="520" y="350" class="transform-label" fill="#c0392b">Dynamic (Detection)</text>
+
+        <!-- T6: map -> robot_A/base_link (Resultado) -->
+        <path d="M 200 525 Q 400 450 600 500" stroke-width="3" class="transform-result" fill="none"/>
+        <text x="400" y="480" class="transform-label" fill="#27ae60" font-size="14" font-weight="bold">TF2 Calculated Transform</text>
+    </g>
+
+    <!-- Leyenda -->
+    <g id="legend" transform="translate(20, 20)">
+        <rect x="0" y="0" width="210" height="90" fill="#fafafa" stroke="#ccc" rx="5"/>
+        <text x="100" y="18" font-weight="bold" text-anchor="middle">Leyenda de Transformadas</text>
+        
+        <line x1="10" y1="35" x2="50" y2="35" class="transform-static"/>
+        <text x="60" y="40">Estática (Geometría fija)</text>
+
+        <line x1="10" y1="55" x2="50" y2="55" class="transform-dynamic"/>
+        <text x="60" y="60">Dinámica (Detección por sensor)</text>
+
+        <line x1="10" y1="75" x2="50" y2="75" class="transform-result"/>
+        <text x="60" y="80">Resultado (Calculada por TF2)</text>
+    </g>
+</svg>

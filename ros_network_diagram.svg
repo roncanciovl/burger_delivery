@@ -1,0 +1,209 @@
+<svg width="1600" height="750" viewBox="0 0 1600 750" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" font-size="14">
+    <defs>
+        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="8" refY="3.5" orient="auto" fill="#e74c3c">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#333" />
+        </marker>
+        <style>
+            .box { fill: #f9f9f9; stroke: #666; stroke-width: 1.5; rx: 8; }
+            .title-text { font-size: 18px; font-weight: bold; text-anchor: middle; }
+            .label-text { font-size: 14px; text-anchor: middle; }
+            .ip-text { font-size: 12px; fill: #005582; text-anchor: middle; font-family: monospace; }
+            .role-text { font-size: 11px; fill: #555; text-anchor: middle; font-style: italic; }
+            .conn-text { font-size: 11px; fill: #444; text-anchor: middle; }
+            .ethernet-line { stroke: #3498db; stroke-width: 2.5; }
+            .wifi-line { stroke: #2ecc71; stroke-width: 2.5; stroke-dasharray: 8, 4; }
+            .usb-line { stroke: #f39c12; stroke-width: 2; }
+            .ros-comm { stroke: #e74c3c; stroke-width: 1.5; stroke-dasharray: 3, 3; marker-end: url(#arrowhead); }
+        </style>
+    </defs>
+
+    <!-- Fondo blanco para asegurar legibilidad -->
+    <rect width="100%" height="100%" fill="white"/>
+
+    <!-- Título -->
+    <text x="800" y="80" font-size="22" font-weight="bold" text-anchor="middle">Arquitectura de Red para Ecosistema ROS 2 y micro-ROS</text>
+    <text x="800" y="105" font-size="14" text-anchor="middle" fill="#555">Topología en Estrella Centralizada</text>
+
+    <!-- Conexión a WAN -->
+    <g id="wan-connection" transform="translate(-300, 0)">
+        <rect x="700" y="140" width="200" height="50" class="box" fill="#f2f2f2"/>
+        <text x="800" y="165" class="label-text">WAN Universidad</text>
+        <line x1="900" y1="165" x2="1000" y2="165" class="ethernet-line"/>
+        <text x="950" y="155" class="conn-text" font-size="10">(Cable)</text>
+    </g>
+
+    <!-- Router Central -->
+    <g id="router">
+        <rect x="700" y="140" width="200" height="110" class="box" fill="#eafaf1"/>
+        <text x="800" y="170" class="title-text">Router WiFi</text>
+        <text x="800" y="190" class="ip-text">192.168.1.1</text>
+        <text x="800" y="205" class="role-text">(Servidor DHCP)</text>
+        <text x="800" y="222" class="conn-text" font-size="12">SSID: <tspan font-family="monospace" fill="#005582">ros2</tspan></text>
+        <text x="800" y="237" class="conn-text" font-size="12">Pass: <tspan font-family="monospace" fill="#005582">ros12345</tspan></text>
+    </g>
+
+    <!-- Líneas de Conexión Principales desde Router -->
+    <line x1="800" y1="250" x2="800" y2="280" stroke="#aaa" stroke-width="2"/> <!-- Vertical troncal para Ethernet -->
+    <line x1="100" y1="280" x2="1500" y2="280" stroke="#aaa" stroke-width="2"/> <!-- Horizontal Ethernet -->
+
+    <line x1="800" y1="250" x2="800" y2="460" stroke="#aaa" stroke-width="2"/> <!-- Vertical troncal para WiFi -->
+    <line x1="10" y1="460" x2="1590" y2="460" stroke="#aaa" stroke-width="2"/> <!-- Horizontal WiFi -->
+
+    <!-- PC Comando Kinova -->
+    <g id="pc-cmd-kinova">
+        <line x1="200" y1="280" x2="200" y2="320" class="ethernet-line"/>
+        <rect x="100" y="320" width="200" height="90" class="box" fill="#e9f5ff"/>
+        <text x="200" y="345" class="label-text">PC Comando Kinova</text>
+        <text x="200" y="305" class="ip-text">DHCP</text>
+        <text x="200" y="365" class="ip-text">DHCP</text>
+        <text x="200" y="380" class="conn-text">(Conexión Ethernet)</text>
+        <text x="200" y="398" class="role-text">Comanda el Kinova</text>
+    </g>
+
+    <!-- Robot Kinova -->
+    <g id="robot-kinova">
+        <line x1="800" y1="280" x2="800" y2="320" class="ethernet-line"/>
+        <rect x="700" y="320" width="200" height="90" class="box" fill="#e9f5ff"/>
+        <text x="800" y="345" class="label-text">Robot Kinova</text>
+        <text x="800" y="365" class="ip-text">IP: 192.168.1.10</text>
+        <text x="800" y="380" class="conn-text">(Conexión Ethernet)</text>
+        <text x="800" y="398" class="role-text">Nodos ROS 2</text>
+    </g>
+
+    <!-- PC Cámara Kinova -->
+    <g id="pc-cam-kinova">
+        <line x1="1400" y1="280" x2="1400" y2="320" class="ethernet-line"/>
+        <rect x="1300" y="320" width="200" height="90" class="box" fill="#e9f5ff"/>
+        <text x="1400" y="345" class="label-text">PC Cámara Kinova</text>
+        <text x="1400" y="365" class="ip-text">DHCP</text>
+        <text x="1400" y="380" class="conn-text">(Conexión Ethernet)</text>
+        <text x="1400" y="398" class="role-text">Acceso Cámara Kinova</text>
+    </g>
+
+    <!-- PC Principal (Agente) -->
+    <g id="pc-principal">
+        <line x1="100" y1="460" x2="100" y2="500" class="wifi-line"/>
+        <rect x="0" y="500" width="200" height="110" class="box" fill="#e9f5ff"/>
+        <text x="100" y="525" class="label-text">PC Principal</text>
+        <text x="100" y="545" class="ip-text">IP Fija: 192.168.1.100</text>
+        <text x="100" y="560" class="conn-text">(Conexión WiFi)</text>
+        <rect x="15" y="570" width="170" height="30" rx="4" fill="#d1e7fd" stroke="#7abaff"/>
+        <text x="100" y="590" class="role-text">Ejecuta `micro-ros-agent`</text>
+    </g>
+
+    <!-- Cámara Cableada -->
+    <g id="cam-usb">
+        <line x1="300" y1="590" x2="300" y2="630" class="usb-line"/>
+        <rect x="200" y="630" width="200" height="60" class="box" fill="#fff8e1"/>
+        <text x="300" y="655" class="label-text">Cámara Cableada</text>
+        <text x="300" y="675" class="conn-text">(Conexión USB)</text>
+    </g>
+
+    <!-- PC Publicador (Visión) -->
+    <g id="pc-publicador">
+        <line x1="300" y1="460" x2="300" y2="500" class="wifi-line"/>
+        <rect x="200" y="500" width="200" height="90" class="box" fill="#e9f5ff"/>
+        <text x="300" y="525" class="label-text">PC Publicador</text>
+        <text x="300" y="545" class="ip-text">DHCP</text>
+        <text x="300" y="560" class="conn-text">(Conexión WiFi)</text>
+        <text x="300" y="578" class="role-text">Procesa AprilTags</text>
+    </g>
+
+    <!-- Cámara WiFi -->
+    <g id="cam-wifi">
+        <line x1="500" y1="460" x2="500" y2="500" class="wifi-line"/>
+        <rect x="400" y="500" width="200" height="80" class="box" fill="#fef9e7"/>
+        <text x="500" y="525" class="label-text">Cámara Aérea</text>
+        <text x="500" y="545" class="ip-text">DHCP</text>
+        <text x="500" y="565" class="conn-text">(Conexión WiFi)</text>
+    </g>
+
+    <!-- Celular con Tether -->
+    <g id="celular-tether">
+        <line x1="700" y1="460" x2="700" y2="500" class="wifi-line"/>
+        <rect x="600" y="500" width="200" height="90" class="box" fill="#f0f0f0"/>
+        <text x="700" y="525" class="label-text">Celular (Tether)</text>
+        <text x="700" y="545" class="ip-text">DHCP</text>
+        <text x="700" y="560" class="conn-text">(Conexión WiFi 6)</text>
+        <text x="700" y="578" class="role-text">Config. Router</text>
+    </g>
+
+    <!-- Robots (ESP32) -->
+    <g id="robots">
+        <!-- Robot A -->
+        <line x1="1300" y1="460" x2="1300" y2="500" class="wifi-line"/>
+        <rect x="1200" y="500" width="200" height="90" class="box" fill="#fdeae8"/>
+        <text x="1300" y="525" class="label-text">Robot A (ESP32)</text>
+        <text x="1300" y="545" class="ip-text">DHCP</text>
+        <text x="1300" y="565" class="role-text">Cliente micro-ROS</text>
+        <text x="1300" y="580" class="conn-text">(Conexión WiFi)</text>
+
+        <!-- Robot B -->
+        <line x1="1500" y1="460" x2="1500" y2="500" class="wifi-line"/>
+        <rect x="1400" y="500" width="200" height="90" class="box" fill="#fdeae8"/>
+        <text x="1500" y="525" class="label-text">Robot B (ESP32)</text>
+        <text x="1500" y="545" class="ip-text">DHCP</text>
+        <text x="1500" y="565" class="role-text">Cliente micro-ROS</text>
+        <text x="1500" y="580" class="conn-text">(Conexión WiFi)</text>
+    </g>
+
+    <!-- PCs de Diagnóstico -->
+    <g id="diag-pcs">
+        <!-- PC Diag 1 -->
+        <line x1="900" y1="460" x2="900" y2="500" class="wifi-line"/>
+        <rect x="800" y="500" width="200" height="90" class="box" fill="#fcf3cf"/>
+        <text x="900" y="525" class="label-text">PC Diagnóstico 1</text>
+        <text x="900" y="545" class="ip-text">DHCP</text>
+        <text x="900" y="560" class="conn-text">(Conexión WiFi)</text>
+        <text x="900" y="578" class="role-text">RQT Diagnostics</text>
+
+        <!-- PC Diag 2 -->
+        <line x1="1100" y1="460" x2="1100" y2="500" class="wifi-line"/>
+        <rect x="1000" y="500" width="200" height="90" class="box" fill="#fcf3cf"/>
+        <text x="1100" y="525" class="label-text">PC Diagnóstico 2</text>
+        <text x="1100" y="545" class="ip-text">DHCP</text>
+        <text x="1100" y="560" class="conn-text">(Conexión WiFi)</text>
+        <text x="1100" y="578" class="role-text">RQT Diagnostics</text>
+    </g>
+
+    <!-- Flujo de Comunicación ROS -->
+    <g id="ros-flow">
+        <!-- Comunicación DDS entre todos los nodos ROS 2 -->
+        <path d="M 200 360 C 200 260, 1400 260, 1400 360" class="ros-comm" fill="none"/>
+        <path d="M 100 540 C 100 440, 1100 440, 1100 540" class="ros-comm" fill="none"/>
+        <text x="800" y="440" class="conn-text" fill="#c0392b" font-size="12">Comunicación ROS 2 (DDS)</text>
+        <text x="800" y="455" class="conn-text" fill="#c0392b" font-size="10">ROS_DOMAIN_ID=0</text>
+
+        <!-- Comunicación micro-ROS -->
+        <!-- Robot A a Agente (PC Principal) -->
+        <path d="M 1300 495 C 1300 410, 200 410, 100 495" class="ros-comm" fill="none"/>
+        <text x="1250" y="480" class="conn-text" fill="#c0392b" font-size="10">UDP:8888</text>
+
+        <!-- Robot B a Agente (PC Principal) -->
+        <path d="M 1500 495 C 1500 410, 200 410, 100 495" class="ros-comm" fill="none"/>
+        <text x="1450" y="480" class="conn-text" fill="#c0392b" font-size="10">UDP:8888</text>
+    </g>
+
+    <!-- Leyenda -->
+    <g id="legend" transform="translate(20, 610)">
+        <rect x="0" y="0" width="160" height="100" class="box" fill="#fafafa" stroke-dasharray="3,3"/>
+        <text x="80" y="18" font-weight="bold" text-anchor="middle">Leyenda</text>
+        <line x1="10" y1="35" x2="40" y2="35" class="ethernet-line"/>
+        <text x="45" y="40">Ethernet</text>
+        <line x1="10" y1="55" x2="40" y2="55" class="wifi-line"/>
+        <text x="45" y="60">WiFi</text>
+        <line x1="10" y1="75" x2="40" y2="75" class="usb-line"/>
+        <text x="45" y="80">USB</text>
+        <path d="M 10 95 L 40 95" class="ros-comm" fill="none"/>
+        <text x="45" y="100">micro-ROS</text>
+    </g>
+
+    <!-- Configuración de Subred -->
+    <g id="subnet-config" transform="translate(1380, 20)">
+        <rect x="0" y="0" width="200" height="80" class="box" fill="#fafafa" stroke-dasharray="3,3"/>
+        <text x="100" y="18" font-weight="bold" text-anchor="middle">Config. de Red</text>
+        <text x="10" y="40" class="ip-text" text-anchor="start">Subnet: 192.168.1.0/24</text>
+        <text x="10" y="55" class="ip-text" text-anchor="start">Mask: 255.255.255.0</text>
+        <text x="10" y="70" class="ip-text" text-anchor="start">DHCP: 192.168.1.101-254</text>
+    </g>
+</svg>

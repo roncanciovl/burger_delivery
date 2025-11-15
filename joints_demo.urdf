@@ -1,0 +1,127 @@
+<?xml version="1.0"?>
+<robot name="joints_demo">
+  <!-- Base frames -->
+  <link name="world"/>
+  <link name="base">
+    <!-- Axes at base: X red, Y green, Z blue -->
+    <visual name="axis_x">
+      <origin xyz="0.2 0 0" rpy="0 0 0"/>
+      <geometry><box size="0.4 0.02 0.02"/></geometry>
+      <material name="x_red"><color rgba="1 0 0 1"/></material>
+    </visual>
+    <visual name="axis_y">
+      <origin xyz="0 0.2 0" rpy="0 0 0"/>
+      <geometry><box size="0.02 0.4 0.02"/></geometry>
+      <material name="y_green"><color rgba="0 1 0 1"/></material>
+    </visual>
+    <visual name="axis_z">
+      <origin xyz="0 0 0.2" rpy="0 0 0"/>
+      <geometry><box size="0.02 0.02 0.4"/></geometry>
+      <material name="z_blue"><color rgba="0 0.2 1 1"/></material>
+    </visual>
+    <!-- Base floor tile -->
+    <visual name="floor">
+      <origin xyz="0 0 -0.01" rpy="0 0 0"/>
+      <geometry><box size="4 4 0.02"/></geometry>
+      <material name="floor_gray"><color rgba="0.85 0.85 0.85 0.6"/></material>
+    </visual>
+  </link>
+
+  <joint name="world_to_base" type="fixed">
+    <parent link="world"/>
+    <child link="base"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- 1) Fixed joint example -->
+  <link name="fixed_link">
+    <visual>
+      <geometry><box size="0.3 0.3 0.3"/></geometry>
+      <material name="fixed_blue"><color rgba="0.1 0.4 1.0 1"/></material>
+    </visual>
+  </link>
+  <joint name="base_to_fixed" type="fixed">
+    <parent link="base"/>
+    <child link="fixed_link"/>
+    <origin xyz="0.8 0.0 0.15" rpy="0 0 0"/>
+  </joint>
+
+  <!-- 2) Revolute joint (limited rotation) around Z axis -->
+  <link name="revolute_link">
+    <visual>
+      <!-- arm extends along +X from joint center -->
+      <origin xyz="0.4 0 0"/>
+      <geometry><box size="0.8 0.06 0.06"/></geometry>
+      <material name="revolute_red"><color rgba="0.9 0.2 0.2 1"/></material>
+    </visual>
+  </link>
+  <joint name="base_to_revolute" type="revolute">
+    <parent link="base"/>
+    <child link="revolute_link"/>
+    <origin xyz="0.0 1.0 0.2" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-1.5708" upper="1.5708" effort="5" velocity="2"/>
+  </joint>
+
+  <!-- 3) Continuous joint (unbounded rotation) around Z axis -->
+  <link name="continuous_link">
+    <visual>
+      <origin xyz="0.35 0 0"/>
+      <geometry><box size="0.7 0.06 0.06"/></geometry>
+      <material name="continuous_orange"><color rgba="0.95 0.55 0.2 1"/></material>
+    </visual>
+  </link>
+  <joint name="base_to_continuous" type="continuous">
+    <parent link="base"/>
+    <child link="continuous_link"/>
+    <origin xyz="0.0 -1.0 0.2" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <!-- 4) Prismatic joint (linear slide) along X axis -->
+  <link name="prismatic_link">
+    <visual>
+      <origin xyz="0.25 0 0"/>
+      <geometry><box size="0.5 0.06 0.06"/></geometry>
+      <material name="prismatic_green"><color rgba="0.2 0.9 0.4 1"/></material>
+    </visual>
+  </link>
+  <joint name="base_to_prismatic" type="prismatic">
+    <parent link="base"/>
+    <child link="prismatic_link"/>
+    <origin xyz="-1.0 0.0 0.2" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="0.0" upper="0.6" effort="5" velocity="0.5"/>
+  </joint>
+
+  <!-- 5) Planar joint (motion in XY plane + yaw about Z)
+       Nota: el visor web no soporta joints "planar". Para que se vea,
+       aquí lo dejamos como fixed conservando la geometría y la pose. -->
+  <link name="planar_link">
+    <visual>
+      <geometry><box size="0.4 0.4 0.04"/></geometry>
+      <material name="planar_magenta"><color rgba="0.8 0.2 0.8 1"/></material>
+    </visual>
+  </link>
+  <joint name="base_to_planar" type="fixed">
+    <parent link="base"/>
+    <child link="planar_link"/>
+    <origin xyz="1.5 1.0 0.2" rpy="0 0 0"/>
+  </joint>
+
+  <!-- 6) Floating joint (full 6-DOF relative pose)
+       Nota: el visor web no soporta joints "floating". Para que se vea,
+       aquí lo dejamos como fixed conservando la geometría y la pose. -->
+  <link name="floating_link">
+    <visual>
+      <geometry><sphere radius="0.12"/></geometry>
+      <material name="floating_yellow"><color rgba="1.0 0.9 0.2 1"/></material>
+    </visual>
+  </link>
+  <joint name="base_to_floating" type="fixed">
+    <parent link="base"/>
+    <child link="floating_link"/>
+    <origin xyz="-1.5 -1.0 0.5" rpy="0 0 0"/>
+  </joint>
+
+</robot>
