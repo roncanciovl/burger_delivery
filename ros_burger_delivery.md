@@ -58,7 +58,7 @@ Todos los nodos ROS se mantienen dentro de la misma subred (`192.168.1.0/24`) pa
 | `order_manager` | `burger_delivery_msgs` | Convierte órdenes REST → ROS, prioriza pedidos y asigna robots. |
 | `tray_allocator` | `burger_delivery_logic` | Decide qué robot recibe cada bandeja según disponibilidad. |
 | `micro_ros_agent` | `micro_ros_agent` | Termina la conexión UDP (`ros2 run micro_ros_agent micro_ros_agent udp4 --port 8888`). |
-| `tf2_ros::static_transform_publisher` | `tf2_ros` | Define frames fijos entre `map`, `staging_area` y `belt_frame`. |
+| `tf2_ros::static_transform_publisher` | `tf2_ros` | Define frames fijos `map -> table_link`, `map -> staging_area`, `staging_area -> delivery_slot_1`, `map -> robot_{a,b}_base_link`. |
 | `nav2_bt_navigator` + stack Nav2 | `nav2_bringup` | Genera planes y controla los robots diferenciales a nivel macro. |
 | `move_group` + `kinova_gen3_control` | `moveit_servo` | Resuelve trayectorias del brazo y los pases Kinova → bandeja. |
 
@@ -102,21 +102,24 @@ Estos nodos se conectan a `micro_ros_agent` mediante `set_microros_wifi_transpor
 
 # 5. Uso de tf2
 
-tf2 es el pegamento espacial entre la manipulación y la movilidad. El frame `map` se encuentra en el piso (plano de navegación) y es el origen común desde el cual se derivan los frames del Kinova y de cada robot diferencial:
+tf2 es el pegamento espacial entre la manipulación y la movilidad. El frame `map` se encuentra en el piso (plano de navegación) y es el origen común desde el cual se derivan los frames del Kinova, la mesa y cada robot diferencial. El árbol expresado en `ROS/visual/burger_delivery_gen3.urdf` es:
 
 ```
 map
+ ├── table_link
+ │    ├── world
+ │    │    └── gen3_base_link → … → gen3_end_effector_link → frames Robotiq/cámara muñeca
+ │    └── kinova_base_link → kinova_tool_frame → burger_grip_frame (TCP auxiliar)
  ├── staging_area
  │    └── delivery_slot_1
- ├── kinova_base_link
- │    └── kinova_tool_frame
- │         └── burger_grip_frame
- ├── robot_A/base_link
- │    └── robot_A/tray_frame
- ├── robot_B/base_link
- │    └── robot_B/tray_frame
+ ├── robot_a_base_link
+ │    └── robot_a_tray_frame
+ ├── robot_b_base_link
+ │    └── robot_b_tray_frame
  └── overhead_camera_link
 ```
+
+El branch `world → gen3_*` corresponde al URDF oficial del Gen3 (articulaciones dinámicas publicadas por `robot_state_publisher`). El branch `kinova_base_link → kinova_tool_frame → burger_grip_frame` es un helper rígido usado para visualizar la mesa y definir el TCP efectivo que usa el planeador de trayectorias.
 
 ## 5.1. Fuentes de Transformaciones
 
@@ -140,8 +143,16 @@ ros2 run tf2_ros static_transform_publisher \
   map staging_area
 
 ros2 run tf2_ros static_transform_publisher \
+  0.00 0.40 0.50 0 0 0 \
+  staging_area delivery_slot_1
+
+ros2 run tf2_ros static_transform_publisher \
   0.00 0.00 0.15 0 0 0 \
   robot_X/base_link robot_X/tray_frame
+
+ros2 run tf2_ros static_transform_publisher \
+  0.20 0.30 0.00 0 0 0 \
+  table_link world
 ```
 
 ## 5.3. Por qué tf2 es crítico
@@ -252,7 +263,7 @@ Un URDF mínimo que codifica este árbol de transformaciones puede lucir así (t
 </robot>
 ```
 
-Este URDF puede cargarse con `robot_state_publisher` para validar el árbol de `tf` en RViz y garantizar que `map -> kinova_base_link -> burger_grip_frame`, los `delivery_slot_i`, el frame `overhead_camera_link` y los frames de cada robot diferencial se alinean con la disposición física del laboratorio. Kinova usa los slots como objetivos de colocación, los robots se alinean con ellos antes de recibir la bandeja y la cámara proyecta sus detecciones directamente al mapa.
+Este URDF puede cargarse con `robot_state_publisher` para validar el árbol de `tf` en RViz y garantizar que `map -> table_link -> kinova_base_link -> burger_grip_frame`, los `delivery_slot_i`, el frame `overhead_camera_link` y los frames de cada robot diferencial se alinean con la disposición física del laboratorio. Kinova usa los slots como objetivos de colocación, los robots se alinean con ellos antes de recibir la bandeja y la cámara proyecta sus detecciones directamente al mapa.
 
 **Uso práctico del URDF para obtener transformaciones en línea:** al lanzar `robot_state_publisher` con `burger_delivery_gen3.urdf` y los `static_transform_publisher` mencionados arriba, tf2 mantiene continuamente todas las transformaciones disponibles. Si la cámara publica detecciones en su propio frame (`overhead_camera_link`), basta con hacer:
 
@@ -260,7 +271,7 @@ Este URDF puede cargarse con `robot_state_publisher` para validar el árbol de `
 ros2 run tf2_ros tf2_echo map overhead_camera_link
 ```
 
-para inspeccionar la transformada y, en código (C++/Python), invocar `tf_buffer.transform()` de `geometry_msgs/msg/PoseStamped` o `PointStamped`. Así convertimos una detección 3D de la cámara al plano XY del mapa (`map`), que es el mismo plano de navegación usado por Nav2 y los robots diferenciales. El URDF garantiza que estas relaciones se mantengan actualizadas incluso mientras el Kinova se mueve, ya que `robot_state_publisher` publica continuamente `map -> table_link -> world -> gen3_base_link -> ... -> burger_grip_frame` y los drivers añaden las articulaciones dinámicas del brazo.
+para inspeccionar la transformada y, en código (C++/Python), invocar `tf_buffer.transform()` de `geometry_msgs/msg/PoseStamped` o `PointStamped`. Así convertimos una detección 3D de la cámara al plano XY del mapa (`map`), que es el mismo plano de navegación usado por Nav2 y los robots diferenciales. El URDF garantiza que estas relaciones se mantengan actualizadas incluso mientras el Kinova se mueve, ya que `robot_state_publisher` publica simultáneamente (a) `map -> table_link -> world -> gen3_base_link -> ... -> gen3_end_effector_link` para la cadena real del brazo y (b) el helper rígido `map -> table_link -> kinova_base_link -> kinova_tool_frame -> burger_grip_frame` que fija el TCP usado en las rutinas de pick & place.
 
 ## 5.5. Descripción de frames (TF)
 
@@ -320,7 +331,7 @@ TCP recomendado y frames de herramienta:
 - Ajusta el offset del TCP según la garra real: grosor de dedos, centro de agarre y altura de contacto.
 
 Notas prácticas:
-- En RViz, verifica que `map → table_link → world → gen3_base_link → … → end_effector_link → burger_grip_frame` se mantiene consistente al mover el brazo (drivers activos) antes de ejecutar pick & place.
+- En RViz, verifica que la cadena oficial `map → table_link → world → gen3_base_link → … → end_effector_link` y el helper `map → table_link → kinova_base_link → kinova_tool_frame → burger_grip_frame` se mantienen consistentes al mover el brazo (drivers activos) antes de ejecutar pick & place.
 - Para MoveIt, configura el frame de planificación/tarea en el TCP efectivo (aquí `burger_grip_frame`) para que las trayectorias y metas cartesianas sean correctas.
 
 
