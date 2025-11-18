@@ -39,14 +39,15 @@
     <line x1="450" y1="110" x2="750" y2="200" class="static-edge"/>
     <line x1="750" y1="240" x2="750" y2="320" class="static-edge"/>
 
-    <line x1="300" y1="210" x2="300" y2="350" class="static-edge"/>
+    <line x1="300" y1="260" x2="300" y2="310" class="static-edge"/>
+    <line x1="300" y1="490" x2="300" y2="530" class="static-edge"/>
+    <line x1="450" y1="110" x2="600" y2="330" class="static-edge"/>
   </g>
 
   <!-- Conexiones dinámicas (cadena Kinova oficial) -->
   <g stroke-linecap="round" fill="none">
-    <line x1="300" y1="310" x2="300" y2="370" class="dynamic-edge"/>
-    <line x1="300" y1="410" x2="300" y2="470" class="dynamic-edge"/>
-    <line x1="300" y1="510" x2="300" y2="570" class="dynamic-edge"/>
+    <line x1="300" y1="330" x2="300" y2="410" class="dynamic-edge"/>
+    <line x1="300" y1="430" x2="300" y2="490" class="dynamic-edge"/>
   </g>
 
   <!-- Nodos -->
