@@ -23,6 +23,10 @@ Este repositorio centraliza la documentación y los modelos usados en el proyect
 2. **State publisher**: lanzar `robot_state_publisher` con `ROS/visual/burger_delivery_gen3.urdf` para publicar la cadena completa `map → table_link → world → gen3_* → burger_grip_frame`.
 3. **Visualización**: abrir RViz, agregar `RobotModel` y `TF` para inspeccionar la escena y validar las relaciones descritas en la guía.
 
+## Visualizadores URDF
+
+- [Online URDF Viewer](https://gkjohnson.github.io/urdf-loaders/javascript/example/bundle/index.html): Herramienta web para visualizar y manipular modelos URDF directamente en el navegador.
+
 ## Referencias
 
 - Consulta `ROS/ros_burger_delivery.md` para detalles de topics, nodos, QoS y secuencia operativa del delivery.
