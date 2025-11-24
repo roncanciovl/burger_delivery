@@ -28,11 +28,83 @@ This package contains the URDF description for the Burger Delivery Robot.
 
 ## Usage
 
-To visualize the robot model in RViz:
+### Lanzar Visualización (Nodo 1: robot_state_publisher)
 
+**Terminal 1 - Visualización:**
 ```bash
+cd ~/ros2_ws
+source install/setup.bash
 ros2 launch burger_description display.launch.py
 ```
+
+Esto lanza automáticamente:
+- `robot_state_publisher` - Publica TF
+- `joint_state_publisher_gui` - GUI para mover articulaciones manualmente
+- `rviz2` - Visualización 3D
+
+**Configuración en RViz:**
+- En el panel izquierdo "Global Options" → **Fixed Frame** → Selecciona `map`
+- Verifica que estén habilitados: ✓ RobotModel, ✓ TF
+
+### Lanzar Tu Nodo de Control (Nodo 2: Controlador)
+
+**Opción A: Nodo Python simple**
+
+1. Crea el archivo `~/ros2_ws/src/arm_controller.py`:
+```python
+import rclpy
+from rclpy.node import Node
+from sensor_msgs.msg import JointState
+
+class SimpleArmController(Node):
+    def __init__(self):
+        super().__init__('simple_arm_controller')
+        self.pub = self.create_publisher(JointState, '/joint_states', 10)
+        self.timer = self.create_timer(0.1, self.move_arm)
+        
+    def move_arm(self):
+        msg = JointState()
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.name = ['gen3_joint_1', 'gen3_joint_2', 'gen3_joint_3', 
+                    'gen3_joint_4', 'gen3_joint_5', 'gen3_joint_6', 'gen3_joint_7']
+        msg.position = [0.0, 0.5, 0.0, 1.0, 0.0, 0.5, 0.0]
+        self.pub.publish(msg)
+
+def main():
+    rclpy.init()
+    node = SimpleArmController()
+    rclpy.spin(node)
+
+if __name__ == '__main__':
+    main()
+```
+
+2. **Terminal 2 - Controlador:**
+```bash
+cd ~/ros2_ws/src
+python3 arm_controller.py
+```
+
+**Opción B: Con MoveIt2 (recomendado)**
+
+```bash
+# Terminal 2 - MoveIt2
+ros2 launch moveit_config demo.launch.py
+```
+
+### Workflow Completo
+
+```bash
+# Terminal 1: Visualización (siempre primero)
+ros2 launch burger_description display.launch.py
+
+# Terminal 2: Tu controlador (después de ver RViz)
+python3 arm_controller.py
+
+# Terminal 3 (opcional): Monitorear topics
+ros2 topic echo /joint_states
+```
+
 
 This will launch:
 - `robot_state_publisher`
