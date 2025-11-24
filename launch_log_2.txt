@@ -1,0 +1,20 @@
+[INFO] [launch]: All log files can be found below /home/roncanciovl/.ros/log/2025-11-24-11-05-09-269054-DESKTOP-3ISD7FI-15720
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [robot_state_publisher-1]: process started with pid [15723]
+[INFO] [joint_state_publisher_gui-2]: process started with pid [15724]
+[INFO] [rviz2-3]: process started with pid [15725]
+[robot_state_publisher-1] [INFO] [1764000309.640616778] [robot_state_publisher]: Robot initialized
+[rviz2-3] QStandardPaths: runtime directory '/mnt/wslg/runtime-dir' is not owned by UID 1001, but a directory permissions 0777 owned by UID 1000 GID 1000
+[joint_state_publisher_gui-2] QStandardPaths: runtime directory '/mnt/wslg/runtime-dir' is not owned by UID 1001, but a directory permissions 0777 owned by UID 1000 GID 1000
+[joint_state_publisher_gui-2] [INFO] [1764000310.620636529] [joint_state_publisher_gui]: Waiting for robot_description to be published on the robot_description topic...
+[joint_state_publisher_gui-2] [INFO] [1764000310.988796219] [joint_state_publisher_gui]: Centering
+[joint_state_publisher_gui-2] [INFO] [1764000311.100423422] [joint_state_publisher_gui]: Centering
+[rviz2-3] [INFO] [1764000311.179634354] [rviz2]: Stereo is NOT SUPPORTED
+[rviz2-3] [INFO] [1764000311.179934997] [rviz2]: OpenGl version: 4.5 (GLSL 4.5)
+[rviz2-3] [INFO] [1764000311.339584153] [rviz2]: Stereo is NOT SUPPORTED
+[WARNING] [launch]: user interrupted with ctrl-c (SIGINT)
+[rviz2-3] [INFO] [1764000345.057322578] [rclcpp]: signal_handler(signum=2)
+[robot_state_publisher-1] [INFO] [1764000345.128471153] [rclcpp]: signal_handler(signum=2)
+[ERROR] [joint_state_publisher_gui-2]: process has died [pid 15724, exit code -2, cmd '/opt/ros/jazzy/lib/joint_state_publisher_gui/joint_state_publisher_gui --ros-args -r __node:=joint_state_publisher_gui'].
+[INFO] [robot_state_publisher-1]: process has finished cleanly [pid 15723]
+[INFO] [rviz2-3]: process has finished cleanly [pid 15725]

@@ -14,6 +14,11 @@ def generate_launch_description():
         'urdf',
         urdf_file_name)
 
+    rviz_config_file = os.path.join(
+        get_package_share_directory('burger_description'),
+        'rviz',
+        'default.rviz')
+
     with open(urdf, 'r') as infp:
         robot_desc = infp.read()
 
@@ -41,5 +46,6 @@ def generate_launch_description():
             package='rviz2',
             executable='rviz2',
             name='rviz2',
-            output='screen'),
+            output='screen',
+            arguments=['-d', rviz_config_file]),
     ])

@@ -1220,12 +1220,12 @@
   <link name="gen3_robotiq_85_base_link">
     <visual>
       <geometry>
-        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/visual/robotiq_base.dae"/>
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/visual/2f_85/robotiq_base.dae"/>
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/collision/robotiq_base.stl"/>
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/collision/2f_85/robotiq_base.stl"/>
       </geometry>
     </collision>
     <inertial>
@@ -1237,12 +1237,12 @@
   <link name="gen3_robotiq_85_left_knuckle_link">
     <visual>
       <geometry>
-        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/visual/left_knuckle.dae"/>
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/visual/2f_85/left_knuckle.dae"/>
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/collision/left_knuckle.stl"/>
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/collision/2f_85/left_knuckle.stl"/>
       </geometry>
     </collision>
     <inertial>
@@ -1254,12 +1254,12 @@
   <link name="gen3_robotiq_85_right_knuckle_link">
     <visual>
       <geometry>
-        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/visual/right_knuckle.dae"/>
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/visual/2f_85/right_knuckle.dae"/>
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/collision/right_knuckle.stl"/>
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/collision/2f_85/right_knuckle.stl"/>
       </geometry>
     </collision>
     <inertial>
@@ -1271,12 +1271,12 @@
   <link name="gen3_robotiq_85_left_finger_link">
     <visual>
       <geometry>
-        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/visual/left_finger.dae"/>
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/visual/2f_85/left_finger.dae"/>
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/collision/left_finger.stl"/>
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/collision/2f_85/left_finger.stl"/>
       </geometry>
     </collision>
     <inertial>
@@ -1288,12 +1288,12 @@
   <link name="gen3_robotiq_85_right_finger_link">
     <visual>
       <geometry>
-        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/visual/right_finger.dae"/>
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/visual/2f_85/right_finger.dae"/>
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/collision/right_finger.stl"/>
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/collision/2f_85/right_finger.stl"/>
       </geometry>
     </collision>
     <inertial>
@@ -1305,12 +1305,12 @@
   <link name="gen3_robotiq_85_left_inner_knuckle_link">
     <visual>
       <geometry>
-        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/visual/left_inner_knuckle.dae"/>
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/visual/2f_85/left_inner_knuckle.dae"/>
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/collision/left_inner_knuckle.stl"/>
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/collision/2f_85/left_inner_knuckle.stl"/>
       </geometry>
     </collision>
     <inertial>
@@ -1322,12 +1322,12 @@
   <link name="gen3_robotiq_85_right_inner_knuckle_link">
     <visual>
       <geometry>
-        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/visual/right_inner_knuckle.dae"/>
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/visual/2f_85/right_inner_knuckle.dae"/>
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/collision/right_inner_knuckle.stl"/>
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/collision/2f_85/right_inner_knuckle.stl"/>
       </geometry>
     </collision>
     <inertial>
@@ -1339,12 +1339,12 @@
   <link name="gen3_robotiq_85_left_finger_tip_link">
     <visual>
       <geometry>
-        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/visual/left_finger_tip.dae"/>
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/visual/2f_85/left_finger_tip.dae"/>
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/collision/left_finger_tip.stl"/>
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/collision/2f_85/left_finger_tip.stl"/>
       </geometry>
       <surface>
         <friction>
@@ -1374,12 +1374,12 @@
   <link name="gen3_robotiq_85_right_finger_tip_link">
     <visual>
       <geometry>
-        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/visual/right_finger_tip.dae"/>
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/visual/2f_85/right_finger_tip.dae"/>
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/collision/right_finger_tip.stl"/>
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/collision/2f_85/right_finger_tip.stl"/>
       </geometry>
       <surface>
         <friction>
@@ -1555,7 +1555,7 @@
     <child link="wrist_mounted_camera_color_optical_frame"/>
   </joint>
   <link name="wrist_mounted_camera_color_optical_frame"/>
-  <!-- Wrist Camera Bracket -->
+  <!-- Wrist Camera Bracket (simplified - using box instead of missing mesh) -->
   <link name="wrist_camera_mount_link">
     <inertial>
       <origin rpy="0 0 0" xyz="0.000281 0.011402 -0.029798"/>
@@ -1563,15 +1563,16 @@
       <inertia ixx="0.000587" ixy="3E-06" ixz="3E-06" iyy="0.000369" iyz="-0.000118" izz="0.000609"/>
     </inertial>
     <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 -0.03"/>
       <geometry>
-        <mesh filename="package://burger_description/vendor/kortex_description/arms/gen3/7dof/meshes/realsense_bracket_for_kinova.dae"/>
+        <box size="0.04 0.08 0.06"/>
       </geometry>
+      <material name="aluminum"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 -0.03"/>
       <geometry>
-        <mesh filename="package://burger_description/vendor/kortex_description/arms/gen3/7dof/meshes/realsense_bracket_for_kinova.dae"/>
+        <box size="0.04 0.08 0.06"/>
       </geometry>
     </collision>
   </link>
