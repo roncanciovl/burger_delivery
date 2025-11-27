@@ -4,7 +4,7 @@
     <visual name="table_top">
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="1.2 0.8 0.05" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="1.2 0.8 0.05" />
       </geometry>
       <material name="table_brown">
         <color rgba="0.45 0.25 0.10 1.0" />
@@ -13,7 +13,7 @@
     <visual name="axis_x">
       <origin xyz="0.1 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.2 0.01 0.01" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.2 0.01 0.01" />
       </geometry>
       <material name="axis_red">
         <color rgba="1.0 0.0 0.0 1.0" />
@@ -22,7 +22,7 @@
     <visual name="axis_y">
       <origin xyz="0 0.1 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.01 0.2 0.01" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.01 0.2 0.01" />
       </geometry>
       <material name="axis_green">
         <color rgba="0.0 1.0 0.0 1.0" />
@@ -31,7 +31,7 @@
     <visual name="axis_z">
       <origin xyz="0 0 0.1" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.01 0.01 0.2" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.01 0.01 0.2" />
       </geometry>
       <material name="axis_blue">
         <color rgba="0.0 0.2 1.0 1.0" />
@@ -40,7 +40,7 @@
     <visual name="axis_x_head">
       <origin xyz="0.2 0 0" rpy="0 -1.5708 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
+        <mesh filename="package://burger_description/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
       </geometry>
       <material name="axis_red">
         <color rgba="1.0 0.0 0.0 1.0" />
@@ -49,7 +49,7 @@
     <visual name="axis_y_head">
       <origin xyz="0 0.2 0" rpy="1.5708 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
+        <mesh filename="package://burger_description/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
       </geometry>
       <material name="axis_green">
         <color rgba="0.0 1.0 0.0 1.0" />
@@ -58,7 +58,7 @@
     <visual name="axis_z_head">
       <origin xyz="0 0 0.2" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
+        <mesh filename="package://burger_description/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
       </geometry>
       <material name="axis_blue">
         <color rgba="0.0 0.2 1.0 1.0" />
@@ -68,7 +68,7 @@
   <link name="staging_area">
     <visual name="staging_pad">
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.5 0.5 0.02" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.5 0.5 0.02" />
       </geometry>
       <material name="staging_blue">
         <color rgba="0.2 0.4 0.9 0.7" />
@@ -77,7 +77,7 @@
     <visual name="axis_x">
       <origin xyz="0.1 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.2 0.01 0.01" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.2 0.01 0.01" />
       </geometry>
       <material name="axis_red">
         <color rgba="1.0 0.0 0.0 1.0" />
@@ -86,7 +86,7 @@
     <visual name="axis_y">
       <origin xyz="0 0.1 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.01 0.2 0.01" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.01 0.2 0.01" />
       </geometry>
       <material name="axis_green">
         <color rgba="0.0 1.0 0.0 1.0" />
@@ -95,7 +95,7 @@
     <visual name="axis_z">
       <origin xyz="0 0 0.1" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.01 0.01 0.2" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.01 0.01 0.2" />
       </geometry>
       <material name="axis_blue">
         <color rgba="0.0 0.2 1.0 1.0" />
@@ -104,7 +104,7 @@
     <visual name="axis_x_head">
       <origin xyz="0.2 0 0" rpy="0 -1.5708 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
+        <mesh filename="package://burger_description/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
       </geometry>
       <material name="axis_red">
         <color rgba="1.0 0.0 0.0 1.0" />
@@ -113,7 +113,7 @@
     <visual name="axis_y_head">
       <origin xyz="0 0.2 0" rpy="1.5708 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
+        <mesh filename="package://burger_description/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
       </geometry>
       <material name="axis_green">
         <color rgba="0.0 1.0 0.0 1.0" />
@@ -122,7 +122,7 @@
     <visual name="axis_z_head">
       <origin xyz="0 0 0.2" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
+        <mesh filename="package://burger_description/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
       </geometry>
       <material name="axis_blue">
         <color rgba="0.0 0.2 1.0 1.0" />
@@ -132,7 +132,7 @@
   <link name="delivery_slot_1">
     <visual name="delivery_slot">
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.2 0.2 0.1" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.2 0.2 0.1" />
       </geometry>
       <material name="slot_green">
         <color rgba="0.2 0.8 0.3 1.0" />
@@ -141,7 +141,7 @@
     <visual name="axis_x">
       <origin xyz="0.1 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.2 0.01 0.01" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.2 0.01 0.01" />
       </geometry>
       <material name="axis_red">
         <color rgba="1.0 0.0 0.0 1.0" />
@@ -150,7 +150,7 @@
     <visual name="axis_y">
       <origin xyz="0 0.1 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.01 0.2 0.01" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.01 0.2 0.01" />
       </geometry>
       <material name="axis_green">
         <color rgba="0.0 1.0 0.0 1.0" />
@@ -159,7 +159,7 @@
     <visual name="axis_z">
       <origin xyz="0 0 0.1" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.01 0.01 0.2" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.01 0.01 0.2" />
       </geometry>
       <material name="axis_blue">
         <color rgba="0.0 0.2 1.0 1.0" />
@@ -168,7 +168,7 @@
     <visual name="axis_x_head">
       <origin xyz="0.2 0 0" rpy="0 -1.5708 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
+        <mesh filename="package://burger_description/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
       </geometry>
       <material name="axis_red">
         <color rgba="1.0 0.0 0.0 1.0" />
@@ -177,7 +177,7 @@
     <visual name="axis_y_head">
       <origin xyz="0 0.2 0" rpy="1.5708 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
+        <mesh filename="package://burger_description/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
       </geometry>
       <material name="axis_green">
         <color rgba="0.0 1.0 0.0 1.0" />
@@ -186,7 +186,7 @@
     <visual name="axis_z_head">
       <origin xyz="0 0 0.2" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
+        <mesh filename="package://burger_description/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
       </geometry>
       <material name="axis_blue">
         <color rgba="0.0 0.2 1.0 1.0" />
@@ -196,7 +196,7 @@
   <link name="kinova_base_link">
     <visual name="kinova_base">
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.2 0.2 0.1" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.2 0.2 0.1" />
       </geometry>
       <material name="kinova_base_gray">
         <color rgba="0.5 0.5 0.5 1.0" />
@@ -205,7 +205,7 @@
     <visual name="axis_x">
       <origin xyz="0.1 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.2 0.01 0.01" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.2 0.01 0.01" />
       </geometry>
       <material name="axis_red">
         <color rgba="1.0 0.0 0.0 1.0" />
@@ -214,7 +214,7 @@
     <visual name="axis_y">
       <origin xyz="0 0.1 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.01 0.2 0.01" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.01 0.2 0.01" />
       </geometry>
       <material name="axis_green">
         <color rgba="0.0 1.0 0.0 1.0" />
@@ -223,7 +223,7 @@
     <visual name="axis_z">
       <origin xyz="0 0 0.1" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.01 0.01 0.2" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.01 0.01 0.2" />
       </geometry>
       <material name="axis_blue">
         <color rgba="0.0 0.2 1.0 1.0" />
@@ -232,7 +232,7 @@
     <visual name="axis_x_head">
       <origin xyz="0.2 0 0" rpy="0 -1.5708 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
+        <mesh filename="package://burger_description/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
       </geometry>
       <material name="axis_red">
         <color rgba="1.0 0.0 0.0 1.0" />
@@ -241,7 +241,7 @@
     <visual name="axis_y_head">
       <origin xyz="0 0.2 0" rpy="1.5708 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
+        <mesh filename="package://burger_description/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
       </geometry>
       <material name="axis_green">
         <color rgba="0.0 1.0 0.0 1.0" />
@@ -250,7 +250,7 @@
     <visual name="axis_z_head">
       <origin xyz="0 0 0.2" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
+        <mesh filename="package://burger_description/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
       </geometry>
       <material name="axis_blue">
         <color rgba="0.0 0.2 1.0 1.0" />
@@ -260,7 +260,7 @@
   <link name="kinova_tool_frame">
     <visual name="kinova_tool">
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.06 0.06 0.06" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.06 0.06 0.06" />
       </geometry>
       <material name="tool_orange">
         <color rgba="0.9 0.5 0.2 1.0" />
@@ -269,7 +269,7 @@
     <visual name="axis_x">
       <origin xyz="0.1 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.2 0.01 0.01" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.2 0.01 0.01" />
       </geometry>
       <material name="axis_red">
         <color rgba="1.0 0.0 0.0 1.0" />
@@ -278,7 +278,7 @@
     <visual name="axis_y">
       <origin xyz="0 0.1 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.01 0.2 0.01" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.01 0.2 0.01" />
       </geometry>
       <material name="axis_green">
         <color rgba="0.0 1.0 0.0 1.0" />
@@ -287,7 +287,7 @@
     <visual name="axis_z">
       <origin xyz="0 0 0.1" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.01 0.01 0.2" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.01 0.01 0.2" />
       </geometry>
       <material name="axis_blue">
         <color rgba="0.0 0.2 1.0 1.0" />
@@ -296,7 +296,7 @@
     <visual name="axis_x_head">
       <origin xyz="0.2 0 0" rpy="0 -1.5708 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
+        <mesh filename="package://burger_description/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
       </geometry>
       <material name="axis_red">
         <color rgba="1.0 0.0 0.0 1.0" />
@@ -305,7 +305,7 @@
     <visual name="axis_y_head">
       <origin xyz="0 0.2 0" rpy="1.5708 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
+        <mesh filename="package://burger_description/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
       </geometry>
       <material name="axis_green">
         <color rgba="0.0 1.0 0.0 1.0" />
@@ -314,7 +314,7 @@
     <visual name="axis_z_head">
       <origin xyz="0 0 0.2" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
+        <mesh filename="package://burger_description/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
       </geometry>
       <material name="axis_blue">
         <color rgba="0.0 0.2 1.0 1.0" />
@@ -324,7 +324,7 @@
   <link name="burger_grip_frame">
     <visual name="burger_grip">
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.04 0.08 0.02" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.04 0.08 0.02" />
       </geometry>
       <material name="grip_red">
         <color rgba="0.9 0.2 0.2 1.0" />
@@ -333,7 +333,7 @@
     <visual name="axis_x">
       <origin xyz="0.1 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.2 0.01 0.01" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.2 0.01 0.01" />
       </geometry>
       <material name="axis_red">
         <color rgba="1.0 0.0 0.0 1.0" />
@@ -342,7 +342,7 @@
     <visual name="axis_y">
       <origin xyz="0 0.1 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.01 0.2 0.01" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.01 0.2 0.01" />
       </geometry>
       <material name="axis_green">
         <color rgba="0.0 1.0 0.0 1.0" />
@@ -351,7 +351,7 @@
     <visual name="axis_z">
       <origin xyz="0 0 0.1" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.01 0.01 0.2" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.01 0.01 0.2" />
       </geometry>
       <material name="axis_blue">
         <color rgba="0.0 0.2 1.0 1.0" />
@@ -360,7 +360,7 @@
     <visual name="axis_x_head">
       <origin xyz="0.2 0 0" rpy="0 -1.5708 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
+        <mesh filename="package://burger_description/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
       </geometry>
       <material name="axis_red">
         <color rgba="1.0 0.0 0.0 1.0" />
@@ -369,7 +369,7 @@
     <visual name="axis_y_head">
       <origin xyz="0 0.2 0" rpy="1.5708 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
+        <mesh filename="package://burger_description/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
       </geometry>
       <material name="axis_green">
         <color rgba="0.0 1.0 0.0 1.0" />
@@ -378,7 +378,7 @@
     <visual name="axis_z_head">
       <origin xyz="0 0 0.2" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
+        <mesh filename="package://burger_description/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
       </geometry>
       <material name="axis_blue">
         <color rgba="0.0 0.2 1.0 1.0" />
@@ -389,7 +389,7 @@
   <link name="overhead_camera_link">
     <visual name="overhead_camera">
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.05 0.05 0.05" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.05 0.05 0.05" />
       </geometry>
       <material name="cam_black">
         <color rgba="0.1 0.1 0.1 1.0" />
@@ -398,7 +398,7 @@
     <visual name="axis_x">
       <origin xyz="0.1 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.2 0.01 0.01" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.2 0.01 0.01" />
       </geometry>
       <material name="axis_red">
         <color rgba="1.0 0.0 0.0 1.0" />
@@ -407,7 +407,7 @@
     <visual name="axis_y">
       <origin xyz="0 0.1 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.01 0.2 0.01" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.01 0.2 0.01" />
       </geometry>
       <material name="axis_green">
         <color rgba="0.0 1.0 0.0 1.0" />
@@ -416,7 +416,7 @@
     <visual name="axis_z">
       <origin xyz="0 0 0.1" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.01 0.01 0.2" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.01 0.01 0.2" />
       </geometry>
       <material name="axis_blue">
         <color rgba="0.0 0.2 1.0 1.0" />
@@ -425,7 +425,7 @@
     <visual name="axis_x_head">
       <origin xyz="0.2 0 0" rpy="0 -1.5708 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
+        <mesh filename="package://burger_description/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
       </geometry>
       <material name="axis_red">
         <color rgba="1.0 0.0 0.0 1.0" />
@@ -434,7 +434,7 @@
     <visual name="axis_y_head">
       <origin xyz="0 0.2 0" rpy="1.5708 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
+        <mesh filename="package://burger_description/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
       </geometry>
       <material name="axis_green">
         <color rgba="0.0 1.0 0.0 1.0" />
@@ -443,7 +443,7 @@
     <visual name="axis_z_head">
       <origin xyz="0 0 0.2" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
+        <mesh filename="package://burger_description/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
       </geometry>
       <material name="axis_blue">
         <color rgba="0.0 0.2 1.0 1.0" />
@@ -454,7 +454,7 @@
     <visual name="axis_x">
       <origin xyz="0.1 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.2 0.01 0.01" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.2 0.01 0.01" />
       </geometry>
       <material name="axis_red">
         <color rgba="1.0 0.0 0.0 1.0" />
@@ -463,7 +463,7 @@
     <visual name="axis_y">
       <origin xyz="0 0.1 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.01 0.2 0.01" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.01 0.2 0.01" />
       </geometry>
       <material name="axis_green">
         <color rgba="0.0 1.0 0.0 1.0" />
@@ -472,7 +472,7 @@
     <visual name="axis_z">
       <origin xyz="0 0 0.1" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.01 0.01 0.2" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.01 0.01 0.2" />
       </geometry>
       <material name="axis_blue">
         <color rgba="0.0 0.2 1.0 1.0" />
@@ -481,7 +481,7 @@
     <visual name="axis_x_head">
       <origin xyz="0.2 0 0" rpy="0 -1.5708 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
+        <mesh filename="package://burger_description/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
       </geometry>
       <material name="axis_red">
         <color rgba="1.0 0.0 0.0 1.0" />
@@ -490,7 +490,7 @@
     <visual name="axis_y_head">
       <origin xyz="0 0.2 0" rpy="1.5708 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
+        <mesh filename="package://burger_description/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
       </geometry>
       <material name="axis_green">
         <color rgba="0.0 1.0 0.0 1.0" />
@@ -499,7 +499,7 @@
     <visual name="axis_z_head">
       <origin xyz="0 0 0.2" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
+        <mesh filename="package://burger_description/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08" />
       </geometry>
       <material name="axis_blue">
         <color rgba="0.0 0.2 1.0 1.0" />
@@ -536,22 +536,23 @@
     <child link="burger_grip_frame" />
     <origin xyz="0 0 0.18" rpy="0 0 0" />
   </joint>
+  
   <joint name="map_to_robot_a_base" type="fixed">
     <parent link="map" />
-    <child link="robot_a_base_link" />
+    <child link="car1_base_link" />
     <origin xyz="1.20 0.80 0.00" rpy="0 0 0" />
   </joint>
   
   <joint name="map_to_robot_b_base" type="fixed">
     <parent link="map" />
-    <child link="robot_b_base_link" />
+    <child link="car2_base_link" />
     <origin xyz="1.20 1.30 0.00" rpy="0 0 0" />
   </joint>
   
   <joint name="map_to_camera" type="fixed">
     <parent link="map" />
     <child link="overhead_camera_link" />
-    <origin xyz="0.50 0.00 2.00" rpy="-1.5708 0 1.5708" />
+    <origin xyz="2.00 1.00 1.50" rpy="0 0.5 -1.5708" />
   </joint>
   <joint name="map_to_world" type="fixed">
     <parent link="table_link" />
@@ -699,7 +700,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/kortex_description/arms/gen3/7dof/meshes/base_link.dae" />
+        <mesh filename="package://burger_description/vendor/kortex_description/arms/gen3/7dof/meshes/base_link.dae" />
       </geometry>
       <material name="">
         <color rgba="0.75294 0.75294 0.75294 1" />
@@ -708,7 +709,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/kortex_description/arms/gen3/7dof/meshes/base_link.dae" />
+        <mesh filename="package://burger_description/vendor/kortex_description/arms/gen3/7dof/meshes/base_link.dae" />
       </geometry>
     </collision>
   </link>
@@ -721,7 +722,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/kortex_description/arms/gen3/7dof/meshes/shoulder_link.dae" />
+        <mesh filename="package://burger_description/vendor/kortex_description/arms/gen3/7dof/meshes/shoulder_link.dae" />
       </geometry>
       <material name="">
         <color rgba="0.75294 0.75294 0.75294 1" />
@@ -730,7 +731,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/kortex_description/arms/gen3/7dof/meshes/shoulder_link.dae" />
+        <mesh filename="package://burger_description/vendor/kortex_description/arms/gen3/7dof/meshes/shoulder_link.dae" />
       </geometry>
     </collision>
   </link>
@@ -750,7 +751,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/kortex_description/arms/gen3/7dof/meshes/half_arm_1_link.dae" />
+        <mesh filename="package://burger_description/vendor/kortex_description/arms/gen3/7dof/meshes/half_arm_1_link.dae" />
       </geometry>
       <material name="">
         <color rgba="0.75294 0.75294 0.75294 1" />
@@ -759,7 +760,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/kortex_description/arms/gen3/7dof/meshes/half_arm_1_link.dae" />
+        <mesh filename="package://burger_description/vendor/kortex_description/arms/gen3/7dof/meshes/half_arm_1_link.dae" />
       </geometry>
     </collision>
   </link>
@@ -779,7 +780,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/kortex_description/arms/gen3/7dof/meshes/half_arm_2_link.dae" />
+        <mesh filename="package://burger_description/vendor/kortex_description/arms/gen3/7dof/meshes/half_arm_2_link.dae" />
       </geometry>
       <material name="">
         <color rgba="0.75294 0.75294 0.75294 1" />
@@ -788,7 +789,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/kortex_description/arms/gen3/7dof/meshes/half_arm_2_link.dae" />
+        <mesh filename="package://burger_description/vendor/kortex_description/arms/gen3/7dof/meshes/half_arm_2_link.dae" />
       </geometry>
     </collision>
   </link>
@@ -808,7 +809,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/kortex_description/arms/gen3/7dof/meshes/forearm_link.dae" />
+        <mesh filename="package://burger_description/vendor/kortex_description/arms/gen3/7dof/meshes/forearm_link.dae" />
       </geometry>
       <material name="">
         <color rgba="0.75294 0.75294 0.75294 1" />
@@ -817,7 +818,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/kortex_description/arms/gen3/7dof/meshes/forearm_link.dae" />
+        <mesh filename="package://burger_description/vendor/kortex_description/arms/gen3/7dof/meshes/forearm_link.dae" />
       </geometry>
     </collision>
   </link>
@@ -837,7 +838,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/kortex_description/arms/gen3/7dof/meshes/spherical_wrist_1_link.dae" />
+        <mesh filename="package://burger_description/vendor/kortex_description/arms/gen3/7dof/meshes/spherical_wrist_1_link.dae" />
       </geometry>
       <material name="">
         <color rgba="0.75294 0.75294 0.75294 1" />
@@ -846,7 +847,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/kortex_description/arms/gen3/7dof/meshes/spherical_wrist_1_link.dae" />
+        <mesh filename="package://burger_description/vendor/kortex_description/arms/gen3/7dof/meshes/spherical_wrist_1_link.dae" />
       </geometry>
     </collision>
   </link>
@@ -866,7 +867,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/kortex_description/arms/gen3/7dof/meshes/spherical_wrist_2_link.dae" />
+        <mesh filename="package://burger_description/vendor/kortex_description/arms/gen3/7dof/meshes/spherical_wrist_2_link.dae" />
       </geometry>
       <material name="">
         <color rgba="0.75294 0.75294 0.75294 1" />
@@ -875,7 +876,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/kortex_description/arms/gen3/7dof/meshes/spherical_wrist_2_link.dae" />
+        <mesh filename="package://burger_description/vendor/kortex_description/arms/gen3/7dof/meshes/spherical_wrist_2_link.dae" />
       </geometry>
     </collision>
   </link>
@@ -895,7 +896,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/kortex_description/arms/gen3/7dof/meshes/bracelet_no_vision_link.dae" />
+        <mesh filename="package://burger_description/vendor/kortex_description/arms/gen3/7dof/meshes/bracelet_no_vision_link.dae" />
       </geometry>
       <material name="">
         <color rgba="0.75294 0.75294 0.75294 1" />
@@ -904,7 +905,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/kortex_description/arms/gen3/7dof/meshes/bracelet_no_vision_link.dae" />
+        <mesh filename="package://burger_description/vendor/kortex_description/arms/gen3/7dof/meshes/bracelet_no_vision_link.dae" />
       </geometry>
     </collision>
   </link>
@@ -925,12 +926,12 @@
   <link name="gen3_robotiq_85_base_link">
     <visual>
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/robotiq_description/meshes/visual/robotiq_base.dae" />
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/visual/robotiq_base.dae" />
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/robotiq_description/meshes/collision/robotiq_base.stl" />
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/collision/robotiq_base.stl" />
       </geometry>
     </collision>
     <inertial>
@@ -942,12 +943,12 @@
   <link name="gen3_robotiq_85_left_knuckle_link">
     <visual>
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/robotiq_description/meshes/visual/left_knuckle.dae" />
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/visual/left_knuckle.dae" />
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/robotiq_description/meshes/collision/left_knuckle.stl" />
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/collision/left_knuckle.stl" />
       </geometry>
     </collision>
     <inertial>
@@ -959,12 +960,12 @@
   <link name="gen3_robotiq_85_right_knuckle_link">
     <visual>
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/robotiq_description/meshes/visual/right_knuckle.dae" />
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/visual/right_knuckle.dae" />
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/robotiq_description/meshes/collision/right_knuckle.stl" />
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/collision/right_knuckle.stl" />
       </geometry>
     </collision>
     <inertial>
@@ -976,12 +977,12 @@
   <link name="gen3_robotiq_85_left_finger_link">
     <visual>
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/robotiq_description/meshes/visual/left_finger.dae" />
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/visual/left_finger.dae" />
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/robotiq_description/meshes/collision/left_finger.stl" />
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/collision/left_finger.stl" />
       </geometry>
     </collision>
     <inertial>
@@ -993,12 +994,12 @@
   <link name="gen3_robotiq_85_right_finger_link">
     <visual>
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/robotiq_description/meshes/visual/right_finger.dae" />
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/visual/right_finger.dae" />
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/robotiq_description/meshes/collision/right_finger.stl" />
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/collision/right_finger.stl" />
       </geometry>
     </collision>
     <inertial>
@@ -1010,12 +1011,12 @@
   <link name="gen3_robotiq_85_left_inner_knuckle_link">
     <visual>
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/robotiq_description/meshes/visual/left_inner_knuckle.dae" />
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/visual/left_inner_knuckle.dae" />
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/robotiq_description/meshes/collision/left_inner_knuckle.stl" />
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/collision/left_inner_knuckle.stl" />
       </geometry>
     </collision>
     <inertial>
@@ -1027,12 +1028,12 @@
   <link name="gen3_robotiq_85_right_inner_knuckle_link">
     <visual>
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/robotiq_description/meshes/visual/right_inner_knuckle.dae" />
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/visual/right_inner_knuckle.dae" />
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/robotiq_description/meshes/collision/right_inner_knuckle.stl" />
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/collision/right_inner_knuckle.stl" />
       </geometry>
     </collision>
     <inertial>
@@ -1044,12 +1045,12 @@
   <link name="gen3_robotiq_85_left_finger_tip_link">
     <visual>
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/robotiq_description/meshes/visual/left_finger_tip.dae" />
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/visual/left_finger_tip.dae" />
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/robotiq_description/meshes/collision/left_finger_tip.stl" />
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/collision/left_finger_tip.stl" />
       </geometry>
       <surface>
         <friction>
@@ -1079,12 +1080,12 @@
   <link name="gen3_robotiq_85_right_finger_tip_link">
     <visual>
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/robotiq_description/meshes/visual/right_finger_tip.dae" />
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/visual/right_finger_tip.dae" />
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/robotiq_description/meshes/collision/right_finger_tip.stl" />
+        <mesh filename="package://burger_description/vendor/robotiq_description/meshes/collision/right_finger_tip.stl" />
       </geometry>
       <surface>
         <friction>
@@ -1261,15 +1262,18 @@
       <inertia ixx="0.000587" ixy="3E-06" ixz="3E-06" iyy="0.000369" iyz="-0.000118" izz="0.000609" />
     </inertial>
     <visual>
-      <origin rpy="0 0 0" xyz="0 0 0" />
+      <origin rpy="0 0 0" xyz="0 0 -0.03" />
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/kortex_description/arms/gen3/7dof/meshes/realsense_bracket_for_kinova.dae" />
+        <box size="0.04 0.08 0.06" />
       </geometry>
+      <material name="aluminum">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0" />
+      <origin rpy="0 0 0" xyz="0 0 -0.03" />
       <geometry>
-        <mesh filename="package://burger_description/visual/vendor/kortex_description/arms/gen3/7dof/meshes/realsense_bracket_for_kinova.dae" />
+        <box size="0.04 0.08 0.06" />
       </geometry>
     </collision>
   </link>
@@ -1303,32 +1307,32 @@
     <!-- Added coordinate axes -->
     <visual name="car1_axis_x">
       <origin xyz="0.1 0 0" rpy="0 0 0"/>
-      <geometry><mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.2 0.01 0.01"/></geometry>
+      <geometry><mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.2 0.01 0.01"/></geometry>
       <material name="axis_red"><color rgba="1 0 0 1"/></material>
     </visual>
     <visual name="car1_axis_y">
       <origin xyz="0 0.1 0" rpy="0 0 0"/>
-      <geometry><mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.01 0.2 0.01"/></geometry>
+      <geometry><mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.01 0.2 0.01"/></geometry>
       <material name="axis_green"><color rgba="0 1 0 1"/></material>
     </visual>
     <visual name="car1_axis_z">
       <origin xyz="0 0 0.1" rpy="0 0 0"/>
-      <geometry><mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.01 0.01 0.2"/></geometry>
+      <geometry><mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.01 0.01 0.2"/></geometry>
       <material name="axis_blue"><color rgba="0 0.2 1 1"/></material>
     </visual>
     <visual name="car1_axis_x_head">
       <origin xyz="0.2 0 0" rpy="0 -1.5708 0"/>
-      <geometry><mesh filename="package://burger_description/visual/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08"/></geometry>
+      <geometry><mesh filename="package://burger_description/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08"/></geometry>
       <material name="axis_red"><color rgba="1 0 0 1"/></material>
     </visual>
     <visual name="car1_axis_y_head">
       <origin xyz="0 0.2 0" rpy="1.5708 0 0"/>
-      <geometry><mesh filename="package://burger_description/visual/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08"/></geometry>
+      <geometry><mesh filename="package://burger_description/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08"/></geometry>
       <material name="axis_green"><color rgba="0 1 0 1"/></material>
     </visual>
     <visual name="car1_axis_z_head">
       <origin xyz="0 0 0.2" rpy="0 0 0"/>
-      <geometry><mesh filename="package://burger_description/visual/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08"/></geometry>
+      <geometry><mesh filename="package://burger_description/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08"/></geometry>
       <material name="axis_blue"><color rgba="0 0.2 1 1"/></material>
     </visual>
 
@@ -1478,32 +1482,32 @@
     <!-- Added coordinate axes -->
     <visual name="car2_axis_x">
       <origin xyz="0.1 0 0" rpy="0 0 0"/>
-      <geometry><mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.2 0.01 0.01"/></geometry>
+      <geometry><mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.2 0.01 0.01"/></geometry>
       <material name="axis_red"><color rgba="1 0 0 1"/></material>
     </visual>
     <visual name="car2_axis_y">
       <origin xyz="0 0.1 0" rpy="0 0 0"/>
-      <geometry><mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.01 0.2 0.01"/></geometry>
+      <geometry><mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.01 0.2 0.01"/></geometry>
       <material name="axis_green"><color rgba="0 1 0 1"/></material>
     </visual>
     <visual name="car2_axis_z">
       <origin xyz="0 0 0.1" rpy="0 0 0"/>
-      <geometry><mesh filename="package://burger_description/visual/meshes/cube_1m.stl" scale="0.01 0.01 0.2"/></geometry>
+      <geometry><mesh filename="package://burger_description/meshes/cube_1m.stl" scale="0.01 0.01 0.2"/></geometry>
       <material name="axis_blue"><color rgba="0 0.2 1 1"/></material>
     </visual>
     <visual name="car2_axis_x_head">
       <origin xyz="0.2 0 0" rpy="0 -1.5708 0"/>
-      <geometry><mesh filename="package://burger_description/visual/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08"/></geometry>
+      <geometry><mesh filename="package://burger_description/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08"/></geometry>
       <material name="axis_red"><color rgba="1 0 0 1"/></material>
     </visual>
     <visual name="car2_axis_y_head">
       <origin xyz="0 0.2 0" rpy="1.5708 0 0"/>
-      <geometry><mesh filename="package://burger_description/visual/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08"/></geometry>
+      <geometry><mesh filename="package://burger_description/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08"/></geometry>
       <material name="axis_green"><color rgba="0 1 0 1"/></material>
     </visual>
     <visual name="car2_axis_z_head">
       <origin xyz="0 0 0.2" rpy="0 0 0"/>
-      <geometry><mesh filename="package://burger_description/visual/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08"/></geometry>
+      <geometry><mesh filename="package://burger_description/meshes/arrow_pyramid_1m.stl" scale="0.06 0.06 0.08"/></geometry>
       <material name="axis_blue"><color rgba="0 0.2 1 1"/></material>
     </visual>
 
