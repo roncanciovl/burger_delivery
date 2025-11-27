@@ -234,4 +234,23 @@ tf_listener = TransformListener(tf_buffer, node)
 transform = tf_buffer.lookup_transform('table_link', 'gen3_end_effector_link', rclpy.time.Time())
 ```
 
+## Micro-ROS Debugging 📡
+
+For issues related to micro-ROS communication (ESP32 connectivity, agent issues), we provide automatic diagnostic scripts for both operating systems.
+
+**1. Windows (PowerShell):**
+```powershell
+.\diagnostico_microros.ps1
+```
+
+**2. Linux (Bash/WSL):**
+```bash
+chmod +x diagnostico_microros.sh
+./diagnostico_microros.sh
+```
+
+For a detailed guide on interpreting results, firewall configuration, and router settings (AP Isolation), please refer to the root documentation:
+
+[👉 Go to Detailed Micro-ROS Debugging Guide](../../README.md#diagnóstico-de-comunicación-micro-ros)
+
 
