@@ -39,6 +39,36 @@ export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 ### Network Topology Diagram
 ![Network Diagram](ros_network_diagram.svg)
 
+## 💻 WSL Networking Configuration (Windows Users)
+
+WSL2 uses a virtual network (NAT) by default, which can hide ROS nodes from the rest of the physical network.
+
+#### Option A: Mirrored Mode (Recommended & Easiest) ⭐
+This mode makes WSL share the same IP address as your Windows host (`192.168.1.100`), making all ROS nodes visible instantly.
+
+1. Open Windows Explorer and go to `%USERPROFILE%` (e.g., `C:\Users\YourUser`).
+2. Create or edit a file named `.wslconfig`.
+3. Add the following lines:
+   ```ini
+   [wsl2]
+   networkingMode=mirrored
+   ```
+4. Restart WSL from PowerShell:
+   ```powershell
+   wsl --shutdown
+   ```
+5. Verify in WSL: `ip addr` should now show your Windows IP.
+
+#### Option B: Port Proxy (Alternative)
+If you cannot use Mirrored mode, you must forward the DDS/micro-ROS ports from Windows to WSL.
+
+Run in PowerShell as **Administrator**:
+```powershell
+# Forward micro-ROS Agent port
+netsh interface portproxy add v4tov4 listenaddress=192.168.1.100 listenport=8888 connectaddress=<WSL_IP> connectport=8888
+```
+*(Note: You'll also need to forward DDS ports 7400-7500 for general ROS 2 discovery).*
+
 ## Configuring Other PCs
 
 To connect another PC to this ROS 2 system:

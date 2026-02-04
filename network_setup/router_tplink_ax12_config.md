@@ -9,7 +9,7 @@
 
 2. **Credenciales por defecto:**
    - Usuario: `admin`
-   - Contraseña: (la que configuraste en el setup inicial, o `admin` si nunca la cambiaste)
+   - Contraseña: (ros123, o `admin` si nunca la cambiaste)
 
 ---
 
@@ -129,6 +129,35 @@ Advanced → Security → Access Control
 
 **Verificar:**
 - **Access Control:** Disabled (o si está Enabled, asegúrate de que tus dispositivos estén en la whitelist)
+
+### 7. **Configuración de WSL (Windows Subsystem for Linux)** 💻
+
+**Problema:** Por defecto, WSL2 usa NAT, lo que significa que tiene una IP distinta a la de Windows (ej. `172.x.x.x`) y los robots/router no pueden verlo directamente.
+
+#### Opción A: Modo Espejo (Mirrored Mode) - RECOMENDADO ⭐
+Hace que WSL comparta la misma IP que Windows (`192.168.1.100`), eliminando todos los problemas de visibilidad de red.
+
+1. En Windows, presiona `Win + R`, escribe `%USERPROFILE%` y presiona Enter.
+2. Crea o edita el archivo llamado `.wslconfig`.
+3. Pega el siguiente contenido:
+   ```ini
+   [wsl2]
+   networkingMode=mirrored
+   ```
+4. Apaga WSL desde una terminal de PowerShell:
+   ```powershell
+   wsl --shutdown
+   ```
+5. Al volver a abrir tu terminal de Ubuntu/Jazzy, verás que `ip addr` muestra la IP `192.168.1.100`.
+
+#### Opción B: Port Proxy (Si no usas Modo Espejo)
+Si prefieres mantener NAT, debes "puentear" el puerto UDP de micro-ROS desde Windows hacia WSL.
+
+Ejecuta en PowerShell como **Administrador**:
+```powershell
+# Reemplaza 172.x.x.x con la IP que sale en 'ip addr' dentro de WSL
+netsh interface portproxy add v4tov4 listenaddress=192.168.1.100 listenport=8888 connectaddress=172.x.x.x connectport=8888
+```
 
 ---
 
