@@ -53,13 +53,13 @@ Ejecuta el script de diagnóstico según tu sistema operativo:
 
 **Windows (PowerShell):**
 ```powershell
-.\diagnostico_microros.ps1
+.\network_setup\diagnostico_microros.ps1
 ```
 
 **Linux (Bash):**
 ```bash
-chmod +x diagnostico_microros.sh
-./diagnostico_microros.sh
+chmod +x network_setup/diagnostico_microros.sh
+./network_setup/diagnostico_microros.sh
 ```
 
 El script verificará automáticamente:
@@ -76,7 +76,7 @@ El script verificará automáticamente:
   - Guía de configuración manual del router
 - Tabla ARP
 
-**Nota:** Si usas un **TP-Link Archer AX12**, consulta la guía específica: [`router_tplink_ax12_config.md`](router_tplink_ax12_config.md)
+**Nota:** Si usas un **TP-Link Archer AX12**, consulta la guía específica: [`network_setup/router_tplink_ax12_config.md`](network_setup/router_tplink_ax12_config.md)
 
 ### Configuración del Firewall
 

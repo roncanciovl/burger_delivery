@@ -240,13 +240,13 @@ For issues related to micro-ROS communication (ESP32 connectivity, agent issues)
 
 **1. Windows (PowerShell):**
 ```powershell
-.\diagnostico_microros.ps1
+..\network_setup\diagnostico_microros.ps1
 ```
 
 **2. Linux (Bash/WSL):**
 ```bash
-chmod +x diagnostico_microros.sh
-./diagnostico_microros.sh
+chmod +x ../network_setup/diagnostico_microros.sh
+../network_setup/diagnostico_microros.sh
 ```
 
 For a detailed guide on interpreting results, firewall configuration, and router settings (AP Isolation), please refer to the root documentation:

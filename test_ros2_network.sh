@@ -9,8 +9,12 @@ echo ""
 
 # 1. Check ROS environment variables
 echo "1. Checking ROS 2 Environment Variables:"
-echo "   ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-NOT SET}"
-echo "   ROS_LOCALHOST_ONLY: ${ROS_LOCALHOST_ONLY:-NOT SET}"
+echo "   ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-NOT SET (Default: 0)}"
+echo "   ROS_AUTOMATIC_DISCOVERY_RANGE: ${ROS_AUTOMATIC_DISCOVERY_RANGE:-NOT SET (Default: SUBNET)}"
+if [ ! -z "$ROS_LOCALHOST_ONLY" ]; then
+    echo "   WARNING: ROS_LOCALHOST_ONLY is set to $ROS_LOCALHOST_ONLY but is DEPRECATED in ROS 2 Jazzy."
+    echo "   Use ROS_AUTOMATIC_DISCOVERY_RANGE instead."
+fi
 echo "   RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-default (FastRTPS)}"
 echo ""
 
@@ -64,4 +68,5 @@ echo "To test communication with another PC:"
 echo "1. On this PC: ros2 topic pub /hello std_msgs/String \"data: 'Hello from PC1'\""
 echo "2. On other PC: ros2 topic echo /hello"
 echo ""
-echo "Both PCs must have ROS_DOMAIN_ID=0"
+echo "Both PCs must have the same ROS_DOMAIN_ID (currently: ${ROS_DOMAIN_ID:-0})"
+echo "And ROS_AUTOMATIC_DISCOVERY_RANGE set to SUBNET (or unset)."

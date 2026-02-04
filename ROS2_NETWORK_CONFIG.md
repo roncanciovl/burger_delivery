@@ -10,7 +10,7 @@ The following variables have been added to `~/.bashrc`:
 
 ```bash
 export ROS_DOMAIN_ID=42
-export ROS_LOCALHOST_ONLY=0
+export ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET
 export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 ```
 
@@ -21,9 +21,11 @@ export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
    - Only nodes with the **same domain ID** can communicate
    - Range: 0-101 (use different IDs for different robot systems)
 
-2. **`ROS_LOCALHOST_ONLY=0`**
-   - `0` = Allow network discovery (nodes visible across PCs)
-   - `1` = Local only (nodes only visible on same PC)
+2. **`ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET`**
+   - `SUBNET` = Discover any node reachable via multicast (default).
+   - `LOCALHOST` = Only discover nodes on the same machine.
+   - `OFF` = Do not discover any other nodes.
+   - *Note: This replaces the deprecated `ROS_LOCALHOST_ONLY` variable.*
 
 3. **`RMW_IMPLEMENTATION=rmw_cyclonedds_cpp`**
    - Uses CycloneDDS middleware (better for multi-PC setups)
@@ -44,7 +46,7 @@ To connect another PC to this ROS 2 system:
 2. Add to `~/.bashrc`:
    ```bash
    export ROS_DOMAIN_ID=42
-   export ROS_LOCALHOST_ONLY=0
+   export ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET
    export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
    ```
 3. Restart terminal or run: `source ~/.bashrc`
@@ -54,7 +56,7 @@ To connect another PC to this ROS 2 system:
 1. Set environment variables (PowerShell as Admin):
    ```powershell
    [System.Environment]::SetEnvironmentVariable('ROS_DOMAIN_ID', '42', 'User')
-   [System.Environment]::SetEnvironmentVariable('ROS_LOCALHOST_ONLY', '0', 'User')
+   [System.Environment]::SetEnvironmentVariable('ROS_AUTOMATIC_DISCOVERY_RANGE', 'SUBNET', 'User')
    [System.Environment]::SetEnvironmentVariable('RMW_IMPLEMENTATION', 'rmw_cyclonedds_cpp', 'User')
    ```
 2. Restart terminal
@@ -67,7 +69,7 @@ To connect another PC to this ROS 2 system:
 # In WSL
 source ~/.bashrc
 echo $ROS_DOMAIN_ID  # Should show: 42
-echo $ROS_LOCALHOST_ONLY  # Should show: 0
+echo $ROS_AUTOMATIC_DISCOVERY_RANGE  # Should show: SUBNET
 ```
 
 ### Test 2: Publish from PC1, Subscribe from PC2
@@ -117,9 +119,9 @@ sudo ufw allow 7400:7500/udp
    echo $ROS_DOMAIN_ID  # Must be same on all PCs
    ```
 
-2. **Check localhost setting:**
+2. **Check discovery range setting:**
    ```bash
-   echo $ROS_LOCALHOST_ONLY  # Must be 0
+   echo $ROS_AUTOMATIC_DISCOVERY_RANGE  # Should be SUBNET (or unset defaults to SUBNET)
    ```
 
 3. **Verify network connectivity:**

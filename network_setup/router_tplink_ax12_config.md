@@ -1,8 +1,5 @@
 # Guía de Configuración para TP-Link Archer AX12 (AX1500)
 
-## 🎯 Diagnóstico Rápido
-
-Si **funciona con hotspot de celular** pero **NO con el router TP-Link**, el problema está en la configuración del router.
 
 ## 🔑 Acceso al Router
 
@@ -135,65 +132,104 @@ Advanced → Security → Access Control
 
 ---
 
-## 🔍 Información que el Script Extrae Automáticamente
+## 📋 Checklist General de Configuración
 
-Al ejecutar `diagnostico_microros.ps1` (Windows) o `diagnostico_microros.sh` (Linux), obtendrás:
-
-✅ **Gateway/Router IP:** Dirección del router  
-✅ **SSID Conectado:** Verifica que sea "ros2"  
-✅ **MAC Address del PC:** Necesaria para la reserva DHCP  
-✅ **DNS Servers:** Servidores DNS configurados  
-✅ **Rutas de Red:** Tabla de rutas completa  
-✅ **Conectividad al Router:** Si responde a ping  
-
----
-
-## 📋 Checklist de Configuración
-
-Usa este checklist para verificar el router:
+Usa este checklist antes de pasar a los tests:
 
 ```
 [ ] 1. Accedí al router en http://192.168.1.1
 [ ] 2. AP Isolation está DESACTIVADO
-[ ] 3. Smart Connect está desactivado (para pruebas)
-[ ] 4. SSID es "ros2" con password "ros12345"
-[ ] 5. DHCP activo en rango 192.168.1.101-254
-[ ] 6. IP 192.168.1.100 reservada para mi PC (por MAC)
-[ ] 7. Firewall no está bloqueando tráfico interno
-[ ] 8. No hay reglas de Access Control activas
-[ ] 9. Reinicié el router después de los cambios
-[ ] 10. Reconecté el PC y las ESP32s a la red
+[ ] 3. Smart Connect desactivado (recomendado)
+[ ] 4. SSID "ros2" con password "ros12345" configurado
+[ ] 5. DHCP activo y reserva de IP 192.168.1.100 para el PC
+[ ] 6. Firewall/Access Control verificado
+[ ] 7. Router reiniciado después de cambios
 ```
 
 ---
 
-## 🚀 Prueba de Validación
+---
 
-Después de configurar el router:
+## 🧪 Test Básico de Conectividad (Red Local y WAN)
 
-1. **Ejecutar el agente micro-ROS:**
-   ```bash
-   ros2 run micro_ros_agent micro_ros_agent udp4 --port 8888 -v6
-   ```
+Antes de probar micro-ROS, asegúrate de que la red básica funciona correctamente.
 
-2. **Ejecutar el script de diagnóstico:**
-   ```powershell
-   .\diagnostico_microros.ps1
-   ```
+### 1. Ubicación en la Subred
+- Abre una terminal y verifica tu IP:
+  ```powershell
+  ipconfig  # Windows
+  ip addr   # Linux
+  ```
+- **Resultado esperado:** Tu IP debe estar en el rango `192.168.1.x`.
 
-3. **Reiniciar las ESP32s** y verificar en los logs del agente que se conectan.
+### 2. Prueba de Salida a Internet (WAN)
+- Verifica que el router tiene acceso a internet:
+  ```powershell
+  # Windows
+  ping 8.8.8.8
+  ping google.com
+  ```
+  ```bash
+  # Linux / WSL
+  ping -c 4 8.8.8.8
+  ```
+- **Si falla:** El cable del proveedor (ONT/Módem) debe estar en el puerto **WAN (Azul)** del TP-Link.
 
-4. **Verificar tópicos ROS:**
-   ```bash
-   ros2 topic list
-   ```
-   Deberías ver los tópicos de los robots, por ejemplo:
-   ```
-   /robot_A/odom
-   /robot_A/cmd_vel
-   /robot_B/odom
-   /robot_B/cmd_vel
-   ```
+### 3. Prueba de Comunicación Interna (Subnet)
+- Intenta hacer ping al router:
+  ```powershell
+  ping 192.168.1.1
+  ```
+- **Prueba de Fuego (AP Isolation):** Intenta hacer ping desde tu PC a la IP de una ESP32 conectada (o a otro celular/PC en la misma red).
+  ```powershell
+  ping 192.168.1.x  # IP de otro dispositivo
+  ```
+  *Si el ping al router funciona pero el ping entre dispositivos falla, el **AP Isolation** sigue activo.*
+
+---
+
+## 🤖 Validaciones de micro-ROS
+
+Una vez confirmada la red, procede con las pruebas específicas de ROS2.
+
+### 1. Iniciar el Agente
+Ejecuta el agente en tu PC (asegúrate de que la IP de tu PC sea la `192.168.1.100` reservada):
+```bash
+ros2 run micro_ros_agent micro_ros_agent udp4 --port 8888 -v6
+```
+
+### 2. Ejecutar Script de Diagnóstico
+Usa la herramienta automatizada para verificar puertos y visibilidad:
+```powershell
+.\diagnostico_microros.ps1
+```
+
+### 3. Sincronización de Clientes
+- Reinicia tus ESP32s físicamente o vía serial.
+- Observa los logs del agente. Deberías ver:
+  ```text
+  [168...] Session established
+  [168...] Topic matched
+  ```
+
+### 4. Verificación de Tópicos
+En una nueva terminal, lista los tópicos detectados:
+```bash
+ros2 topic list
+```
+**Tópicos esperados:**
+- `/robot_A/odom`
+- `/robot_A/cmd_vel`
+- `/robot_B/odom`
+- `/robot_B/cmd_vel`
+
+---
+
+## 🎯 Diagnóstico Rápido (Si el script anterior falla)
+
+Esta sección es útil si el script `diagnostico_microros.ps1` muestra errores o si el sistema **funciona con hotspot de celular** pero **NO con el router TP-Link**. En ese caso, el problema es casi seguro la configuración del router.
+
+---
 
 ---
 
