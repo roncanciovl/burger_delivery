@@ -8,6 +8,9 @@ Este repositorio centraliza la documentación y los modelos usados en el proyect
   - `GUIA_DE_USO.md`: **¡LEER PRIMERO!** Guía de lanzamiento rápido (PowerShell/WSL).
   - `urdf/delivery_scene_fixed.urdf`: Modelo URDF final corregido (Kinova + Carritos + Escena).
 - `ROS/ros_burger_delivery.md`: guía completa del sistema (arquitectura, tf2, nodos, flujos).
+- `ROS/network_setup/`: **Carpeta de Red** (Configuración DSL, Router, Diagnóstico).
+  - `ROS2_NETWORK_CONFIG.md`: Configuración de variables de entorno y descubrimiento.
+  - `router_tplink_ax12_config.md`: Guía específica para el router TP-Link.
 - `ROS/joints.md`, `ROS/launch.md`, `ROS/ros.md`: notas auxiliares.
 
 ## Uso rápido del modelo ROS (burger_description)
@@ -188,6 +191,7 @@ Deberías ver paquetes desde las ESP32s hacia `192.168.1.100:8888`. Si no aparec
 - Consulta `ROS/ros_burger_delivery.md` para detalles de topics, nodos, QoS y secuencia operativa del delivery.
 - `ROS/ros_burger_delivery.pdf` ofrece la misma guía en formato imprimible.
 - `ROS/ros.md` contiene la arquitectura de red completa, configuración de micro-ROS y localización con AprilTags.
+- `ROS/network_setup/ros_network_diagram.svg`: Diagrama de la infraestructura de red.
 - Diagrama del árbol tf2: `ROS/tf_tree_diagram.svg`.
 
 > Mantén los URDF y la guía sincronizados: cualquier cambio en links/joints debe reflejarse tanto en `burger_delivery_gen3.urdf` como en el apartado de tf2 de la guía para evitar inconsistencias.

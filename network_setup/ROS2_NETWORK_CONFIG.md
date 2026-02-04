@@ -36,6 +36,9 @@ export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 - **WSL IP Address:** 172.27.119.126
 - **Network:** Your local network (WiFi/Ethernet)
 
+### Network Topology Diagram
+![Network Diagram](ros_network_diagram.svg)
+
 ## Configuring Other PCs
 
 To connect another PC to this ROS 2 system:
@@ -65,7 +68,21 @@ To connect another PC to this ROS 2 system:
 
 ### Test 1: Verify Configuration
 
+You can use the automated script for a complete diagnostic:
 ```bash
+bash test_ros2_network.sh
+```
+
+**What the script verifies:**
+1.  **Environment Variables:** Checks `ROS_DOMAIN_ID`, `ROS_AUTOMATIC_DISCOVERY_RANGE`, and `RMW_IMPLEMENTATION`.
+2.  **Network Layer:** Extracts WSL IP and Gateway (Router) address.
+3.  **Core ROS 2:** Verifies the `ros2` CLI installation and version.
+4.  **Discovery Scan:** Lists visible nodes and topics (confirms discovery is working).
+5.  **DDS Ports:** Checks if UDP ports 7400-7500 are active (the "engines" of ROS communication).
+6.  **Local Pub Test:** Attempts to publish a test message to ensure internal ROS health.
+7.  **Peer Guide:** Provides exact commands to test communication with a second PC.
+
+Or run manual checks:
 # In WSL
 source ~/.bashrc
 echo $ROS_DOMAIN_ID  # Should show: 42
