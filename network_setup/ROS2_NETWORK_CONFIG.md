@@ -149,6 +149,9 @@ If nodes are not visible across PCs, check firewall:
 # Allow ROS 2 DDS ports (run as Admin)
 New-NetFirewallRule -DisplayName "ROS2 Discovery (UDP)" -Direction Inbound -Action Allow -Protocol UDP -LocalPort 7400-7500
 New-NetFirewallRule -DisplayName "ROS2 Discovery (UDP)" -Direction Outbound -Action Allow -Protocol UDP -LocalPort 7400-7500
+
+# Allow Ping (ICMPv4) for network diagnostics
+New-NetFirewallRule -DisplayName "Allow Ping (ICMPv4-In)" -Protocol ICMPv4 -IcmpType 8 -RemoteAddress Any -Action Allow
 ```
 
 ### Linux Firewall (on other PCs):
