@@ -178,7 +178,16 @@ sudo ufw allow 7400:7500/udp
 
 4. **Check firewall** (see above)
 
-5. **Restart ROS nodes** after changing environment variables
+5. **Restart ROS 2 Daemon:**
+   If `ros2 topic list` hangs or doesn't show expected topics after a network change (like switching to Mirrored Mode), the daemon might be using outdated network information.
+   ```bash
+   # Force kill and restart
+   pkill -f _ros2_daemon
+   ros2 daemon start
+   ```
+   *Reason: The daemon caches network interfaces and IP addresses. If your IP changes (e.g., WSL switching to Mirrored Mode), the daemon can point to the old address, causing timeouts.*
+
+6. **Restart ROS nodes** after changing environment variables
 
 ### Change Domain ID
 
