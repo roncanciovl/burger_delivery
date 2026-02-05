@@ -147,8 +147,8 @@ If nodes are not visible across PCs, check firewall:
 
 ```powershell
 # Allow ROS 2 DDS ports (run as Admin)
-New-NetFirewallRule -DisplayName "ROS 2 DDS" -Direction Inbound -Protocol UDP -LocalPort 7400-7500 -Action Allow
-New-NetFirewallRule -DisplayName "ROS 2 DDS" -Direction Outbound -Protocol UDP -LocalPort 7400-7500 -Action Allow
+New-NetFirewallRule -DisplayName "ROS2 Discovery (UDP)" -Direction Inbound -Action Allow -Protocol UDP -LocalPort 7400-7500
+New-NetFirewallRule -DisplayName "ROS2 Discovery (UDP)" -Direction Outbound -Action Allow -Protocol UDP -LocalPort 7400-7500
 ```
 
 ### Linux Firewall (on other PCs):
