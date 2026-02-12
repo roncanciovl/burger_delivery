@@ -7,11 +7,10 @@ source /opt/ros/jazzy/setup.bash
 echo "Creating workspace..."
 mkdir -p ~/ros2_ws/src
 
-echo "Linking burger_description package..."
-# Remove existing link if it exists
-rm -rf ~/ros2_ws/src/burger_description
-# Create symbolic link from Windows path (mounted in /mnt/c)
-ln -s /mnt/c/Users/Usuario/OneDrive/biblioteca/ROS/burger_description ~/ros2_ws/src/
+echo "Ensuring burger_description is available..."
+# In the Linux version, burger_description is already inside burger_delivery/
+# We can link it to src/ for colcon if needed, or just let colcon find it.
+# If colcon is run from ~/ros2_ws, it will find it inside src/burger_delivery/
 
 echo "Building workspace..."
 cd ~/ros2_ws
