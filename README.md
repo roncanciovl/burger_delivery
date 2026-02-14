@@ -4,24 +4,43 @@ Este repositorio centraliza la documentación y los modelos usados en el proyect
 
 ## Estructura relevante
 
+- `ROS/burger_description/`: **Paquete principal** con la descripción del robot y archivos de lanzamiento.
+  - `GUIA_DE_USO.md`: **¡LEER PRIMERO!** Guía de lanzamiento rápido (PowerShell/WSL).
+  - `urdf/delivery_scene_fixed.urdf`: Modelo URDF final corregido (Kinova + Carritos + Escena).
 - `ROS/ros_burger_delivery.md`: guía completa del sistema (arquitectura, tf2, nodos, flujos).
-- `ROS/visual/burger_delivery_gen3.urdf`: escena compuesta con la mesa, Kinova y robots móviles; sirve como fuente del árbol de frames.
-- `ROS/joints.md`, `ROS/launch.md`, `ROS/ros.md`: notas auxiliares para joints URDF, lanzamientos y configuración general de ROS 2.
-- `ROS/vendor/`: paquetes vendorizados (Kinova Gen3, Robotiq) referenciados por los URDF.
-- Carpetas adicionales (`IA/`, `PDS BIO/`, etc.) contienen exámenes y apuntes que no interfieren con el stack ROS.
+- `ROS/network_setup/`: **Carpeta de Red** (Configuración DSL, Router, Diagnóstico).
+  - `ROS2_NETWORK_CONFIG.md`: Configuración de variables de entorno y descubrimiento.
+  - `router_tplink_ax12_config.md`: Guía específica para el router TP-Link.
+- `ROS/joints.md`, `ROS/launch.md`, `ROS/ros.md`: notas auxiliares.
 
-## Uso rápido del modelo ROS
+## Uso rápido del modelo ROS (burger_description)
 
-1. **Publicar transformaciones estáticas** (mesa, staging, robots):
+Hemos simplificado el lanzamiento del robot. Ver `ROS/burger_description/GUIA_DE_USO.md` para detalles.
+
+**Opción Rápida (PowerShell):**
+```powershell
+lanzar_robot
+```
+
+**Opción Manual (WSL):**
+1. **Compilar (si hay cambios):**
    ```bash
-   ros2 run tf2_ros static_transform_publisher 0.80 -1.00 0.80 0 0 0 map table_link
-   ros2 run tf2_ros static_transform_publisher 1.20 0.30 0.50 0 0 0 table_link kinova_base_link
-   ros2 run tf2_ros static_transform_publisher 0.80 0.00 0.00 0 0 0 map staging_area
-   ros2 run tf2_ros static_transform_publisher 0.00 0.40 0.50 0 0 0 staging_area delivery_slot_1
-   ros2 run tf2_ros static_transform_publisher 0.20 0.30 0.00 0 0 0 table_link world
+   cd ~/ros2_ws
+   colcon build --packages-select burger_description
+   source install/setup.bash
    ```
-2. **State publisher**: lanzar `robot_state_publisher` con `ROS/visual/burger_delivery_gen3.urdf` para publicar la cadena completa `map → table_link → world → gen3_* → burger_grip_frame`.
-3. **Visualización**: abrir RViz, agregar `RobotModel` y `TF` para inspeccionar la escena y validar las relaciones descritas en la guía.
+2. **Lanzar visualización:**
+   ```bash
+   ros2 launch burger_description display.launch.py
+   ```
+   Esto carga:
+   - `robot_state_publisher` (TF)
+   - `rviz2` (Visualización con configuración precargada)
+   - `joint_state_publisher_gui` (Control manual de joints)
+
+3. **Visualización en RViz:**
+   - Fixed Frame: `map`
+   - El modelo incluye: Brazo Kinova Gen3, Gripper Robotiq 2F-85, 2 Robots móviles (Carro2/Carro4), Mesa y zona de entrega.
 
 ## Visualizadores URDF
 
@@ -37,13 +56,13 @@ Ejecuta el script de diagnóstico según tu sistema operativo:
 
 **Windows (PowerShell):**
 ```powershell
-.\diagnostico_microros.ps1
+.\network_setup\diagnostico_microros.ps1
 ```
 
 **Linux (Bash):**
 ```bash
-chmod +x diagnostico_microros.sh
-./diagnostico_microros.sh
+chmod +x network_setup/diagnostico_microros.sh
+./network_setup/diagnostico_microros.sh
 ```
 
 El script verificará automáticamente:
@@ -60,7 +79,7 @@ El script verificará automáticamente:
   - Guía de configuración manual del router
 - Tabla ARP
 
-**Nota:** Si usas un **TP-Link Archer AX12**, consulta la guía específica: [`router_tplink_ax12_config.md`](router_tplink_ax12_config.md)
+**Nota:** Si usas un **TP-Link Archer AX12**, consulta la guía específica: [`network_setup/router_tplink_ax12_config.md`](network_setup/router_tplink_ax12_config.md)
 
 ### Configuración del Firewall
 
@@ -172,6 +191,7 @@ Deberías ver paquetes desde las ESP32s hacia `192.168.1.100:8888`. Si no aparec
 - Consulta `ROS/ros_burger_delivery.md` para detalles de topics, nodos, QoS y secuencia operativa del delivery.
 - `ROS/ros_burger_delivery.pdf` ofrece la misma guía en formato imprimible.
 - `ROS/ros.md` contiene la arquitectura de red completa, configuración de micro-ROS y localización con AprilTags.
+- `ROS/network_setup/ros_network_diagram.svg`: Diagrama de la infraestructura de red.
 - Diagrama del árbol tf2: `ROS/tf_tree_diagram.svg`.
 
 > Mantén los URDF y la guía sincronizados: cualquier cambio en links/joints debe reflejarse tanto en `burger_delivery_gen3.urdf` como en el apartado de tf2 de la guía para evitar inconsistencias.

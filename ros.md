@@ -79,36 +79,33 @@ El siguiente diagrama ilustra cómo todos los componentes se interconectan a tra
 ### 2.3.2. Adaptadores de Red de los PCs
 
 *   **PC Principal (Agente):** Debe tener la IP fija configurada a través de la reserva DHCP del router.
-*   **Resto de Dispositivos:** Todos los demás componentes (PCs, cámaras, ESP32) están configurados para obtener su dirección IP automáticamente del servidor DHCP del router. Esto simplifica la gestión de la red, ya que no es necesario configurar manualmente cada nuevo dispositivo.
+*   **Resto de Dispositivos:** Todos los demás componentes (PCs, cámaras, ESP32) están configurados para obtener su dirección IP automáticamente del servidor DHCP del router. Esto simplifica la gestión de la red, ya que no es necesario administrar manualmente cada nuevo dispositivo.
 
 ## 2.4. Configuración de Variables de Ambiente de ROS 2
 
 Para que los nodos de ROS 2 en diferentes computadores se descubran y comuniquen correctamente, es fundamental que compartan la misma configuración de "dominio".
 
-*   **`ROS_DOMAIN_ID`**: Esta variable segmenta la red. Solo los nodos que tengan el mismo `ROS_DOMAIN_ID` podrán verse entre sí. Se utilizará el valor por defecto `0`. Esto es simple, pero significa que si hay otros sistemas ROS 2 en la misma red física (ej. la red de la universidad), podrían interferir. Para este proyecto aislado, es aceptable. **Todos los PCs de tu proyecto deben usar el mismo ID.**
+*   **`ROS_DOMAIN_ID`**: Esta variable segmenta la red. Solo los nodos que tengan el mismo `ROS_DOMAIN_ID` podrán verse entre sí. Se recomienda usar un valor como `42` para evitar interferencias en redes externas. **Todos los PCs de tu proyecto deben usar el mismo ID.**
 
-*   **`ROS_LOCALHOST_ONLY`**: Si esta variable está configurada en `1`, la comunicación de ROS 2 se restringirá únicamente al computador local (`localhost`), impidiendo la comunicación por la red. Asegúrate de que esta variable no esté configurada o esté explícitamente en `0`.
+*   **`ROS_AUTOMATIC_DISCOVERY_RANGE`**: Esta variable controla cómo se descubren los nodos en la red. 
+    - `SUBNET`: (Recomendado) Descubre cualquier nodo en la red local.
+    - `LOCALHOST`: Solo descubre nodos en la misma máquina.
+    - *Nota: Reemplaza a la antigua variable `ROS_LOCALHOST_ONLY`.*
 
-Para aplicar esta configuración de forma permanente en un sistema Linux (Ubuntu), edita el archivo `.bashrc` en tu directorio de usuario:
-
-```bash
-# Abrir el archivo de configuración de la terminal
-gedit ~/.bashrc
-```
-
-Añade las siguientes líneas al final del archivo:
+Para aplicar esta configuración de forma permanente en Ubuntu, añade lo siguiente a tu `~/.bashrc`:
 
 ```bash
 # Configuración de ROS 2 para la red del proyecto
-export ROS_DOMAIN_ID=0
-export ROS_LOCALHOST_ONLY=0
+export ROS_DOMAIN_ID=42
+export ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 ```
 
-Guarda el archivo, cierra la terminal y abre una nueva para que los cambios surtan efecto. Repite este proceso en **todos los PCs** que participarán en la red ROS 2.
+**Para una guía detallada multi-PC:** Consulta [`network_setup/ROS2_NETWORK_CONFIG.md`](network_setup/ROS2_NETWORK_CONFIG.md)
 
 ## 2.5. Recomendaciones sobre el Firewall
 
-El sistema de comunicación de ROS 2 (DDS) utiliza varios puertos UDP para el descubrimiento y el intercambio de datos. Los firewalls del sistema operativo a menudo bloquean este tipo de tráfico por defecto, lo que puede impedir que los nodos se vean entre sí.
+El sistema de comunicación de ROS 2 (DDS) utiliza varios puertos UDP para el descubrimiento y el intercambio de datos.
 
 **ADVERTENCIA DE SEGURIDAD:** Deshabilitar el firewall solo debe hacerse en una **red local controlada y de confianza**, como la red de pruebas dedicada para este proyecto. **NUNCA** desactives el firewall en un PC conectado directamente a una red pública o no segura.
 

@@ -1,0 +1,45 @@
+==========================================
+ROS 2 Network Configuration Test
+==========================================
+
+1. Checking ROS 2 Environment Variables:
+   ROS_DOMAIN_ID: 0
+   ROS_AUTOMATIC_DISCOVERY_RANGE: SUBNET
+   RMW_IMPLEMENTATION: default (FastRTPS)
+
+2. Network Information:
+   WSL IP Address: 192.168.1.185
+   Gateway: 192.168.1.1
+
+3. Testing ROS 2 Installation:
+   ✓ ROS 2 command found
+usage: ros2 [-h] [--use-python-default-buffering]
+            Call `ros2 <command> -h` for more detailed usage. ...
+ros2: error: unrecognized arguments: --version
+
+4. Active ROS 2 Nodes:
+   No nodes detected (this is normal if nothing is running)
+
+5. Active ROS 2 Topics:
+   No topics detected
+
+6. Checking DDS Ports (7400-7500):
+
+7. Testing Topic Publication (5 seconds):
+   Publishing test message to /test_topic...
+Waiting for at least 1 matching subscription(s)...
+Waiting for at least 1 matching subscription(s)...
+Waiting for at least 1 matching subscription(s)...
+Waiting for at least 1 matching subscription(s)...
+   ✗ Failed to publish
+
+==========================================
+Test Complete!
+==========================================
+
+To test communication with another PC:
+1. On this PC: ros2 topic pub /hello std_msgs/String "data: 'Hello from PC1'"
+2. On other PC: ros2 topic echo /hello
+
+Both PCs must have the same ROS_DOMAIN_ID (currently: 0)
+And ROS_AUTOMATIC_DISCOVERY_RANGE set to SUBNET (or unset).
