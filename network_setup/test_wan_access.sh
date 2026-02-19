@@ -34,7 +34,7 @@ fi
 
 # 3. Verificar Resolución DNS
 echo -n "[3/4] Verificando resolución DNS (google.com)... "
-if host google.com > /dev/null 2>&1 || nslookup google.com > /dev/null 2>&1; then
+if getent hosts google.com > /dev/null 2>&1 || host google.com > /dev/null 2>&1 || nslookup google.com > /dev/null 2>&1; then
     echo -e "${GREEN}OK${NC}"
 else
     echo -e "${RED}FALLIDO: No se pueden resolver nombres. Revisa /etc/resolv.conf o DNS del Router.${NC}"

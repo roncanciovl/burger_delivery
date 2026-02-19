@@ -28,8 +28,41 @@ export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
    - *Note: This replaces the deprecated `ROS_LOCALHOST_ONLY` variable.*
 
 3. **`RMW_IMPLEMENTATION=rmw_cyclonedds_cpp`**
-   - Uses CycloneDDS middleware (better for multi-PC setups)
-   - Alternative: `rmw_fastrtps_cpp` (default, but less reliable across networks)
+   - **Why use it?** CycloneDDS is significantly more stable in WiFi environments. It generates less "chatter" during node discovery and handles packet loss/latency (common in wireless) much better than the default Fast DDS.
+   - **Installation:** It's not installed by default. Run:
+     ```bash
+     sudo apt update && sudo apt install ros-jazzy-rmw-cyclonedds-cpp
+     ```
+   - **Verification:** Run `printenv RMW_IMPLEMENTATION`. It should return `rmw_cyclonedds_cpp`.
+   - **Alternative:** `rmw_fastrtps_cpp` (default). Use this only if you are using the *Discovery Server* (see below), otherwise, stay with CycloneDDS for mobile robots.
+
+## Fast DDS Discovery Server (Advanced)
+
+If you have issues with **multicast** (common in corporate or restricted WiFi), you can use the Discovery Server. This replaces the automatic "shouting" of nodes with a central "phonebook" (the Server).
+
+### 1. The Configuration File (`fastdds_discovery.xml`)
+
+This file configures your ROS nodes to act as **Super Clients**. Instead of searching the whole network, they connect directly to the IP of the Discovery Server.
+
+*   **`<address>`**: Set to `192.168.1.100` (the PC Principal running the Agent/Server).
+*   **`<port>`**: Default is `11811`.
+*   **`<discoveryProtocol>`**: `SUPER_CLIENT` allows this node to see all other nodes, even if they aren't using the server (hybrid mode).
+
+### 2. How to Use
+
+**A. Start the Server (only on PC Principal):**
+```bash
+fastdds discovery --server-id 0 --ip-address 192.168.1.100 --port 11811
+```
+
+**B. Configure Clients (on all PCs):**
+Add these variables to your `~/.bashrc`:
+```bash
+export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+export FASTRTPS_DEFAULT_PROFILES_FILE=~/ros2_ws/src/burger_delivery/network_setup/fastdds_discovery.xml
+```
+
+*Note: You can also use the simpler `export ROS_DISCOVERY_SERVER="192.168.1.100:11811"` but the XML file gives more control over QoS and discovery behavior.*
 
 ## Network Information
 
@@ -98,19 +131,33 @@ To connect another PC to this ROS 2 system:
 
 ### Test 1: Verify Configuration
 
-You can use the automated script for a complete diagnostic:
+You can use the automated scripts for a complete diagnostic:
+
+**For ROS 2 & General Network:**
 ```bash
 bash test_ros2_network.sh
 ```
 
-**What the script verifies:**
-1.  **Environment Variables:** Checks `ROS_DOMAIN_ID`, `ROS_AUTOMATIC_DISCOVERY_RANGE`, and `RMW_IMPLEMENTATION`.
-2.  **Network Layer:** Extracts WSL IP and Gateway (Router) address.
-3.  **Core ROS 2:** Verifies the `ros2` CLI installation and version.
-4.  **Discovery Scan:** Lists visible nodes and topics (confirms discovery is working).
-5.  **DDS Ports:** Checks if UDP ports 7400-7500 are active (the "engines" of ROS communication).
-6.  **Local Pub Test:** Attempts to publish a test message to ensure internal ROS health.
-7.  **Peer Guide:** Provides exact commands to test communication with a second PC.
+**For WiFi Quality & Stability:**
+```bash
+# Linux
+bash diagnostico_wifi.sh
+
+# Windows (PowerShell)
+.\diagnostico_wifi.ps1
+```
+
+**Network Diagnostics (All Levels):**
+Check the unified guide: [`DIAGNOSTICO_RED.md`](DIAGNOSTICO_RED.md)
+
+**What the scripts verify:**
+1.  **WiFi Status:** Signal strength, channel congestion, and interface health.
+2.  **Environment Variables:** Checks `ROS_DOMAIN_ID`, `ROS_AUTOMATIC_DISCOVERY_RANGE`, and `RMW_IMPLEMENTATION`.
+3.  **Network Layer:** Extracts WSL IP, Gateway (Router) address, and DNS.
+4.  **Core ROS 2:** Verifies the `ros2` CLI installation and version.
+5.  **Discovery Scan:** Lists visible nodes and topics (confirms discovery is working).
+6.  **DDS Ports:** Checks if UDP ports 7400-7500 are active.
+7.  **Latency Test:** Measures ping response time to the router (critical for real-time control).
 
 Or run manual checks:
 # In WSL
