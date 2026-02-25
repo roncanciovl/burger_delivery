@@ -109,6 +109,31 @@ if [ -n "$GATEWAY" ]; then
     fi
 fi
 
+# Verificación de compatibilidad con WiFi 6 (802.11ax)
+echo -e "  Verificando hardware de red del equipo..."
+if grep -qi "microsoft" /proc/version 2>/dev/null; then
+    # WSL: usar netsh.exe de Windows
+    if command -v netsh.exe &>/dev/null; then
+        wifi_types=$(netsh.exe wlan show drivers 2>/dev/null)
+        if echo "$wifi_types" | grep -qi "802.11ax"; then
+            echo -e "  ${GREEN}✅ Tarjeta de red COMPATIBLE con WiFi 6 (802.11ax).${NC}"
+        elif echo "$wifi_types" | grep -qi "802.11ac\|802.11n"; then
+            echo -e "  ${YELLOW}⚠️  Tarjeta de red NO COMPATIBLE con WiFi 6 (Solo soporta hasta WiFi 5 / AC o inferior).${NC}"
+            echo -e "     Limitación de hardware de la PC: No aprovecharás el 100% del router AX12."
+        fi
+    fi
+else
+    # GNU/Linux nativo
+    if command -v iw &>/dev/null; then
+        if iw list 2>/dev/null | grep -qiE "HE MAC|HE PHY|802.11ax"; then
+            echo -e "  ${GREEN}✅ Tarjeta de red COMPATIBLE con WiFi 6 (802.11ax).${NC}"
+        else
+            echo -e "  ${YELLOW}⚠️  Tarjeta de red NO COMPATIBLE con WiFi 6 (Solo soporta hasta WiFi 5 / AC o inferior).${NC}"
+            echo -e "     Limitación de hardware de la PC: No aprovecharás el 100% del router AX12."
+        fi
+    fi
+fi
+
 # 4. Recomendaciones de Optimización
 echo -e "\n${YELLOW}[4/5] Guía de Mitigación de Latencia:${NC}"
 

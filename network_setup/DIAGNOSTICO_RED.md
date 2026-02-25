@@ -25,10 +25,7 @@ Para resolver un problema de red, sigue este orden de herramientas locales:
 
 ## 2. Diagnóstico Visual y de Terceros
 
-Si las herramientas locales no resuelven el problema, utiliza interfaces gráficas especializadas:
-
-*   **Fast DDS Monitor (eProsima)**: Visualiza el mapa completo de la red, ancho de banda por tópico y latencia media.  
-    [Descarga/Documentación](https://fast-dds.docs.eprosima.com/en/latest/fastdds/monitor/monitor.html)
+Si las herramientas locales no resuelven el problema, utiliza interfaces gráficas especializadas:.//fastdds/monitor/monitor.html)
 *   **Foxglove Studio**: Monitorización moderna de mensajes y estado del sistema.  
     [Sitio Web](https://foxglove.dev/)
 *   **Wireshark (GUI)**: Inspección de paquetes con disectores específicos para DDS/RTPS.

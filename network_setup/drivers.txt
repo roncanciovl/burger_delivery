@@ -1,0 +1,37 @@
+
+Nombre de interfaz: Wi-Fi 2
+
+    Controlador                : Qualcomm Atheros QCA61x4A Wireless Network Adapter
+    Proveedor                  : Qualcomm Atheros Communications Inc.
+    Proveedor               : Qualcomm Atheros Communications Inc.
+    Fecha                      : 23/02/2022
+    Versión                    : 12.0.0.1257
+    Archivo INF                : oem30.inf
+    Tipo                       : Controlador Wi-Fi nativo
+    Tipos de radio admitidos    : 802.11b 802.11a 802.11g 802.11n 802.11ac
+    Compatible con el modo FIPS 140 : Sí
+    Protección de trama de administración de 802.11w habilitada: Sí
+    Red hospedada admitida: no
+    Autenticación y cifrado admitidos en el modo infrastructure:
+                                Abierta          Ninguna
+                                Abierta          WEP-40bit
+                                Abierta          WEP-104 bits
+                                Abierta          WEP
+                                WPA-Enterprise   TKIP
+                                WPA-Personal     TKIP
+                                WPA2-Enterprise  TKIP
+                                WPA2-Personal    TKIP
+                                WPA-Enterprise   CCMP
+                                WPA-Personal     CCMP
+                                WPA2-Enterprise  CCMP
+                                Definido por el fabricante CCMP
+                                Definido por el fabricante CCMP
+                                WPA2-Personal    CCMP
+                                WPA3-Personal    CCMP
+                                OWE              CCMP
+                                Definido por el fabricante Definido por el fabricante
+    Número de bandas admitidas: 2
+                                2,4 GHz [ 0 MHz - 0 MHz]
+                                5 GHz [ 0 MHz - 0 MHz]
+    Monitor inalámbrico admitido: Sí (controlador de gráficos: Sí, controlador de Wi-Fi: Sí)
+
