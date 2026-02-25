@@ -161,8 +161,13 @@ echo -e "     Consulta: ${CYAN}network_setup/ROS2_NETWORK_CONFIG.md${NC} (secci�
 echo -e "\n  ${WHITE}3. Desactivar Smart Connect:${NC}"
 echo -e "     En routers WiFi 6 (Archer AX12), el salto entre 2.4 y 5GHz causa picos de lag."
 
-echo -e "\n  ${WHITE}4. Ajustar MTU:${NC}"
-echo -e "     Si los mensajes son grandes (imágenes), reduce el MTU para evitar fragmentación."
+echo -e "\n  ${WHITE}4. MTU y Fragmentación (Imágenes o mapas densos):${NC}"
+echo -e "     El WiFi tiene un límite de envío (MTU) de 1500 bytes. Mensajes grandes se fragmentan."
+echo -e "     Si una parte choca en el aire, se pierde el mensaje completo, causando lag."
+echo -e "     ${CYAN}Consejos para evitarlo:${NC}"
+echo -e "     ${WHITE}a)${NC} NUNCA envíes imágenes RAW por WiFi, usa compresión (paquete image_transport)."
+echo -e "     ${WHITE}b)${NC} Si hay problemas, amplía los buffers UDP de Linux (comando sysctl net.core.rmem_max)."
+echo -e "     ${WHITE}c)${NC} Mantén CycloneDDS activo, ya que gestiona mejor los paquetes grandes que FastDDS."
 
 echo -e "\n${CYAN}===============================================${NC}"
 echo -e "${CYAN}          Análisis de Red Completado           ${NC}"
