@@ -1,29 +1,30 @@
 # Biblioteca de proyectos ROS y apuntes
 
-Este repositorio centraliza la documentación y los modelos usados en el proyecto **Burger Delivery con ROS 2 Jazzy** junto con materiales de estudio (carpetas `IA/`, `PDS BIO/`, etc.). El foco principal es la celda donde un manipulador **Kinova Gen3** entrega bandejas a robots diferenciales coordinados mediante `tf2`, visión por AprilTags y micro-ROS.
+Este repositorio centraliza la documentación y los modelos usados en el proyecto **Burger Delivery con ROS 2 Jazzy**. El foco principal es la celda donde un manipulador **Kinova Gen3** entrega bandejas a robots diferenciales coordinados mediante `tf2`, visión por AprilTags y micro-ROS, optimizado para entornos inalámbricos de alta densidad.
 
-## Estructura relevante
+## 📁 Estructura relevante
 
-- `ROS/burger_description/`: **Paquete principal** con la descripción del robot y archivos de lanzamiento.
-  - `GUIA_DE_USO.md`: **¡LEER PRIMERO!** Guía de lanzamiento rápido (PowerShell/WSL).
-  - `urdf/delivery_scene_fixed.urdf`: Modelo URDF final corregido (Kinova + Carritos + Escena).
-- `ROS/ros_burger_delivery.md`: guía completa del sistema (arquitectura, tf2, nodos, flujos).
-- `ROS/network_setup/`: **Carpeta de Red** (Configuración DSL, Router, Diagnóstico).
-  - `ROS2_NETWORK_CONFIG.md`: Configuración de variables de entorno y descubrimiento.
-  - `router_tplink_ax12_config.md`: Guía específica para el router TP-Link.
-- `ROS/joints.md`, `ROS/launch.md`, `ROS/ros.md`: notas auxiliares.
+- `burger_description/`: **Paquete principal** con el URDF y archivos de lanzamiento.
+  - `GUIA_DE_USO.md`: Guía de inicio rápido para visualización.
+  - `urdf/delivery_scene_fixed.urdf`: Modelo URDF corregido (Kinova + Carritos + Escena).
+- `network_setup/`: **Infraestructura de Red** (Configuración Crítica y Diagnóstico).
+  - [`DIAGNOSTICO_RED.md`](network_setup/DIAGNOSTICO_RED.md): **Guía Maestra** de resolución de problemas (Niveles 1-4).
+  - [`ROS2_NETWORK_CONFIG.md`](network_setup/ROS2_NETWORK_CONFIG.md): Configuración de RMW, Domain ID y Modo Mirrored de WSL.
+  - `fastdds_discovery.xml`: Configuración para Discovery Server (evita problemas de Multicast).
+- `ros_burger_delivery.md`: Documentación técnica de la arquitectura y flujos.
+- `lanzar_robot.sh`: Script de automatización para lanzar la visualización completa.
 
-## Uso rápido del modelo ROS (burger_description)
+## 🚀 Uso rápido del sistema
 
-Hemos simplificado el lanzamiento del robot. Ver `ROS/burger_description/GUIA_DE_USO.md` para detalles.
-
-**Opción Rápida (PowerShell):**
-```powershell
-lanzar_robot
+### Opción Rápida (Scripts de automatización)
+Para lanzar la visualización en RViz con todos los componentes preconfigurados:
+```bash
+chmod +x lanzar_robot.sh
+./lanzar_robot.sh
 ```
 
-**Opción Manual (WSL):**
-1. **Compilar (si hay cambios):**
+### Opción Manual (WSL/Linux)
+1. **Compilar el paquete:**
    ```bash
    cd ~/ros2_ws
    colcon build --packages-select burger_description
@@ -33,165 +34,54 @@ lanzar_robot
    ```bash
    ros2 launch burger_description display.launch.py
    ```
-   Esto carga:
-   - `robot_state_publisher` (TF)
-   - `rviz2` (Visualización con configuración precargada)
-   - `joint_state_publisher_gui` (Control manual de joints)
+   *Incluye: Kinova Gen3, Gripper Robotiq, Robots móviles, y la mesa de entrega.*
 
-3. **Visualización en RViz:**
-   - Fixed Frame: `map`
-   - El modelo incluye: Brazo Kinova Gen3, Gripper Robotiq 2F-85, 2 Robots móviles (Carro2/Carro4), Mesa y zona de entrega.
+---
 
-## Visualizadores URDF
+## 📶 Diagnóstico y Configuración de Red ROS 2
 
-- [Online URDF Viewer](https://gkjohnson.github.io/urdf-loaders/javascript/example/bundle/index.html): Herramienta web para visualizar y manipular modelos URDF directamente en el navegador.
+Hemos implementado un sistema de diagnóstico multinivel para asegurar la estabilidad del sistema en redes WiFi 6 y entornos con micro-ROS.
 
-## Diagnóstico de Comunicación micro-ROS
+### 1. Herramientas de Diagnóstico (Niveles 1-4)
+Si experimentas lag, pérdida de tópicos o desconexión de las ESP32, usa los scripts en `network_setup/`:
 
-Si experimentas problemas de comunicación entre las ESP32s y el agente micro-ROS (el ping funciona pero ROS no se comunica), sigue estos pasos:
+| Nivel | Script | Objetivo | Diagnóstico |
+| :--- | :--- | :--- | :--- |
+| **1** | `test_ros2_network.sh` | **Salud Local** | Verifica variables de entorno y visibilidad de nodos. |
+| **2** | `diagnostico_wifi.sh` | **Calidad Física** | Analiza latencia al router, RSSI y congestión WiFi. |
+| **3** | `analisis_trafico_ros2.sh` | **Rendimiento** | Optimización de MTU, fragmentación y ancho de banda. |
+| **4** | `test_wan_access.sh` | **Acceso WAN** | Verifica salida a internet (necesario para updates/drivers). |
 
-### Script de Diagnóstico Automático
-
-Ejecuta el script de diagnóstico según tu sistema operativo:
-
-**Windows (PowerShell):**
-```powershell
-.\network_setup\diagnostico_microros.ps1
-```
-
-**Linux (Bash):**
+### 2. Configuración Óptima (Recomendada)
+Para máxima estabilidad en WiFi, configura tu `~/.bashrc` con:
 ```bash
-chmod +x network_setup/diagnostico_microros.sh
-./network_setup/diagnostico_microros.sh
+export ROS_DOMAIN_ID=42
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+export ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET
 ```
+*Nota: CycloneDDS gestiona mucho mejor la pérdida de paquetes que el RMW por defecto.*
 
-El script verificará automáticamente:
-- IP y conectividad de red
-- Estado del firewall
-- Puerto UDP 8888 (agente micro-ROS)
-- Conectividad a ESP32s
-- Variables de entorno ROS
-- **Router/Gateway** (nuevo) - Extrae información del router automáticamente
-  - Gateway IP y conectividad
-  - SSID conectado (verifica que sea 'ros2')
-  - MAC Address del PC (necesaria para reserva DHCP)
-  - Configuración DNS y rutas de red
-  - Guía de configuración manual del router
-- Tabla ARP
+### 3. Configuración Crítica del Router & Firewall
+**⚠️ El ping puede funcionar pero ROS no si estas opciones están mal:**
 
-**Nota:** Si usas un **TP-Link Archer AX12**, consulta la guía específica: [`network_setup/router_tplink_ax12_config.md`](network_setup/router_tplink_ax12_config.md)
+- **AP Isolation:** Debe estar **DESACTIVADO** en el router para que los dispositivos se vean entre sí.
+- **Reserva IP:** El PC Principal debe tener la IP `192.168.1.100` reservada mediante MAC.
+- **Firewall:** Abre los puertos UDP `7400-7500` (DDS) y `8888` (micro-ROS).
+  ```bash
+  sudo ufw allow 7400:7500/udp
+  sudo ufw allow 8888/udp
+  ```
 
-### Configuración del Firewall
+### 4. Modo Mirrored (WSL2)
+Si usas Windows, es **fundamental** activar el `networkingMode=mirrored` en tu `.wslconfig` para que WSL comparta la IP real de tu PC y sea visible en la red física. Ver [guía detallada acá](network_setup/ROS2_NETWORK_CONFIG.md#💻-wsl-networking-configuration-windows-users).
 
-El firewall puede bloquear el tráfico UDP necesario para micro-ROS. Para depuración, desactívalo temporalmente:
+---
 
-#### Windows
+## 🛠️ Visualizadores y Referencias
 
-**Opción 1: Desactivar temporalmente (método rápido)**
-```powershell
-# Desactivar firewall para red privada
-Set-NetFirewallProfile -Profile Private -Enabled False
+- **Visualización URDF:** [Online URDF Viewer](https://gkjohnson.github.io/urdf-loaders/javascript/example/bundle/index.html) para pruebas rápidas de modelos.
+- **Captura Avanzada:** Si nada funciona, usa `tcpdump` o Wireshark con el filtro `udp.port == 8888` o `rtps`.
+- **Árbol TF2:** Consulta `tf_tree_diagram.svg` para entender la jerarquía de coordenadas.
 
-# Para reactivarlo después de las pruebas
-Set-NetFirewallProfile -Profile Private -Enabled True
-```
+> **Importante:** Mantén los URDF y la documentación sincronizados. Cualquier cambio en joints/links debe reflejarse en la guía técnica para evitar errores de posicionamiento.
 
-**Opción 2: Crear regla específica (recomendado para producción)**
-```powershell
-New-NetFirewallRule -DisplayName "micro-ROS Agent UDP" `
-  -Direction Inbound `
-  -Protocol UDP `
-  -LocalPort 8888 `
-  -Action Allow
-```
-
-#### Linux (Ubuntu)
-
-**Opción 1: Desactivar UFW temporalmente**
-```bash
-# Verificar estado
-sudo ufw status
-
-# Desactivar
-sudo ufw disable
-
-# Para reactivar después
-sudo ufw enable
-```
-
-**Opción 2: Agregar regla específica (recomendado)**
-```bash
-# Permitir puerto 8888 UDP
-sudo ufw allow 8888/udp
-
-# Verificar reglas
-sudo ufw status numbered
-```
-
-### Configuración Crítica del Router
-
-**⚠️ IMPORTANTE:** Verifica en la configuración de tu router WiFi que:
-
-1. **AP Isolation (Aislamiento de Clientes) esté DESACTIVADO**
-   - Esta es la causa #1 cuando el ping funciona pero ROS no
-   - Para TP-Link Archer AX12: Advanced → Wireless → Wireless Settings → Desmarca "Enable AP Isolation"
-   
-2. **IP fija reservada para el PC Principal** (`192.168.1.100`)
-   - Router → DHCP → Reserva de IP → Vincular MAC del PC con 192.168.1.100
-   - El script de diagnóstico te muestra tu MAC Address
-
-3. **Todos los dispositivos en la misma subred** (`192.168.1.0/24`)
-
-4. **Smart Connect desactivado** (si usas router WiFi 6 como el Archer AX12)
-   - Puede causar problemas de conectividad con ESP32s
-
-**Prueba de diagnóstico rápida:**
-Si la comunicación **funciona con un hotspot de celular** pero **NO con el router WiFi**, confirma que el problema está en la configuración del router (típicamente AP Isolation).
-
-### Verificación del Agente
-
-Ejecuta el agente con logs verbosos para ver intentos de conexión:
-
-```bash
-ros2 run micro_ros_agent micro_ros_agent udp4 --port 8888 -v6
-```
-
-### Configuración Crítica del Router
-
-**⚠️ IMPORTANTE:** Verifica en la configuración de tu router WiFi que:
-
-1. **AP Isolation (Aislamiento de Clientes) esté DESACTIVADO**
-   - Esta es la causa #1 cuando el ping funciona pero ROS no
-   - Ubicación típica: Configuración WiFi → Seguridad → AP Isolation
-   
-2. **IP fija reservada para el PC Principal** (`192.168.1.100`)
-   - Router → DHCP → Reserva de IP → Vincular MAC del PC con 192.168.1.100
-
-3. **Todos los dispositivos en la misma subred** (`192.168.1.0/24`)
-
-### Captura de Tráfico (Diagnóstico Avanzado)
-
-Si los pasos anteriores no resuelven el problema, captura el tráfico UDP:
-
-**Windows (Wireshark):**
-1. Instalar Wireshark
-2. Capturar en interfaz WiFi
-3. Filtro: `udp.port == 8888`
-4. Reiniciar ESP32 y observar paquetes
-
-**Linux (tcpdump):**
-```bash
-sudo tcpdump -i wlan0 -n udp port 8888 -vv
-```
-
-Deberías ver paquetes desde las ESP32s hacia `192.168.1.100:8888`. Si no aparecen, el problema está en las ESP32s o el router.
-
-## Referencias
-
-- Consulta `ROS/ros_burger_delivery.md` para detalles de topics, nodos, QoS y secuencia operativa del delivery.
-- `ROS/ros_burger_delivery.pdf` ofrece la misma guía en formato imprimible.
-- `ROS/ros.md` contiene la arquitectura de red completa, configuración de micro-ROS y localización con AprilTags.
-- `ROS/network_setup/ros_network_diagram.svg`: Diagrama de la infraestructura de red.
-- Diagrama del árbol tf2: `ROS/tf_tree_diagram.svg`.
-
-> Mantén los URDF y la guía sincronizados: cualquier cambio en links/joints debe reflejarse tanto en `burger_delivery_gen3.urdf` como en el apartado de tf2 de la guía para evitar inconsistencias.
