@@ -24,12 +24,14 @@ chmod +x lanzar_robot.sh
 ```
 
 ### Opción Manual (WSL/Linux)
-1. **Compilar el paquete:**
+1. **Compilar el espacio de trabajo:**
    ```bash
    cd ~/ros2_ws
-   colcon build --packages-select burger_description
+   colcon build --symlink-install
    source install/setup.bash
    ```
+   *Para el brazo Kinova real, ver: [Guía de Instalación Kortex](ros2_setup/INSTALACION_KORTEX.md).*
+
 2. **Lanzar visualización:**
    ```bash
    ros2 launch burger_description display.launch.py

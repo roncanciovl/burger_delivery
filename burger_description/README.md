@@ -212,8 +212,8 @@ El URDF ya incluye configuración `ros2_control` para el Kinova Gen3:
 
 Para conectar al robot real:
 ```bash
-sudo apt install ros-jazzy-kortex-driver
-ros2 launch kortex_driver kortex_driver.launch.py robot_ip:=192.168.11.11
+# Ver guía de instalación en: ros2_setup/INSTALACION_KORTEX.md
+ros2 launch kortex_bringup gen3.launch.py robot_ip:=192.168.1.10
 ```
 
 ### 4. Coordinate Frames para Pick-and-Place
