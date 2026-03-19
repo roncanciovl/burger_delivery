@@ -95,8 +95,34 @@ sudo apt update && sudo apt install -y tshark
 
 ---
 
-## 5. Resumen de Flujo de Trabajo
-Si el robot se mueve con lag:
-1. Ejecuta `./diagnostico_wifi.sh` para descartar mala señal.
-2. Ejecuta `./analisis_trafico_ros2.sh` para ver interferencia de otros dominios.
-3. Si el problema persiste, usa `tshark` para ver si hay pérdida de paquetes (retransmisiones).
+## 5. Cómo Evaluar si las Optimizaciones Funcionan
+
+Para comprobar empíricamente que los ajustes para mitigar latencia (compresión, QoS, FPS) y los cambios en la red (Discovery Server / CycloneDDS) fueron efectivos, usa estas 3 métricas integradas de ROS 2:
+
+1. **Ahorro en Ancho de Banda (Bandwidth):**
+   ```bash
+   ros2 topic bw /image_raw/compressed
+   ```
+   *Éxito:* Deberías observar que el consumo final disminuyó drásticamente (ej. pasar de 60 MB/s a ~1.5 MB/s) y se mantiene moderadamente constante.
+
+2. **Estabilidad de la Frecuencia (FPS Reales):**
+   ```bash
+   ros2 topic hz /image_raw/compressed
+   ```
+   *Éxito:* Verás una tasa promedio (`rate`) constante que coincide con tu límite. Si los hz fluctúan alocadamente o los mensajes llegan retrasados en ráfagas (efecto acordeón), significa que la red tiene caídas físicas y colas llenas.
+
+3. **Latencia Absoluta del Mensaje (Delay):**
+   *(Nota: Requiere que todos los equipos compartan la hora sincronizada mediante `chrony` o `ntp`)*
+   ```bash
+   ros2 topic delay /image_raw/compressed
+   ```
+   *Éxito:* Calcula la diferencia entre el instante en el robot captura la imagen (`header.stamp`) y cuando tu PC la desempaqueta. Si los promedios bajan sustancialmente y los picos de *Max delay* desaparecen, la optimización ha sido un éxito rotundo.
+
+---
+
+## 6. Resumen de Flujo de Trabajo
+Si el robot se mueve con lag o video retrasado:
+1. Ejecuta `./diagnostico_wifi.sh` para descartar mala señal (nivel físico).
+2. Ejecuta `./analisis_trafico_ros2.sh` para localizar cuellos de botella por dominios/multicast.
+3. Utiliza la sección 5 (`ros2 topic hz/bw`) para evaluar la estabilidad de los mensajes críticos como el video.
+4. Si aún se sufre, audita los paquetes puros con `tshark` para evidenciar interferencia o retransmisión de hardware en la señal Wi-Fi.
