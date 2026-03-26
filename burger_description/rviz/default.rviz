@@ -1,6 +1,6 @@
 Panels:
   - Class: rviz_common/Displays
-    Help Height: 78
+    Help Height: 70
     Name: Displays
     Property Tree Widget:
       Expanded:
@@ -9,7 +9,7 @@ Panels:
         - /RobotModel1
         - /TF1
       Splitter Ratio: 0.5
-    Tree Height: 557
+    Tree Height: 85
   - Class: rviz_common/Selection
     Name: Selection
   - Class: rviz_common/Tool Properties
@@ -62,6 +62,242 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
+        burger_grip_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        car1_Base_rueda_castor_Link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        car1_Rueda_castor_Link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        car1_Rueda_derecha_Link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        car1_Rueda_izquierda_Link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        car1_base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        car2_base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        car2_wheel1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        car2_wheel2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        car2_wheel3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        car2_wheel4:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        delivery_slot_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        gen3_base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        gen3_bracelet_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        gen3_end_effector_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        gen3_forearm_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        gen3_half_arm_1_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        gen3_half_arm_2_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        gen3_robotiq_85_base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        gen3_robotiq_85_left_finger_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        gen3_robotiq_85_left_finger_tip_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        gen3_robotiq_85_left_inner_knuckle_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        gen3_robotiq_85_left_knuckle_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        gen3_robotiq_85_right_finger_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        gen3_robotiq_85_right_finger_tip_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        gen3_robotiq_85_right_inner_knuckle_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        gen3_robotiq_85_right_knuckle_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        gen3_shoulder_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        gen3_spherical_wrist_1_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        gen3_spherical_wrist_2_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        kinova_base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        kinova_tool_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        map:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        overhead_camera_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        staging_area:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        table_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        world:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        wrist_camera_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        wrist_camera_mount_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wrist_mounted_camera_bottom_screw_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        wrist_mounted_camera_color_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        wrist_mounted_camera_color_optical_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        wrist_mounted_camera_depth_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        wrist_mounted_camera_depth_optical_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        wrist_mounted_camera_infra1_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        wrist_mounted_camera_infra1_optical_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        wrist_mounted_camera_infra2_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        wrist_mounted_camera_infra2_optical_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        wrist_mounted_camera_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+      Mass Properties:
+        Inertia: false
+        Mass: false
       Name: RobotModel
       TF Prefix: ""
       Update Interval: 0
@@ -69,22 +305,189 @@ Visualization Manager:
       Visual Enabled: true
     - Class: rviz_default_plugins/TF
       Enabled: true
+      Filter (blacklist): ""
+      Filter (whitelist): ""
       Frame Timeout: 15
       Frames:
         All Enabled: true
+        burger_grip_frame:
+          Value: true
+        car1_Base_rueda_castor_Link:
+          Value: true
+        car1_Rueda_castor_Link:
+          Value: true
+        car1_Rueda_derecha_Link:
+          Value: true
+        car1_Rueda_izquierda_Link:
+          Value: true
+        car1_base_link:
+          Value: true
+        car2_base_link:
+          Value: true
+        car2_wheel1:
+          Value: true
+        car2_wheel2:
+          Value: true
+        car2_wheel3:
+          Value: true
+        car2_wheel4:
+          Value: true
+        delivery_slot_1:
+          Value: true
+        gen3_base_link:
+          Value: true
+        gen3_bracelet_link:
+          Value: true
+        gen3_end_effector_link:
+          Value: true
+        gen3_forearm_link:
+          Value: true
+        gen3_half_arm_1_link:
+          Value: true
+        gen3_half_arm_2_link:
+          Value: true
+        gen3_robotiq_85_base_link:
+          Value: true
+        gen3_robotiq_85_left_finger_link:
+          Value: true
+        gen3_robotiq_85_left_finger_tip_link:
+          Value: true
+        gen3_robotiq_85_left_inner_knuckle_link:
+          Value: true
+        gen3_robotiq_85_left_knuckle_link:
+          Value: true
+        gen3_robotiq_85_right_finger_link:
+          Value: true
+        gen3_robotiq_85_right_finger_tip_link:
+          Value: true
+        gen3_robotiq_85_right_inner_knuckle_link:
+          Value: true
+        gen3_robotiq_85_right_knuckle_link:
+          Value: true
+        gen3_shoulder_link:
+          Value: true
+        gen3_spherical_wrist_1_link:
+          Value: true
+        gen3_spherical_wrist_2_link:
+          Value: true
+        kinova_base_link:
+          Value: true
+        kinova_tool_frame:
+          Value: true
+        map:
+          Value: true
+        overhead_camera_link:
+          Value: true
+        staging_area:
+          Value: true
+        table_link:
+          Value: true
+        world:
+          Value: true
+        wrist_camera_link:
+          Value: true
+        wrist_camera_mount_link:
+          Value: true
+        wrist_mounted_camera_bottom_screw_frame:
+          Value: true
+        wrist_mounted_camera_color_frame:
+          Value: true
+        wrist_mounted_camera_color_optical_frame:
+          Value: true
+        wrist_mounted_camera_depth_frame:
+          Value: true
+        wrist_mounted_camera_depth_optical_frame:
+          Value: true
+        wrist_mounted_camera_infra1_frame:
+          Value: true
+        wrist_mounted_camera_infra1_optical_frame:
+          Value: true
+        wrist_mounted_camera_infra2_frame:
+          Value: true
+        wrist_mounted_camera_infra2_optical_frame:
+          Value: true
+        wrist_mounted_camera_link:
+          Value: true
       Marker Scale: 1
       Name: TF
       Show Arrows: true
-      Show Axes: true
-      Show Names: true
+      Show Axes: false
+      Show Names: false
       Tree:
-        {}
+        map:
+          overhead_camera_link:
+            {}
+          staging_area:
+            delivery_slot_1:
+              {}
+          table_link:
+            car1_base_link:
+              car1_Base_rueda_castor_Link:
+                car1_Rueda_castor_Link:
+                  {}
+              car1_Rueda_derecha_Link:
+                {}
+              car1_Rueda_izquierda_Link:
+                {}
+            car2_base_link:
+              car2_wheel1:
+                {}
+              car2_wheel2:
+                {}
+              car2_wheel3:
+                {}
+              car2_wheel4:
+                {}
+            kinova_base_link:
+              kinova_tool_frame:
+                burger_grip_frame:
+                  {}
+            world:
+              gen3_base_link:
+                gen3_shoulder_link:
+                  gen3_half_arm_1_link:
+                    gen3_half_arm_2_link:
+                      gen3_forearm_link:
+                        gen3_spherical_wrist_1_link:
+                          gen3_spherical_wrist_2_link:
+                            gen3_bracelet_link:
+                              gen3_end_effector_link:
+                                gen3_robotiq_85_base_link:
+                                  gen3_robotiq_85_left_inner_knuckle_link:
+                                    {}
+                                  gen3_robotiq_85_left_knuckle_link:
+                                    gen3_robotiq_85_left_finger_link:
+                                      gen3_robotiq_85_left_finger_tip_link:
+                                        {}
+                                  gen3_robotiq_85_right_inner_knuckle_link:
+                                    {}
+                                  gen3_robotiq_85_right_knuckle_link:
+                                    gen3_robotiq_85_right_finger_link:
+                                      gen3_robotiq_85_right_finger_tip_link:
+                                        {}
+                              wrist_camera_link:
+                                wrist_mounted_camera_bottom_screw_frame:
+                                  wrist_mounted_camera_link:
+                                    wrist_mounted_camera_color_frame:
+                                      wrist_mounted_camera_color_optical_frame:
+                                        {}
+                                    wrist_mounted_camera_depth_frame:
+                                      wrist_mounted_camera_depth_optical_frame:
+                                        {}
+                                    wrist_mounted_camera_infra1_frame:
+                                      wrist_mounted_camera_infra1_optical_frame:
+                                        {}
+                                    wrist_mounted_camera_infra2_frame:
+                                      wrist_mounted_camera_infra2_optical_frame:
+                                        {}
+                              wrist_camera_mount_link:
+                                {}
       Update Interval: 0
       Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: base_link
+    Fixed Frame: world
     Frame Rate: 30
   Name: root
   Tools:
@@ -94,7 +497,11 @@ Visualization Manager:
     - Class: rviz_default_plugins/Select
     - Class: rviz_default_plugins/FocusCamera
     - Class: rviz_default_plugins/Measure
+      Line color: 128; 128; 0
     - Class: rviz_default_plugins/SetInitialPose
+      Covariance x: 0.25
+      Covariance y: 0.25
+      Covariance yaw: 0.06853891909122467
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -116,11 +523,14 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /clicked_point
+  Transformation:
+    Current:
+      Class: rviz_default_plugins/TF
   Value: true
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 10
+      Distance: 3.3784823417663574
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -135,8 +545,24 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.785398006439209
+      Pitch: 0.7753979563713074
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.785398006439209
+      Yaw: 0.37539783120155334
     Saved: ~
+Window Geometry:
+  Displays:
+    collapsed: false
+  Height: 687
+  Hide Left Dock: false
+  Hide Right Dock: false
+  QMainWindow State: 000000ff00000000fd00000001000000000000019b00000259fc0200000004fb000000100044006900730070006c006100790073010000003b000000d6000000c700fffffffb0000001200530065006c0065006300740069006f006e0100000117000000620000005c00fffffffb0000001e0054006f006f006c002000500072006f0070006500720074006900650073010000017f000000630000005c00fffffffb0000000a0056006900650077007301000001e8000000ac000000a000ffffff000003a90000025900000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  Selection:
+    collapsed: false
+  Tool Properties:
+    collapsed: false
+  Views:
+    collapsed: false
+  Width: 1354
+  X: 0
+  Y: 0
