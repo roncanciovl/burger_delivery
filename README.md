@@ -1,89 +1,160 @@
-# Biblioteca de proyectos ROS y apuntes
+# burger_delivery
 
-Este repositorio centraliza la documentación y los modelos usados en el proyecto **Burger Delivery con ROS 2 Jazzy**. El foco principal es la celda donde un manipulador **Kinova Gen3** entrega bandejas a robots diferenciales coordinados mediante `tf2`, visión por AprilTags y micro-ROS, optimizado para entornos inalámbricos de alta densidad.
+Este repositorio centraliza la documentación, los modelos y los recursos usados en el proyecto **Burger Delivery con ROS 2 Jazzy**. El foco principal es la celda donde un manipulador **Kinova Gen3** entrega bandejas a robots diferenciales coordinados mediante `tf2`, visión por AprilTags y micro-ROS, optimizado para entornos inalámbricos de alta densidad.
 
-## 📁 Estructura relevante
+Actualmente, el contenido implementado en este repositorio está centrado en el paquete `burger_description`, la visualización de la escena, scripts auxiliares y documentación técnica para Linux o WSL.
 
-- `burger_description/`: **Paquete principal** con el URDF y archivos de lanzamiento.
-  - `GUIA_DE_USO.md`: Guía de inicio rápido para visualización.
-  - `urdf/delivery_scene_fixed.urdf`: Modelo URDF corregido (Kinova + Carritos + Escena).
-- `network_setup/`: **Infraestructura de Red** (Configuración Crítica y Diagnóstico).
-  - [`DIAGNOSTICO_RED.md`](network_setup/DIAGNOSTICO_RED.md): **Guía Maestra** de resolución de problemas (Niveles 1-4).
-  - [`ROS2_NETWORK_CONFIG.md`](network_setup/ROS2_NETWORK_CONFIG.md): Configuración de RMW, Domain ID y Modo Mirrored de WSL.
-  - `fastdds_discovery.xml`: Configuración para Discovery Server (evita problemas de Multicast).
-- `ros_burger_delivery.md`: Documentación técnica de la arquitectura y flujos.
-- `lanzar_robot.sh`: Script de automatización para lanzar la visualización completa.
+## Alcance actual
 
-## 🚀 Uso rápido del sistema
+Este proyecto contiene hoy:
 
-### Opción Rápida (Scripts de automatización)
-Para lanzar la visualización en RViz con todos los componentes preconfigurados:
+- Un paquete ROS 2 compilable: `burger_description`.
+- Modelos URDF de la escena de entrega.
+- Un `launch` para publicar TF, mover joints manualmente y abrir RViz.
+- Mallas vendorizadas del Kinova Gen3, Robotiq y dos carros móviles.
+- Documentación de arquitectura, instalación y red.
+- Scripts auxiliares para build, lanzamiento y diagnóstico.
+
+No contiene todavía un stack completo de operación autónoma en este repositorio: no hay paquetes propios de navegación, percepción, planeación o lógica de pedidos listos para compilar aquí.
+
+## Estructura
+
+- `burger_description/`: paquete ROS 2 principal.
+- `burger_description/urdf/delivery_scene_fixed.urdf`: escena principal usada por el launch actual.
+- `burger_description/urdf/burger_delivery_gen3.urdf`: variante adicional de escena con Gen3.
+- `burger_description/launch/display.launch.py`: lanza `robot_state_publisher`, `joint_state_publisher_gui` y `rviz2`.
+- `burger_description/rviz/default.rviz`: configuración base de RViz.
+- `burger_description/visual/`: mallas auxiliares y modelos de los carros.
+- `burger_description/vendor/`: recursos vendorizados de Kinova/Robotiq.
+- `network_setup/`: scripts y guías de diagnóstico de red ROS 2 y micro-ROS.
+- `ros2_setup/`: notas de instalación y verificación de ROS 2 Jazzy.
+- `lanzar_robot.sh`: script rápido para abrir la visualización y `rqt`.
+- `build_burger.sh`: script de compilación del paquete.
+
+## Qué modela el URDF
+
+La escena incluye:
+
+- Frame raíz `map`.
+- Mesa de trabajo `table_link`.
+- Zona de staging `staging_area`.
+- Un slot de entrega `delivery_slot_1`.
+- Base auxiliar del manipulador `kinova_base_link`.
+- Tool frame y grip frame (`kinova_tool_frame`, `burger_grip_frame`).
+- Cámara aérea `overhead_camera_link`.
+- Brazo Kinova Gen3 de 7 GDL.
+- Gripper Robotiq 2F-85.
+- Frames de cámara de muñeca.
+- Dos robots móviles de referencia: `car1` y `car2`.
+- Un bloque `ros2_control` para hardware Kinova con plugin `kortex2_driver/KortexMultiInterfaceHardware`.
+
+## Requisitos
+
+- Ubuntu con ROS 2 Jazzy instalado.
+- `colcon`.
+- Paquetes de escritorio de ROS 2 para usar RViz.
+- Dependencias declaradas por el paquete:
+  - `joint_state_publisher_gui`
+  - `robot_state_publisher`
+  - `rviz2`
+  - `xacro`
+
+Si necesitas instalar ROS 2 desde cero, revisa `install_ros2.sh` y la documentación en `ros2_setup/`.
+
+## Compilación
+
+Si este repositorio está dentro de `~/ros2_ws/src`, compila así:
+
 ```bash
-chmod +x lanzar_robot.sh
+cd ~/ros2_ws
+source /opt/ros/jazzy/setup.bash
+colcon build --packages-select burger_description
+source install/setup.bash
+```
+
+También existe el script:
+
+```bash
+./build_burger.sh
+```
+
+## Ejecución
+
+Lanzamiento manual:
+
+```bash
+cd ~/ros2_ws
+source install/setup.bash
+ros2 launch burger_description display.launch.py
+```
+
+Ese launch abre:
+
+- `robot_state_publisher`
+- `joint_state_publisher_gui`
+- `rviz2`
+
+Script rápido:
+
+```bash
 ./lanzar_robot.sh
 ```
 
-### Opción Manual (WSL/Linux)
-1. **Compilar el espacio de trabajo:**
-   ```bash
-   cd ~/ros2_ws
-   colcon build --symlink-install
-   source install/setup.bash
-   ```
-   *Para el brazo Kinova real, ver: [Guía de Instalación Kortex](ros2_setup/INSTALACION_KORTEX.md).*
+Ese script además intenta abrir `rqt`.
 
-2. **Lanzar visualización:**
-   ```bash
-   ros2 launch burger_description display.launch.py
-   ```
-   *Incluye: Kinova Gen3, Gripper Robotiq, Robots móviles, y la mesa de entrega.*
+## Notas de uso
 
----
+- El launch actual carga `burger_description/urdf/delivery_scene_fixed.urdf`.
+- En RViz conviene usar `map` como `Fixed Frame`.
+- El paquete instalable es `burger_description`, aunque el repositorio se llama `burger_delivery`.
+- `lanzar_robot.sh` usa una ruta absoluta al workspace del entorno actual: `/home/roncanciovl/ros2_ws/install/setup.bash`. Si mueves el proyecto a otra máquina, tendrás que ajustarla.
 
-## 📶 Diagnóstico y Configuración de Red ROS 2
+## Documentación adicional
 
-Hemos implementado un sistema de diagnóstico multinivel para asegurar la estabilidad del sistema en redes WiFi 6 y entornos con micro-ROS.
+- `burger_description/GUIA_DE_USO.md`: guía rápida de uso.
+- `burger_description/README.md`: README específico del paquete.
+- `ros_burger_delivery.md`: documento técnico de arquitectura y flujo propuesto.
+- `launch.md`: notas para visualizar URDF en visor web.
+- `network_setup/DIAGNOSTICO_RED.md`: guía de diagnóstico de red ROS 2.
+- `network_setup/ROS2_NETWORK_CONFIG.md`: configuración de red recomendada.
+- `ros2_setup/INSTALACION_KORTEX.md`: instalación del stack Kortex.
+- `ros2_setup/verificar_ros2.md`: verificación de instalación de ROS 2 Jazzy.
 
-### 1. Herramientas de Diagnóstico (Niveles 1-4)
-Si experimentas lag, pérdida de tópicos o desconexión de las ESP32, usa los scripts en `network_setup/`:
+## Diagramas de referencia
 
-| Nivel | Script | Objetivo | Diagnóstico |
-| :--- | :--- | :--- | :--- |
-| **1** | `test_ros2_network.sh` | **Salud Local** | Verifica variables de entorno y visibilidad de nodos. |
-| **2** | `diagnostico_wifi.sh` | **Calidad Física** | Analiza latencia al router, RSSI y congestión WiFi. |
-| **3** | `analisis_trafico_ros2.sh` | **Rendimiento** | Optimización de MTU, fragmentación y ancho de banda. |
-| **4** | `test_wan_access.sh` | **Acceso WAN** | Verifica salida a internet (necesario para updates/drivers). |
+Los siguientes diagramas en formato SVG sirven como referencia rápida de arquitectura, transformaciones y vision del sistema:
 
-### 2. Configuración Óptima (Recomendada)
-Para máxima estabilidad en WiFi, configura tu `~/.bashrc` con:
-```bash
-export ROS_DOMAIN_ID=42
-export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
-export ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET
-```
-*Nota: CycloneDDS gestiona mucho mejor la pérdida de paquetes que el RMW por defecto.*
+### Esquema de localizacion por vision
 
-### 3. Configuración Crítica del Router & Firewall
-**⚠️ El ping puede funcionar pero ROS no si estas opciones están mal:**
+Reconstruccion vectorial basada en el esquema de pizarra del proyecto:
 
-- **AP Isolation:** Debe estar **DESACTIVADO** en el router para que los dispositivos se vean entre sí.
-- **Reserva IP:** El PC Principal debe tener la IP `192.168.1.100` reservada mediante MAC.
-- **Firewall:** Abre los puertos UDP `7400-7500` (DDS) y `8888` (micro-ROS).
-  ```bash
-  sudo ufw allow 7400:7500/udp
-  sudo ufw allow 8888/udp
-  ```
+![Esquema de localizacion por vision](vision_localizacion_whiteboard.svg)
 
-### 4. Modo Mirrored (WSL2)
-Si usas Windows, es **fundamental** activar el `networkingMode=mirrored` en tu `.wslconfig` para que WSL comparta la IP real de tu PC y sea visible en la red física. Ver [guía detallada acá](network_setup/ROS2_NETWORK_CONFIG.md#💻-wsl-networking-configuration-windows-users).
+### Árbol TF
 
----
+![Árbol TF del proyecto](tf_tree_diagram.svg)
 
-## 🛠️ Visualizadores y Referencias
+### Red ROS 2
 
-- **Visualización URDF:** [Online URDF Viewer](https://gkjohnson.github.io/urdf-loaders/javascript/example/bundle/index.html) para pruebas rápidas de modelos.
-- **Captura Avanzada:** Si nada funciona, usa `tcpdump` o Wireshark con el filtro `udp.port == 8888` o `rtps`.
-- **Árbol TF2:** Consulta `tf_tree_diagram.svg` para entender la jerarquía de coordenadas.
+![Diagrama de red ROS 2](network_setup/ros_network_diagram.svg)
 
-> **Importante:** Mantén los URDF y la documentación sincronizados. Cualquier cambio en joints/links debe reflejarse en la guía técnica para evitar errores de posicionamiento.
+### Dependencias
 
+![Mapa de dependencias](ros2_setup/MAPA_DEPENDENCIAS.svg)
+
+### Dependencias AI
+
+![Mapa de dependencias AI](ros2_setup/MAPA_DEPENDENCIAS_AI.svg)
+
+## Diagnóstico de red y micro-ROS
+
+En `network_setup/` hay utilidades para revisar conectividad y rendimiento:
+
+- `test_ros2_network.sh`
+- `diagnostico_wifi.sh`
+- `analisis_trafico_ros2.sh`
+- `test_wan_access.sh`
+- `diagnostico_microros.sh`
+- `diagnostico_microros.ps1`
+
+Estas herramientas son auxiliares y no forman parte del launch principal del paquete.
