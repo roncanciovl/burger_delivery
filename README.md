@@ -7,7 +7,6 @@ Este repositorio centraliza la documentación y los modelos usados en el proyect
 - `ROS/ros_burger_delivery.md`: guía completa del sistema (arquitectura, tf2, nodos, flujos).
 - `ROS/visual/burger_delivery_gen3.urdf`: escena compuesta con la mesa, Kinova y robots móviles; sirve como fuente del árbol de frames.
 - `ROS/joints.md`, `ROS/launch.md`, `ROS/ros.md`: notas auxiliares para joints URDF, lanzamientos y configuración general de ROS 2.
-- `ROS/vendor/`: paquetes vendorizados (Kinova Gen3, Robotiq) referenciados por los URDF.
 - Carpetas adicionales (`IA/`, `PDS BIO/`, etc.) contienen exámenes y apuntes que no interfieren con el stack ROS.
 
 ## Uso rápido del modelo ROS
@@ -26,6 +25,7 @@ Este repositorio centraliza la documentación y los modelos usados en el proyect
 ## Visualizadores URDF
 
 - [Online URDF Viewer](https://gkjohnson.github.io/urdf-loaders/javascript/example/bundle/index.html): Herramienta web para visualizar y manipular modelos URDF directamente en el navegador.
+
 
 ## Diagnóstico de Comunicación micro-ROS
 
