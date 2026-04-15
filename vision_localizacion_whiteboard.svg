@@ -1,179 +1,147 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
-  <title id="title">Esquema de localizacion por vision para burger_delivery</title>
-  <desc id="desc">Reconstruccion vectorial basada en una pizarra: mesa de pruebas con Kinova, camara, AprilTag, robots moviles, router, servidor y flujo cliente-servidor.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" style="background-color: #f8f9fa; font-family: 'Segoe UI', Roboto, Helvetica, 'Arial', sans-serif;">
   <defs>
-    <style>
-      .bg { fill: #fcfcf8; }
-      .panel { fill: #ffffff; stroke: #d8d8cf; stroke-width: 2; }
-      .title { font: 700 34px 'Arial', sans-serif; fill: #1f3f6b; }
-      .subtitle { font: 600 22px 'Arial', sans-serif; fill: #325d88; }
-      .label { font: 600 24px 'Arial', sans-serif; fill: #202020; }
-      .small { font: 500 18px 'Arial', sans-serif; fill: #303030; }
-      .tiny { font: 500 15px 'Arial', sans-serif; fill: #404040; }
-      .greenText { fill: #2f8f55; }
-      .blueText { fill: #2d5ea8; }
-      .redText { fill: #c94737; }
-      .muted { fill: #656565; }
-      .blackStroke { stroke: #222; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; fill: none; }
-      .thinStroke { stroke: #2b2b2b; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; fill: none; }
-      .tableTop { fill: #fafafa; stroke: #404040; stroke-width: 3; }
-      .tableLeg { stroke: #404040; stroke-width: 4; stroke-linecap: round; }
-      .greenArea { fill: rgba(74, 175, 112, 0.08); stroke: #3ea164; stroke-width: 3; }
-      .redArea { fill: rgba(224, 95, 74, 0.05); stroke: #d75a46; stroke-width: 3; }
-      .robotBody { fill: #fff4e8; stroke: #3f3f3f; stroke-width: 3; }
-      .robotTag { fill: #fff; stroke: #c94737; stroke-width: 2; }
-      .wheel { fill: #222; }
-      .callout { fill: #fff; stroke: #c94737; stroke-width: 3; rx: 14; }
-      .serviceCircle { fill: #fffef6; stroke: #4b9d66; stroke-width: 3; }
-      .serverCircle { fill: #ffffff; stroke: #4b9d66; stroke-width: 3; }
-      .clientCircle { fill: #ffffff; stroke: #9fcab1; stroke-width: 3; }
-      .bubbleText { font: 600 18px 'Arial', sans-serif; fill: #232323; }
-      .arrowBlue { stroke: #2d6fcb; stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-      .arrowGreen { stroke: #4b9d66; stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-      .arrowRed { stroke: #d75a46; stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-      .dashed { stroke-dasharray: 9 9; }
-    </style>
-    <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2d6fcb"/>
+    <!-- Arrow Markers -->
+    <marker id="arrow-green" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#4caf50" />
     </marker>
-    <marker id="arrow-green" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#4b9d66"/>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2196f3" />
     </marker>
-    <marker id="arrow-red" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#d75a46"/>
+    <marker id="arrow-red" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#f44336" />
     </marker>
+    <marker id="arrow-orange" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#ff9800" />
+    </marker>
+
+    <!-- AprilTag Component -->
+    <g id="apriltag">
+      <rect x="0" y="0" width="50" height="50" fill="#212121" rx="4"/>
+      <rect x="5" y="5" width="40" height="40" fill="#ffffff"/>
+      <!-- Internal Grid Mockup -->
+      <rect x="10" y="10" width="12" height="12" fill="#212121"/>
+      <rect x="28" y="10" width="12" height="12" fill="#212121"/>
+      <rect x="10" y="28" width="8" height="12" fill="#212121"/>
+      <rect x="22" y="28" width="18" height="12" fill="#212121"/>
+      <text x="25" y="-8" font-size="14" fill="#d32f2f" font-weight="bold" text-anchor="middle">AprilTag</text>
+    </g>
+
+    <!-- TurtleBot Front-Top View -->
+    <g id="turtlebot">
+      <!-- Body chassis -->
+      <circle cx="45" cy="45" r="45" fill="#cfd8dc" stroke="#90a4ae" stroke-width="4"/>
+      <!-- Wheels -->
+      <rect x="-5" y="15" width="10" height="60" rx="3" fill="#37474f"/>
+      <rect x="85" y="15" width="10" height="60" rx="3" fill="#37474f"/>
+      <!-- Front marking -->
+      <path d="M 35 5 L 55 5 L 45 15 Z" fill="#2196f3"/>
+    </g>
   </defs>
 
-  <rect class="bg" width="1600" height="900"/>
-  <rect class="panel" x="18" y="18" width="1564" height="864" rx="18"/>
+  <!-- Title -->
+  <text x="800" y="60" fill="#263238" font-size="36" font-weight="bold" text-anchor="middle">Esquema de Localización por Visión - Burger Delivery</text>
+  <text x="800" y="95" fill="#546e7a" font-size="20" font-weight="500" text-anchor="middle">Uso de cámara (Kinova) y AprilTags para detección de robots exploradores</text>
 
-  <text class="title" x="580" y="90">Localizacion de los carritos domiciliarios</text>
-  <text class="subtitle" x="700" y="128">usando vision (camara)</text>
+  <!-- ==================== AREA DE PREPARACION (LEFT) ==================== -->
+  <rect x="50" y="160" width="500" height="500" rx="20" fill="#e8f5e9" stroke="#81c784" stroke-width="5" stroke-dasharray="15,10"/>
+  <text x="300" y="210" fill="#2e7d32" font-size="28" font-weight="bold" text-anchor="middle">Área de Preparación</text>
+  <text x="300" y="240" fill="#4caf50" font-size="16" font-weight="bold" text-anchor="middle">(Donde se sirven las hamburguesas)</text>
 
-  <g transform="translate(0,10)">
-    <polygon class="tableTop" points="455,300 1048,315 1312,430 655,445"/>
-    <line class="tableLeg" x1="530" y1="448" x2="520" y2="692"/>
-    <line class="tableLeg" x1="713" y1="445" x2="710" y2="820"/>
-    <line class="tableLeg" x1="1045" y1="431" x2="1040" y2="810"/>
-    <line class="tableLeg" x1="1285" y1="425" x2="1285" y2="690"/>
+  <!-- Kinova Base -->
+  <circle cx="200" cy="450" r="50" fill="#455a64" stroke="#263238" stroke-width="5"/>
+  <circle cx="200" cy="450" r="30" fill="#607d8b"/>
+  <text x="200" y="530" fill="#37474f" font-size="18" font-weight="bold" text-anchor="middle">Brazo Kinova</text>
 
-    <polygon class="greenArea" points="570,328 760,334 700,427 520,420"/>
-    <text class="label greenText" x="585" y="392" transform="rotate(-28 585 392)">Area de preparacion</text>
-    <text class="small greenText" x="635" y="418" transform="rotate(-28 635 418)">de las hamburguesas</text>
+  <!-- Kinova Arm Links -->
+  <!-- Link 1 -->
+  <line x1="200" y1="450" x2="350" y2="350" stroke="#b0bec5" stroke-width="25" stroke-linecap="round"/>
+  <line x1="200" y1="450" x2="350" y2="350" stroke="#78909c" stroke-width="5" stroke-linecap="round" stroke-dasharray="5,15"/>
+  <circle cx="350" cy="350" r="15" fill="#ffb300"/>
+  
+  <!-- Link 2 -->
+  <line x1="350" y1="350" x2="480" y2="440" stroke="#b0bec5" stroke-width="20" stroke-linecap="round"/>
+  <circle cx="480" cy="440" r="12" fill="#ffb300"/>
 
-    <polygon class="redArea" points="690,345 1080,352 1220,414 745,426"/>
-    <text class="label redText" x="805" y="438">Espacio de operacion</text>
+  <!-- End Effector / Camera -->
+  <rect x="460" y="430" width="50" height="40" rx="5" fill="#f4511e" stroke="#d84315" stroke-width="4"/>
+  <circle cx="510" cy="450" r="10" fill="#212121"/> <!-- Camera Lens -->
+  <text x="440" y="415" fill="#d84315" font-size="16" font-weight="bold" text-anchor="end">Cámara (Ojo del sistema)</text>
 
-    <text class="label" x="1298" y="438">Mesa de pruebas</text>
+  <!-- FOV CONE -->
+  <polygon points="520,450 1150,220 1150,680" fill="rgba(255, 152, 0, 0.15)" stroke="#ffb300" stroke-width="2" stroke-dasharray="10,5"/>
+  <text x="590" y="390" fill="#f57c00" font-size="18" font-weight="bold" transform="rotate(10, 590, 390)">Campo de Visión (FOV)</text>
+
+
+  <!-- ==================== MESA DE PRUEBAS (CENTER-RIGHT) ==================== -->
+  <rect x="650" y="160" width="550" height="500" rx="20" fill="#e3f2fd" stroke="#64b5f6" stroke-width="5" stroke-dasharray="15,10"/>
+  <text x="925" y="210" fill="#1565c0" font-size="28" font-weight="bold" text-anchor="middle">Mesa de Pruebas</text>
+  <text x="925" y="240" fill="#2196f3" font-size="16" font-weight="bold" text-anchor="middle">(Donde operan los TurtleBots)</text>
+
+  <!-- Origin Marker (AprilTag Reference) -->
+  <use href="#apriltag" x="640" y="590"/>
+  
+  <!-- Reference Raycast from Camera to Origin Tag -->
+  <path d="M 520 450 L 665 615" stroke="#2196f3" stroke-width="2" stroke-dasharray="4,4"/>
+  
+  <path d="M 665 615 L 750 615" stroke="#f44336" stroke-width="4" marker-end="url(#arrow-red)"/>
+  <text x="760" y="620" fill="#f44336" font-size="16" font-weight="bold">X</text>
+  <path d="M 665 615 L 665 520" stroke="#4caf50" stroke-width="4" marker-end="url(#arrow-green)"/>
+  <text x="660" y="510" fill="#4caf50" font-size="16" font-weight="bold">Y</text>
+  <text x="700" y="655" fill="#546e7a" font-size="16" font-weight="bold">Origen Global (Tag Referencia)</text>
+  
+  <text x="700" y="675" fill="#78909c" font-size="14">(La pose de los robots es un Offset relativo a este TAG estático)</text>
+
+  <!-- TurtleBots -->
+  <!-- Robot 1 -->
+  <g transform="translate(750, 350)">
+    <use href="#turtlebot" x="0" y="0"/>
+    <use href="#apriltag" x="20" y="20"/>
   </g>
+  <path d="M 520 450 L 780 395" stroke="#f4511e" stroke-width="2" stroke-dasharray="4,4"/> <!-- Raycast from camera to tag -->
+  <text x="780" y="340" fill="#37474f" font-size="16" font-weight="bold" text-anchor="middle">Robot 1</text>
 
-  <g transform="translate(0,8)">
-    <path class="blackStroke" d="M 510 462 C 510 420, 505 370, 530 334 L 585 258 L 625 244 L 675 278 L 688 318"/>
-    <path class="blackStroke" d="M 688 318 C 705 305, 726 295, 748 294"/>
-    <path class="blackStroke" d="M 748 294 C 758 282, 772 274, 790 272"/>
-    <circle cx="518" cy="463" r="28" fill="#f4f4f0" stroke="#222" stroke-width="3"/>
-    <text class="label greenText" x="438" y="368" transform="rotate(-26 438 368)">Kinova</text>
-    <text class="small" x="763" y="245">(camara)</text>
-    <path class="arrowBlue dashed" d="M 782 286 C 836 310, 888 332, 930 354" marker-end="url(#arrow-blue)"/>
-    <path class="arrowBlue dashed" d="M 790 288 C 832 330, 860 355, 900 392" marker-end="url(#arrow-blue)"/>
+  <!-- Robot 2 -->
+  <g transform="translate(950, 480) rotate(-15 45 45)">
+    <use href="#turtlebot" x="0" y="0"/>
+    <use href="#apriltag" x="20" y="20"/>
   </g>
+  <path d="M 520 450 L 980 520" stroke="#f4511e" stroke-width="2" stroke-dasharray="4,4"/> <!-- Raycast from camera to tag -->
+  <text x="1000" y="470" fill="#37474f" font-size="16" font-weight="bold" text-anchor="middle">Robot 2</text>
 
-  <g>
-    <rect class="callout" x="910" y="260" width="140" height="66"/>
-    <text class="title redText" x="936" y="304" style="font-size:28px;">AprilTag</text>
-    <text class="small redText" x="956" y="348">Robusto a distorsiones,</text>
-    <text class="small redText" x="958" y="372">perdida de camara</text>
-    <text class="small redText" x="976" y="396">(resolucion, distancia)</text>
-  </g>
 
-  <g>
-    <rect class="robotTag" x="828" y="340" width="52" height="52" transform="rotate(18 854 366)"/>
-    <path class="thinStroke" d="M 838 352 l 8 0 l 0 8 l -8 0 z M 854 352 l 8 0 l 0 8 l -8 0 z M 846 368 l 8 0 l 0 8 l -8 0 z" transform="rotate(18 854 366)"/>
-    <text class="label blueText" x="803" y="330">QR</text>
+  <!-- ==================== ARQUITECTURA ROS 2 (RIGHT) ==================== -->
+  <rect x="1250" y="160" width="300" height="500" rx="15" fill="#fffde7" stroke="#fff176" stroke-width="5"/>
+  <text x="1400" y="210" fill="#f57f17" font-size="24" font-weight="bold" text-anchor="middle">Servicio ROS 2</text>
+  <text x="1400" y="235" fill="#fbc02d" font-size="14" font-weight="bold" text-anchor="middle">(Cálculo de Localización)</text>
 
-    <text class="label blueText" x="788" y="414">Origen</text>
-    <text class="label blueText" x="777" y="444">de coordenadas</text>
-    <path class="arrowBlue" d="M 830 458 L 910 458"/>
-    <path class="arrowGreen" d="M 832 488 l 20 20 l 20 -20" marker-end="url(#arrow-green)"/>
-  </g>
+  <!-- Server Node -->
+  <circle cx="1400" cy="320" r="50" fill="#ffffff" stroke="#f4511e" stroke-width="4"/>
+  <text x="1400" y="315" fill="#d84315" font-size="18" font-weight="bold" text-anchor="middle">Sub-Sistema</text>
+  <text x="1400" y="335" fill="#d84315" font-size="18" font-weight="bold" text-anchor="middle">Kinova Visión</text>
 
-  <g transform="translate(0,5)">
-    <g transform="translate(962,405) rotate(-18)">
-      <rect class="robotBody" x="0" y="0" width="90" height="44" rx="8"/>
-      <rect class="robotTag" x="20" y="8" width="50" height="24" rx="3"/>
-      <path class="thinStroke" d="M 26 12 h 10 v 6 h -10 z M 42 12 h 10 v 6 h -10 z M 58 12 h 8 v 6 h -8 z M 34 22 h 10 v 6 h -10 z M 50 22 h 10 v 6 h -10 z"/>
-      <circle class="wheel" cx="10" cy="42" r="9"/>
-      <circle class="wheel" cx="76" cy="42" r="9"/>
-    </g>
-    <text class="label redText" x="952" y="410">QR</text>
-  </g>
+  <rect x="1280" y="390" width="240" height="90" rx="10" fill="#ffffff" stroke="#e0e0e0" stroke-width="2"/>
+  <text x="1400" y="420" fill="#546e7a" font-size="14" text-anchor="middle">Procesa imagen, detecta los</text>
+  <text x="1400" y="440" fill="#546e7a" font-size="14" text-anchor="middle">Tags y calcula [x, y, theta] de</text>
+  <text x="1400" y="460" fill="#546e7a" font-size="14" text-anchor="middle">los robots relativos al Tag Origen</text>
 
-  <g transform="translate(0,-10)">
-    <g transform="translate(1110,432) rotate(-18)">
-      <rect class="robotBody" x="0" y="0" width="90" height="44" rx="8"/>
-      <rect class="robotTag" x="20" y="8" width="50" height="24" rx="3"/>
-      <path class="thinStroke" d="M 26 12 h 10 v 6 h -10 z M 42 12 h 10 v 6 h -10 z M 58 12 h 8 v 6 h -8 z M 34 22 h 10 v 6 h -10 z M 50 22 h 10 v 6 h -10 z"/>
-      <circle class="wheel" cx="10" cy="42" r="9"/>
-      <circle class="wheel" cx="76" cy="42" r="9"/>
-    </g>
-  </g>
+  <!-- Client Node -->
+  <circle cx="1400" cy="580" r="50" fill="#ffffff" stroke="#2196f3" stroke-width="4"/>
+  <text x="1400" y="575" fill="#1565c0" font-size="18" font-weight="bold" text-anchor="middle">Nodo</text>
+  <text x="1400" y="595" fill="#1565c0" font-size="18" font-weight="bold" text-anchor="middle">Flota (Cliente)</text>
 
-  <g>
-    <path class="arrowBlue dashed" d="M 1030 304 C 1115 298, 1188 314, 1280 344"/>
-    <path class="arrowRed" d="M 975 325 C 975 350, 980 376, 986 398" marker-end="url(#arrow-red)"/>
-    <path class="arrowGreen" d="M 945 486 C 1030 510, 1110 512, 1185 480" marker-end="url(#arrow-green)"/>
-  </g>
+  <!-- Service Arrows -->
+  <path d="M 1360 520 L 1360 380" stroke="#ff9800" stroke-width="4" marker-end="url(#arrow-orange)" stroke-dasharray="6,4"/>
+  <text x="1350" y="470" fill="#e65100" font-size="14" font-weight="bold" text-anchor="end" transform="rotate(-90 1350 470)">Request: Dónde están?</text>
 
-  <g>
-    <path class="thinStroke" d="M 160 520 L 250 520 L 270 538 L 180 538 Z"/>
-    <path class="thinStroke" d="M 180 538 L 250 538"/>
-    <text class="label" x="188" y="508">Router</text>
-    <path class="arrowGreen" d="M 270 530 C 345 530, 400 520, 470 500" marker-end="url(#arrow-green)"/>
-  </g>
+  <path d="M 1440 380 L 1440 520" stroke="#4caf50" stroke-width="4" marker-end="url(#arrow-green)" stroke-dasharray="6,4"/>
+  <text x="1450" y="420" fill="#2e7d32" font-size="14" font-weight="bold" transform="rotate(90 1450 420)">Response: Poses relativas 3D</text>
 
-  <g>
-    <path class="thinStroke" d="M 70 685 L 162 685 L 190 712 L 100 712 Z"/>
-    <path class="thinStroke" d="M 100 712 L 100 778"/>
-    <path class="thinStroke" d="M 190 712 L 205 785"/>
-    <path class="thinStroke" d="M 88 785 L 212 785"/>
-    <text class="small" x="82" y="670">server</text>
-    <text class="label" x="220" y="750">Drivers</text>
-    <text class="label" x="220" y="782">de Kinova para</text>
-    <text class="label" x="220" y="814">Jazzy</text>
-  </g>
+  <!-- ==================== LOCAL NETWORK ==================== -->
+  <rect x="50" y="700" width="300" height="100" rx="15" fill="#eceff1" stroke="#b0bec5" stroke-width="4"/>
+  <text x="200" y="740" fill="#455a64" font-size="22" font-weight="bold" text-anchor="middle">Servidor Local &amp; Router</text>
+  <text x="200" y="765" fill="#607d8b" font-size="16" text-anchor="middle">(Drivers ROS 2 Jazzy, Red WiFi)</text>
 
-  <g transform="translate(0,-10)">
-    <text class="title" x="1308" y="74" style="font-size:30px; fill:#222;">Servicio</text>
+  <!-- Link Kinova to Network -->
+  <path d="M 200 500 L 200 690" stroke="#b0bec5" stroke-width="4" stroke-dasharray="8,8"/>
 
-    <text class="title greenText" x="1225" y="138" style="font-size:28px;">Server</text>
-    <line x1="1218" y1="146" x2="1320" y2="146" stroke="#4b9d66" stroke-width="2"/>
-    <circle class="serverCircle" cx="1275" cy="262" r="88"/>
-    <text class="bubbleText" x="1228" y="233">Llegar a esa</text>
-    <text class="bubbleText" x="1216" y="257">coordenada 3D,</text>
-    <text class="bubbleText" x="1231" y="281">inclinar la</text>
-    <text class="bubbleText" x="1226" y="305">camara y</text>
-    <text class="bubbleText" x="1235" y="329">tomar foto</text>
-
-    <text class="title greenText" x="1390" y="165" style="font-size:22px;">imagen de la</text>
-    <text class="title greenText" x="1415" y="194" style="font-size:22px;">camara del</text>
-    <text class="title greenText" x="1445" y="223" style="font-size:22px;">Kinova</text>
-    <path class="arrowGreen" d="M 1440 230 C 1435 248, 1430 262, 1420 280" marker-end="url(#arrow-green)"/>
-
-    <rect x="1386" y="236" width="82" height="54" fill="#eef8ef" stroke="#7bb089" stroke-width="2"/>
-    <path d="M 1396 274 C 1408 246, 1425 249, 1436 262 C 1447 275, 1458 270, 1460 250" fill="none" stroke="#5aa273" stroke-width="3"/>
-    <line x1="1386" y1="296" x2="1468" y2="296" stroke="#7bb089" stroke-width="2"/>
-    <text class="title greenText" x="1400" y="332" style="font-size:22px;">Response</text>
-
-    <path class="arrowGreen" d="M 1328 314 C 1360 360, 1390 408, 1450 455" marker-end="url(#arrow-green)"/>
-    <text class="label greenText" x="1348" y="397" style="font-size:20px;">Request</text>
-
-    <text class="label greenText" x="1212" y="512" style="font-size:20px;">coordenadas</text>
-    <text class="label greenText" x="1230" y="540" style="font-size:20px;">de la</text>
-    <text class="label greenText" x="1202" y="568" style="font-size:20px;">camara en</text>
-    <text class="label greenText" x="1247" y="606" style="font-size:28px;">3D.</text>
-
-    <circle class="clientCircle" cx="1480" cy="520" r="92"/>
-    <text class="label muted" x="1452" y="500">cliente</text>
-    <text class="label" x="1408" y="715">Cualquier PC</text>
-  </g>
 </svg>

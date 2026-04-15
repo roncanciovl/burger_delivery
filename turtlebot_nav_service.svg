@@ -1,0 +1,135 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1050 620" style="background-color: #1e222a; font-family: 'Segoe UI', Roboto, Helvetica, sans-serif;">
+  <defs>
+    <!-- Arrow Markers -->
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#98c379" />
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#61afef" />
+    </marker>
+    <marker id="arrow-orange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#e5c07b" />
+    </marker>
+
+    <!-- AprilTag Graphic -->
+    <g id="apriltag">
+      <rect x="0" y="0" width="50" height="50" fill="#212121" rx="4"/>
+      <rect x="5" y="5" width="40" height="40" fill="#ffffff"/>
+      <rect x="10" y="10" width="12" height="12" fill="#212121"/>
+      <rect x="28" y="10" width="12" height="12" fill="#212121"/>
+      <rect x="10" y="28" width="8" height="12" fill="#212121"/>
+      <rect x="22" y="28" width="18" height="12" fill="#212121"/>
+      <text x="25" y="-8" font-size="14" fill="#e06c75" font-weight="bold" text-anchor="middle">AprilTag</text>
+    </g>
+  </defs>
+
+  <!-- Título -->
+  <text x="525" y="40" fill="#ffffff" font-size="24" font-weight="bold" text-anchor="middle">Arquitectura de Navegación Nav2 (Basada en Localización tf2 por AprilTags)</text>
+  <line x1="40" y1="55" x2="1010" y2="55" stroke="#4b5263" stroke-width="2"/>
+
+  <!-- ======================= PANEL 1: NAV2 ACTION INTERFACE ======================= -->
+  <rect x="40" y="80" width="370" height="500" rx="10" fill="#282c34" stroke="#3e4451" stroke-width="2"/>
+  <text x="225" y="115" fill="#c678dd" font-size="18" font-weight="bold" text-anchor="middle">1. ROS 2 Action Interface</text>
+
+  <!-- Node Client -->
+  <rect x="70" y="150" width="310" height="70" rx="6" fill="#1e222a" stroke="#c678dd" stroke-width="2"/>
+  <text x="225" y="180" fill="#ffffff" font-size="16" font-weight="bold" text-anchor="middle">Gestor de Flota (Master Node)</text>
+  <text x="225" y="200" fill="#abb2bf" font-size="12" text-anchor="middle">[ rclcpp_action::Client ]</text>
+
+  <!-- Node Server -->
+  <rect x="70" y="460" width="310" height="70" rx="6" fill="#1e222a" stroke="#61afef" stroke-width="2"/>
+  <text x="225" y="490" fill="#61afef" font-size="16" font-weight="bold" text-anchor="middle">Nav2 Stack (TurtleBot)</text>
+  <text x="225" y="510" fill="#abb2bf" font-size="12" text-anchor="middle">[ rclcpp_action::Server (bt_navigator) ]</text>
+
+  <!-- Arrows Request/Response/Feedback -->
+  <!-- Action Goal -->
+  <path d="M 160 220 L 160 460" stroke="#e5c07b" stroke-width="3" stroke-dasharray="6,4" marker-end="url(#arrow-orange)" />
+  <rect x="75" y="260" width="170" height="80" rx="4" fill="#2c313a" stroke="#e5c07b" stroke-width="1"/>
+  <text x="160" y="280" fill="#e5c07b" font-size="13" font-weight="bold" text-anchor="middle">Action Goal:</text>
+  <text x="160" y="300" fill="#ffffff" font-size="12" font-weight="bold" text-anchor="middle">/navigate_to_pose</text>
+  <text x="160" y="325" fill="#abb2bf" font-size="11" font-weight="bold" text-anchor="middle">geometry_msgs/PoseStamped</text>
+  
+  <!-- Action Result -->
+  <path d="M 310 460 L 310 220" stroke="#98c379" stroke-width="3" stroke-dasharray="6,4" marker-end="url(#arrow-green)" />
+  <rect x="235" y="350" width="150" height="60" rx="4" fill="#2c313a" stroke="#98c379" stroke-width="1"/>
+  <text x="310" y="370" fill="#98c379" font-size="13" font-weight="bold" text-anchor="middle">Action Result:</text>
+  <text x="310" y="390" fill="#abb2bf" font-size="11" text-anchor="middle">nav2_msgs/..._Result</text>
+
+  <!-- Action Feedback -->
+  <path d="M 235 460 L 235 220" stroke="#56b6c2" stroke-width="2" stroke-dasharray="2,4" marker-end="url(#arrow-blue)" />
+  <rect x="230" y="260" width="10" height="80" fill="#1e222a"/> <!-- Background mask for text -->
+  <text x="235" y="300" fill="#56b6c2" font-size="11" font-weight="bold" text-anchor="middle" transform="rotate(-90 235 300)">Action Feedback</text>
+
+
+  <!-- ======================= PANEL 2: NAV2 CONTROL LOOP ======================= -->
+  <rect x="430" y="80" width="580" height="500" rx="10" fill="#282c34" stroke="#3e4451" stroke-width="2"/>
+  <text x="720" y="115" fill="#61afef" font-size="18" font-weight="bold" text-anchor="middle">2. Nav2 Controller Loop (Cerrando el Lazo con tf2)</text>
+  <text x="720" y="140" fill="#abb2bf" font-size="13" text-anchor="middle">El Controller plugin minimiza el Error respecto al Transform /tf calculado por cámara</text>
+
+  <!-- Sub-box indicating this is internal execution -->
+  <rect x="450" y="160" width="540" height="380" rx="8" fill="#1e222a" stroke="#4b5263" stroke-width="1" stroke-dasharray="8,8"/>
+
+  <!-- Link from service to setpoint -->
+  <path d="M 380 495 C 420 495, 430 220, 480 220" stroke="#61afef" stroke-width="2" stroke-dasharray="4,4" fill="none" marker-end="url(#arrow-blue)"/>
+  
+  <!-- Setpoint Text -->
+  <text x="465" y="210" fill="#61afef" font-size="13" font-weight="bold" text-anchor="middle">Goal Pose</text>
+  <text x="465" y="235" fill="#abb2bf" font-size="10" font-weight="bold" text-anchor="middle">PoseStamped</text>
+
+  <!-- Comparator -->
+  <circle cx="510" cy="220" r="15" fill="#2c313a" stroke="#ffffff" stroke-width="2"/>
+  <line x1="495" y1="220" x2="525" y2="220" stroke="#ffffff" stroke-width="2"/>
+  <line x1="510" y1="205" x2="510" y2="235" stroke="#ffffff" stroke-width="2"/>
+
+  <!-- Error signal -->
+  <line x1="525" y1="220" x2="580" y2="220" stroke="#ffffff" stroke-width="2" marker-end="url(#arrow-green)"/>
+  <text x="552" y="212" fill="#e06c75" font-size="14" font-weight="bold" text-anchor="middle">Error e(t)</text>
+
+  <!-- Nav2 Controller -->
+  <rect x="580" y="185" width="130" height="70" rx="4" fill="#d19a66"/>
+  <text x="645" y="215" fill="#282c34" font-size="14" font-weight="bold" text-anchor="middle">Nav2 Controller</text>
+  <text x="645" y="235" fill="#282c34" font-size="12" text-anchor="middle">Server (Plugin)</text>
+
+  <!-- Cmd_vel -->
+  <line x1="710" y1="220" x2="810" y2="220" stroke="#ffffff" stroke-width="2" marker-end="url(#arrow-green)"/>
+  <text x="760" y="200" fill="#56b6c2" font-size="14" font-weight="bold" text-anchor="middle">Topic:</text>
+  <text x="760" y="215" fill="#56b6c2" font-size="14" font-weight="bold" text-anchor="middle">/cmd_vel</text>
+  <text x="760" y="240" fill="#abb2bf" font-size="10" font-weight="bold" text-anchor="middle">geometry_msgs/Twist</text>
+
+  <!-- Hardware Abstraction -->
+  <rect x="810" y="170" width="140" height="100" rx="6" fill="#3e4451"/>
+  <text x="880" y="195" fill="#ffffff" font-size="14" font-weight="bold" text-anchor="middle">ros2_control</text>
+  <text x="880" y="210" fill="#abb2bf" font-size="12" text-anchor="middle">(Hardware Interface)</text>
+  <circle cx="840" cy="240" r="20" fill="#1e222a" stroke="#7f848e" stroke-width="3"/>
+  <circle cx="920" cy="240" r="20" fill="#1e222a" stroke="#7f848e" stroke-width="3"/>
+  <rect x="860" y="225" width="40" height="30" fill="#2c313a"/>
+  
+  <!-- ====== APRIL TAG ====== -->
+  <use href="#apriltag" x="855" y="90"/>
+  <line x1="880" y1="140" x2="880" y2="170" stroke="#abb2bf" stroke-width="2"/>
+
+  <!-- Physical motion mapping to feedback -->
+  <line x1="900" y1="270" x2="900" y2="440" stroke="#ffffff" stroke-width="2" stroke-dasharray="4,4"/>
+  <line x1="900" y1="440" x2="840" y2="440" stroke="#ffffff" stroke-width="2" marker-end="url(#arrow-green)"/>
+
+  <!-- Feedback block: Kinova Vision -->
+  <rect x="610" y="400" width="230" height="80" rx="6" fill="#c678dd"/>
+  <text x="725" y="420" fill="#282c34" font-size="14" font-weight="bold" text-anchor="middle">Nodo Visión (Kinova Camera)</text>
+  <text x="725" y="445" fill="#282c34" font-size="12" font-weight="bold" text-anchor="middle">Detecta Tag y calcula posición 3D.</text>
+  <text x="725" y="465" fill="#282c34" font-size="12" font-weight="bold" text-anchor="middle">Retorna relative Transform (TF2)</text>
+
+  <!-- Vision Raycast (Optics) -->
+  <line x1="720" y1="400" x2="855" y2="135" stroke="#e65100" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrow-orange)" />
+  <rect x="725" y="250" width="125" height="35" rx="4" fill="#1e222a" opacity="0.9"/>
+  <text x="787" y="265" fill="#e5c07b" font-size="12" font-weight="bold" text-anchor="middle">Tópico de Imagen</text>
+  <text x="787" y="280" fill="#abb2bf" font-size="10" text-anchor="middle">sensor_msgs/Image</text>
+  
+  <!-- Feedback arrow back to Comparator -->
+  <path d="M 610 440 L 510 440 L 510 235" stroke="#ffffff" stroke-width="2" fill="none" marker-end="url(#arrow-green)"/>
+  
+  <rect x="490" y="320" width="130" height="60" rx="3" fill="#2c313a" stroke="#98c379" stroke-width="1"/>
+  <text x="555" y="340" fill="#98c379" font-size="12" font-weight="bold" text-anchor="middle">TF Broadcaster</text>
+  <text x="555" y="355" fill="#ffffff" font-size="11" text-anchor="middle">Topic: /tf</text>
+  <text x="555" y="370" fill="#abb2bf" font-size="10" text-anchor="middle">[map -> base_link]</text>
+
+</svg>
