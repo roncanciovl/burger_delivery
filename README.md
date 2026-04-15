@@ -124,11 +124,23 @@ Ese script además intenta abrir `rqt`.
 
 Los siguientes diagramas en formato SVG sirven como referencia rápida de arquitectura, transformaciones y vision del sistema:
 
-### Esquema de localizacion por vision
+### Esquema de Localización por Visión
 
-Reconstruccion vectorial basada en el esquema de pizarra del proyecto:
+Esquema visual que mapea la posición del brazo respecto a la mesa de trabajo de los móviles y el marco estático de referencia de los AprilTags:
 
 ![Esquema de localizacion por vision](vision_localizacion_whiteboard.svg)
+
+### Navegación de Movimiento (Nav2 + Visión)
+
+Arquitectura Cliente/Servidor de ROS 2 Action y Lazo de Control Cinemático compensado para los comandos de entrega del TurtleBot:
+
+![Arquitectura Nav2 Turtlebot](turtlebot_nav_service.svg)
+
+### Pipeline de Manipulación Pick & Place
+
+Jerarquía lógica y trayectoria física planificadas a través del framework MoveIt Task Constructor (MTC):
+
+![Pipeline Pick and Place](pick_and_place_pipeline.svg)
 
 ### Árbol TF
 
