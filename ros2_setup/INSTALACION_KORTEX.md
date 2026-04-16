@@ -65,6 +65,13 @@ sudo apt install -y \
   ros-jazzy-rqt-joint-trajectory-controller
 ```
 
+### 3.4 Optimización de Hardware (Script de Movimiento Suave)
+Antes de compilar, es vital inyectar los ajustes oficiales para suprimir lags de UDP (C++) y unificar el bus URDF de la pinza para así eliminar inercias.
+```bash
+python3 ~/ros2_ws/src/burger_delivery/scripts/apply_kinova_smooth_movement.py
+```
+> Esto parcheará directamente tus archivos internos de `ros2_kortex`. Reduce el Timeout de red interno a `200ms` forzando un ciclo de control libre de micro vibraciones y habilitando MTC de forma segura.
+
 ---
 
 ## 4. Compilar

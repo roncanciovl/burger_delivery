@@ -28,6 +28,8 @@ No contiene todavía un stack completo de operación autónoma en este repositor
 - `burger_description/vendor/`: recursos vendorizados de Kinova/Robotiq.
 - `network_setup/`: scripts y guías de diagnóstico de red ROS 2 y micro-ROS.
 - `ros2_setup/`: notas de instalación y verificación de ROS 2 Jazzy.
+- `vision_setup/`: diagnóstico de conectividad visual, protocolos ópticos RTSP y uso de OpenCV.
+- `scripts/`: herramientas vitales de parcheado de latencias del Kinova y testeos unitarios físicos CLI.
 - `lanzar_robot.sh`: script rápido para abrir la visualización y `rqt`.
 - `build_burger.sh`: script de compilación del paquete.
 
@@ -119,6 +121,10 @@ Ese script además intenta abrir `rqt`.
 - `network_setup/ROS2_NETWORK_CONFIG.md`: configuración de red recomendada.
 - `ros2_setup/INSTALACION_KORTEX.md`: instalación del stack Kortex.
 - `ros2_setup/verificar_ros2.md`: verificación de instalación de ROS 2 Jazzy.
+- `MEJORAS_MOVIMIENTO_KINOVA.md`: guías de escalado MTC (5%) y explicativo del visualizador fantasma Ghost en RViz.
+- `PRUEBAS_MOVIMIENTO.md`: manual unitario explicando cómo inyectar coordenadas de prueba cartesianas usando terminal.
+- `vision_setup/VERIFICACION_CAMARA.md`: diagnóstico de cámara nativo.
+- `vision_setup/DIAGNOSTICO_RED_VISION.md`: aislamiento de latencia visual (TCP vs ROS 2 Topic).
 
 ## Diagramas de referencia
 
@@ -169,4 +175,11 @@ En `network_setup/` hay utilidades para revisar conectividad y rendimiento:
 - `diagnostico_microros.sh`
 - `diagnostico_microros.ps1`
 
-Estas herramientas son auxiliares y no forman parte del launch principal del paquete.
+## Scripts de Depuración Física y Hardware
+Alojados en `scripts/`, encontrarás potentes herramientas nativas en Python enfocadas en resolver barreras prácticas de la robótica y estabilizar el sistema:
+
+- `apply_kinova_smooth_movement.py`: Parcheador inteligente que inyecta opciones de "Low Latency" a los drivers C++ del hardware, corrigiendo saltos y vibraciones inerciales (jittering).
+- `test_kinova_pose.py`: Tester CLI de interacciones espaciales. Útil para verificar si una coordenada [X,Y,Z] rompe cinemática antes de llevarla al código final en el Pipeline de MoveIt.
+- `test_kinova_camera.py`: Extractor Gstreamer/OpenCV por RTSP para diagnosticar la cámara y guardar *Datasets* sin invocar a los pesados tópicos ROS.
+
+Estas herramientas son independientes y pueden usarse en demanda sin afectar el launch modular de simulaciones.

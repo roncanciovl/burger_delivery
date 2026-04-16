@@ -57,4 +57,10 @@ Sabiendo esto, ahora cada vez que un componente falla sabes a quién culpar o d�
 1.  *¿El robot real da un salto brusco e hiperagresivo?* = Error de sintonización en el generador de de movimientos de **MoveIt 2**.
 2.  *¿RViz muestra al fantasma naranja atravesando la pared de la mesa que creaste?* = Error de configuración de colisiones en la escena de **MoveIt**.
 3.  *¿El robot intenta rotar articulaciones imposibles cuando usas el panel deslizador manual?* = MoveIt no está cuidándote las espaldas porque te saltaste ese paso para interactuar directamente con **ros2_control**.
-4.  *¿Te da un error "Overrun (1000hz)... missed loops"?* = El cable o la comunicación hacia tu **`kortex_driver`** está sufriendo latencias, provocando que los nervios reaccionen tarde a las órdenes.
+4.  *¿Te da un error "Overrun (1000hz)... missed loops"?* = El cable o la comunicación hacia tu **`kortex_driver`** está sufriendo latencias, provocando que los nervios reaccionen tarde a las órdenes. *(Nota: Por ello aplicamos una modificación al `hardware_interface.cpp` reduciendo su timeout a 200 ms evitando que pierda sincronía).*
+
+### ⚙️ Actualizaciones Recientes del Sistema (Visión y Movimiento Fluido)
+En adición a MoveIt 2 puro y duro, agregamos dos características invaluables a esta capa de arquitectura:
+
+1. **Restricción de Curvas (Scaling Factors)**: Por defecto, los perfiles arrancan subiendo bruscamente una alta inercia (jerk) sacudiendo el sistema. Hemos establecido políticas de limitar drásticamente `max_velocity_scaling_factor` y `max_acceleration_scaling_factor` usualmente al `0.05` (5%) cada vez que invoquemos un cliente de Acción. Este salto curvo es la clave del transporte suave en Robótica Colaborativa (Cobots).
+2. **Ghost Display (Planeamiento Visual Interactivo)**: Enrutamos una copia del RobotModel suscribiéndose internamente vía plugin a la fase de planeación (`MotionPlanning`). Dándole un nivel de opacidad (transparencia Alpha al 50%), ahora puedes visualizar y arrastrar al robot "Fantasma" físicamente dentro de RViz. Él encarna la pose espacial planificada (`Show Goal State`) dándonos certeza 100% algorítmica de la posición IK antes y durante la emisión de la orden física de `kortex_api`.

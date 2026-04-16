@@ -303,6 +303,25 @@ Visualization Manager:
       Update Interval: 0
       Value: true
       Visual Enabled: true
+    - Alpha: 0.5
+      Class: moveit_rviz_plugin/MotionPlanning
+      Enabled: true
+      MoveGroup Node Name: move_group
+      Name: MotionPlanning
+      Robot Description: robot_description
+      Planning Request:
+        Interactive Marker Size: 0.2
+        Show Goal State: true
+        Show Start State: false
+        Show Workspace: false
+      Planned Path:
+        Show Robot Visual: true
+        Show Trail: false
+        State Display Time: 0.05
+        Loop Animating: true
+      Planning Scene Topic: /monitored_planning_scene
+      Robot State Topic: /display_robot_state
+      Trajectory Topic: /display_planned_path
     - Class: rviz_default_plugins/TF
       Enabled: true
       Filter (blacklist): ""
