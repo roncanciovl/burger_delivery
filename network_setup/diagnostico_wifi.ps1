@@ -15,7 +15,7 @@ function Write-Section($num, $text) {
     Write-Host "`n[$num/6] $text..." -ForegroundColor Yellow
 }
 
-Write-Header "Diagnóstico de Red WiFi - Burger Delivery (Windows)"
+Write-Header "Diagnostico de Red WiFi - Burger Delivery (Windows)"
 
 # ======================================
 # 1. Verificar Adaptador WiFi
@@ -25,58 +25,58 @@ Write-Section 1 "Verificando Adaptador WiFi"
 $wifiAdapter = Get-NetAdapter | Where-Object { $_.InterfaceDescription -like "*Wi-Fi*" -or $_.Name -like "*Wi-Fi*" } | Select-Object -First 1
 
 if (-not $wifiAdapter) {
-    Write-Host "  ❌ No se encontró ningún adaptador WiFi." -ForegroundColor Red
+    Write-Host "  [X] No se encontró ningún adaptador WiFi." -ForegroundColor Red
     return
 }
 
 Write-Host "  Nombre: $($wifiAdapter.Name)" -ForegroundColor White
-Write-Host "  Descripción: $($wifiAdapter.InterfaceDescription)" -ForegroundColor White
+Write-Host "  Descripcion: $($wifiAdapter.InterfaceDescription)" -ForegroundColor White
 
 if ($wifiAdapter.Status -eq "Up") {
-    Write-Host "  ✅ Estado: ACTIVO" -ForegroundColor Green
+    Write-Host "  [OK] Estado: ACTIVO" -ForegroundColor Green
 } else {
-    Write-Host "  ❌ Estado: $($wifiAdapter.Status) (Desconectado)" -ForegroundColor Red
+    Write-Host "  [X] Estado: $($wifiAdapter.Status) (Desconectado)" -ForegroundColor Red
     Write-Host "  Intenta activar el WiFi en la barra de tareas de Windows." -ForegroundColor White
 }
 
 # ======================================
 # 2. Calidad de Señal y SSID
 # ======================================
-Write-Section 2 "Analizando Calidad de Señal"
+Write-Section 2 "Analizando Calidad de Senal"
 
 try {
     $interfaceInfo = netsh wlan show interfaces | Out-String
-    $ssid = ($interfaceInfo | Select-String "SSID\s+:\s+(.*)").Matches.Groups[1].Value.Trim()
-    $signal = ($interfaceInfo | Select-String "Señal\s+:\s+(\d+)%").Matches.Groups[1].Value.Trim()
-    if (-not $signal) {
-        $signal = ($interfaceInfo | Select-String "Signal\s+:\s+(\d+)%").Matches.Groups[1].Value.Trim()
-    }
-    $rate = ($interfaceInfo | Select-String "Velocidad de recepción \(Mbps\)\s+:\s+(.*)").Matches.Groups[1].Value.Trim()
-    if (-not $rate) {
-        $rate = ($interfaceInfo | Select-String "Receive rate \(Mbps\)\s+:\s+(.*)").Matches.Groups[1].Value.Trim()
-    }
+    
+    $ssidMatch = [regex]::Match($interfaceInfo, 'SSID\s+:\s+([^\r\n]+)')
+    $ssid = if ($ssidMatch.Success) { $ssidMatch.Groups[1].Value.Trim() } else { "" }
+
+    $signalMatch = [regex]::Match($interfaceInfo, '(?:Se.*al|Signal)\s+:\s+(\d+)%')
+    $signal = if ($signalMatch.Success) { $signalMatch.Groups[1].Value.Trim() } else { "0" }
+
+    $rateMatch = [regex]::Match($interfaceInfo, '(?:Velocidad.*|Receive rate.*)\s+:\s+([^\r\n]+)')
+    $rate = if ($rateMatch.Success) { $rateMatch.Groups[1].Value.Trim() } else { "Desconocida" }
 
     if ($ssid) {
         Write-Host "  SSID Conectado: $ssid" -ForegroundColor White
-        Write-Host "  Velocidad: $rate Mbps" -ForegroundColor White
+        Write-Host "  Velocidad: $rate" -ForegroundColor White
         
         $signalNum = [int]$signal
         if ($signalNum -ge 75) {
-            Write-Host "  ✅ Señal: $signal% - Excelente" -ForegroundColor Green
-        } elif ($signalNum -ge 50) {
-            Write-Host "  ⚠️  Señal: $signal% - Media (Puede afectar latencia)" -ForegroundColor Yellow
+            Write-Host "  [OK] Senal: $signal% - Excelente" -ForegroundColor Green
+        } elseif ($signalNum -ge 50) {
+            Write-Host "  [!] Senal: $signal% - Media (Puede afectar latencia)" -ForegroundColor Yellow
         } else {
-            Write-Host "  ❌ Señal: $signal% - Débil (Riesgo de desconexión)" -ForegroundColor Red
+            Write-Host "  [X] Senal: $signal% - Debil (Riesgo de desconexion)" -ForegroundColor Red
         }
 
         if ($ssid -ne "ros2") {
-            Write-Host "  ℹ️  Nota: No estás en el SSID 'ros2' (recomendado para el robot)" -ForegroundColor White
+            Write-Host "  [i] Nota: No estas en el SSID 'ros2' (recomendado para el robot)" -ForegroundColor White
         }
     } else {
-        Write-Host "  ❌ No conectado a ninguna red WiFi." -ForegroundColor Red
+        Write-Host "  [X] No conectado a ninguna red WiFi." -ForegroundColor Red
     }
 } catch {
-    Write-Host "  ⚠️  Error al obtener detalles del WiFi vía netsh." -ForegroundColor Yellow
+    Write-Host "  [!] Error al obtener detalles del WiFi via netsh: $_" -ForegroundColor Yellow
 }
 
 # ======================================
@@ -104,13 +104,13 @@ if ($gateway) {
         $avgLatency = ($pingGW | Measure-Object -Property ResponseTime -Average).Average
         Write-Host "OK ($([Math]::Round($avgLatency, 2)) ms)" -ForegroundColor Green
         if ($avgLatency -gt 50) {
-            Write-Host "  ⚠️  Latencia alta hacia el router (>50ms)." -ForegroundColor Yellow
+            Write-Host "  [!] Latencia alta hacia el router (>50ms)." -ForegroundColor Yellow
         }
     } else {
         Write-Host "FALLIDO" -ForegroundColor Red
     }
 } else {
-    Write-Host "  ❌ No se detectó Gateway." -ForegroundColor Red
+    Write-Host "  [X] No se detectó Gateway." -ForegroundColor Red
 }
 
 # Internet
@@ -133,7 +133,7 @@ try {
 # ======================================
 # 5. Configuración IP y DNS
 # ======================================
-Write-Section 5 "Configuración de Red Local"
+Write-Section 5 "Configuracion de Red Local"
 $ipConfig = Get-NetIPConfiguration | Where-Object { $_.InterfaceAlias -eq $wifiAdapter.Name } | Select-Object -First 1
 Write-Host "  IP Local: $($ipConfig.IPv4Address.IPAddress)" -ForegroundColor White
 Write-Host "  DNS Servidores: $($ipConfig.DNSServer.ServerAddresses -join ', ')" -ForegroundColor White
@@ -144,19 +144,19 @@ Write-Host "  DNS Servidores: $($ipConfig.DNSServer.ServerAddresses -join ', ')"
 Write-Section 6 "Resumen y Recomendaciones"
 
 if ($wifiAdapter.Status -ne "Up") {
-    Write-Host "  ● ADVERTENCIA: El adaptador WiFi no está activo." -ForegroundColor Red
+    Write-Host "  - ADVERTENCIA: El adaptador WiFi no está activo." -ForegroundColor Red
 }
 
 if ($signalNum -and $signalNum -lt 60) {
-    Write-Host "  ● SEÑAL DÉBIL: Mejora la ubicación del robot o el router." -ForegroundColor Yellow
+    Write-Host "  - SENAL DEBIL: Mejora la ubicacion del robot o el router." -ForegroundColor Yellow
 }
 
 if ($ssid -and $ssid -ne "ros2") {
-    Write-Host "  ● RED: Considera usar un router dedicado con el SSID 'ros2'." -ForegroundColor White
+    Write-Host "  - RED: Considera usar un router dedicado con el SSID 'ros2'." -ForegroundColor White
 }
 
 if ($avgLatency -gt 100) {
-    Write-Host "  ● LATENCIA CRÍTICA: La comunicación ROS2 fallará con latencia > 100ms." -ForegroundColor Red
+    Write-Host "  - LATENCIA CRITICA: La comunicacion ROS2 fallara con latencia > 100ms." -ForegroundColor Red
 }
 
 Write-Header "Diagnóstico Finalizado"

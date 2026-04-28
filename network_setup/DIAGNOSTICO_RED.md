@@ -11,13 +11,14 @@ Para resolver un problema de red, sigue este orden de herramientas locales:
 | Nivel | Herramienta | Objetivo | Cuándo usarlo |
 | :--- | :--- | :--- | :--- |
 | **1** | `test_ros2_network.sh` | **Salud de ROS 2** | Si no ves tópicos o nodos en la lista. |
-| **2** | `diagnostico_wifi.sh` | **Calidad Física** | Si crees que la señal WiFi es débil. |
+| **2** | `diagnostico_wifi.sh` / `.ps1` | **Calidad Física** | Si crees que la señal WiFi es débil. |
 | **3** | `analisis_trafico_ros2.sh` | **Rendimiento** | Si hay lag, retraso o interferencia de otros dominios. |
 | **4** | `test_wan_access.sh` | **Acceso WAN** | Si no puedes descargar paquetes o navegar. |
 
 ### Cómo elegir el script adecuado:
 *   Usa **`test_ros2_network.sh`** para verificar que ROS 2 esté bien instalado, los puertos DDS locales estén abiertos y puedas publicar mensajes básicos.
-*   Usa **`diagnostico_wifi.sh`** para medir estabilidad del link, latencia al router y congestión de canales.
+*   Usa **`diagnostico_wifi.sh`** para medir estabilidad del link, latencia al router y congestión de canales (Linux nativo).
+    *   **Nota para usuarios de WSL (Windows):** Debido a que WSL usa un adaptador de red virtual, no puede leer el estado físico del WiFi. Usa el script de PowerShell ejecutando: `powershell.exe -ExecutionPolicy Bypass -File diagnostico_wifi.ps1` desde la terminal de WSL (o directamente en Windows).
 *   Usa **`analisis_trafico_ros2.sh`** para escanear la subred en busca de otros robots e identificar cuellos de botella de ancho de banda.
 *   Usa **`test_wan_access.sh`** si tienes "falsa conexión" (tienes IP pero el router bloquea la salida a Internet o HTTPS).
 
@@ -122,7 +123,7 @@ Para comprobar empíricamente que los ajustes para mitigar latencia (compresión
 
 ## 6. Resumen de Flujo de Trabajo
 Si el robot se mueve con lag o video retrasado:
-1. Ejecuta `./diagnostico_wifi.sh` para descartar mala señal (nivel físico).
+1. Ejecuta `./diagnostico_wifi.sh` (o `powershell.exe -ExecutionPolicy Bypass -File diagnostico_wifi.ps1` si estás en WSL) para descartar mala señal (nivel físico).
 2. Ejecuta `./analisis_trafico_ros2.sh` para localizar cuellos de botella por dominios/multicast.
 3. Utiliza la sección 5 (`ros2 topic hz/bw`) para evaluar la estabilidad de los mensajes críticos como el video.
 4. Si aún se sufre, audita los paquetes puros con `tshark` para evidenciar interferencia o retransmisión de hardware en la señal Wi-Fi.
