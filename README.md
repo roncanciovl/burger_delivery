@@ -150,6 +150,24 @@ Jerarquía lógica y trayectoria física planificadas a través del framework Mo
 
 ### Árbol TF
 
+Para generar un diagrama en formato PDF del árbol de transformaciones en tiempo real (similar a la imagen inferior), primero asegúrate de que el robot y la publicación de TFs estén lanzados en una terminal:
+
+```bash
+cd ~/ros2_ws
+source install/setup.bash
+ros2 launch burger_description display.launch.py
+```
+
+Luego, mientras el comando anterior está corriendo, abre una **terminal nueva** y ejecuta:
+
+```bash
+cd ~/ros2_ws
+source install/setup.bash
+ros2 run tf2_tools view_frames
+```
+
+Esto creará un archivo `frames.pdf` en el directorio donde ejecutes este último comando.
+
 ![Árbol TF del proyecto](tf_tree_diagram.svg)
 
 ### Red ROS 2
