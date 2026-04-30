@@ -9,7 +9,7 @@ Panels:
         - /RobotModel1
         - /TF1
       Splitter Ratio: 0.5
-    Tree Height: 85
+    Tree Height: 70
   - Class: rviz_common/Selection
     Name: Selection
   - Class: rviz_common/Tool Properties
@@ -303,25 +303,88 @@ Visualization Manager:
       Update Interval: 0
       Value: true
       Visual Enabled: true
-    - Alpha: 0.5
+    - Acceleration_Scaling_Factor: 0.1
       Class: moveit_rviz_plugin/MotionPlanning
       Enabled: true
-      MoveGroup Node Name: move_group
+      Move Group Namespace: ""
+      MoveIt_Allow_Approximate_IK: false
+      MoveIt_Allow_External_Program: false
+      MoveIt_Allow_Replanning: false
+      MoveIt_Allow_Sensor_Positioning: false
+      MoveIt_Planning_Attempts: 10
+      MoveIt_Planning_Time: 5
+      MoveIt_Use_Cartesian_Path: false
+      MoveIt_Use_Constraint_Aware_IK: false
+      MoveIt_Workspace:
+        Center:
+          X: 0
+          Y: 0
+          Z: 0
+        Size:
+          X: 2
+          Y: 2
+          Z: 2
       Name: MotionPlanning
-      Robot Description: robot_description
-      Planning Request:
-        Interactive Marker Size: 0.2
-        Show Goal State: true
-        Show Start State: false
-        Show Workspace: false
       Planned Path:
+        Color Enabled: false
+        Interrupt Display: false
+        Links:
+          All Links Enabled: true
+          Expand Joint Details: false
+          Expand Link Details: false
+          Expand Tree: false
+          Link Tree Style: ""
+        Loop Animation: false
+        Robot Alpha: 0.5
+        Robot Color: 150; 50; 150
+        Show Robot Collision: false
         Show Robot Visual: true
         Show Trail: false
         State Display Time: 0.05
-        Loop Animating: true
+        Trail Step Size: 1
+        Trajectory Topic: /display_planned_path
+        Use Sim Time: false
+      Planning Metrics:
+        Payload: 1
+        Show Joint Torques: false
+        Show Manipulability: false
+        Show Manipulability Index: false
+        Show Weight Limit: false
+        TextHeight: 0.07999999821186066
+      Planning Request:
+        Colliding Link Color: 255; 0; 0
+        Goal State Alpha: 1
+        Goal State Color: 250; 128; 0
+        Interactive Marker Size: 0.20000000298023224
+        Joint Violation Color: 255; 0; 255
+        Planning Group: ""
+        Query Goal State: true
+        Query Start State: false
+        Show Workspace: false
+        Start State Alpha: 1
+        Start State Color: 0; 255; 0
       Planning Scene Topic: /monitored_planning_scene
-      Robot State Topic: /display_robot_state
-      Trajectory Topic: /display_planned_path
+      Robot Description: robot_description
+      Scene Geometry:
+        Scene Alpha: 0.8999999761581421
+        Scene Color: 50; 230; 50
+        Scene Display Time: 0.009999999776482582
+        Show Scene Geometry: true
+        Voxel Coloring: Z-Axis
+        Voxel Rendering: Occupied Voxels
+      Scene Robot:
+        Attached Body Color: 150; 50; 150
+        Links:
+          All Links Enabled: true
+          Expand Joint Details: false
+          Expand Link Details: false
+          Expand Tree: false
+          Link Tree Style: ""
+        Robot Alpha: 1
+        Show Robot Collision: false
+        Show Robot Visual: true
+      Value: true
+      Velocity_Scaling_Factor: 0.1
     - Class: rviz_default_plugins/TF
       Enabled: true
       Filter (blacklist): ""
@@ -549,7 +612,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 3.3784823417663574
+      Distance: 3.4648525714874268
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -564,10 +627,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.7753979563713074
+      Pitch: 0.18539854884147644
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.37539783120155334
+      Yaw: 1.9503971338272095
     Saved: ~
 Window Geometry:
   Displays:
@@ -575,7 +638,11 @@ Window Geometry:
   Height: 687
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd00000001000000000000019b00000259fc0200000004fb000000100044006900730070006c006100790073010000003b000000d6000000c700fffffffb0000001200530065006c0065006300740069006f006e0100000117000000620000005c00fffffffb0000001e0054006f006f006c002000500072006f0070006500720074006900650073010000017f000000630000005c00fffffffb0000000a0056006900650077007301000001e8000000ac000000a000ffffff000003a90000025900000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  MotionPlanning:
+    collapsed: false
+  MotionPlanning - Trajectory Slider:
+    collapsed: false
+  QMainWindow State: 000000ff00000000fd0000000100000000000001c900000259fc0200000006fb000000100044006900730070006c006100790073010000003b00000083000000c700fffffffb0000001200530065006c0065006300740069006f006e01000000c40000005c0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007301000001260000005c0000005c00fffffffb0000000a00560069006500770073010000018800000083000000a000fffffffb00000044004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000003f00fffffffb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e00670100000211000000830000016900ffffff0000037b0000025900000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Tool Properties:
