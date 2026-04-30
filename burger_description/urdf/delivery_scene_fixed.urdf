@@ -537,17 +537,7 @@
     <origin xyz="0 0 0.18" rpy="0 0 0" />
   </joint>
   
-  <joint name="map_to_robot_a_base" type="fixed">
-    <parent link="map" />
-    <child link="car1_base_link" />
-    <origin xyz="1.20 0.80 0.00" rpy="0 0 0" />
-  </joint>
-  
-  <joint name="map_to_robot_b_base" type="fixed">
-    <parent link="map" />
-    <child link="car2_base_link" />
-    <origin xyz="1.20 1.30 0.00" rpy="0 0 0" />
-  </joint>
+
   
   <joint name="map_to_camera" type="fixed">
     <parent link="map" />
@@ -1632,14 +1622,28 @@
     <limit effort="5" velocity="20" />
     <dynamics damping="0.1" friction="0.1" />
   </joint>
-  <joint name="table_to_car1_base" type="fixed">
+
+  <!-- ========================================== -->
+  <!-- ESTRUCTURA TF PARA LOCALIZACION VISUAL     -->
+  <!-- ========================================== -->
+
+  <!-- 1. Tag Fijo en la Mesa (Referencia Global) -->
+  <link name="tag_mesa">
+    <visual>
+      <geometry><box size="0.1 0.1 0.001"/></geometry>
+      <material name="tag_white"><color rgba="1 1 1 1"/></material>
+    </visual>
+  </link>
+  <joint name="table_to_tag_mesa" type="fixed">
     <parent link="table_link" />
-    <child link="car1_base_link" />
-    <origin xyz="-0.300 0.000 0.075" rpy="0.000 0.000 0.000" />
+    <child link="tag_mesa" />
+    <origin xyz="0.5 0.3 0.025" rpy="0 0 0" /> <!-- Esquina de la mesa (ajustado) -->
   </joint>
-  <joint name="table_to_car2_base" type="fixed">
-    <parent link="table_link" />
-    <child link="car2_base_link" />
-    <origin xyz="0.300 0.000 0.12" rpy="0.000 0.000 0.000" />
-  </joint>
+
+  <!-- Los carritos NO tienen joint fijo al mapa.                         -->
+  <!-- Su posicion la publica dinamicamente el nodo de vision en TF:      -->
+  <!--   tag_mesa -> tag_carrito1 -> car1_base_link                       -->
+  <!-- Para visualizacion rapida sin vision, usar el parametro del launch: -->
+  <!--   ros2 launch burger_description display.launch.py use_static_carts:=true -->
+
 </robot>

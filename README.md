@@ -11,7 +11,7 @@ Este proyecto contiene hoy:
 - Un paquete ROS 2 compilable: `burger_description`.
 - Modelos URDF de la escena de entrega.
 - Un `launch` para publicar TF, mover joints manualmente y abrir RViz.
-- Mallas vendorizadas del Kinova Gen3, Robotiq y dos carros móviles.
+- Mallas vendorizadas del Kinova Gen3, de la pinza y de dos carros móviles.
 - Documentación de arquitectura, instalación y red.
 - Scripts auxiliares para build, lanzamiento y diagnóstico.
 
@@ -45,9 +45,10 @@ La escena incluye:
 - Tool frame y grip frame (`kinova_tool_frame`, `burger_grip_frame`).
 - Cámara aérea `overhead_camera_link`.
 - Brazo Kinova Gen3 de 7 GDL.
-- Gripper Robotiq 2F-85.
+- Pinza (2F Adapter).
 - Frames de cámara de muñeca.
-- Dos robots móviles de referencia: `car1` y `car2`.
+- Dos robots móviles de referencia: `car1` y `car2` (posición controlada por TF dinámico).
+- Frame de referencia visual `tag_mesa` anclado a la esquina de la mesa (base del sistema de localización por AprilTags).
 - Un bloque `ros2_control` para hardware Kinova con plugin `kortex2_driver/KortexMultiInterfaceHardware`.
 
 ## Requisitos
@@ -107,7 +108,14 @@ Ese script además intenta abrir `rqt`.
 ## Notas de uso
 
 - El launch actual carga `burger_description/urdf/delivery_scene_fixed.urdf`.
-- En RViz conviene usar `map` como `Fixed Frame`.
+- En RViz usa `map` como `Fixed Frame`.
+- **Posicionamiento dinámico de los carritos (TF):** El URDF no tiene a los robots anclados al mapa. Su ubicación llega vía TF desde el nodo de visión de AprilTags:
+
+  | Modo | Comando | Cuándo usarlo |
+  |---|---|---|
+  | **Producción** (defecto) | `ros2 launch burger_description display.launch.py` | El nodo de visión publica la cadena `tag_mesa → tag_carrito → car_base_link`. Los carritos no aparecen en RViz hasta que la visión esté activa. |
+  | **Visualización** | `ros2 launch burger_description display.launch.py use_static_carts:=true` | Publica TFs estáticos temporales para ver los carritos sin necesitar el nodo de visión. Solo para desarrollo y debug. |
+
 - El paquete instalable es `burger_description`, aunque el repositorio se llama `burger_delivery`.
 - `lanzar_robot.sh` usa una ruta absoluta al workspace del entorno actual: `/home/roncanciovl/ros2_ws/install/setup.bash`. Si mueves el proyecto a otra máquina, tendrás que ajustarla.
 
@@ -116,7 +124,7 @@ Ese script además intenta abrir `rqt`.
 - `burger_description/GUIA_DE_USO.md`: guía rápida de uso.
 - `burger_description/README.md`: README específico del paquete.
 - `ros_burger_delivery.md`: documento técnico de arquitectura y flujo propuesto.
-- `launch.md`: notas para visualizar URDF en visor web.
+- `VISUALIZAR_URDF_WEB.md`: notas para visualizar URDF en visor web.
 - `network_setup/DIAGNOSTICO_RED.md`: guía de diagnóstico de red ROS 2.
 - `network_setup/ROS2_NETWORK_CONFIG.md`: configuración de red recomendada.
 - `ros2_setup/INSTALACION_KORTEX.md`: instalación del stack Kortex.
@@ -125,6 +133,7 @@ Ese script además intenta abrir `rqt`.
 - `PRUEBAS_MOVIMIENTO.md`: manual unitario explicando cómo inyectar coordenadas de prueba cartesianas usando terminal.
 - `vision_setup/VERIFICACION_CAMARA.md`: diagnóstico de cámara nativo.
 - `vision_setup/DIAGNOSTICO_RED_VISION.md`: aislamiento de latencia visual (TCP vs ROS 2 Topic).
+- `vision_setup/LOCALIZACION_APRILTAG.md`: **⭐ Arquitectura del sistema de localización visual.** Explica el árbol TF, el pseudo-código del nodo de visión y todas las advertencias de calibración y ajuste físico de tags.
 
 ## Diagramas de referencia
 

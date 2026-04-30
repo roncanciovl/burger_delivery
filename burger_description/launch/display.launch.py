@@ -3,10 +3,12 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
+from launch.conditions import IfCondition
 from launch_ros.actions import Node
 
 def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
+    use_static_carts = LaunchConfiguration('use_static_carts', default='false')
     urdf_file_name = 'delivery_scene_fixed.urdf'
 
     urdf = os.path.join(
@@ -28,6 +30,11 @@ def generate_launch_description():
             default_value='false',
             description='Use simulation (Gazebo) clock if true'),
 
+        DeclareLaunchArgument(
+            'use_static_carts',
+            default_value='false',
+            description='Publica TFs estaticos para los carritos (solo para visualizacion, sin nodo de vision activo)'),
+
         Node(
             package='robot_state_publisher',
             executable='robot_state_publisher',
@@ -48,4 +55,20 @@ def generate_launch_description():
             name='rviz2',
             output='screen',
             arguments=['-d', rviz_config_file]),
+
+        # Modo visualizacion: publica TFs estaticos map -> car_base_link
+        # Solo activo cuando use_static_carts:=true
+        # En produccion, el nodo de vision publica: tag_mesa -> tag_carrito -> car_base_link
+        Node(
+            package='tf2_ros',
+            executable='static_transform_publisher',
+            arguments=['0.7', '0.4', '0.0', '0', '0', '0', 'map', 'car1_base_link'],
+            condition=IfCondition(use_static_carts)
+        ),
+        Node(
+            package='tf2_ros',
+            executable='static_transform_publisher',
+            arguments=['0.7', '-0.4', '0.0', '0', '0', '0', 'map', 'car2_base_link'],
+            condition=IfCondition(use_static_carts)
+        ),
     ])

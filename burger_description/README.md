@@ -119,7 +119,7 @@ This will launch:
 
 This URDF includes:
 - **Kinova Gen3 (7 DOF)** - Ultra-lightweight robotic arm
-- **Robotiq 2F-85** - Adaptive gripper
+- **2F Adapter** - Pinza simple
 - **Scene elements** - Table, staging area, delivery slots, mobile robot bases
 
 ## Integration with Motion Control Nodes
