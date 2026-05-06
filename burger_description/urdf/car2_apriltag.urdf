@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot name="car2_apriltag">
   <material name="tag_white"><color rgba="1 1 1 1" /></material>
-  <material name="cart_body"><color rgba="0.75294 0.75294 0.75294 1" /></material>
+  <material name="cart_body"><color rgba="0.75294 0.75294 0.75294 0.35" /></material>
   <material name="wheel_light"><color rgba="0.79216 0.81961 0.93333 1" /></material>
   <material name="delivery_green"><color rgba="0.2 0.8 0.3 0.7" /></material>
 
