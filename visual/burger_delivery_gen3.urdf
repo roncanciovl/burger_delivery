@@ -798,7 +798,7 @@
     <origin xyz="0.00 0.40 0.50" rpy="0 0 0"/>
   </joint>
 
-  <joint name="map_to_kinova_base" type="fixed">
+  <joint name="table_to_kinova_base" type="fixed">
     <parent link="table_link"/>
     <child link="kinova_base_link"/>
     <origin xyz="1.20 0.30 0.5" rpy="0 0 0"/>
@@ -847,7 +847,7 @@
     <origin xyz="0.50 0.00 2.00" rpy="-1.5708 0 1.5708"/>
   </joint>
 
-  <joint name="map_to_world" type="fixed">
+  <joint name="table_to_world" type="fixed">
     <parent link="table_link"/>
     <child link="world"/>
     <origin xyz="0.20 0.30 0.00" rpy="0 0 0"/>

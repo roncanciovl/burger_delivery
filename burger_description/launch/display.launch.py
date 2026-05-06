@@ -15,6 +15,14 @@ def generate_launch_description():
         get_package_share_directory('burger_description'),
         'urdf',
         urdf_file_name)
+    car1_urdf = os.path.join(
+        get_package_share_directory('burger_description'),
+        'urdf',
+        'car1_apriltag.urdf')
+    car2_urdf = os.path.join(
+        get_package_share_directory('burger_description'),
+        'urdf',
+        'car2_apriltag.urdf')
 
     rviz_config_file = os.path.join(
         get_package_share_directory('burger_description'),
@@ -23,6 +31,10 @@ def generate_launch_description():
 
     with open(urdf, 'r') as infp:
         robot_desc = infp.read()
+    with open(car1_urdf, 'r') as infp:
+        car1_desc = infp.read()
+    with open(car2_urdf, 'r') as infp:
+        car2_desc = infp.read()
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -33,7 +45,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'use_static_carts',
             default_value='false',
-            description='Publica TFs estaticos para los carritos (solo para visualizacion, sin nodo de vision activo)'),
+            description='Publica TFs temporales tag_mesa -> tag_carrito{1,2} mientras no exista el nodo de localizacion AprilTag'),
 
         Node(
             package='robot_state_publisher',
@@ -50,25 +62,69 @@ def generate_launch_description():
             output='screen'),
 
         Node(
+            package='robot_state_publisher',
+            executable='robot_state_publisher',
+            name='car1_state_publisher',
+            output='screen',
+            parameters=[{'use_sim_time': use_sim_time, 'robot_description': car1_desc}],
+            remappings=[
+                ('robot_description', '/car1/robot_description'),
+                ('joint_states', '/car1/joint_states')],
+            arguments=[car1_urdf]),
+
+        Node(
+            package='joint_state_publisher',
+            executable='joint_state_publisher',
+            name='car1_joint_state_publisher',
+            output='screen',
+            parameters=[{'use_sim_time': use_sim_time}],
+            remappings=[('joint_states', '/car1/joint_states')],
+            arguments=[car1_urdf]),
+
+        Node(
+            package='robot_state_publisher',
+            executable='robot_state_publisher',
+            name='car2_state_publisher',
+            output='screen',
+            parameters=[{'use_sim_time': use_sim_time, 'robot_description': car2_desc}],
+            remappings=[
+                ('robot_description', '/car2/robot_description'),
+                ('joint_states', '/car2/joint_states')],
+            arguments=[car2_urdf]),
+
+        Node(
+            package='joint_state_publisher',
+            executable='joint_state_publisher',
+            name='car2_joint_state_publisher',
+            output='screen',
+            parameters=[{'use_sim_time': use_sim_time}],
+            remappings=[('joint_states', '/car2/joint_states')],
+            arguments=[car2_urdf]),
+
+        Node(
+            package='tf2_ros',
+            executable='static_transform_publisher',
+            arguments=[
+                '--x', '0.35', '--y', '0.10', '--z', '0.00',
+                '--roll', '0', '--pitch', '0', '--yaw', '0',
+                '--frame-id', 'tag_mesa',
+                '--child-frame-id', 'tag_carrito1'],
+            condition=IfCondition(use_static_carts)),
+
+        Node(
+            package='tf2_ros',
+            executable='static_transform_publisher',
+            arguments=[
+                '--x', '0.35', '--y', '-0.10', '--z', '0.00',
+                '--roll', '0', '--pitch', '0', '--yaw', '0',
+                '--frame-id', 'tag_mesa',
+                '--child-frame-id', 'tag_carrito2'],
+            condition=IfCondition(use_static_carts)),
+
+        Node(
             package='rviz2',
             executable='rviz2',
             name='rviz2',
             output='screen',
             arguments=['-d', rviz_config_file]),
-
-        # Modo visualizacion: publica TFs estaticos map -> car_base_link
-        # Solo activo cuando use_static_carts:=true
-        # En produccion, el nodo de vision publica: tag_mesa -> tag_carrito -> car_base_link
-        Node(
-            package='tf2_ros',
-            executable='static_transform_publisher',
-            arguments=['0.7', '0.4', '0.0', '0', '0', '0', 'map', 'car1_base_link'],
-            condition=IfCondition(use_static_carts)
-        ),
-        Node(
-            package='tf2_ros',
-            executable='static_transform_publisher',
-            arguments=['0.7', '-0.4', '0.0', '0', '0', '0', 'map', 'car2_base_link'],
-            condition=IfCondition(use_static_carts)
-        ),
     ])

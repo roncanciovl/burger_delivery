@@ -1,0 +1,106 @@
+<?xml version="1.0"?>
+<robot name="car2_apriltag">
+  <material name="tag_white"><color rgba="1 1 1 1" /></material>
+  <material name="cart_body"><color rgba="0.75294 0.75294 0.75294 1" /></material>
+  <material name="wheel_light"><color rgba="0.79216 0.81961 0.93333 1" /></material>
+  <material name="delivery_green"><color rgba="0.2 0.8 0.3 0.7" /></material>
+
+  <link name="tag_carrito2">
+    <visual name="apriltag_plate">
+      <geometry><box size="0.10 0.10 0.001" /></geometry>
+      <material name="tag_white" />
+    </visual>
+    <collision name="apriltag_collision">
+      <geometry><box size="0.10 0.10 0.001" /></geometry>
+    </collision>
+  </link>
+
+  <joint name="tag_carrito2_to_car2_base" type="fixed">
+    <parent link="tag_carrito2" />
+    <child link="car2_base_link" />
+    <origin xyz="0.00 0.00 -0.12" rpy="0 0 0" />
+  </joint>
+
+  <link name="car2_base_link">
+    <inertial>
+      <origin xyz="-0.114018971629912 -0.0178599760362418 -0.0000210435080845" rpy="0 0 0" />
+      <mass value="0.576318693040092" />
+      <inertia ixx="0.000483205186547504" ixy="0.0000005617231984" ixz="0.0000005396464100" iyy="0.00171521897407484" iyz="0.0" izz="0.00127699776286583" />
+    </inertial>
+    <visual>
+      <geometry><mesh filename="package://burger_description/visual/Carro4/meshes/base_link.STL" /></geometry>
+      <material name="cart_body" />
+    </visual>
+    <collision>
+      <origin xyz="-0.09 0 -0.03" rpy="0 0 0" />
+      <geometry><box size="0.32 0.20 0.12" /></geometry>
+    </collision>
+  </link>
+
+  <joint name="car2_wheel1" type="continuous">
+    <origin xyz="-0.148 0.07825 -0.05835" rpy="-1.5708 0.042481 0" />
+    <parent link="car2_base_link" />
+    <child link="car2_wheel1_link" />
+    <axis xyz="0 0 1" />
+    <limit effort="5" velocity="20" />
+    <dynamics damping="0.1" friction="0.1" />
+  </joint>
+  <link name="car2_wheel1_link">
+    <visual><geometry><mesh filename="package://burger_description/visual/Carro4/meshes/wheel1.STL" /></geometry><material name="wheel_light" /></visual>
+    <collision><geometry><mesh filename="package://burger_description/visual/Carro4/meshes/wheel1.STL" /></geometry></collision>
+    <inertial><mass value="0.0214032" /><inertia ixx="0.0000086275" ixy="0.0" ixz="0.0" iyy="0.0000086271" iyz="0.0" izz="0.0000145141" /></inertial>
+  </link>
+
+  <joint name="car2_wheel2" type="continuous">
+    <origin xyz="-0.037 0.07825 -0.05835" rpy="1.5708 -0.042481 3.1416" />
+    <parent link="car2_base_link" />
+    <child link="car2_wheel2_link" />
+    <axis xyz="0 0 1" />
+    <limit effort="5" velocity="20" />
+    <dynamics damping="0.1" friction="0.1" />
+  </joint>
+  <link name="car2_wheel2_link">
+    <visual><geometry><mesh filename="package://burger_description/visual/Carro4/meshes/wheel2.STL" /></geometry><material name="wheel_light" /></visual>
+    <collision><geometry><mesh filename="package://burger_description/visual/Carro4/meshes/wheel2.STL" /></geometry></collision>
+    <inertial><mass value="0.0214032" /><inertia ixx="0.0000086275" ixy="0.0" ixz="0.0" iyy="0.0000086271" iyz="0.0" izz="0.0000145141" /></inertial>
+  </link>
+
+  <joint name="car2_wheel3" type="continuous">
+    <origin xyz="-0.037 -0.07825 -0.05835" rpy="-1.5708 0.042481 -3.1416" />
+    <parent link="car2_base_link" />
+    <child link="car2_wheel3_link" />
+    <axis xyz="0 0 1" />
+    <limit effort="5" velocity="20" />
+    <dynamics damping="0.1" friction="0.1" />
+  </joint>
+  <link name="car2_wheel3_link">
+    <visual><geometry><mesh filename="package://burger_description/visual/Carro4/meshes/wheel3.STL" /></geometry><material name="wheel_light" /></visual>
+    <collision><geometry><mesh filename="package://burger_description/visual/Carro4/meshes/wheel3.STL" /></geometry></collision>
+    <inertial><mass value="0.0214032" /><inertia ixx="0.0000086275" ixy="0.0" ixz="0.0" iyy="0.0000086271" iyz="0.0" izz="0.0000145141" /></inertial>
+  </link>
+
+  <joint name="car2_wheel4" type="continuous">
+    <origin xyz="-0.148 -0.07825 -0.05835" rpy="1.5708 -0.042481 0" />
+    <parent link="car2_base_link" />
+    <child link="car2_wheel4_link" />
+    <axis xyz="0 0 1" />
+    <limit effort="5" velocity="20" />
+    <dynamics damping="0.1" friction="0.1" />
+  </joint>
+  <link name="car2_wheel4_link">
+    <visual><geometry><mesh filename="package://burger_description/visual/Carro4/meshes/wheel4.STL" /></geometry><material name="wheel_light" /></visual>
+    <collision><geometry><mesh filename="package://burger_description/visual/Carro4/meshes/wheel4.STL" /></geometry></collision>
+    <inertial><mass value="0.0214032" /><inertia ixx="0.0000086275" ixy="0.0" ixz="0.0" iyy="0.0000086271" iyz="0.0" izz="0.0000145141" /></inertial>
+  </link>
+
+  <joint name="car2_base_to_delivery_tray" type="fixed">
+    <parent link="car2_base_link" />
+    <child link="car2_delivery_tray_frame" />
+    <origin xyz="-0.09 0.00 0.08" rpy="0 0 0" />
+  </joint>
+  <link name="car2_delivery_tray_frame">
+    <visual><geometry><box size="0.18 0.16 0.02" /></geometry><material name="delivery_green" /></visual>
+    <collision><geometry><box size="0.18 0.16 0.02" /></geometry></collision>
+    <inertial><mass value="0.05" /><inertia ixx="0.0001083" ixy="0.0" ixz="0.0" iyy="0.0001417" iyz="0.0" izz="0.0002417" /></inertial>
+  </link>
+</robot>

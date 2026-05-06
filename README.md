@@ -109,12 +109,14 @@ Ese script además intenta abrir `rqt`.
 
 - El launch actual carga `burger_description/urdf/delivery_scene_fixed.urdf`.
 - En RViz usa `map` como `Fixed Frame`.
-- **Posicionamiento dinámico de los carritos (TF):** El URDF no tiene a los robots anclados al mapa. Su ubicación llega vía TF desde el nodo de visión de AprilTags:
+- **Carritos móviles:** `delivery_scene_fixed.urdf` describe la celda fija. Los carritos se cargan desde URDFs separados (`car1_apriltag.urdf`, `car2_apriltag.urdf`) para que puedan colgar del `frame` dinámico publicado por el nodo de localización AprilTag.
 
   | Modo | Comando | Cuándo usarlo |
   |---|---|---|
-  | **Producción** (defecto) | `ros2 launch burger_description display.launch.py` | El nodo de visión publica la cadena `tag_mesa → tag_carrito → car_base_link`. Los carritos no aparecen en RViz hasta que la visión esté activa. |
-  | **Visualización** | `ros2 launch burger_description display.launch.py use_static_carts:=true` | Publica TFs estáticos temporales para ver los carritos sin necesitar el nodo de visión. Solo para desarrollo y debug. |
+  | **Producción** (defecto) | `ros2 launch burger_description display.launch.py` | Carga la escena y los URDFs de los carritos. Los carritos se conectan al mapa cuando el nodo de localización AprilTag publica `tag_mesa -> tag_carrito*`. |
+  | **Visualización temporal** | `ros2 launch burger_description display.launch.py use_static_carts:=true` | Publica TFs temporales `tag_mesa -> tag_carrito1/2` para ver los carritos mientras no existe el nodo de localización AprilTag. |
+
+- No publiques simultáneamente `map -> car_base_link` y `tag_carrito -> car_base_link`: cada `child frame` debe tener un solo padre en TF.
 
 - El paquete instalable es `burger_description`, aunque el repositorio se llama `burger_delivery`.
 - `lanzar_robot.sh` usa una ruta absoluta al workspace del entorno actual: `/home/roncanciovl/ros2_ws/install/setup.bash`. Si mueves el proyecto a otra máquina, tendrás que ajustarla.
@@ -133,19 +135,19 @@ Ese script además intenta abrir `rqt`.
 - `PRUEBAS_MOVIMIENTO.md`: manual unitario explicando cómo inyectar coordenadas de prueba cartesianas usando terminal.
 - `vision_setup/VERIFICACION_CAMARA.md`: diagnóstico de cámara nativo.
 - `vision_setup/DIAGNOSTICO_RED_VISION.md`: aislamiento de latencia visual (TCP vs ROS 2 Topic).
-- `vision_setup/LOCALIZACION_APRILTAG.md`: **⭐ Arquitectura del sistema de localización visual.** Explica el árbol TF, el pseudo-código del nodo de visión y todas las advertencias de calibración y ajuste físico de tags.
+- `vision_setup/LOCALIZACION_APRILTAG.md`: **⭐ Arquitectura del sistema de localización AprilTag.** Explica el árbol TF, el pseudo-código del nodo de localización y todas las advertencias de calibración y ajuste físico de tags.
 
 ## Diagramas de referencia
 
-Los siguientes diagramas en formato SVG sirven como referencia rápida de arquitectura, transformaciones y vision del sistema:
+Los siguientes diagramas en formato SVG sirven como referencia rápida de arquitectura, transformaciones y localización del sistema:
 
-### Esquema de Localización por Visión
+### Esquema de Localización AprilTag
 
 Esquema visual que mapea la posición del brazo respecto a la mesa de trabajo de los móviles y el marco estático de referencia de los AprilTags:
 
-![Esquema de localizacion por vision](vision_localizacion_whiteboard.svg)
+![Esquema de localizacion AprilTag](vision_localizacion_whiteboard.svg)
 
-### Navegación de Movimiento (Nav2 + Visión)
+### Navegación de Movimiento (Nav2 + Localización AprilTag)
 
 Arquitectura Cliente/Servidor de ROS 2 Action y Lazo de Control Cinemático compensado para los comandos de entrega del TurtleBot:
 

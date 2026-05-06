@@ -49,9 +49,9 @@ MTC puede probar millones de combinaciones *hacia adelante o hacia atrás* a tra
 
 ## 4. Aplicación Curada para "Burger Delivery" (El rol crítico de TF2)
 
-En nuestra arquitectura, transferir un paquete de forma autónoma depende vitalmente de conectar MoveIt 2 con el sistema de visión a través del árbol de transformaciones (`tf2`):
+En nuestra arquitectura, transferir un paquete de forma autónoma depende vitalmente de conectar MoveIt 2 con el nodo de localización AprilTag a través del árbol de transformaciones (`tf2`):
 
-1. **TF2 como el Puente Espacial**: Para que MTC sepa y planifique hacia dónde realizar el movimiento geométrico para soltar el paquete ("Place"), el sistema de visión de la cámara Kinova calcula la matriz espacial relativa respecto al AprilTag del TurtleBot. 
+1. **TF2 como el Puente Espacial**: Para que MTC sepa y planifique hacia dónde realizar el movimiento geométrico para soltar el paquete ("Place"), el nodo de localización AprilTag calcula la matriz espacial relativa respecto al AprilTag del TurtleBot usando las detecciones de cámara.
 2. El `move_group` escucha permanentemente las ramas activas del tópico `/tf` (`kinova_base_link` -> `camera_link` -> `apriltag_pose_robotN`). **MoveIt usaría esa transformación exacta como su Goal final o "Destino".** ¡Sin el sistema de TF, la percepción y la manipulación estarían hablando idiomas completamente diferentes!
 3. Internamente, el planificador de **OMPL** evitará chocar empleando la **Planning Scene** construida bajo tu archivo maestro `delivery_scene_fixed.urdf`.
 4. Mediante las etapas lógicas de **MTC**, el Kinova ejecuta el comando *Attach* sobre el paquete (caja de delivery). Automáticamente la caja adopta una rama dinámica dentro de `/tf` anclada al gripper, lo cual instruye al planificador que la propia caja es un nuevo elemento a proteger de colisiones antes de dejarla sobre el TurtleBot.
@@ -75,5 +75,5 @@ Toda la "magia" espacial que necesita MoveIt está estructurada sistemáticament
    👉 `burger_description/launch/display.launch.py`
    Ejecuta el paquete estándar **`robot_state_publisher`**. ¡Este nodo es literalmente quien parsea el URDF y transmite el árbol constantemente a la red bajo el tópico público `/tf_static`!
 
-3. **Inyección Dinámica de Visión (Pendiente de Implementar):**
+3. **Inyección Dinámica de Localización AprilTag (Pendiente de Implementar):**
    Las transformaciones que determinan dónde están rodando los TurtleBots (`apriltag_pose_robot1`, etc.) **aún no residen en el código fuente actual**. Son la siguiente capa lógica a desarrollar. Consistirá en un Nodo en C++/Python instanciando un `tf2_ros::TransformBroadcaster` que nutrirá al árbol base (el que montó el URDF) con las matemáticas captadas en tiempo vivo por la cámara Kinova.

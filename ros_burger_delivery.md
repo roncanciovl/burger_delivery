@@ -29,7 +29,7 @@ Este documento describe cómo implementar, con **ROS 2 Jazzy**, una celda de ent
 | Router WiFi | Núcleo de red; expone SSID `ros2` / pass `ros12345` | WAN + LAN | `192.168.1.1` |
 | PC Maestro | Corre ROS 2 Jazzy completo, orquestador, micro-ros-agent, MoveIt 2 y Nav2 | WiFi | `192.168.1.100` |
 | Robot Kinova Gen3 | Manipulación pick & place; ejecuta nodos de bajo nivel y MoveIt servo | Ethernet | `192.168.1.10` |
-| Cámara aérea + PC visión | Detecta AprilTags y estima pose de robots y bandejas | WiFi | DHCP |
+| Cámara aérea + PC localización AprilTag | Detecta AprilTags y estima pose de robots y bandejas | WiFi | DHCP |
 | Robots diferenciales (x3) | Plataformas delivery con ESP32 + micro-ROS | WiFi | DHCP (reservas) |
 | Estación de pedidos | UI que envía órdenes (API REST → ROS Bridge) | WiFi | DHCP |
 
@@ -39,7 +39,7 @@ Todos los nodos ROS se mantienen dentro de la misma subred (`192.168.1.0/24`) pa
 
 1. La cocina coloca hamburguesas en bandejas etiquetadas en la estación Kinova.
 2. El Kinova toma la bandeja usando una pinza, define el `delivery_slot_i` disponible dentro de `staging_area` y solo deposita la bandeja cuando el robot diferencial se alinea con ese frame.
-3. El robot diferencial navega hasta la zona de despacho guiado por Nav2 y datos de visión.
+3. El robot diferencial navega hasta la zona de despacho guiado por Nav2 y datos de localización AprilTag.
 4. Al completar la entrega, el robot regresa a la estación para recibir otro pedido.
 
 ## 2.3. Comunicación ROS 2 Jazzy
@@ -70,9 +70,9 @@ Todos los nodos ROS se mantienen dentro de la misma subred (`192.168.1.0/24`) pa
 | `kinova_task_server` | Action server personalizado que recibe `PlaceOnRobot` y ejecuta pick & place. |
 | `tf2` broadcasters | Publican `kinova_base_link`, `kinova_tool_frame`, `burger_grip_frame`. |
 
-## 3.3. Nodos de Visión
+## 3.3. Nodos de Localización AprilTag
 
-- `vision_tag_pose` (Python + `apriltag_ros`): calcula pose 2D/3D de bandejas y robots → topics `/aruco/pose2d`, `/aruco/pose3d`.
+- `apriltag_localization` (Python + `apriltag_ros`): calcula pose 2D/3D de bandejas y robots → topics `/aruco/pose2d`, `/aruco/pose3d`.
 - `tray_state_publisher`: combina la detección con el estado de pedidos y emite `burger_delivery_msgs/TrayState`.
 - `tf2` broadcaster `apriltag_map` → `robot_X/base_link` usando los tags colocados en cada móvil.
 
@@ -93,9 +93,9 @@ Estos nodos se conectan a `micro_ros_agent` mediante `set_microros_wifi_transpor
 | :--- | :--- | :--- |
 | `/orders/new` | `burger_delivery_msgs/Order` | UI → `order_manager` |
 | `/tray_assignment` | `burger_delivery_msgs/Assignment` | `tray_allocator` → `kinova_task_server` + Nav2 |
-| `/aruco/pose2d` | `geometry_msgs/Pose2D` | `vision_tag_pose` → ESP32 (`robot_X/localization_bridge`) |
+| `/aruco/pose2d` | `geometry_msgs/Pose2D` | `apriltag_localization` → ESP32 (`robot_X/localization_bridge`) |
 | `/move_to_pose/goal` | `geometry_msgs/PoseStamped` | Nav2 → ESP32 `motor_controller` |
-| `/tf` / `/tf_static` | TF frames | Kinova, visión y robots → toda la red |
+| `/tf` / `/tf_static` | TF frames | Kinova, localización AprilTag y robots → toda la red |
 | `/robot_X/odom` | `nav_msgs/Odometry` | ESP32 → Nav2, RViz |
 | `/kinova/place_result` | `burger_delivery_msgs/PlaceResult` | `kinova_task_server` → `tray_allocator` |
 
@@ -123,7 +123,7 @@ El branch `world → gen3_*` corresponde al URDF oficial del Gen3 (articulacione
 
 ## 5.1. Fuentes de Transformaciones
 
-- **Visión**: `vision_tag_pose` publica `overhead_camera_link -> robot_X/base_link` (o `apriltag_map`) usando los AprilTags colocados en cada robot y en la estación de bandejas. El frame de la cámara se fija respecto a `map` para conocer su altura y campos de visión.
+- **Localización AprilTag**: `apriltag_localization` publica las transformaciones dinámicas de los robots usando los AprilTags colocados en cada móvil y en la estación de bandejas. El frame de la cámara se fija respecto a `map` para conocer su altura y campo de visión.
 - **Kinova**: `kinova_driver_node` actualiza `kinova_base_link -> kinova_tool_frame` con cinemática directa. Dos `static_transform_publisher` encadenan la base al mapa (`map -> table_link` y `table_link -> kinova_base_link`) para respetar la geometría de la mesa.
 - **Robots diferenciales**: cada ESP32 envía su odometría como `robot_X/odom -> robot_X/base_link`. Un nodo en el PC Maestro (`robot_state_publisher` o `tf2_ros::TransformBroadcaster`) enlaza `map -> robot_X/odom`.
 
@@ -159,16 +159,16 @@ ros2 run tf2_ros static_transform_publisher \
 
 1. MoveIt necesita conocer `map -> burger_grip_frame` para planificar trayectorias libres de colisiones desde la estación hasta la bandeja del robot.
 2. Nav2 y RViz dependen de `map -> robot_X/base_link` para ubicar correctamente las metas `/move_to_pose/goal`.
-3. Las detecciones de visión (que llegan en frame `apriltag_map`) se transforman vía tf2 hacia el frame del Kinova o del robot objetivo antes de ejecutar acciones.
+3. Las poses estimadas por el nodo de localización AprilTag se transforman vía tf2 hacia el frame del Kinova o del robot objetivo antes de ejecutar acciones.
 
 ## 5.4. Frame `staging_area` y URDF del árbol de transformaciones
 
-El frame `staging_area` se fija en la estructura de la mesa donde se ubican las bandejas, pero su posición se expresa respecto al origen `map`, que está en el piso. Para representar la mesa física se incorporó el frame `table_link`, que queda a `(0.80, -1.00, 0.80)` respecto a `map` y actúa como padre tanto del Kinova como del frame `world` del URDF oficial. El frame `map` permanece como referencia global para navegación y visión; `world` es un frame auxiliar requerido por el URDF original del Kinova para declarar `world -> gen3_base_link` y mantener la cadena de articulaciones del brazo. Al incluir `table_link` entre ambos frames (`map -> table_link -> world -> gen3_base_link`) ubicamos el brazo siguiendo la geometría real de la mesa sin perder compatibilidad con los paquetes oficiales de Kinova. Asimismo se define `overhead_camera_link`, solidario a la cámara aérea montada sobre la estación. De esta forma:
+El frame `staging_area` se fija en la estructura de la mesa donde se ubican las bandejas, pero su posición se expresa respecto al origen `map`, que está en el piso. Para representar la mesa física se incorporó el frame `table_link`, que queda a `(0.80, -1.00, 0.80)` respecto a `map` y actúa como padre tanto del Kinova como del frame `world` del URDF oficial. El frame `map` permanece como referencia global para navegación y localización; `world` es un frame auxiliar requerido por el URDF original del Kinova para declarar `world -> gen3_base_link` y mantener la cadena de articulaciones del brazo. Al incluir `table_link` entre ambos frames (`map -> table_link -> world -> gen3_base_link`) ubicamos el brazo siguiendo la geometría real de la mesa sin perder compatibilidad con los paquetes oficiales de Kinova. Asimismo se define `overhead_camera_link`, solidario a la cámara aérea montada sobre la estación. De esta forma:
 
 - El Kinova y los robots comparten un plano de referencia común (`map`) que coincide con el suelo donde se desplazan los diferenciales.
 - Los robots reciben objetivos expresados en frames derivados del mapa (`delivery_slot_i`) para alinearse exactamente donde el Kinova depositará la hamburguesa en su bandeja.
 - El Kinova selecciona un `delivery_slot_i` libre y publica esa selección (por ejemplo en `/tray_assignment`) para que Nav2 envíe al robot a dicho frame antes del pick & place.
-- El sistema de visión conoce su pose absoluta (`map -> overhead_camera_link`), permitiendo proyectar detecciones a coordenadas del mapa sin cálculos adicionales.
+- El nodo de localización AprilTag conoce la pose absoluta de la cámara (`map -> overhead_camera_link`), permitiendo proyectar detecciones a coordenadas del mapa sin cálculos adicionales.
 
 Un URDF mínimo que codifica este árbol de transformaciones puede lucir así (también lo encontrarás como archivo independiente en `burger_delivery_frames.urdf` para cargarlo directamente con `robot_state_publisher`):
 
@@ -201,7 +201,7 @@ Un URDF mínimo que codifica este árbol de transformaciones puede lucir así (t
     <origin xyz="0.80 0.00 0.00" rpy="0 0 0"/>
   </joint>
 
-  <joint name="map_to_kinova_base" type="fixed">
+  <joint name="table_to_kinova_base" type="fixed">
     <parent link="table_link"/>
     <child link="kinova_base_link"/>
     <origin xyz="1.20 0.30 0.50" rpy="0 0 0"/>
@@ -255,7 +255,7 @@ Un URDF mínimo que codifica este árbol de transformaciones puede lucir así (t
     <origin xyz="0.00 0.00 0.15" rpy="0 0 0"/>
   </joint>
 
-  <joint name="map_to_world" type="fixed">
+  <joint name="table_to_world" type="fixed">
     <parent link="table_link"/>
     <child link="world"/>
     <origin xyz="0.20 0.30 0.00" rpy="0 0 0"/>
