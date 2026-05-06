@@ -1087,6 +1087,8 @@
       </geometry>
     </collision>
   </link>
+  <!-- Prueba temporal descartada: se evaluo limitar este joint a [-3.0, 3.0] rad.
+       Se conserva como continuous para mantener el comportamiento original del Gen3. -->
   <joint name="gen3_joint_3" type="continuous">
     <origin rpy="-1.5708 1.2326E-32 -2.9122E-16" xyz="0 -0.21038 -0.006375"/>
     <parent link="gen3_half_arm_1_link"/>

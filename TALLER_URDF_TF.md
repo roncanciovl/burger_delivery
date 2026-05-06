@@ -219,13 +219,15 @@ rg -n 'gen3_joint_[1-7]|mimic|limit|axis' burger_description/urdf/delivery_scene
 
 Verifica en el archivo:
 - `gen3_joint_2` es `revolute`, usa `axis="0 0 1"` y tiene límites `lower="-2.41"` y `upper="2.41"`.
-- `gen3_joint_1` (y otros) son `continuous`.
+- `gen3_joint_1`, `gen3_joint_3`, `gen3_joint_5` y `gen3_joint_7` son `continuous`.
 - La pinza usa `mimic` con `multiplier="-1"` para que el dedo derecho imite al izquierdo en sentido opuesto.
+
+Nota de consistencia: se evaluó temporalmente convertir `gen3_joint_3` a `revolute` con límites `lower="-3.0"` y `upper="3.0"`, pero se descartó para conservar el comportamiento original del modelo Gen3. Por eso el URDF activo mantiene `gen3_joint_3` como `continuous`.
 
 ### 🛠️ Ejercicio: ¡Mueve el robot!
 1.  Lanza: `ros2 launch burger_description display.launch.py use_static_carts:=true`
 2.  En el panel **Joint State Publisher**, mueve los deslizadores.
-3.  **Verifica en RViz:** Mueve `gen3_joint_2`. ¿Ves cómo el slider queda limitado aproximadamente en el rango del XML?
+3.  **Verifica en RViz:** Mueve `gen3_joint_2`. ¿Se observa que el slider queda limitado aproximadamente en el rango definido por el XML?
 4.  **Prueba la pinza:** Mueve `gen3_robotiq_85_left_knuckle_joint`. Observa cómo el dedo derecho acompaña el movimiento gracias al `mimic`.
 
 ### ✅ Criterios de Éxito
