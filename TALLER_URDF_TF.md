@@ -50,20 +50,28 @@ Este archivo es el encargado de cargar:
 ### 🛠️ Tu primer reto: Construir y Validar
 Vamos a preparar tu entorno. Ejecuta estos comandos en tu terminal:
 
-1.  **Compila y refresca tu espacio de trabajo:**
+1.  **Crea el enlace para los recursos (Meshes):**
+    Por un estándar de ROS, el URDF busca los modelos en una carpeta llamada `meshes`. En nuestro proyecto, estos archivos están dentro de `visual/meshes`. Ejecuta esto para crear el puente:
+    ```bash
+    cd ~/ros2_ws/src/burger_delivery/burger_description
+    ln -s visual/meshes meshes
+    ```
+
+2.  **Compila y refresca tu espacio de trabajo:**
     ```bash
     cd ~/ros2_ws
     colcon build --packages-select burger_description --symlink-install
     source install/setup.bash
     ```
 
-2.  **Verifica la instalación real:**
+3.  **Verifica la instalación real:**
     ```bash
     ls -l install/burger_description/share/burger_description/urdf
+    ls -l install/burger_description/share/burger_description/meshes
     ```
-    *Deben aparecer, como mínimo: `delivery_scene_fixed.urdf`, `car1_apriltag.urdf` y `car2_apriltag.urdf`.*
+    *Deben aparecer los archivos `.urdf` y los archivos `.stl` de la mesa.*
 
-3.  **¡Lanza la visualización!**
+4.  **¡Lanza la visualización!**
     Usaremos `use_static_carts:=true` para crear TFs temporales y ver los carritos:
     ```bash
     ros2 launch burger_description display.launch.py use_static_carts:=true
@@ -71,7 +79,7 @@ Vamos a preparar tu entorno. Ejecuta estos comandos en tu terminal:
 
 ### ✅ ¿Cómo sé si voy por buen camino? (Criterio de Éxito)
 - El launch no falla con `FileNotFoundError`.
-- RViz abre correctamente.
+- RViz abre correctamente y **puedes ver la mesa marrón y el brazo robot**.
 - Puedes usar `map` como `Fixed Frame`.
 - Los TF temporales `tag_mesa -> tag_carrito1` y `tag_mesa -> tag_carrito2` son visibles en RViz.
 
@@ -484,6 +492,7 @@ Antes de dar por válida tu configuración, asegúrate de haber hecho este recor
 
 ## ⚠️ ¡No caigas en la trampa! (Errores Comunes)
 - **Olvidar reconstruir:** Cambiar el URDF en `src` y esperar que se vea en RViz sin hacer `colcon build`.
+- **Meshes no encontrados:** No haber creado el enlace simbólico `meshes -> visual/meshes` en la carpeta `src`. Sin esto, la mesa y objetos fijos saldrán en rojo o serán invisibles.
 - **Doble publicación:** Usar `use_static_carts:=true` al mismo tiempo que el nodo real de AprilTags.
 - **Offsets mal ubicados:** Corregir un error de la mesa moviendo el carrito. Siempre calibra de la raíz hacia las hojas.
 - **Colisiones complejas:** Usar mallas CAD pesadas para detección de choques en lugar de cajas simples.
