@@ -126,6 +126,7 @@ Ese script además intenta abrir `rqt`.
 - `burger_description/GUIA_DE_USO.md`: guía rápida de uso.
 - `burger_description/README.md`: README específico del paquete.
 - `ros_burger_delivery.md`: documento técnico de arquitectura y flujo propuesto.
+- `PROYECTO_INTERMEDIO_MOVEIT2_DELIVERY.md`: proyecto evaluable para integrar MoveIt 2, localización, servicio del carrito y pick and place con criterios de evaluación.
 - `VISUALIZAR_URDF_WEB.md`: notas para visualizar URDF en visor web.
 - `network_setup/DIAGNOSTICO_RED.md`: guía de diagnóstico de red ROS 2.
 - `network_setup/ROS2_NETWORK_CONFIG.md`: configuración de red recomendada.
