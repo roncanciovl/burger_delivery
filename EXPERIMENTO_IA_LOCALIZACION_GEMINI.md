@@ -122,7 +122,33 @@ point_3d_camera_frame = (ray[0] * z_depth, ray[1] * z_depth, z_depth)
 
 ---
 
-## 7. Criterios de Evaluación y Retos de IA (Rúbrica de 100 Puntos)
+## 7. Pruebas Prácticas: Entendimiento Semántico de la Escena (2D)
+
+Para que los estudiantes comprueben visual y numéricamente por qué Gemini supera a un detector de objetos clásico, pídeles que configuren las siguientes escenas físicas en el laboratorio usando sus objetos personales, y que analicen los resultados del modelo 2D antes de hacer la proyección 3D.
+
+### Prueba 1: Relaciones Espaciales y Restricciones (El vaso y la caja)
+- **Escena:** Colocar dos "cajas de hamburguesa" (o tuppers) en la mesa. Encima de una caja, poner una botella de agua o un termo. La otra caja dejarla libre.
+- **Prompt:** *"Identifica la caja de hamburguesas que esté completamente libre y segura para ser agarrada desde arriba, ignorando la que tiene un objeto encima."*
+- **Análisis:** Un modelo clásico (YOLO) detectaría las dos cajas por igual. Gemini debe devolver únicamente la coordenada de la caja libre, demostrando su comprensión de colisiones (safety/affordances).
+
+### Prueba 2: Propiedad por Proximidad Semántica (Llaves y Celulares)
+- **Escena:** Poner dos teléfonos celulares en la mesa. Al lado del celular A, colocar un manojo de llaves o un carnet de la universidad. El celular B está aislado.
+- **Prompt:** *"Señala únicamente el celular que le pertenece a la persona que dejó sus llaves al lado."*
+- **Análisis:** El modelo no solo detecta los teléfonos, sino que entiende la relación semántica de "pertenencia" o agrupamiento lógico de objetos personales, algo imposible en pipelines tradicionales sin entrenar complejas reglas de grafos espaciales.
+
+### Prueba 3: Estado del Objeto (El Cuaderno Abierto)
+- **Escena:** Dos cuadernos universitarios, uno cerrado y otro abierto en una página en blanco.
+- **Prompt:** *"Encuentra el cuaderno que está abierto y listo para tomar apuntes."*
+- **Análisis:** Evalúa la capacidad de comprender el "estado" de un objeto. Un detector clásico tendría problemas sin una etiqueta específica `cuaderno_abierto`. Gemini lo deduce *zero-shot*.
+
+### Prueba 4: Discriminación Fina por Contexto (Esferos)
+- **Escena:** Tres esferos o lápices esparcidos. Uno de ellos está metido a medias en un estuche/cartuchera, y los otros dos están sueltos.
+- **Prompt:** *"Encuentra el esfero que está dentro del estuche."*
+- **Análisis:** Verifica que el modelo entiende contenedores y estados de contención.
+
+---
+
+## 8. Criterios de Evaluación y Retos de IA (Rúbrica de 100 Puntos)
 
 | Competencia | Descripción del Reto | Puntaje |
 | :--- | :--- | :---: |
@@ -133,7 +159,7 @@ point_3d_camera_frame = (ray[0] * z_depth, ray[1] * z_depth, z_depth)
 
 ---
 
-## 8. Tips de Implementación Multi-Vista (Excelencia Académica)
+## 9. Tips de Implementación Multi-Vista (Excelencia Académica)
 
 Para los grupos que deseen prescindir del sensor de profundidad (simulando cámaras RGB económicas), pueden implementar el razonamiento multi-vista:
 
