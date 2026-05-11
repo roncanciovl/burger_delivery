@@ -1,221 +1,112 @@
-# Proyecto Intermedio: MoveIt 2, Localización y Entrega en Carrito
+# Proyecto de Integración: Celda de Manufactura y Logística Autónoma
 
-## 1. Objetivo
+## 1. Introducción y Contexto del Workspace
 
-Implementar una prueba intermedia donde el Kinova Gen3 ubica un carrito mediante un nodo de localización, solicita al carrito ubicarse en una pose conveniente y luego ejecuta un pick and place de una caja de hamburguesa usando MoveIt 2 o MoveIt Task Constructor.
+El presente proyecto constituye la evaluación integradora de nivel avanzado para el curso de Robótica. El objetivo es diseñar, implementar y validar una celda de manufactura flexible donde un manipulador **Kinova Gen3** interactúa de manera autónoma con una unidad de transporte (**carrito móvil**) mediante **ROS 2 Jazzy**.
 
-El proyecto evalúa integración robótica, no solo visualización:
+El desarrollo del proyecto se centraliza en el workspace del curso:
+`~/ros2_ws/src/burger_delivery/`
 
-- URDF y geometría de colisión,
-- `robot_description`, TF y frames dinámicos,
-- nodo de localización,
-- servicio ROS 2 del carrito,
-- coordinación entre carrito y manipulador,
-- Planning Scene,
-- pipeline de pick and place,
-- validación y diagnóstico.
+Para simular un entorno de desarrollo profesional, la clase se dividirá en **dos grandes equipos de ingeniería**. Cada equipo desarrollará sus nodos y archivos de configuración dentro de los paquetes de este workspace. Ambos equipos deben definir y respetar un **contrato de integración** (interfaces de software y transformaciones espaciales) para lograr el éxito del proyecto.
 
-Estrategia de manipulación de referencia:
+---
 
-![Pipeline Pick and Place](pick_and_place_pipeline.svg)
+## 2. Contrato de Integración (Interfaces Compartidas)
 
-## 2. Flujo esperado
+El éxito del proyecto depende de que ambos equipos respeten las siguientes interfaces. Ningún equipo debe depender de "coordenadas quemadas" (hardcoded); todo debe calcularse dinámicamente.
 
-1. El sistema carga la escena fija, el Kinova y los URDFs separados de los carritos.
-2. Un nodo de localización publica la pose dinámica del carrito:
+### 2.1. Árbol de Transformaciones (TF2)
+Debe existir una cadena continua entre los sistemas de referencia de ambos equipos:
+- **Punto de anclaje compartido:** `map` -> `table_link` -> `tag_mesa`
+- **Generado por Equipo Carrito:** `tag_mesa` -> `tag_carrito1` -> `car1_base_link` -> `car1_delivery_tray_frame`
+- **Generado por Equipo Kinova:** `map` / `world` -> `gen3_base_link` -> ... -> `burger_grip_frame`
 
-```text
-tag_mesa -> tag_carrito1
-```
+> [!IMPORTANT]
+> El destino de la descarga (*Place*) ejecutado por el Kinova debe calcularse dinámicamente consultando el frame `car1_delivery_tray_frame` expuesto por el carrito.
 
-3. El sistema calcula una pose conveniente para recibir la caja.
-4. El coordinador llama un servicio del carrito para pedirle que se ubique allí.
-5. Cuando el carrito confirma llegada, se valida su pose usando TF.
-6. MoveIt 2 planifica el pick de la caja desde la mesa.
-7. MoveIt 2 transporta la caja evitando colisiones.
-8. El destino de place se calcula desde:
+### 2.2. Servicio de Coordinación
+El Equipo Kinova (Cliente) solicitará posicionamiento al Equipo Carrito (Servidor) a través de este servicio:
+- **Servicio:** `/car1/prepare_delivery_pose`
+- **Tipo de Interfaz (Custom o std_srvs):**
+  - **Request:** `geometry_msgs/PoseStamped target_pose` (Pose requerida) y `float64 tolerance_xy` (Tolerancia).
+  - **Response:** `bool success` y `string status_message` (Diagnóstico).
 
-```text
-car1_delivery_tray_frame
-```
+---
 
-9. El Kinova deposita la caja, hace detach y se retira.
+## 3. Asignación: Equipo Kinova (Manipulador)
 
-## 3. Arquitectura mínima
+**Objetivo:** Desarrollar el pipeline de manipulación autónoma para recoger la orden y depositarla en la bandeja del carrito móvil de forma segura.
 
-| Responsabilidad | Componente | Interfaz principal |
-|---|---|---|
-| Escena fija | `delivery_scene_fixed.urdf` | `robot_description`, `/tf_static` |
-| Modelo del carrito | `car1_apriltag.urdf` | `/car1/robot_description` |
-| Localización | `cart_localization_node` | publica `tag_mesa -> tag_carrito1` |
-| Selección de pose | `delivery_pose_selector` | produce `PoseStamped` objetivo |
-| Servicio del carrito | `/car1/prepare_delivery_pose` | request/response |
-| Manipulación | `kinova_delivery_task_node` | MoveIt 2 / MTC |
+**Componentes y Archivos a Cargo en el Workspace:**
+1. **Paquete de Lógica de Tarea:** Crear un paquete (ej. `kinova_delivery_task`) que contenga el nodo orquestador cliente (`delivery_coordinator_node`).
+2. **MoveIt 2 / MTC:** Archivos de configuración o scripts C++/Python para la planificación del brazo.
+3. **Manejo de Escena:** Actualizar y mantener el archivo `delivery_scene_fixed.urdf` reflejando las dimensiones reales de la mesa de trabajo y la ubicación exacta de los marcadores fiduciarios (tags).
 
-Principio de diseño:
+**Responsabilidades Clave:**
+- **Sincronización Geométrica:** Ajustar la geometría de colisión en el URDF para que coincida con el entorno físico (mesa, obstáculos fijos y posición de los tags).
+- **Posicionamiento de Visión:** Mover el manipulador a la "Pose de Observación" definida por el equipo carrito al inicio del proceso para garantizar que la cámara tenga línea de visión con los tags.
+- **Orquestación:** Llamar al servicio `/car1/prepare_delivery_pose` y esperar el `success` antes de moverse hacia el carrito.
+- **Pick and Place Seguro:**
+  - Aproximación y agarre (Pre-grasp & Grasp).
+  - Usar `AttachedCollisionObject` para fusionar el objeto con el gripper.
+  - Calcular dinámicamente la pose de entrega (Place) leyendo el frame `car1_delivery_tray_frame` vía TF2.
+  - Planificar esquivando al carrito (actualizando la escena dinámicamente) y retornar a *Home*.
 
-```text
-El URDF describe estructura rígida.
-TF describe poses en tiempo de ejecución.
-El servicio coordina intención con el carrito.
-MoveIt 2 planifica solo cuando TF y la Planning Scene son coherentes.
-```
+### Rúbrica Específica - Equipo Kinova (50 Puntos)
+| Criterio | Puntos | Indicador de Logro |
+| :--- | :---: | :--- |
+| **Pipeline MoveIt 2** | 20 | Pick-Lift-Move-Place-Retreat ejecutado sin errores cinemáticos. |
+| **Manejo de Colisiones** | 10 | Uso correcto de la Planning Scene y del `AttachedCollisionObject`. |
+| **TF2 Dinámico** | 10 | El *Place* se adapta si el frame del carrito cambia de posición. |
+| **Cliente de Servicio** | 10 | Llama al servicio correctamente y maneja timeouts o errores del servidor. |
 
-## 4. Frames obligatorios
+---
 
-La persona participante debe poder generar `view_frames` y justificar estas cadenas:
+## 4. Asignación: Equipo Carrito (Unidad Móvil)
 
-```text
-map -> table_link -> tag_mesa -> tag_carrito1 -> car1_base_link -> car1_delivery_tray_frame
-map -> table_link -> world -> gen3_base_link -> ... -> burger_grip_frame
-```
+**Objetivo:** Proveer localización dinámica de la plataforma móvil y responder a los comandos de orquestación, asegurando que el URDF de la bandeja se posicione correctamente en el mundo.
 
-Restricción crítica:
+**Componentes y Archivos a Cargo en el Workspace:**
+1. **Paquete `burger_description`:** Modificar y mantener el archivo `car1_apriltag.urdf` asegurando que el `car1_delivery_tray_frame` esté en el centro de la bandeja de carga.
+2. **Paquete de Localización:** Crear o configurar un nodo (`cart_localization_node`) dentro de la carpeta `vision_setup/` o un nuevo paquete que publique la TF `tag_mesa -> tag_carrito1`.
+3. **Servidor de Servicio:** Desarrollar el paquete `cart_delivery_service` que contenga el nodo servidor para `/car1/prepare_delivery_pose`.
 
-El place no debe usar una coordenada fija escrita a mano. Debe depender del frame del carrito:
+**Responsabilidades Clave:**
+- **Definición de Pose de Observación:** Determinar y comunicar al equipo Kinova la configuración de joints o pose del end-effector necesaria para que la cámara del brazo visualice los AprilTags de la mesa y el carrito.
+- **Localización Activa:** Procesar el stream de la cámara del Kinova para publicar la TF `tag_mesa -> tag_carrito1` sin saltos bruscos en RViz.
+- **Validación del Servidor:** El servicio no debe devolver `success = True` instantáneamente. Debe simular (o ejecutar) el movimiento y verificar internamente mediante TF que el carrito está dentro de la `tolerance_xy` requerida antes de responder al Kinova.
 
-```text
-car1_delivery_tray_frame
-```
+### Rúbrica Específica - Equipo Carrito (50 Puntos)
+| Criterio | Puntos | Indicador de Logro |
+| :--- | :---: | :--- |
+| **Robustez del Servicio** | 20 | El servidor valida la pose final mediante TF antes de confirmar el `success`. |
+| **Precisión de Localización** | 15 | El TF `tag_mesa -> tag_carrito1` es estable, continuo y usa timestamps correctos. |
+| **Estructura URDF/TF2** | 15 | La cadena `car1_base_link -> car1_delivery_tray_frame` es dimensionalmente correcta. |
 
-## 5. Servicio del carrito
+---
 
-Servicio sugerido:
+## 5. El Reto de "Ingeniería en Tiempo Real" (Sustentación)
 
-```text
-/car1/prepare_delivery_pose
-```
+Durante la sustentación (que evaluará los 50 puntos de cada equipo), el equipo docente introducirá una **modificación imprevista** en el workspace. Los estudiantes deberán diagnosticar la falla en vivo (15-20 min).
 
-Interfaz conceptual:
+**Ejemplos del Reto (Por Equipo):**
+- **Equipo Kinova:** "El objeto ahora pesa más y cambia el centro de gravedad, modifiquen los límites de aceleración de MoveIt en `joint_limits.yaml`." O "El carrito 1 se averió, enruten la entrega dinámicamente al `/car2/prepare_delivery_pose`".
+- **Equipo Carrito:** "El soporte de la cámara se aflojó (el tag rotó 15 grados). Apliquen un `static_transform_publisher` en su launch file para corregir el offset." O "El cliente envía coordenadas fuera del alcance del carrito; hagan que el servicio devuelva un error controlado en `status_message` sin crashear".
 
-```text
-Request:
-  target_pose: geometry_msgs/PoseStamped
-  tray_frame: string
-  tolerance_xy: float64
-  tolerance_yaw: float64
-  timeout_sec: float64
+**Protocolo de Respuesta al Reto:**
+1. **Identificar Capa:** ¿Falla en URDF/Config, en Transformaciones (TF2), en Servicios o en Planificación?
+2. **Recolectar Evidencia:** Mostrar el fallo en terminal (`ros2 topic echo`, `ros2 run tf2_tools view_frames`, logs).
+3. **Aplicar Parche:** Modificar el código, el URDF o el Launch dentro del workspace y volver a lanzar (`colcon build` si es necesario).
 
-Response:
-  accepted: bool
-  reached: bool
-  message: string
-  final_pose: geometry_msgs/PoseStamped
-```
+---
 
-El servicio puede ser simulado al inicio. En ese caso debe quedar claro que simula la llegada del carrito, no la localización real ni la navegación real.
+## 6. Entregables Finales y Lanzamiento
 
-## 6. Pipeline de MoveIt 2
+Para demostrar la integración final en `~/ros2_ws/src/burger_delivery/`:
 
-El pipeline debe seguir las etapas de `pick_and_place_pipeline.svg`:
+1. **Launch de Integración Conjunta:** Debe existir un archivo `launch/system_integration.launch.py` (o scripts bash como `lanzar_robot.sh` actualizados) que levante ambos subsistemas simultáneamente.
+2. **Limpieza del Repositorio:** El paquete no debe tener código basura. Los `package.xml` deben tener las dependencias correctas.
+3. **Reporte (Markdown):** Un breve análisis justificando parámetros de control (timeouts, IK solver, tolerancias del carrito).
+4. **Demostración Práctica:** Flujo completo visualizado en **RViz** mostrando la coordinación de los árboles de TF y la evasión de colisiones.
 
-| Etapa | Acción | Fundamento |
-|---|---|---|
-| 0 | Estado inicial | TF, Planning Scene, joints |
-| 1 | aproximación a caja | IK y pregrasp |
-| 2 | cerrar gripper + attach | objeto adherido |
-| 3 | levantar | movimiento cartesiano seguro |
-| 4 | conectar hacia carrito | planificación anti-colisión |
-| 5 | descender al destino | pose dependiente de TF |
-| 6 | abrir gripper + detach | objeto vuelve al mundo |
-| 7 | retirada | salida segura |
-
-La caja debe existir como objeto de colisión antes del pick. Después del attach, debe tratarse como `AttachedCollisionObject`. Después del detach, debe quedar en la Planning Scene sobre la bandeja.
-
-## 7. Entregables
-
-La persona participante debe entregar:
-
-1. Diagrama de nodos, tópicos, servicios y TF.
-2. `view_frames` con el carrito conectado por localización.
-3. Servicio `/car1/prepare_delivery_pose` definido y probado.
-4. Nodo de localización simulado o real para `tag_mesa -> tag_carrito1`.
-5. Nodo coordinador que llame el servicio antes del pick and place.
-6. Pipeline MoveIt 2 o MTC con aproximación, attach, lift, connect, place, detach y retreat.
-7. Evidencia en RViz de carrito, caja, Planning Scene y trayectoria.
-8. Registro de una prueba exitosa y un fallo diagnosticado.
-
-## 8. Pruebas mínimas
-
-| Prueba | Evidencia |
-|---|---|
-| URDF válido | `check_urdf burger_description/urdf/delivery_scene_fixed.urdf` |
-| TF del carrito | `view_frames` muestra `tag_mesa -> tag_carrito1 -> car1_base_link` |
-| Servicio activo | `ros2 service list` muestra `/car1/prepare_delivery_pose` |
-| Servicio funcional | una llamada responde `accepted/reached` o falla con razón clara |
-| Place dependiente de TF | mover el carrito cambia el destino de place |
-| Planning Scene | mesa, carrito y caja se consideran como colisiones |
-| Attach/Detach | la caja cambia de mundo a gripper y vuelve al mundo |
-| Seguridad | la trayectoria no atraviesa mesa ni carrito |
-
-## 9. Evaluación
-
-Puntaje sugerido: 100 puntos.
-
-| Área | Puntaje | Evidencia |
-|---|---:|---|
-| Arquitectura ROS 2 | 10 | responsabilidades, nodos, servicios y tópicos claros |
-| URDF, TF y frames | 15 | distingue escena fija, carrito móvil y TF dinámico |
-| Localización del carrito | 10 | publica y valida `tag_mesa -> tag_carrito1` sin conflictos |
-| Servicio del carrito | 10 | define interfaz, tolerancias, timeout y fallos |
-| Coordinación del flujo | 10 | localiza, pide pose, verifica y manipula en orden correcto |
-| MoveIt 2 / MTC | 15 | ejecuta pipeline pick and place con attach/detach |
-| Planning Scene y colisiones | 10 | caja, mesa y carrito afectan la planificación |
-| Validación y diagnóstico | 10 | usa RViz, CLI, logs y TF para justificar resultados |
-| Documentación técnica | 5 | explica decisiones y límites |
-| Problema desconocido | 5 | transfiere fundamentos a una situación nueva |
-
-## 10. Evaluación adicional: problema desconocido
-
-La evaluación adicional no debe preguntar por una etapa ya implementada exactamente como en el proyecto. Debe presentar un problema nuevo, no ensayado, que obligue a transferir los mismos fundamentos.
-
-La persona participante debe explicar cómo lo resolvería, qué verificaría primero, qué comandos usaría y en qué capa corregiría el problema.
-
-Formato de respuesta esperado:
-
-```text
-Problema:
-Hipótesis inicial:
-Capa probable: URDF / TF / localización / servicio / MoveIt / RViz / hardware
-Evidencia a recolectar:
-Comandos o herramientas:
-Corrección propuesta:
-Cómo se valida:
-Qué no se debe compensar en otro nivel:
-```
-
-Ejemplos de problemas desconocidos:
-
-| Problema nuevo | Qué se evalúa |
-|---|---|
-| El sistema debe entregar en `car2` en vez de `car1` sin duplicar lógica | generalización de frames, servicios y parámetros |
-| El carrito queda visible en RViz pero MoveIt lo atraviesa | diferencia entre visual y collision / Planning Scene |
-| El detector ve el tag, pero el carrito aparece desplazado 8 cm | calibración, offset tag-carrito y `tag_mesa` |
-| El servicio responde `reached=true`, pero TF no cambió | separación entre respuesta de servicio y evidencia espacial |
-| El place funciona con carrito quieto, pero falla cuando el carrito cambia de pose | uso correcto de TF dinámico y timestamp |
-| La caja se mueve con el gripper en RViz pero MoveIt no evita chocarla | estado attached mal actualizado |
-| Al activar RViz aparece error de `robot_description_semantic` | plugin MoveIt cargado sin SRDF o stack incompleto |
-| Dos nodos publican `tag_carrito1` | conflicto de autoridad TF |
-
-Rúbrica del problema desconocido:
-
-| Criterio | Puntaje | Evidencia |
-|---|---:|---|
-| Identifica la capa correcta | 1 | no confunde síntomas con causa |
-| Propone validación concreta | 1 | usa comandos, RViz o logs verificables |
-| Corrige en el nivel correcto | 1 | no compensa en URDF si el fallo es TF, ni al revés |
-| Explica impacto robótico | 1 | relaciona el fallo con seguridad, planificación o localización |
-| Generaliza la solución | 1 | la respuesta sirve para casos similares |
-
-## 11. Criterio de aprobación global
-
-El proyecto se considera aprobado si la persona participante puede demostrar el flujo principal y además resolver conceptualmente un problema desconocido usando razonamiento por capas.
-
-La evidencia más fuerte de aprendizaje es poder afirmar:
-
-```text
-El problema está en esta capa del sistema.
-Lo verifico con esta herramienta.
-Lo corrijo en este nodo, archivo o configuración.
-No lo compenso en otro nivel porque produciría un error sistemático.
-```
+> *"En la robótica colaborativa, los sistemas no fallan por defecto en sus partes, sino en las interfaces que los unen."*
