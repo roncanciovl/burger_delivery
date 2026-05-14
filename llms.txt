@@ -5,6 +5,8 @@
 ## Project Identity
 
 - **Name**: burger_delivery / burger_description
+- **Author**: Henry Antonio Roncancio Velandia
+- **Institution**: Universidad Militar Nueva Granada (UMNG), Colombia
 - **ROS 2 Distro**: Jazzy
 - **Build System**: ament_cmake + colcon
 - **Language**: Python (scripts, launch), XML (URDF), C++ (vendored drivers)
