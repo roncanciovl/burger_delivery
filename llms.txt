@@ -1,0 +1,172 @@
+# Burger Delivery — ROS 2 Jazzy Robotics Project
+
+> URDF description package, documentation hub, and configuration center for an advanced collaborative robotics work cell. A Kinova Gen3 7-DOF manipulator delivers trays to differential mobile robots (TurtleBot-style carts) using tf2, AprilTag visual localization, MoveIt 2 planning, and micro-ROS protocols — optimized for high-density wireless environments.
+
+## Project Identity
+
+- **Name**: burger_delivery / burger_description
+- **ROS 2 Distro**: Jazzy
+- **Build System**: ament_cmake + colcon
+- **Language**: Python (scripts, launch), XML (URDF), C++ (vendored drivers)
+- **Platform**: Ubuntu + ROS 2 Jazzy
+
+## Quick Start
+
+```bash
+cd ~/ros2_ws
+source /opt/ros/jazzy/setup.bash
+colcon build --packages-select burger_description
+source install/setup.bash
+ros2 launch burger_description display.launch.py
+```
+
+Alternative: `./build_burger.sh` to build, `./lanzar_robot.sh` to launch.
+
+## Repository Structure
+
+### Core Package
+- `burger_description/` — Main ROS 2 package
+  - `urdf/delivery_scene_fixed.urdf` — Static delivery scene (table, Kinova Gen3, staging areas, AprilTag anchors)
+  - `urdf/car1_apriltag.urdf` — Mobile cart 1 URDF (separate for dynamic localization)
+  - `urdf/car2_apriltag.urdf` — Mobile cart 2 URDF
+  - `launch/display.launch.py` — Main launch file (supports `use_static_carts:=true` for debug mode)
+  - `rviz/` — RViz configuration files
+  - `package.xml` — ROS 2 package manifest (depends on joint_state_publisher_gui, robot_state_publisher, rviz2, xacro)
+  - `CMakeLists.txt` — Build configuration
+
+### 3D Meshes & Vendored Resources
+- `visual/` — Custom visual meshes (table, carts, scene objects)
+- `vendor/` — Third-party robot descriptions
+  - `kortex_description/` — Kinova Gen3 meshes and config
+  - `robotiq_description/` — Robotiq 85 gripper meshes
+
+### Scripts (Hardware Debugging)
+- `scripts/apply_kinova_smooth_movement.py` — Patches C++ drivers for low-latency smooth movement (fixes jittering)
+- `scripts/test_kinova_pose.py` — Validates [X,Y,Z] coordinates against kinematic limits before MoveIt execution
+- `scripts/test_kinova_camera.py` — GStreamer/OpenCV camera evaluation without ROS overhead
+
+### Networking & Diagnostics
+- `network_setup/` — Network diagnostics, micro-ROS troubleshooting, WiFi analysis
+  - `DIAGNOSTICO_RED.md` — ROS 2 network diagnostics guide
+  - `ROS2_NETWORK_CONFIG.md` — Recommended network configuration
+  - `fastdds_discovery.xml` — FastDDS discovery server config
+  - `test_ros2_network.sh`, `diagnostico_wifi.sh`, `analisis_trafico_ros2.sh` — Diagnostic scripts
+
+### Vision & Localization
+- `vision_setup/` — Vision pipeline documentation
+  - `LOCALIZACION_APRILTAG.md` — ⭐ AprilTag localization system architecture (critical for TF tree understanding)
+  - `VERIFICACION_CAMARA.md` — Native camera verification & diagnostics
+  - `DIAGNOSTICO_RED_VISION.md` — Visual latency isolation (TCP vs ROS 2)
+
+### ROS 2 Environment Setup
+- `ros2_setup/` — Installation guides and dependency maps
+  - `INSTALACION_KORTEX.md` — Kortex driver stack installation
+  - `MOVEIT_Y_ROS2_CONTROL.md` — MoveIt 2 and ros2_control integration
+  - `PROPUESTA_GEMINI_ER.md` — Gemini Robotics-ER integration proposal
+  - `verificar_ros2.md` — ROS 2 Jazzy environment verification
+  - `MAPA_DEPENDENCIAS.svg` / `MAPA_DEPENDENCIAS_AI.svg` — Dependency maps
+
+### Shell Scripts (Root)
+- `install_ros2.sh` — ROS 2 Jazzy installation helper
+- `build_burger.sh` — Convenience build script
+- `lanzar_robot.sh` — Quick launch script
+
+## Architecture & Key Concepts
+
+### TF Tree (Transformation Hierarchy)
+The system uses a multi-publisher TF architecture:
+```
+map → table_link → world → gen3_base_link → ... → kinova_tool_frame → burger_grip_frame
+                 → staging_area
+                 → delivery_slot_1
+                 → tag_mesa → tag_carrito1 → car1_base_link (published by AprilTag node)
+                            → tag_carrito2 → car2_base_link (published by AprilTag node)
+```
+
+- **Static TFs**: Published by `robot_state_publisher` from URDF joints
+- **Dynamic TFs**: Cart positions published by the AprilTag localization node at runtime
+- **Debug mode**: `use_static_carts:=true` publishes temporary static TFs for visualization without vision system
+
+### Kinova Gen3 Manipulator
+- 7-DOF redundant arm with Robotiq 85 gripper
+- Joints 1, 3, 5, 7: continuous; Joints 2, 4, 6: revolute with limits
+- Gripper uses `mimic` joints (right finger mirrors left with multiplier=-1)
+- `burger_grip_frame` is the logical grasp target for MoveIt 2 (offset from `kinova_tool_frame`)
+
+### AprilTag Localization System
+- `tag_mesa` is a fixed anchor on the table (defined in URDF)
+- `tag_carrito*` positions are estimated by the vision node relative to `tag_mesa`
+- Formula: `T(tag_mesa → tag_carrito) = inverse(T(camera → tag_mesa)) * T(camera → tag_carrito)`
+- ⚠️ Never publish `map → car_base_link` if AprilTag is publishing `tag_carrito → car_base_link`
+
+### Launch Modes
+
+| Mode | Command | Use Case |
+|------|---------|----------|
+| Production | `ros2 launch burger_description display.launch.py` | Real operation with AprilTag localization |
+| Debug | `ros2 launch burger_description display.launch.py use_static_carts:=true` | Visualization without vision system |
+
+## Documentation Index
+
+### General & Architecture (Spanish)
+- `README.md` — Main project README (Spanish)
+- `README_en.md` — Main project README (English)
+- `ros_burger_delivery.md` — Full technical architecture document
+- `ros.md` — ROS 2 fundamentals reference
+- `burger_description/GUIA_DE_USO.md` — Quick usage guide
+
+### Workshops & Pedagogy
+- `TALLER_URDF_TF.md` — Step-by-step URDF/TF2 workshop (11 sections, student-oriented)
+- `joints.md` — Joint types and kinematics reference
+- `MARCO_CONCEPTUAL_MOVEIT2.md` — MoveIt 2 conceptual framework
+
+### Projects & Evaluation
+- `PROYECTO_INTERMEDIO_MOVEIT2_DELIVERY.md` — Evaluable MoveIt 2 delivery project
+- `EXPERIMENTO_IA_LOCALIZACION_GEMINI.md` — AI experiment: 3D spatial reasoning with Gemini Robotics-ER 1.6
+
+### Motion & Hardware
+- `MEJORAS_MOVIMIENTO_KINOVA.md` — MTC motion improvements and ghost visualizer
+- `PRUEBAS_MOVIMIENTO.md` — Motion tests and CLI Cartesian coordinates
+
+### Diagrams (SVG)
+- `pick_and_place_pipeline.svg` — Pick & place pipeline architecture
+- `tf_tree_diagram.svg` — TF transformation tree
+- `turtlebot_nav_service.svg` — TurtleBot Nav2 service architecture
+- `vision_localizacion_whiteboard.svg` — AprilTag localization scheme
+
+## Key Dependencies
+
+- `robot_state_publisher` — Publishes TF from URDF + joint_states
+- `joint_state_publisher_gui` — Interactive joint slider GUI
+- `rviz2` — 3D visualization
+- `xacro` — URDF macro processor
+- `tf2_tools` — TF tree visualization (`view_frames`)
+- MoveIt 2 — Motion planning (external, see `ros2_setup/INSTALACION_KORTEX.md`)
+- Kortex driver — Kinova Gen3 hardware interface (external)
+
+## Common Validation Commands
+
+```bash
+# Validate URDF XML
+xmllint --noout burger_description/urdf/delivery_scene_fixed.urdf
+
+# Check kinematic tree (root should be "map")
+check_urdf burger_description/urdf/delivery_scene_fixed.urdf
+
+# Verify launch syntax
+python3 -m py_compile burger_description/launch/display.launch.py
+
+# Generate TF tree diagram
+ros2 run tf2_tools view_frames
+
+# Echo live TF
+ros2 run tf2_ros tf2_echo map delivery_slot_1
+```
+
+## Notes for LLMs
+
+- This is a **university-level educational robotics project** used for teaching ROS 2, URDF, TF2, MoveIt 2, and AI-based perception.
+- Documentation is primarily in **Spanish** with an English README translation.
+- The project emphasizes the **architectural and geometric foundation** — it does not include a complete autonomous navigation or business logic stack.
+- The AI localization experiment uses **Gemini Robotics-ER 1.6** for zero-shot spatial reasoning as an alternative to classical object detection (YOLO).
+- When modifying URDFs: always calibrate from root to leaves, rebuild with `colcon build`, and verify with `xmllint` + `check_urdf`.
