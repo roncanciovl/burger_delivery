@@ -5,7 +5,7 @@
 ## Project Identity
 
 - **Name**: burger_delivery / burger_description
-- **Author**: Henry Antonio Roncancio Velandia
+- **Author**: Henry Antonio Roncancio Velandia — Associate Professor of Robotics and Artificial Intelligence at UMNG. Founder of economiaia LLC.
 - **Institution**: Universidad Militar Nueva Granada (UMNG), Colombia
 - **ROS 2 Distro**: Jazzy
 - **Build System**: ament_cmake + colcon
