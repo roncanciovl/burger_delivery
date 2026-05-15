@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pull Requests — Animación SVG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d1117; --surface: #161b22; --border: #30363d;
+      --green: #3fb950; --blue: #58a6ff; --purple: #bc8cff;
+      --orange: #f0883e; --red: #f85149; --text: #e6edf3; --muted: #8b949e;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    nav { padding: 16px 32px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+    nav a { color: var(--muted); text-decoration: none; font-size: 14px; }
+    nav a:hover { color: var(--text); }
+    .nav-sep { color: var(--border); }
+    .hero { text-align: center; padding: 40px 20px 20px; }
+    .hero h1 { font-size: clamp(24px,4vw,42px); font-weight: 900; color: var(--purple); }
+    .hero p { color: var(--muted); margin-top: 10px; max-width: 600px; margin-left: auto; margin-right: auto; font-size: 15px; }
+    .controls { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; padding: 20px; }
+    .btn {
+      padding: 9px 18px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text); font-family: 'Fira Code', monospace;
+      font-size: 12px; cursor: pointer; transition: all 0.2s;
+    }
+    .btn:hover { border-color: var(--purple); color: var(--purple); background: rgba(188,140,255,0.08); }
+    .btn.active { border-color: var(--purple); color: var(--purple); background: rgba(188,140,255,0.12); }
+    .stage { max-width: 920px; margin: 0 auto; padding: 10px 20px 30px; }
+    #pr-svg { width: 100%; height: auto; display: block; }
+    .info-panel {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px 24px; margin: 0 20px 30px;
+      max-width: 880px; margin-left: auto; margin-right: auto;
+    }
+    .info-panel h3 { color: var(--purple); font-size: 16px; margin-bottom: 8px; }
+    .info-panel p { color: var(--muted); font-size: 14px; line-height: 1.7; }
+    .cmd { font-family: 'Fira Code', monospace; background: rgba(188,140,255,0.12); color: var(--purple); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+    .cmd-g { font-family: 'Fira Code', monospace; background: rgba(63,185,80,0.1); color: #3fb950; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+    .cmd-r { font-family: 'Fira Code', monospace; background: rgba(248,81,73,0.1); color: #f85149; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+
+    /* Origin clarification panel */
+    .origin-section {
+      max-width: 880px; margin: 0 auto 10px; padding: 0 20px;
+    }
+    .origin-title {
+      text-align: center; font-size: 13px; color: var(--muted);
+      margin-bottom: 14px; font-weight: 600; letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .origin-cards {
+      display: grid; grid-template-columns: 1fr auto 1fr; gap: 0;
+      align-items: stretch;
+    }
+    .origin-card {
+      border: 1.5px solid var(--border); border-radius: 12px;
+      padding: 18px 20px; background: var(--surface);
+      position: relative;
+    }
+    .origin-card.collab { border-color: #3fb950; background: rgba(63,185,80,0.05); }
+    .origin-card.contrib { border-color: #58a6ff; background: rgba(88,166,255,0.05); }
+    .origin-badge {
+      font-size: 11px; font-weight: 700; font-family: 'Fira Code', monospace;
+      padding: 3px 10px; border-radius: 20px; display: inline-block; margin-bottom: 8px;
+    }
+    .origin-card.collab .origin-badge { background: rgba(63,185,80,0.15); color: #3fb950; }
+    .origin-card.contrib .origin-badge { background: rgba(88,166,255,0.15); color: #58a6ff; }
+    .origin-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+    .origin-card.collab h4 { color: #3fb950; }
+    .origin-card.contrib h4 { color: #58a6ff; }
+    .origin-card p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+    .origin-card ul { font-size: 12px; color: var(--muted); margin-top: 8px; padding-left: 16px; line-height: 1.8; }
+    .origin-vs {
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 16px; font-size: 13px; font-weight: 700; color: var(--muted);
+      white-space: nowrap;
+    }
+    .origin-note {
+      text-align: center; margin-top: 12px; padding: 10px 16px;
+      background: rgba(188,140,255,0.07); border: 1px solid rgba(188,140,255,0.25);
+      border-radius: 8px; font-size: 13px; color: var(--purple);
+    }
+    .section-divider {
+      max-width: 880px; margin: 20px auto 0; padding: 0 20px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .section-divider span {
+      white-space: nowrap; font-size: 12px; font-weight: 700;
+      color: var(--purple); font-family: 'Fira Code', monospace;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .section-divider hr { flex: 1; border: none; border-top: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html">🏠 Inicio</a>
+  <span class="nav-sep">/</span>
+  <span style="color:var(--purple)">🔀 Pull Requests</span>
+</nav>
+
+<div class="hero">
+  <h1>🔀 Pull Requests</h1>
+  <p>Un PR es una solicitud formal para fusionar código de una rama hacia otra. <strong>¿Desde un fork o desde una rama?</strong> Ambas son válidas — depende del contexto.</p>
+</div>
+
+<!-- ═══ ORIGIN CLARIFICATION ═══ -->
+<div class="origin-section">
+  <p class="origin-title">¿De dónde viene un Pull Request?</p>
+  <div class="origin-cards">
+
+    <div class="origin-card collab">
+      <span class="origin-badge">ESCENARIO A</span>
+      <h4>🤝 Rama interna → main</h4>
+      <p>Cuando eres <strong>collaborator</strong> (tienes acceso de escritura), creas una rama dentro del mismo repo y abres el PR desde ahí.</p>
+      <ul>
+        <li>Mismo repositorio</li>
+        <li>Sin fork necesario</li>
+        <li>Flujo de equipos internos</li>
+        <li><code style="font-size:11px;color:#3fb950">feature/auth → main</code></li>
+      </ul>
+    </div>
+
+    <div class="origin-vs">VS</div>
+
+    <div class="origin-card contrib">
+      <span class="origin-badge">ESCENARIO B</span>
+      <h4>🌐 Fork externo → upstream</h4>
+      <p>Cuando eres <strong>contributor</strong> externo (sin acceso de escritura), haces un fork, trabajas en él y propones el PR al repo original.</p>
+      <ul>
+        <li>Repositorio diferente (tu fork)</li>
+        <li>Fork obligatorio</li>
+        <li>Flujo open source</li>
+        <li><code style="font-size:11px;color:#58a6ff">you/repo:feature → owner/repo:main</code></li>
+      </ul>
+    </div>
+
+  </div>
+  <div class="origin-note">
+    💡 El <strong>ciclo interno del PR</strong> (revisión → CI → merge) es <em>idéntico</em> en ambos casos. Solo difiere el origen de la rama.
+  </div>
+</div>
+
+<div class="section-divider">
+  <hr/>
+  <span>▶ Animación: Escenario A — rama interna</span>
+  <hr/>
+</div>
+
+<div class="controls">
+  <button class="btn active" id="btn-0" onclick="goStep(0)">1. Branches base</button>
+  <button class="btn" id="btn-1" onclick="goStep(1)">2. Abrir PR</button>
+  <button class="btn" id="btn-2" onclick="goStep(2)">3. CI checks</button>
+  <button class="btn" id="btn-3" onclick="goStep(3)">4. Review</button>
+  <button class="btn" id="btn-4" onclick="goStep(4)">5. Request changes</button>
+  <button class="btn" id="btn-5" onclick="goStep(5)">6. Aprobado</button>
+  <button class="btn" id="btn-6" onclick="goStep(6)">7. Merge!</button>
+</div>
+
+<div class="stage">
+<svg id="pr-svg" viewBox="0 0 900 420" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="glow3">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="a-g3" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#3fb950"/></marker>
+    <marker id="a-b3" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#58a6ff"/></marker>
+    <marker id="a-p3" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#bc8cff"/></marker>
+    <marker id="a-r3" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#f85149"/></marker>
+  </defs>
+
+  <rect width="900" height="420" fill="#0d1117" rx="12"/>
+
+  <!-- COLUMN: Branches history -->
+  <text x="30" y="30" font-family="Inter" font-size="12" fill="#8b949e" font-weight="600">Historial de commits</text>
+
+  <!-- main branch -->
+  <text x="30" y="68" font-family="Fira Code" font-size="11" fill="#3fb950">main</text>
+  <line x1="76" y1="62" x2="490" y2="62" stroke="#3fb950" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.4"/>
+  <!-- main commits -->
+  <g filter="url(#glow3)">
+    <circle cx="100" cy="62" r="13" fill="#0d1117" stroke="#3fb950" stroke-width="2"/>
+    <text x="100" y="67" text-anchor="middle" font-family="Fira Code" font-size="9" fill="#3fb950">C1</text>
+  </g>
+  <line x1="115" y1="62" x2="143" y2="62" stroke="#3fb950" stroke-width="1.5" marker-end="url(#a-g3)"/>
+  <g filter="url(#glow3)">
+    <circle cx="160" cy="62" r="13" fill="#0d1117" stroke="#3fb950" stroke-width="2"/>
+    <text x="160" y="67" text-anchor="middle" font-family="Fira Code" font-size="9" fill="#3fb950">C2</text>
+  </g>
+  <line x1="175" y1="62" x2="203" y2="62" stroke="#3fb950" stroke-width="1.5" marker-end="url(#a-g3)"/>
+  <g filter="url(#glow3)">
+    <circle cx="220" cy="62" r="13" fill="#0d1117" stroke="#3fb950" stroke-width="2"/>
+    <text x="220" y="67" text-anchor="middle" font-family="Fira Code" font-size="9" fill="#3fb950">C3</text>
+  </g>
+
+  <!-- feature branch -->
+  <text x="30" y="148" font-family="Fira Code" font-size="11" fill="#58a6ff">feature/auth</text>
+  <path d="M 220 62 C 265 62 265 142 310 142" fill="none" stroke="#58a6ff" stroke-width="2" stroke-dasharray="5 3"/>
+  <g filter="url(#glow3)">
+    <circle cx="340" cy="142" r="13" fill="#0d1117" stroke="#58a6ff" stroke-width="2"/>
+    <text x="340" y="147" text-anchor="middle" font-family="Fira Code" font-size="9" fill="#58a6ff">F1</text>
+  </g>
+  <line x1="355" y1="142" x2="383" y2="142" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#a-b3)"/>
+  <g filter="url(#glow3)">
+    <circle cx="400" cy="142" r="13" fill="#0d1117" stroke="#58a6ff" stroke-width="2"/>
+    <text x="400" y="147" text-anchor="middle" font-family="Fira Code" font-size="9" fill="#58a6ff">F2</text>
+  </g>
+
+  <!-- PR PANEL -->
+  <g id="pr-panel" opacity="0">
+    <rect x="30" y="200" width="520" height="190" rx="10" fill="#161b22" stroke="#bc8cff" stroke-width="1.5"/>
+    <!-- PR Header -->
+    <rect x="30" y="200" width="520" height="36" rx="10" fill="rgba(188,140,255,0.1)"/>
+    <circle cx="56" cy="218" r="10" fill="rgba(188,140,255,0.2)" stroke="#bc8cff" stroke-width="1.5"/>
+    <text x="56" y="223" text-anchor="middle" font-family="Inter" font-size="11" fill="#bc8cff">🔀</text>
+    <text x="76" y="214" font-family="Inter" font-size="13" fill="#e6edf3" font-weight="700">Añadir autenticación JWT</text>
+    <text x="76" y="229" font-family="Inter" font-size="10" fill="#8b949e">feature/auth → main  •  by @you  •  2 commits</text>
+
+    <!-- PR status badge -->
+    <g id="pr-badge-open">
+      <rect x="466" y="207" width="70" height="22" rx="11" fill="rgba(63,185,80,0.2)" stroke="#3fb950" stroke-width="1"/>
+      <text x="501" y="222" text-anchor="middle" font-family="Inter" font-size="11" fill="#3fb950" font-weight="600">Open</text>
+    </g>
+    <g id="pr-badge-changes" opacity="0">
+      <rect x="452" y="207" width="90" height="22" rx="11" fill="rgba(248,81,73,0.2)" stroke="#f85149" stroke-width="1"/>
+      <text x="497" y="222" text-anchor="middle" font-family="Inter" font-size="11" fill="#f85149" font-weight="600">Changes ✗</text>
+    </g>
+    <g id="pr-badge-approved" opacity="0">
+      <rect x="452" y="207" width="90" height="22" rx="11" fill="rgba(63,185,80,0.3)" stroke="#3fb950" stroke-width="1.5"/>
+      <text x="497" y="222" text-anchor="middle" font-family="Inter" font-size="11" fill="#3fb950" font-weight="600">Approved ✓</text>
+    </g>
+    <g id="pr-badge-merged" opacity="0">
+      <rect x="452" y="207" width="90" height="22" rx="11" fill="rgba(188,140,255,0.3)" stroke="#bc8cff" stroke-width="1.5"/>
+      <text x="497" y="222" text-anchor="middle" font-family="Inter" font-size="11" fill="#bc8cff" font-weight="600">Merged ✓</text>
+    </g>
+
+    <!-- CI block -->
+    <g id="ci-block" opacity="0">
+      <rect x="46" y="246" width="490" height="50" rx="6" fill="#0d1117" stroke="#30363d" stroke-width="1"/>
+      <text x="62" y="264" font-family="Inter" font-size="11" fill="#8b949e" font-weight="600">Checks automáticos (CI/CD)</text>
+      <g id="ci-running">
+        <circle cx="62" cy="282" r="6" fill="#f0883e"/>
+        <text x="76" y="287" font-family="Fira Code" font-size="10" fill="#f0883e">Tests running...</text>
+      </g>
+      <g id="ci-pass" opacity="0">
+        <circle cx="62" cy="282" r="6" fill="#3fb950"/>
+        <text x="76" y="287" font-family="Fira Code" font-size="10" fill="#3fb950">✓ 42/42 tests passed</text>
+        <circle cx="230" cy="282" r="6" fill="#3fb950"/>
+        <text x="244" y="287" font-family="Fira Code" font-size="10" fill="#3fb950">✓ build OK</text>
+        <circle cx="340" cy="282" r="6" fill="#3fb950"/>
+        <text x="354" y="287" font-family="Fira Code" font-size="10" fill="#3fb950">✓ lint OK</text>
+      </g>
+    </g>
+
+    <!-- Review comment -->
+    <g id="review-block" opacity="0">
+      <rect x="46" y="306" width="490" height="70" rx="6" fill="#0d1117" stroke="#30363d" stroke-width="1"/>
+      <circle cx="64" cy="320" r="10" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="1.5"/>
+      <text x="64" y="325" text-anchor="middle" font-family="Inter" font-size="10" fill="#58a6ff">MR</text>
+      <text x="82" y="318" font-family="Inter" font-size="11" fill="#e6edf3" font-weight="600">@maintainer</text>
+      <text x="82" y="332" font-family="Inter" font-size="10" fill="#8b949e">revisó el código</text>
+
+      <g id="comment-changes" opacity="0">
+        <rect x="56" y="342" width="460" height="26" rx="4" fill="rgba(248,81,73,0.08)" stroke="#f85149" stroke-width="1"/>
+        <text x="70" y="359" font-family="Inter" font-size="11" fill="#f85149">❌  "Por favor agrega manejo de errores en el endpoint /login"</text>
+      </g>
+      <g id="comment-approve" opacity="0">
+        <rect x="56" y="342" width="460" height="26" rx="4" fill="rgba(63,185,80,0.08)" stroke="#3fb950" stroke-width="1"/>
+        <text x="70" y="359" font-family="Inter" font-size="11" fill="#3fb950">✅  "¡Se ve perfecto! Aprobado y listo para merge."</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- Merge commit on main -->
+  <g id="merge-on-main" opacity="0">
+    <path d="M 400 142 C 450 142 470 62 490 62" fill="none" stroke="#bc8cff" stroke-width="2.5" stroke-dasharray="5 3"/>
+    <circle cx="510" cy="62" r="15" fill="#1c1025" stroke="#bc8cff" stroke-width="2.5" filter="url(#glow3)"/>
+    <text x="510" y="67" text-anchor="middle" font-family="Fira Code" font-size="9" fill="#bc8cff">M</text>
+    <text x="540" y="58" font-family="Fira Code" font-size="10" fill="#bc8cff">← merge commit</text>
+  </g>
+
+  <!-- TIMELINE (right panel) -->
+  <g transform="translate(580,20)">
+    <text x="0" y="16" font-family="Inter" font-size="12" fill="#8b949e" font-weight="600">Timeline del PR</text>
+    <!-- items -->
+    <g id="tl-open" opacity="0">
+      <circle cx="10" cy="40" r="6" fill="#3fb950"/>
+      <text x="24" y="45" font-family="Inter" font-size="11" fill="#e6edf3">PR abierto por <tspan fill="#58a6ff">@you</tspan></text>
+    </g>
+    <g id="tl-ci" opacity="0">
+      <line x1="10" y1="46" x2="10" y2="68" stroke="#30363d" stroke-width="1.5"/>
+      <circle cx="10" cy="74" r="6" fill="#f0883e"/>
+      <text x="24" y="79" font-family="Inter" font-size="11" fill="#e6edf3">CI iniciado</text>
+    </g>
+    <g id="tl-ci-ok" opacity="0">
+      <line x1="10" y1="80" x2="10" y2="102" stroke="#30363d" stroke-width="1.5"/>
+      <circle cx="10" cy="108" r="6" fill="#3fb950"/>
+      <text x="24" y="113" font-family="Inter" font-size="11" fill="#e6edf3">✓ CI pasó</text>
+    </g>
+    <g id="tl-review" opacity="0">
+      <line x1="10" y1="114" x2="10" y2="136" stroke="#30363d" stroke-width="1.5"/>
+      <circle cx="10" cy="142" r="6" fill="#58a6ff"/>
+      <text x="24" y="147" font-family="Inter" font-size="11" fill="#e6edf3">Review solicitado</text>
+    </g>
+    <g id="tl-changes" opacity="0">
+      <line x1="10" y1="148" x2="10" y2="170" stroke="#30363d" stroke-width="1.5"/>
+      <circle cx="10" cy="176" r="6" fill="#f85149"/>
+      <text x="24" y="181" font-family="Inter" font-size="11" fill="#e6edf3">Changes requested</text>
+    </g>
+    <g id="tl-fixed" opacity="0">
+      <line x1="10" y1="182" x2="10" y2="204" stroke="#30363d" stroke-width="1.5"/>
+      <circle cx="10" cy="210" r="6" fill="#3fb950"/>
+      <text x="24" y="215" font-family="Inter" font-size="11" fill="#e6edf3">Cambios aplicados ✓</text>
+    </g>
+    <g id="tl-merged" opacity="0">
+      <line x1="10" y1="216" x2="10" y2="238" stroke="#30363d" stroke-width="1.5"/>
+      <circle cx="10" cy="244" r="6" fill="#bc8cff"/>
+      <text x="24" y="249" font-family="Inter" font-size="11" fill="#e6edf3">🎉 Merged a main</text>
+    </g>
+  </g>
+
+  <!-- Step label -->
+  <rect x="20" y="388" width="860" height="24" rx="6" fill="#161b22"/>
+  <text id="step-text" x="450" y="404" text-anchor="middle" font-family="Inter" font-size="12" fill="#8b949e">Paso 1 — Estado inicial: dos ramas independientes</text>
+</svg>
+</div>
+
+<div class="info-panel">
+  <h3 id="info-title">📋 Estado inicial — ramas independientes</h3>
+  <p id="info-body">La rama <span class="cmd-g">main</span> tiene los commits C1, C2, C3. La rama <span class="cmd">feature/auth</span> se creó desde C3 y tiene commits F1 y F2. Aún no hay comunicación formal entre ellas.</p>
+</div>
+
+<script>
+const steps = [
+  {
+    step: "Paso 1 — Estado inicial: dos ramas independientes",
+    title: "📋 Estado inicial — ramas independientes",
+    body: `La rama <span class="cmd-g">main</span> tiene los commits C1→C2→C3. La rama <span class="cmd">feature/auth</span> se creó desde C3 y tiene commits F1 y F2. Aún no hay comunicación formal entre ellas.`,
+    show: [], hide: ["pr-panel","ci-block","ci-pass","ci-running","review-block","comment-changes","comment-approve","pr-badge-changes","pr-badge-approved","pr-badge-merged","merge-on-main","tl-open","tl-ci","tl-ci-ok","tl-review","tl-changes","tl-fixed","tl-merged"]
+  },
+  {
+    step: "Paso 2 — Abrir Pull Request en GitHub",
+    title: "🔀 Abrir PR — solicitud formal de merge",
+    body: `En GitHub haces clic en <span class="cmd">New Pull Request</span>, eliges la rama base (<span class="cmd-g">main</span>) y la rama comparada (<span class="cmd">feature/auth</span>). El PR queda en estado <strong>Open</strong>.`,
+    show: ["pr-panel","tl-open"], hide: ["ci-block","ci-pass","review-block","comment-changes","comment-approve","pr-badge-changes","pr-badge-approved","pr-badge-merged","merge-on-main","tl-ci","tl-ci-ok","tl-review","tl-changes","tl-fixed","tl-merged"]
+  },
+  {
+    step: "Paso 3 — GitHub Actions ejecuta CI checks",
+    title: "🤖 CI/CD automático — verificación de calidad",
+    body: `GitHub ejecuta automáticamente los <strong>checks de CI</strong> (tests, build, linters). Mientras corren aparecen en naranja. Si alguno falla, el PR queda bloqueado para merge.`,
+    show: ["pr-panel","tl-open","ci-block","ci-running","tl-ci"], hide: ["ci-pass","review-block","comment-changes","comment-approve","pr-badge-changes","pr-badge-approved","pr-badge-merged","merge-on-main","tl-ci-ok","tl-review","tl-changes","tl-fixed","tl-merged"]
+  },
+  {
+    step: "Paso 4 — CI pasa ✓, el maintainer hace review",
+    title: "✅ CI pasó — ahora viene la revisión humana",
+    body: `Los 42 tests pasan. El <strong>maintainer</strong> (dueño del repo) recibe una notificación y empieza a revisar el código línea por línea, dejando comentarios.`,
+    show: ["pr-panel","tl-open","ci-block","ci-pass","review-block","tl-ci","tl-ci-ok","tl-review"], hide: ["ci-running","comment-changes","comment-approve","pr-badge-changes","pr-badge-approved","pr-badge-merged","merge-on-main","tl-changes","tl-fixed","tl-merged"]
+  },
+  {
+    step: "Paso 5 — Request Changes: el maintainer pide mejoras",
+    title: "❌ Request Changes — se necesitan correcciones",
+    body: `El maintainer selecciona <span class="cmd-r">Request Changes</span>. El PR queda bloqueado. Tú recibes el feedback, haces los cambios en tu rama local y vuelves a hacer <span class="cmd">git push</span>. Los nuevos commits aparecen automáticamente en el PR.`,
+    show: ["pr-panel","tl-open","ci-block","ci-pass","review-block","comment-changes","pr-badge-changes","tl-ci","tl-ci-ok","tl-review","tl-changes"], hide: ["ci-running","comment-approve","pr-badge-approved","pr-badge-merged","merge-on-main","tl-fixed","tl-merged"]
+  },
+  {
+    step: "Paso 6 — Aprobado ✅",
+    title: "✅ Aprobado — el PR está listo para merge",
+    body: `Después de aplicar los cambios el maintainer revisa de nuevo y selecciona <span class="cmd-g">Approve</span>. El PR ahora muestra estado <strong>Approved</strong>. Si hay reglas de protección de rama, podría necesitar más aprobaciones.`,
+    show: ["pr-panel","tl-open","ci-block","ci-pass","review-block","comment-approve","pr-badge-approved","tl-ci","tl-ci-ok","tl-review","tl-changes","tl-fixed"], hide: ["ci-running","comment-changes","pr-badge-changes","pr-badge-merged","merge-on-main","tl-merged"]
+  },
+  {
+    step: "Paso 7 — Merge: los cambios se integran a main 🎉",
+    title: "🎉 Merge exitoso — feature integrada en main",
+    body: `El maintainer hace clic en <span class="cmd">Merge Pull Request</span>. Se crea un <strong>merge commit M</strong> en <span class="cmd-g">main</span>. La rama <span class="cmd">feature/auth</span> puede borrarse de forma segura. ¡Tu código es ahora parte del proyecto!`,
+    show: ["pr-panel","tl-open","ci-block","ci-pass","review-block","comment-approve","pr-badge-merged","merge-on-main","tl-ci","tl-ci-ok","tl-review","tl-changes","tl-fixed","tl-merged"], hide: ["ci-running","comment-changes","pr-badge-changes","pr-badge-approved"]
+  }
+];
+
+function goStep(n) {
+  document.querySelectorAll('.btn').forEach((b,i) => b.classList.toggle('active', i===n));
+  const s = steps[n];
+  document.getElementById('step-text').textContent = s.step;
+  document.getElementById('info-title').textContent = s.title;
+  document.getElementById('info-body').innerHTML = s.body;
+  s.show.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) { el.style.transition='opacity 0.5s'; el.setAttribute('opacity','1'); }
+  });
+  s.hide.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) { el.style.transition='opacity 0.4s'; el.setAttribute('opacity','0'); }
+  });
+}
+goStep(0);
+</script>
+
+</body>
+</html>

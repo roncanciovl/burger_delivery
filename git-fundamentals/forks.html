@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GitHub Forks — Animación SVG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d1117; --surface: #161b22; --border: #30363d;
+      --green: #3fb950; --blue: #58a6ff; --orange: #f0883e;
+      --purple: #bc8cff; --text: #e6edf3; --muted: #8b949e;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    nav { padding: 16px 32px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+    nav a { color: var(--muted); text-decoration: none; font-size: 14px; }
+    nav a:hover { color: var(--text); }
+    .nav-sep { color: var(--border); }
+    .hero { text-align: center; padding: 40px 20px 20px; }
+    .hero h1 { font-size: clamp(24px,4vw,42px); font-weight: 900; color: var(--orange); }
+    .hero p { color: var(--muted); margin-top: 10px; max-width: 600px; margin-left: auto; margin-right: auto; font-size: 15px; }
+    .controls { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; padding: 20px; }
+    .btn {
+      padding: 10px 22px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text); font-family: 'Fira Code', monospace;
+      font-size: 12px; cursor: pointer; transition: all 0.2s;
+    }
+    .btn:hover { border-color: var(--orange); color: var(--orange); background: rgba(240,136,62,0.08); }
+    .btn.active { border-color: var(--orange); color: var(--orange); background: rgba(240,136,62,0.12); }
+    .stage { max-width: 920px; margin: 0 auto; padding: 10px 20px 40px; }
+    #fork-svg { width: 100%; height: auto; display: block; }
+    .info-panel {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px 24px; margin: 0 20px 30px;
+      max-width: 880px; margin-left: auto; margin-right: auto;
+    }
+    .info-panel h3 { color: var(--orange); font-size: 16px; margin-bottom: 8px; }
+    .info-panel p { color: var(--muted); font-size: 14px; line-height: 1.7; }
+    .cmd { font-family: 'Fira Code', monospace; background: rgba(240,136,62,0.12); color: var(--orange); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+    .cmd-g { font-family: 'Fira Code', monospace; background: rgba(63,185,80,0.1); color: #3fb950; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html">🏠 Inicio</a>
+  <span class="nav-sep">/</span>
+  <span style="color:var(--orange)">🍴 Forks</span>
+</nav>
+
+<div class="hero">
+  <h1>🍴 GitHub Forks</h1>
+  <p>Un fork es una copia completa e independiente de un repositorio en tu cuenta de GitHub. Haz clic en los pasos para ver el flujo completo.</p>
+</div>
+
+<div class="controls">
+  <button class="btn active" id="btn-0" onclick="goStep(0)">1. Repo original</button>
+  <button class="btn" id="btn-1" onclick="goStep(1)">2. Fork en GitHub</button>
+  <button class="btn" id="btn-2" onclick="goStep(2)">3. git clone</button>
+  <button class="btn" id="btn-3" onclick="goStep(3)">4. Cambios locales</button>
+  <button class="btn" id="btn-4" onclick="goStep(4)">5. git push fork</button>
+  <button class="btn" id="btn-5" onclick="goStep(5)">6. Pull Request</button>
+</div>
+
+<div class="stage">
+<svg id="fork-svg" viewBox="0 0 900 480" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="arr-o" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#f0883e"/>
+    </marker>
+    <marker id="arr-g2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#3fb950"/>
+    </marker>
+    <marker id="arr-b2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#58a6ff"/>
+    </marker>
+    <marker id="arr-p2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#bc8cff"/>
+    </marker>
+  </defs>
+
+  <rect width="900" height="480" fill="#0d1117" rx="12"/>
+
+  <!-- ZONES -->
+  <!-- GitHub Cloud zone -->
+  <rect x="20" y="20" width="860" height="280" rx="12" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+  <text x="40" y="48" font-family="Inter" font-size="13" fill="#8b949e" font-weight="600">☁️  GitHub (remoto)</text>
+
+  <!-- Local zone -->
+  <rect x="20" y="320" width="860" height="140" rx="12" fill="#0f1a12" stroke="#3fb950" stroke-width="1" opacity="0" id="local-zone"/>
+  <text id="local-label" x="40" y="348" font-family="Inter" font-size="13" fill="#3fb950" font-weight="600" opacity="0">💻  Tu máquina (local)</text>
+
+  <!-- ORIGINAL REPO (owner/repo) -->
+  <g id="orig-repo">
+    <rect x="60" y="80" width="240" height="190" rx="10" fill="#0d1117" stroke="#f0883e" stroke-width="2"/>
+    <text x="180" y="106" text-anchor="middle" font-family="Fira Code" font-size="12" fill="#f0883e" font-weight="600">owner/repo</text>
+    <!-- commits -->
+    <circle cx="100" cy="140" r="14" fill="#0d1117" stroke="#f0883e" stroke-width="2" filter="url(#glow)"/>
+    <text x="100" y="145" text-anchor="middle" font-family="Fira Code" font-size="9" fill="#f0883e">C1</text>
+    <line x1="116" y1="140" x2="146" y2="140" stroke="#f0883e" stroke-width="1.5" marker-end="url(#arr-o)"/>
+    <circle cx="162" cy="140" r="14" fill="#0d1117" stroke="#f0883e" stroke-width="2" filter="url(#glow)"/>
+    <text x="162" y="145" text-anchor="middle" font-family="Fira Code" font-size="9" fill="#f0883e">C2</text>
+    <line x1="178" y1="140" x2="208" y2="140" stroke="#f0883e" stroke-width="1.5" marker-end="url(#arr-o)"/>
+    <circle cx="224" cy="140" r="14" fill="#0d1117" stroke="#f0883e" stroke-width="2" filter="url(#glow)"/>
+    <text x="224" y="145" text-anchor="middle" font-family="Fira Code" font-size="9" fill="#f0883e">C3</text>
+    <!-- branch label -->
+    <rect x="88" y="166" width="50" height="18" rx="5" fill="rgba(240,136,62,0.12)" stroke="#f0883e" stroke-width="1"/>
+    <text x="113" y="179" text-anchor="middle" font-family="Fira Code" font-size="9" fill="#f0883e">main</text>
+    <!-- stars -->
+    <text x="80" y="215" font-family="Inter" font-size="11" fill="#8b949e">⭐ 423   👁 87   🍴 12</text>
+    <text x="80" y="235" font-family="Fira Code" font-size="10" fill="#8b949e">MIT License</text>
+  </g>
+
+  <!-- FORK REPO (you/repo) -->
+  <g id="fork-repo" opacity="0">
+    <rect x="580" y="80" width="240" height="190" rx="10" fill="#0d1117" stroke="#58a6ff" stroke-width="2"/>
+    <text x="700" y="106" text-anchor="middle" font-family="Fira Code" font-size="12" fill="#58a6ff" font-weight="600">you/repo</text>
+    <text x="700" y="122" text-anchor="middle" font-family="Inter" font-size="10" fill="#8b949e">forked from owner/repo</text>
+    <!-- same commits -->
+    <circle cx="620" cy="150" r="14" fill="#0d1117" stroke="#58a6ff" stroke-width="2" filter="url(#glow)"/>
+    <text x="620" y="155" text-anchor="middle" font-family="Fira Code" font-size="9" fill="#58a6ff">C1</text>
+    <line x1="636" y1="150" x2="666" y2="150" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#arr-b2)"/>
+    <circle cx="682" cy="150" r="14" fill="#0d1117" stroke="#58a6ff" stroke-width="2" filter="url(#glow)"/>
+    <text x="682" y="155" text-anchor="middle" font-family="Fira Code" font-size="9" fill="#58a6ff">C2</text>
+    <line x1="698" y1="150" x2="728" y2="150" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#arr-b2)"/>
+    <circle cx="744" cy="150" r="14" fill="#0d1117" stroke="#58a6ff" stroke-width="2" filter="url(#glow)"/>
+    <text x="744" y="155" text-anchor="middle" font-family="Fira Code" font-size="9" fill="#58a6ff">C3</text>
+    <rect x="608" y="176" width="50" height="18" rx="5" fill="rgba(88,166,255,0.12)" stroke="#58a6ff" stroke-width="1"/>
+    <text x="633" y="189" text-anchor="middle" font-family="Fira Code" font-size="9" fill="#58a6ff">main</text>
+    <!-- new commit (step 4+) -->
+    <g id="new-commit" opacity="0">
+      <line x1="760" y1="150" x2="786" y2="150" stroke="#3fb950" stroke-width="1.5" marker-end="url(#arr-g2)"/>
+      <circle cx="802" cy="150" r="14" fill="#0f1a12" stroke="#3fb950" stroke-width="2" filter="url(#glow)"/>
+      <text x="802" y="155" text-anchor="middle" font-family="Fira Code" font-size="9" fill="#3fb950">F1</text>
+      <rect x="790" y="176" width="50" height="18" rx="5" fill="rgba(63,185,80,0.12)" stroke="#3fb950" stroke-width="1"/>
+      <text x="815" y="189" text-anchor="middle" font-family="Fira Code" font-size="9" fill="#3fb950">feature</text>
+    </g>
+  </g>
+
+  <!-- Fork arrow (from original to fork) -->
+  <g id="fork-arrow" opacity="0">
+    <path d="M 310 175 C 430 175 460 175 572 175" fill="none" stroke="#f0883e" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arr-o)"/>
+    <rect x="380" y="158" width="60" height="22" rx="6" fill="#0d1117" stroke="#f0883e" stroke-width="1"/>
+    <text x="410" y="173" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#f0883e">Fork!</text>
+  </g>
+
+  <!-- LOCAL CLONE box -->
+  <g id="local-box" opacity="0">
+    <rect x="300" y="340" width="300" height="100" rx="10" fill="#0d1117" stroke="#3fb950" stroke-width="2"/>
+    <text x="450" y="366" text-anchor="middle" font-family="Fira Code" font-size="12" fill="#3fb950" font-weight="600">~/proyectos/repo</text>
+    <circle cx="360" cy="400" r="12" fill="#0d1117" stroke="#3fb950" stroke-width="2"/>
+    <text x="360" y="405" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#3fb950">C1</text>
+    <line x1="374" y1="400" x2="398" y2="400" stroke="#3fb950" stroke-width="1.5" marker-end="url(#arr-g2)"/>
+    <circle cx="414" cy="400" r="12" fill="#0d1117" stroke="#3fb950" stroke-width="2"/>
+    <text x="414" y="405" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#3fb950">C2</text>
+    <line x1="428" y1="400" x2="452" y2="400" stroke="#3fb950" stroke-width="1.5" marker-end="url(#arr-g2)"/>
+    <circle cx="468" cy="400" r="12" fill="#0d1117" stroke="#3fb950" stroke-width="2"/>
+    <text x="468" y="405" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#3fb950">C3</text>
+    <!-- local F1 commit (step 4) -->
+    <g id="local-f1" opacity="0">
+      <line x1="482" y1="400" x2="504" y2="400" stroke="#bc8cff" stroke-width="1.5" marker-end="url(#arr-p2)"/>
+      <circle cx="520" cy="400" r="12" fill="#1c1025" stroke="#bc8cff" stroke-width="2"/>
+      <text x="520" y="405" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#bc8cff">F1</text>
+    </g>
+  </g>
+
+  <!-- Clone arrow -->
+  <path id="clone-arrow" d="M 700 278 C 700 320 580 330 452 336" fill="none" stroke="#3fb950" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arr-g2)" opacity="0"/>
+  <g id="clone-label" opacity="0">
+    <rect x="538" y="292" width="80" height="22" rx="6" fill="#0d1117" stroke="#3fb950" stroke-width="1"/>
+    <text x="578" y="307" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#3fb950">git clone</text>
+  </g>
+
+  <!-- Push arrow -->
+  <path id="push-arrow" d="M 548 390 C 600 350 640 310 680 282" fill="none" stroke="#58a6ff" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arr-b2)" opacity="0"/>
+  <g id="push-label" opacity="0">
+    <rect x="580" y="326" width="72" height="22" rx="6" fill="#0d1117" stroke="#58a6ff" stroke-width="1"/>
+    <text x="616" y="341" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#58a6ff">git push</text>
+  </g>
+
+  <!-- PR arrow -->
+  <path id="pr-arrow" d="M 580 175 C 460 175 430 175 312 175" fill="none" stroke="#bc8cff" stroke-width="2.5" stroke-dasharray="6 4" marker-end="url(#arr-p2)" opacity="0"/>
+  <g id="pr-label" opacity="0">
+    <rect x="378" y="152" width="84" height="24" rx="6" fill="#0d1117" stroke="#bc8cff" stroke-width="1.5"/>
+    <text x="420" y="168" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#bc8cff">Pull Request</text>
+  </g>
+
+  <!-- Step label bar -->
+  <rect x="20" y="450" width="860" height="24" rx="6" fill="#161b22"/>
+  <text id="step-text" x="450" y="466" text-anchor="middle" font-family="Inter" font-size="12" fill="#8b949e">Paso 1 — Repositorio original en GitHub</text>
+</svg>
+</div>
+
+<div class="info-panel" id="info-box">
+  <h3 id="info-title">🏠 Repositorio original</h3>
+  <p id="info-body">El repositorio <span class="cmd">owner/repo</span> existe en GitHub. Tiene historial de commits, licencia y colaboradores. Tú <strong>no tienes permisos de escritura</strong> sobre él.</p>
+</div>
+
+<script>
+const steps = [
+  {
+    step: "Paso 1 — Repositorio original en GitHub",
+    title: "🏠 Repositorio original",
+    body: `El repositorio <span class="cmd">owner/repo</span> existe en GitHub. Tiene historial de commits, licencia y colaboradores. Tú <strong>no tienes permisos de escritura</strong> sobre él.`,
+    show: [], hide: ["fork-repo","fork-arrow","local-zone","local-label","local-box","clone-arrow","clone-label","push-arrow","push-label","pr-arrow","pr-label","new-commit","local-f1"]
+  },
+  {
+    step: "Paso 2 — Click en Fork → copia a tu cuenta",
+    title: "🍴 Fork — clonar en tu cuenta de GitHub",
+    body: `Al hacer clic en <span class="cmd">Fork</span> en GitHub, se crea una copia completa de <span class="cmd">owner/repo</span> en tu cuenta como <span class="cmd">you/repo</span>. Ahora <strong>sí tienes permisos</strong> de escritura en tu fork.`,
+    show: ["fork-repo","fork-arrow"], hide: ["local-zone","local-label","local-box","clone-arrow","clone-label","push-arrow","push-label","pr-arrow","pr-label","new-commit","local-f1"]
+  },
+  {
+    step: "Paso 3 — git clone para trabajar localmente",
+    title: "📥 git clone — descargar a tu PC",
+    body: `<span class="cmd">git clone https://github.com/you/repo.git</span> descarga tu fork a tu máquina. El remoto <span class="cmd-g">origin</span> apunta a <em>tu</em> fork, no al original.`,
+    show: ["fork-repo","fork-arrow","local-zone","local-label","local-box","clone-arrow","clone-label"], hide: ["push-arrow","push-label","pr-arrow","pr-label","new-commit","local-f1"]
+  },
+  {
+    step: "Paso 4 — Haces cambios locales (commits)",
+    title: "✏️ Cambios locales — nuevos commits",
+    body: `Creas una rama, haces tus cambios y los commiteas: <span class="cmd">git checkout -b feature</span> → editas archivos → <span class="cmd">git commit -m "mi cambio"</span>. Todo sucede en tu máquina.`,
+    show: ["fork-repo","fork-arrow","local-zone","local-label","local-box","clone-arrow","clone-label","local-f1"], hide: ["push-arrow","push-label","pr-arrow","pr-label","new-commit"]
+  },
+  {
+    step: "Paso 5 — git push origin feature",
+    title: "📤 git push — subir cambios a tu fork",
+    body: `<span class="cmd">git push origin feature</span> envía tus commits locales a <span class="cmd">you/repo</span> en GitHub. Ahora tu fork tiene un commit extra (F1) que el original no tiene.`,
+    show: ["fork-repo","fork-arrow","local-zone","local-label","local-box","clone-arrow","clone-label","local-f1","push-arrow","push-label","new-commit"], hide: ["pr-arrow","pr-label"]
+  },
+  {
+    step: "Paso 6 — Abrir Pull Request al repo original",
+    title: "🔀 Pull Request — proponer cambios al upstream",
+    body: `Desde GitHub, abres un <span class="cmd">Pull Request</span> desde <span class="cmd">you/repo:feature</span> hacia <span class="cmd">owner/repo:main</span>. El dueño del repo revisa y decide si hace merge. ¡Así funciona el open source!`,
+    show: ["fork-repo","fork-arrow","local-zone","local-label","local-box","clone-arrow","clone-label","local-f1","push-arrow","push-label","new-commit","pr-arrow","pr-label"], hide: []
+  }
+];
+
+function goStep(n) {
+  document.querySelectorAll('.btn').forEach((b,i) => b.classList.toggle('active', i===n));
+  const s = steps[n];
+  document.getElementById('step-text').textContent = s.step;
+  document.getElementById('info-title').textContent = s.title;
+  document.getElementById('info-body').innerHTML = s.body;
+
+  s.show.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) { el.style.transition='opacity 0.5s'; el.setAttribute('opacity','1'); }
+  });
+  s.hide.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) { el.style.transition='opacity 0.4s'; el.setAttribute('opacity','0'); }
+  });
+}
+
+goStep(0);
+</script>
+
+</body>
+</html>

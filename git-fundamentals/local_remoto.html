@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Git Local vs Remoto — Animación SVG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d1117; --surface: #161b22; --border: #30363d;
+      --green: #3fb950; --blue: #58a6ff; --purple: #bc8cff;
+      --orange: #f0883e; --red: #f85149; --text: #e6edf3; --muted: #8b949e;
+      --yellow: #d29922;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    nav { padding: 16px 32px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+    nav a { color: var(--muted); text-decoration: none; font-size: 14px; }
+    nav a:hover { color: var(--text); }
+    .nav-sep { color: var(--border); }
+    .hero { text-align: center; padding: 40px 20px 20px; }
+    .hero h1 { font-size: clamp(24px,4vw,42px); font-weight: 900; color: var(--red); }
+    .hero p { color: var(--muted); margin-top: 10px; max-width: 600px; margin-left: auto; margin-right: auto; font-size: 15px; }
+    .controls { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; padding: 20px; }
+    .btn {
+      padding: 9px 18px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text); font-family: 'Fira Code', monospace;
+      font-size: 12px; cursor: pointer; transition: all 0.2s;
+    }
+    .btn:hover { border-color: var(--red); color: var(--red); background: rgba(248,81,73,0.08); }
+    .btn.active { border-color: var(--red); color: var(--red); background: rgba(248,81,73,0.12); }
+    .stage { max-width: 920px; margin: 0 auto; padding: 10px 20px 30px; }
+    #flow-svg { width: 100%; height: auto; display: block; }
+    .info-panel {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px 24px; margin: 0 20px 30px;
+      max-width: 880px; margin-left: auto; margin-right: auto;
+    }
+    .info-panel h3 { color: var(--red); font-size: 16px; margin-bottom: 8px; }
+    .info-panel p { color: var(--muted); font-size: 14px; line-height: 1.7; }
+    .cmd { font-family: 'Fira Code', monospace; background: rgba(248,81,73,0.12); color: var(--red); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html">🏠 Inicio</a>
+  <span class="nav-sep">/</span>
+  <span style="color:var(--red)">🔄 Local vs Remoto</span>
+</nav>
+
+<div class="hero">
+  <h1>🔄 Local vs Remoto</h1>
+  <p>Entiende las áreas de trabajo de Git: Working Directory, Staging Area, Local Repo y Remote Repo.</p>
+</div>
+
+<div class="controls">
+  <button class="btn active" id="btn-0" onclick="goStep(0)">1. Working Directory</button>
+  <button class="btn" id="btn-1" onclick="goStep(1)">2. git add</button>
+  <button class="btn" id="btn-2" onclick="goStep(2)">3. git commit</button>
+  <button class="btn" id="btn-3" onclick="goStep(3)">4. git push</button>
+  <button class="btn" id="btn-4" onclick="goStep(4)">5. git pull</button>
+</div>
+
+<div class="stage">
+<svg id="flow-svg" viewBox="0 0 900 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="glow-r">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glow-g">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="arr-r" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#f85149"/>
+    </marker>
+    <marker id="arr-g" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#3fb950"/>
+    </marker>
+    <marker id="arr-b" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#58a6ff"/>
+    </marker>
+    <marker id="arr-y" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#d29922"/>
+    </marker>
+  </defs>
+
+  <rect width="900" height="400" fill="#0d1117" rx="12"/>
+
+  <!-- Local Machine Area -->
+  <rect x="20" y="40" width="620" height="320" rx="12" fill="#0f1a12" stroke="#3fb950" stroke-width="2" stroke-dasharray="8 4"/>
+  <text x="40" y="70" font-family="Inter" font-size="14" fill="#3fb950" font-weight="700">💻 Tu Máquina (Local)</text>
+
+  <!-- Remote Area -->
+  <rect x="670" y="40" width="210" height="320" rx="12" fill="#161b22" stroke="#30363d" stroke-width="2"/>
+  <text x="690" y="70" font-family="Inter" font-size="14" fill="#8b949e" font-weight="700">☁️ GitHub (Remoto)</text>
+
+  <!-- Areas inside Local -->
+  <!-- Working Directory -->
+  <rect x="40" y="100" width="180" height="240" rx="8" fill="#0d1117" stroke="#f85149" stroke-width="1.5"/>
+  <text x="130" y="130" text-anchor="middle" font-family="Inter" font-size="13" fill="#f85149" font-weight="600">Working Directory</text>
+  <text x="130" y="145" text-anchor="middle" font-family="Inter" font-size="10" fill="#8b949e">Archivos modificados</text>
+
+  <!-- Staging Area -->
+  <rect x="240" y="100" width="180" height="240" rx="8" fill="#0d1117" stroke="#d29922" stroke-width="1.5"/>
+  <text x="330" y="130" text-anchor="middle" font-family="Inter" font-size="13" fill="#d29922" font-weight="600">Staging Area</text>
+  <text x="330" y="145" text-anchor="middle" font-family="Inter" font-size="10" fill="#8b949e">Index (git add)</text>
+
+  <!-- Local Repo -->
+  <rect x="440" y="100" width="180" height="240" rx="8" fill="#0d1117" stroke="#3fb950" stroke-width="1.5"/>
+  <text x="530" y="130" text-anchor="middle" font-family="Inter" font-size="13" fill="#3fb950" font-weight="600">Local Repository</text>
+  <text x="530" y="145" text-anchor="middle" font-family="Inter" font-size="10" fill="#8b949e">Commits (.git)</text>
+
+  <!-- Remote Repo -->
+  <rect x="685" y="100" width="180" height="240" rx="8" fill="#0d1117" stroke="#58a6ff" stroke-width="1.5"/>
+  <text x="775" y="130" text-anchor="middle" font-family="Inter" font-size="13" fill="#58a6ff" font-weight="600">Remote Repository</text>
+  <text x="775" y="145" text-anchor="middle" font-family="Inter" font-size="10" fill="#8b949e">origin/main</text>
+
+  <!-- Flow Arrows -->
+  <path id="arrow-add" d="M 170 200 L 290 200" stroke="#d29922" stroke-width="2" marker-end="url(#arr-y)" opacity="0" stroke-dasharray="4"/>
+  <text id="label-add" x="230" y="190" text-anchor="middle" font-family="Fira Code" font-size="11" fill="#d29922" opacity="0">git add</text>
+
+  <path id="arrow-commit" d="M 370 200 L 490 200" stroke="#3fb950" stroke-width="2" marker-end="url(#arr-g)" opacity="0" stroke-dasharray="4"/>
+  <text id="label-commit" x="430" y="190" text-anchor="middle" font-family="Fira Code" font-size="11" fill="#3fb950" opacity="0">git commit</text>
+
+  <path id="arrow-push" d="M 570 180 L 730 180" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr-b)" opacity="0" stroke-dasharray="4"/>
+  <text id="label-push" x="650" y="170" text-anchor="middle" font-family="Fira Code" font-size="11" fill="#58a6ff" opacity="0">git push</text>
+
+  <path id="arrow-pull" d="M 730 240 L 170 240" stroke="#bc8cff" stroke-width="2" marker-end="url(#arr-p3)" opacity="0" stroke-dasharray="4"/>
+  <text id="label-pull" x="450" y="230" text-anchor="middle" font-family="Fira Code" font-size="11" fill="#bc8cff" opacity="0">git pull / fetch + merge</text>
+
+  <!-- Items -->
+  <g id="file-working">
+    <rect x="100" y="170" width="60" height="70" rx="4" fill="rgba(248,81,73,0.1)" stroke="#f85149" stroke-width="1.5" filter="url(#glow-r)"/>
+    <text x="130" y="200" text-anchor="middle" font-family="Fira Code" font-size="11" fill="#f85149">file.txt</text>
+    <text x="130" y="215" text-anchor="middle" font-family="Inter" font-size="10" fill="#f85149">~ M</text>
+  </g>
+
+  <g id="file-staging" opacity="0">
+    <rect x="300" y="170" width="60" height="70" rx="4" fill="rgba(210,153,34,0.1)" stroke="#d29922" stroke-width="1.5"/>
+    <text x="330" y="200" text-anchor="middle" font-family="Fira Code" font-size="11" fill="#d29922">file.txt</text>
+    <text x="330" y="215" text-anchor="middle" font-family="Inter" font-size="10" fill="#d29922">+ A</text>
+  </g>
+
+  <g id="commit-local" opacity="0">
+    <circle cx="530" cy="205" r="25" fill="#0f1a12" stroke="#3fb950" stroke-width="2" filter="url(#glow-g)"/>
+    <text x="530" y="210" text-anchor="middle" font-family="Fira Code" font-size="12" fill="#3fb950">C1</text>
+  </g>
+
+  <g id="commit-remote" opacity="0">
+    <circle cx="775" cy="205" r="25" fill="#161b22" stroke="#58a6ff" stroke-width="2"/>
+    <text x="775" y="210" text-anchor="middle" font-family="Fira Code" font-size="12" fill="#58a6ff">C1</text>
+  </g>
+
+  <g id="commit-remote-new" opacity="0">
+    <circle cx="775" cy="285" r="25" fill="#161b22" stroke="#bc8cff" stroke-width="2"/>
+    <text x="775" y="290" text-anchor="middle" font-family="Fira Code" font-size="12" fill="#bc8cff">C2</text>
+  </g>
+
+</svg>
+</div>
+
+<div class="info-panel" id="info-box">
+  <h3 id="info-title">1. Working Directory (Directorio de Trabajo)</h3>
+  <p id="info-body">Aquí es donde editas tus archivos. Los archivos modificados aparecen como cambios locales (Untracked o Modified). Git los nota pero aún no están preparados para un commit.</p>
+</div>
+
+<script>
+const steps = [
+  {
+    title: "1. Working Directory (Directorio de Trabajo)",
+    body: "Aquí es donde editas tus archivos. Los archivos modificados aparecen como cambios locales (Untracked o Modified). Git los nota pero aún no están preparados para un commit.",
+    show: ["file-working"],
+    hide: ["arrow-add", "label-add", "file-staging", "arrow-commit", "label-commit", "commit-local", "arrow-push", "label-push", "commit-remote", "arrow-pull", "label-pull", "commit-remote-new"]
+  },
+  {
+    title: "2. Staging Area (git add)",
+    body: "Con <span class='cmd'>git add &lt;archivo&gt;</span> mueves los cambios al Staging Area (Index). Es como preparar un paquete para envío. Aquí revisas qué cambios formarán parte del próximo commit.",
+    show: ["file-working", "arrow-add", "label-add", "file-staging"],
+    hide: ["arrow-commit", "label-commit", "commit-local", "arrow-push", "label-push", "commit-remote", "arrow-pull", "label-pull", "commit-remote-new"]
+  },
+  {
+    title: "3. Local Repository (git commit)",
+    body: "Con <span class='cmd'>git commit -m 'mensaje'</span> empaquetas los cambios del Staging Area y los guardas permanentemente en tu repositorio local (la carpeta `.git`). ¡Ya creaste un Commit!",
+    show: ["file-working", "arrow-add", "label-add", "file-staging", "arrow-commit", "label-commit", "commit-local"],
+    hide: ["arrow-push", "label-push", "commit-remote", "arrow-pull", "label-pull", "commit-remote-new"]
+  },
+  {
+    title: "4. Remote Repository (git push)",
+    body: "Con <span class='cmd'>git push</span> envías tus commits locales al repositorio remoto (GitHub). Ahora tu código está seguro en la nube y visible para otros colaboradores.",
+    show: ["file-working", "arrow-add", "label-add", "file-staging", "arrow-commit", "label-commit", "commit-local", "arrow-push", "label-push", "commit-remote"],
+    hide: ["arrow-pull", "label-pull", "commit-remote-new"]
+  },
+  {
+    title: "5. Sincronizar Cambios (git pull)",
+    body: "Si alguien más hace un push a GitHub, tu repositorio local no se entera automáticamente. Con <span class='cmd'>git pull</span> descargas los nuevos commits (como C2) del remoto y los integras en tu Working Directory.",
+    show: ["commit-local", "commit-remote", "commit-remote-new", "arrow-pull", "label-pull"],
+    hide: ["file-working", "arrow-add", "label-add", "file-staging", "arrow-commit", "label-commit", "arrow-push", "label-push"]
+  }
+];
+
+let current = 0;
+
+function goStep(n) {
+  current = n;
+  const s = steps[n];
+  document.querySelectorAll('.btn').forEach((b,i) => b.classList.toggle('active', i===n));
+  document.getElementById('info-title').textContent = s.title;
+  document.getElementById('info-body').innerHTML = s.body;
+
+  s.show.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) { el.style.transition='opacity 0.5s'; el.setAttribute('opacity','1'); el.style.opacity='1'; }
+  });
+  s.hide.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) { el.style.transition='opacity 0.4s'; el.setAttribute('opacity','0'); el.style.opacity='0'; }
+  });
+}
+
+goStep(0);
+</script>
+
+</body>
+</html>

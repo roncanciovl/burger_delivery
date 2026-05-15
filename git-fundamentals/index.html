@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Git & GitHub — Fundamentos Visuales</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --purple: #bc8cff;
+      --orange: #f0883e;
+      --red: #f85149;
+      --text: #e6edf3;
+      --muted: #8b949e;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      text-align: center;
+      padding: 60px 20px 40px;
+      background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(88,166,255,0.12), transparent);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      font-size: 14px;
+      font-family: 'Fira Code', monospace;
+      color: var(--green);
+      letter-spacing: 2px;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-size: clamp(28px, 5vw, 52px);
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--purple) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.15;
+    }
+
+    .subtitle {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 16px;
+      max-width: 540px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      padding: 50px 40px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px 28px;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 16px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }
+
+    .card[data-color="blue"]:hover  { border-color: var(--accent);  box-shadow: 0 20px 50px rgba(88,166,255,0.15); }
+    .card[data-color="green"]:hover { border-color: var(--green);   box-shadow: 0 20px 50px rgba(63,185,80,0.15); }
+    .card[data-color="purple"]:hover{ border-color: var(--purple);  box-shadow: 0 20px 50px rgba(188,140,255,0.15); }
+    .card[data-color="orange"]:hover{ border-color: var(--orange);  box-shadow: 0 20px 50px rgba(240,136,62,0.15); }
+    .card[data-color="red"]:hover   { border-color: var(--red);     box-shadow: 0 20px 50px rgba(248,81,73,0.15); }
+
+    .card-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+    }
+
+    .card[data-color="blue"]   .card-icon { background: rgba(88,166,255,0.15); }
+    .card[data-color="green"]  .card-icon { background: rgba(63,185,80,0.15); }
+    .card[data-color="purple"] .card-icon { background: rgba(188,140,255,0.15); }
+    .card[data-color="orange"] .card-icon { background: rgba(240,136,62,0.15); }
+    .card[data-color="red"]    .card-icon { background: rgba(248,81,73,0.15); }
+
+    .card-title {
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .card[data-color="blue"]   .card-title { color: var(--accent); }
+    .card[data-color="green"]  .card-title { color: var(--green); }
+    .card[data-color="purple"] .card-title { color: var(--purple); }
+    .card[data-color="orange"] .card-title { color: var(--orange); }
+    .card[data-color="red"]    .card-title { color: var(--red); }
+
+    .card-desc {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+      flex: 1;
+    }
+
+    .card-tag {
+      font-family: 'Fira Code', monospace;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      width: fit-content;
+    }
+
+    .card[data-color="blue"]   .card-tag { background: rgba(88,166,255,0.1);   color: var(--accent); }
+    .card[data-color="green"]  .card-tag { background: rgba(63,185,80,0.1);    color: var(--green); }
+    .card[data-color="purple"] .card-tag { background: rgba(188,140,255,0.1);  color: var(--purple); }
+    .card[data-color="orange"] .card-tag { background: rgba(240,136,62,0.1);   color: var(--orange); }
+    .card[data-color="red"]    .card-tag { background: rgba(248,81,73,0.1);    color: var(--red); }
+
+    footer {
+      text-align: center;
+      padding: 30px;
+      color: var(--muted);
+      font-size: 13px;
+      border-top: 1px solid var(--border);
+    }
+
+    footer code {
+      font-family: 'Fira Code', monospace;
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">$ git init fundamentos</div>
+    <h1>Git & GitHub<br/>Fundamentos Visuales</h1>
+    <p class="subtitle">Animaciones interactivas para entender los conceptos clave de control de versiones y colaboración en GitHub.</p>
+  </header>
+
+  <div class="grid">
+
+    <a class="card" href="local_remoto.html" data-color="red">
+      <div class="card-icon">🔄</div>
+      <div class="card-title">Local vs Remoto</div>
+      <p class="card-desc">Entiende las áreas de trabajo de Git: Working Directory, Staging Area, Local Repo y Remote Repo.</p>
+      <span class="card-tag">add → commit → push</span>
+    </a>
+
+    <a class="card" href="clone.html" data-color="blue">
+      <div class="card-icon">📥</div>
+      <div class="card-title">Git Clone</div>
+      <p class="card-desc">Crea una copia local exacta de un repositorio remoto, incluyendo todo su historial y configuración.</p>
+      <span class="card-tag">git clone &lt;url&gt;</span>
+    </a>
+
+    <a class="card" href="usuarios.html" data-color="blue">
+      <div class="card-icon">👥</div>
+      <div class="card-title">Usuarios & Roles</div>
+      <p class="card-desc">Descubre los diferentes roles en un repositorio: owner, collaborator, contributor y cómo interactúan.</p>
+      <span class="card-tag">owner / collaborator / contributor</span>
+    </a>
+
+    <a class="card" href="branches.html" data-color="green">
+      <div class="card-icon">🌿</div>
+      <div class="card-title">Branches</div>
+      <p class="card-desc">Aprende cómo las ramas permiten desarrollar funcionalidades de forma paralela sin afectar la rama principal.</p>
+      <span class="card-tag">git branch / checkout</span>
+    </a>
+
+    <a class="card" href="forks.html" data-color="orange">
+      <div class="card-icon">🍴</div>
+      <div class="card-title">Forks</div>
+      <p class="card-desc">Entiende qué es un fork: una copia independiente de un repositorio que te permite experimentar libremente.</p>
+      <span class="card-tag">fork → clone → push</span>
+    </a>
+
+    <a class="card" href="pull_requests.html" data-color="purple">
+      <div class="card-icon">🔀</div>
+      <div class="card-title">Pull Requests</div>
+      <p class="card-desc">Visualiza el ciclo completo de un PR: desde abrir la solicitud hasta el merge final en la rama principal.</p>
+      <span class="card-tag">PR → review → merge</span>
+    </a>
+
+  </div>
+
+  <footer>
+    Animaciones SVG educativas — <code>git-fundamentals/</code>
+  </footer>
+
+</body>
+</html>

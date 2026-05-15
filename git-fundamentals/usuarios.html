@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Usuarios & Roles en GitHub — Animación SVG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d1117; --surface: #161b22; --border: #30363d;
+      --blue: #58a6ff; --green: #3fb950; --orange: #f0883e;
+      --purple: #bc8cff; --yellow: #d29922; --red: #f85149;
+      --text: #e6edf3; --muted: #8b949e;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    nav { padding: 16px 32px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+    nav a { color: var(--muted); text-decoration: none; font-size: 14px; }
+    nav a:hover { color: var(--text); }
+    .nav-sep { color: var(--border); }
+    .hero { text-align: center; padding: 40px 20px 20px; }
+    .hero h1 { font-size: clamp(24px,4vw,42px); font-weight: 900; color: var(--blue); }
+    .hero p { color: var(--muted); margin-top: 10px; max-width: 620px; margin-left: auto; margin-right: auto; font-size: 15px; }
+
+    .role-tabs { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; padding: 20px; }
+    .tab {
+      padding: 10px 22px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text); font-family: 'Inter', monospace;
+      font-size: 13px; cursor: pointer; transition: all 0.2s; font-weight: 600;
+    }
+    .tab:hover { transform: translateY(-2px); }
+    .tab[data-role="owner"]:hover, .tab[data-role="owner"].active   { border-color: var(--yellow);  color: var(--yellow);  background: rgba(210,153,34,0.1); }
+    .tab[data-role="collab"]:hover, .tab[data-role="collab"].active { border-color: var(--green);   color: var(--green);   background: rgba(63,185,80,0.1); }
+    .tab[data-role="contrib"]:hover, .tab[data-role="contrib"].active { border-color: var(--blue); color: var(--blue);   background: rgba(88,166,255,0.1); }
+    .tab[data-role="viewer"]:hover, .tab[data-role="viewer"].active { border-color: var(--muted);  color: var(--muted);   background: rgba(139,148,158,0.1); }
+
+    .stage { max-width: 960px; margin: 0 auto; padding: 10px 20px 20px; }
+    #users-svg { width: 100%; height: auto; display: block; }
+
+    .perms-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      padding: 0 20px 20px;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .perm-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      transition: border-color 0.3s;
+    }
+    .perm-card.allowed { border-color: var(--green); background: rgba(63,185,80,0.05); }
+    .perm-card.denied  { border-color: var(--red);   background: rgba(248,81,73,0.04); opacity: 0.6; }
+    .perm-icon { font-size: 20px; margin-bottom: 6px; }
+    .perm-name { font-size: 13px; font-weight: 600; color: var(--text); }
+    .perm-status { font-size: 11px; margin-top: 4px; font-family: 'Fira Code', monospace; }
+    .perm-card.allowed .perm-status { color: var(--green); }
+    .perm-card.denied  .perm-status { color: var(--red); }
+
+    .info-panel {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px 24px; margin: 0 20px 30px;
+      max-width: 920px; margin-left: auto; margin-right: auto;
+    }
+    .info-panel h3 { font-size: 16px; margin-bottom: 8px; }
+    .info-panel p { color: var(--muted); font-size: 14px; line-height: 1.7; }
+    .cmd { font-family: 'Fira Code', monospace; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+    .grid-label { font-size: 13px; font-weight: 700; padding: 0 20px 10px; max-width: 960px; margin: 0 auto; color: var(--muted); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html">🏠 Inicio</a>
+  <span class="nav-sep">/</span>
+  <span style="color:var(--blue)">👥 Usuarios & Roles</span>
+</nav>
+
+<div class="hero">
+  <h1>👥 Usuarios & Roles en GitHub</h1>
+  <p>Un repositorio puede tener múltiples tipos de participantes, cada uno con distintos permisos. Selecciona un rol para ver sus capacidades.</p>
+</div>
+
+<div class="role-tabs">
+  <button class="tab active" data-role="owner" onclick="selectRole('owner')">👑 Owner</button>
+  <button class="tab" data-role="collab" onclick="selectRole('collab')">🤝 Collaborator</button>
+  <button class="tab" data-role="contrib" onclick="selectRole('contrib')">🌐 Contributor</button>
+  <button class="tab" data-role="viewer" onclick="selectRole('viewer')">👀 Viewer</button>
+</div>
+
+<div class="stage">
+<svg id="users-svg" viewBox="0 0 940 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="glow4">
+      <feGaussianBlur stdDeviation="4" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="a-y" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#d29922"/>
+    </marker>
+    <marker id="a-g4" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#3fb950"/>
+    </marker>
+    <marker id="a-b4" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#58a6ff"/>
+    </marker>
+    <marker id="a-m4" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#8b949e"/>
+    </marker>
+  </defs>
+
+  <rect width="940" height="300" fill="#0d1117" rx="12"/>
+
+  <!-- Central REPO -->
+  <g id="central-repo">
+    <rect x="360" y="90" width="220" height="120" rx="12" fill="#161b22" stroke="#30363d" stroke-width="2"/>
+    <text x="470" y="120" text-anchor="middle" font-family="Fira Code" font-size="13" fill="#e6edf3" font-weight="600">📦 owner/repo</text>
+    <!-- mini commits -->
+    <circle cx="410" cy="152" r="10" fill="#0d1117" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="410" y="157" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#3fb950">C1</text>
+    <line x1="422" y1="152" x2="442" y2="152" stroke="#3fb950" stroke-width="1.5" marker-end="url(#a-g4)"/>
+    <circle cx="455" cy="152" r="10" fill="#0d1117" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="455" y="157" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#3fb950">C2</text>
+    <line x1="467" y1="152" x2="487" y2="152" stroke="#3fb950" stroke-width="1.5" marker-end="url(#a-g4)"/>
+    <circle cx="500" cy="152" r="10" fill="#0d1117" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="500" y="157" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#3fb950">C3</text>
+    <!-- branch label -->
+    <rect x="400" y="172" width="44" height="16" rx="4" fill="rgba(63,185,80,0.1)" stroke="#3fb950" stroke-width="1"/>
+    <text x="422" y="183" text-anchor="middle" font-family="Fira Code" font-size="8" fill="#3fb950">main</text>
+    <!-- settings/admin icon -->
+    <text x="550" y="100" font-family="Inter" font-size="14" fill="#8b949e">⚙️</text>
+    <text x="470" y="200" text-anchor="middle" font-family="Fira Code" font-size="9" fill="#8b949e">Issues: 8  •  PRs: 3</text>
+  </g>
+
+  <!-- OWNER user -->
+  <g id="user-owner">
+    <circle cx="80" cy="150" r="36" fill="#1a1600" stroke="#d29922" stroke-width="2.5" filter="url(#glow4)"/>
+    <text x="80" y="145" text-anchor="middle" font-family="Inter" font-size="22">👑</text>
+    <text x="80" y="162" text-anchor="middle" font-family="Inter" font-size="10" fill="#d29922" font-weight="700">@owner</text>
+    <text x="80" y="176" text-anchor="middle" font-family="Inter" font-size="9" fill="#8b949e">Owner</text>
+  </g>
+
+  <!-- COLLABORATOR user -->
+  <g id="user-collab" opacity="0">
+    <circle cx="80" cy="150" r="36" fill="#0f1a12" stroke="#3fb950" stroke-width="2.5" filter="url(#glow4)"/>
+    <text x="80" y="145" text-anchor="middle" font-family="Inter" font-size="22">🤝</text>
+    <text x="80" y="162" text-anchor="middle" font-family="Inter" font-size="10" fill="#3fb950" font-weight="700">@collab</text>
+    <text x="80" y="176" text-anchor="middle" font-family="Inter" font-size="9" fill="#8b949e">Collaborator</text>
+  </g>
+
+  <!-- CONTRIBUTOR user -->
+  <g id="user-contrib" opacity="0">
+    <circle cx="80" cy="150" r="36" fill="#0a1220" stroke="#58a6ff" stroke-width="2.5" filter="url(#glow4)"/>
+    <text x="80" y="145" text-anchor="middle" font-family="Inter" font-size="22">🌐</text>
+    <text x="80" y="162" text-anchor="middle" font-family="Inter" font-size="10" fill="#58a6ff" font-weight="700">@contrib</text>
+    <text x="80" y="176" text-anchor="middle" font-family="Inter" font-size="9" fill="#8b949e">Contributor</text>
+  </g>
+
+  <!-- VIEWER user -->
+  <g id="user-viewer" opacity="0">
+    <circle cx="80" cy="150" r="36" fill="#141414" stroke="#8b949e" stroke-width="2.5" filter="url(#glow4)"/>
+    <text x="80" y="145" text-anchor="middle" font-family="Inter" font-size="22">👀</text>
+    <text x="80" y="162" text-anchor="middle" font-family="Inter" font-size="10" fill="#8b949e" font-weight="700">@viewer</text>
+    <text x="80" y="176" text-anchor="middle" font-family="Inter" font-size="9" fill="#8b949e">Viewer</text>
+  </g>
+
+  <!-- Connection line (animated) -->
+  <line id="conn-line" x1="120" y1="150" x2="358" y2="150" stroke="#d29922" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#a-y)" opacity="1"/>
+
+  <!-- Action bubbles (right side) -->
+  <g id="actions-owner" opacity="1">
+    <rect x="600" y="60" width="310" height="180" rx="10" fill="#161b22" stroke="#d29922" stroke-width="1.5"/>
+    <text x="755" y="88" text-anchor="middle" font-family="Inter" font-size="12" fill="#d29922" font-weight="700">Acciones permitidas al Owner</text>
+    <text x="620" y="114" font-family="Inter" font-size="12" fill="#e6edf3">✅  Push directo a main</text>
+    <text x="620" y="132" font-family="Inter" font-size="12" fill="#e6edf3">✅  Merge Pull Requests</text>
+    <text x="620" y="150" font-family="Inter" font-size="12" fill="#e6edf3">✅  Gestionar Issues</text>
+    <text x="620" y="168" font-family="Inter" font-size="12" fill="#e6edf3">✅  Agregar Collaborators</text>
+    <text x="620" y="186" font-family="Inter" font-size="12" fill="#e6edf3">✅  Cambiar Settings del repo</text>
+    <text x="620" y="204" font-family="Inter" font-size="12" fill="#e6edf3">✅  Eliminar el repositorio</text>
+    <text x="620" y="226" font-family="Inter" font-size="11" fill="#8b949e">Control total sobre el repositorio</text>
+  </g>
+
+  <g id="actions-collab" opacity="0">
+    <rect x="600" y="60" width="310" height="180" rx="10" fill="#161b22" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="755" y="88" text-anchor="middle" font-family="Inter" font-size="12" fill="#3fb950" font-weight="700">Acciones permitidas al Collaborator</text>
+    <text x="620" y="114" font-family="Inter" font-size="12" fill="#e6edf3">✅  Push directo a ramas</text>
+    <text x="620" y="132" font-family="Inter" font-size="12" fill="#e6edf3">✅  Merge PRs (si tiene permisos)</text>
+    <text x="620" y="150" font-family="Inter" font-size="12" fill="#e6edf3">✅  Crear / cerrar Issues</text>
+    <text x="620" y="168" font-family="Inter" font-size="12" fill="#e6edf3">✅  Review de Pull Requests</text>
+    <text x="620" y="186" font-family="Inter" font-size="12" fill="#e6edf3">❌  No puede cambiar Settings</text>
+    <text x="620" y="204" font-family="Inter" font-size="12" fill="#e6edf3">❌  No puede eliminar el repo</text>
+    <text x="620" y="226" font-family="Inter" font-size="11" fill="#8b949e">Invitado directamente por el Owner</text>
+  </g>
+
+  <g id="actions-contrib" opacity="0">
+    <rect x="600" y="60" width="310" height="180" rx="10" fill="#161b22" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="755" y="88" text-anchor="middle" font-family="Inter" font-size="12" fill="#58a6ff" font-weight="700">Acciones del Contributor</text>
+    <text x="620" y="114" font-family="Inter" font-size="12" fill="#e6edf3">✅  Fork del repositorio</text>
+    <text x="620" y="132" font-family="Inter" font-size="12" fill="#e6edf3">✅  Abrir Pull Requests</text>
+    <text x="620" y="150" font-family="Inter" font-size="12" fill="#e6edf3">✅  Comentar en Issues y PRs</text>
+    <text x="620" y="168" font-family="Inter" font-size="12" fill="#e6edf3">✅  Abrir nuevos Issues</text>
+    <text x="620" y="186" font-family="Inter" font-size="12" fill="#e6edf3">❌  No puede hacer push directo</text>
+    <text x="620" y="204" font-family="Inter" font-size="12" fill="#e6edf3">❌  No puede hacer merge</text>
+    <text x="620" y="226" font-family="Inter" font-size="11" fill="#8b949e">No tiene acceso de escritura directo</text>
+  </g>
+
+  <g id="actions-viewer" opacity="0">
+    <rect x="600" y="60" width="310" height="180" rx="10" fill="#161b22" stroke="#8b949e" stroke-width="1.5"/>
+    <text x="755" y="88" text-anchor="middle" font-family="Inter" font-size="12" fill="#8b949e" font-weight="700">Acciones del Viewer (público)</text>
+    <text x="620" y="114" font-family="Inter" font-size="12" fill="#e6edf3">✅  Ver código y commits</text>
+    <text x="620" y="132" font-family="Inter" font-size="12" fill="#e6edf3">✅  Fork del repositorio</text>
+    <text x="620" y="150" font-family="Inter" font-size="12" fill="#e6edf3">✅  Leer Issues y PRs</text>
+    <text x="620" y="168" font-family="Inter" font-size="12" fill="#e6edf3">✅  Star / Watch el repo</text>
+    <text x="620" y="186" font-family="Inter" font-size="12" fill="#e6edf3">❌  No puede escribir código</text>
+    <text x="620" y="204" font-family="Inter" font-size="12" fill="#e6edf3">❌  No puede comentar (privado)</text>
+    <text x="620" y="226" font-family="Inter" font-size="11" fill="#8b949e">Cualquier persona en internet (si repo público)</text>
+  </g>
+
+  <!-- Bottom step text -->
+  <rect x="20" y="268" width="900" height="24" rx="6" fill="#161b22"/>
+  <text id="step-text" x="470" y="284" text-anchor="middle" font-family="Inter" font-size="12" fill="#8b949e">👑 Owner — Control total del repositorio</text>
+</svg>
+</div>
+
+<p class="grid-label" id="perm-grid-label">Permisos detallados — 👑 Owner</p>
+<div class="perms-grid" id="perms-grid"></div>
+
+<div class="info-panel">
+  <h3 id="info-title" style="color:var(--yellow)">👑 Owner — Dueño del repositorio</h3>
+  <p id="info-body">El <strong>Owner</strong> es quien creó el repositorio (o una organización). Tiene <strong>control total</strong>: puede hacer push, merge, cambiar configuraciones, agregar collaborators, cambiar visibilidad (público/privado) y hasta eliminar el repo.</p>
+</div>
+
+<script>
+const roles = {
+  owner: {
+    color: '#d29922',
+    connColor: '#d29922',
+    markerUrl: 'url(#a-y)',
+    stepText: '👑 Owner — Control total del repositorio',
+    titleText: '👑 Owner — Dueño del repositorio',
+    body: `El <strong>Owner</strong> es quien creó el repositorio (o una organización). Tiene <strong>control total</strong>: puede hacer push, merge, cambiar configuraciones, agregar collaborators, cambiar visibilidad (público/privado) y hasta eliminar el repo.`,
+    gridLabel: 'Permisos detallados — 👑 Owner',
+    perms: [
+      { icon:'📤', name:'Push directo', allowed: true },
+      { icon:'🔀', name:'Hacer Merge', allowed: true },
+      { icon:'🐛', name:'Gestionar Issues', allowed: true },
+      { icon:'⚙️', name:'Settings del repo', allowed: true },
+      { icon:'👥', name:'Agregar Collaborators', allowed: true },
+      { icon:'🗑️', name:'Eliminar repo', allowed: true },
+      { icon:'🔒', name:'Branch protection rules', allowed: true },
+      { icon:'🔑', name:'Deploy keys / Secrets', allowed: true },
+    ],
+    userShow: 'user-owner',
+    actionShow: 'actions-owner',
+  },
+  collab: {
+    color: '#3fb950',
+    connColor: '#3fb950',
+    markerUrl: 'url(#a-g4)',
+    stepText: '🤝 Collaborator — Acceso de escritura directo',
+    titleText: '🤝 Collaborator — Escritura directa al repo',
+    body: `Un <strong>Collaborator</strong> es alguien invitado explícitamente por el Owner. Dependiendo del nivel de permisos asignado (Read, Triage, Write, Maintain, Admin), puede hacer push, revisar PRs y gestionar issues, pero <strong>no tiene acceso a settings críticos</strong>.`,
+    gridLabel: 'Permisos detallados — 🤝 Collaborator',
+    perms: [
+      { icon:'📤', name:'Push directo', allowed: true },
+      { icon:'🔀', name:'Hacer Merge', allowed: true },
+      { icon:'🐛', name:'Gestionar Issues', allowed: true },
+      { icon:'👁️', name:'Review de PRs', allowed: true },
+      { icon:'⚙️', name:'Settings del repo', allowed: false },
+      { icon:'👥', name:'Agregar Collaborators', allowed: false },
+      { icon:'🗑️', name:'Eliminar repo', allowed: false },
+      { icon:'🔑', name:'Deploy keys / Secrets', allowed: false },
+    ],
+    userShow: 'user-collab',
+    actionShow: 'actions-collab',
+  },
+  contrib: {
+    color: '#58a6ff',
+    connColor: '#58a6ff',
+    markerUrl: 'url(#a-b4)',
+    stepText: '🌐 Contributor — Contribuye vía Fork + PR',
+    titleText: '🌐 Contributor — Fork & Pull Request',
+    body: `Un <strong>Contributor</strong> no tiene acceso de escritura directo. Contribuye haciendo un <strong>fork</strong> del repositorio, trabajando en su copia y abriendo un <strong>Pull Request</strong>. Es el modelo de contribución del open source. Los proyectos pueden listar automáticamente a quienes tuvieron PRs mergeados.`,
+    gridLabel: 'Permisos detallados — 🌐 Contributor',
+    perms: [
+      { icon:'🍴', name:'Fork del repo', allowed: true },
+      { icon:'🔀', name:'Abrir Pull Requests', allowed: true },
+      { icon:'🐛', name:'Abrir Issues', allowed: true },
+      { icon:'💬', name:'Comentar en Issues/PRs', allowed: true },
+      { icon:'📤', name:'Push directo', allowed: false },
+      { icon:'🔀', name:'Hacer Merge', allowed: false },
+      { icon:'⚙️', name:'Settings del repo', allowed: false },
+      { icon:'🗑️', name:'Eliminar repo', allowed: false },
+    ],
+    userShow: 'user-contrib',
+    actionShow: 'actions-contrib',
+  },
+  viewer: {
+    color: '#8b949e',
+    connColor: '#8b949e',
+    markerUrl: 'url(#a-m4)',
+    stepText: '👀 Viewer — Solo lectura (público o privado)',
+    titleText: '👀 Viewer — Solo puede leer',
+    body: `Un <strong>Viewer</strong> puede ver el código pero no modificarlo. En repos públicos, cualquier persona en internet es un Viewer. En repos privados, solo los Viewers invitados con permiso <span class="cmd" style="background:rgba(139,148,158,0.1);color:#8b949e">Read</span> pueden acceder.`,
+    gridLabel: 'Permisos detallados — 👀 Viewer',
+    perms: [
+      { icon:'👁️', name:'Ver código', allowed: true },
+      { icon:'🍴', name:'Fork (si público)', allowed: true },
+      { icon:'📖', name:'Leer Issues/PRs', allowed: true },
+      { icon:'⭐', name:'Star / Watch', allowed: true },
+      { icon:'📤', name:'Push directo', allowed: false },
+      { icon:'🔀', name:'Abrir PRs', allowed: false },
+      { icon:'🐛', name:'Abrir Issues', allowed: false },
+      { icon:'⚙️', name:'Settings del repo', allowed: false },
+    ],
+    userShow: 'user-viewer',
+    actionShow: 'actions-viewer',
+  }
+};
+
+const userIds = ['user-owner','user-collab','user-contrib','user-viewer'];
+const actionIds = ['actions-owner','actions-collab','actions-contrib','actions-viewer'];
+
+function selectRole(role) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.tab[data-role="${role}"]`).classList.add('active');
+
+  const r = roles[role];
+
+  // User avatars
+  userIds.forEach(id => {
+    const el = document.getElementById(id);
+    el.setAttribute('opacity', id === r.userShow ? '1' : '0');
+  });
+
+  // Action panels
+  actionIds.forEach(id => {
+    const el = document.getElementById(id);
+    el.setAttribute('opacity', id === r.actionShow ? '1' : '0');
+  });
+
+  // Connection line
+  const line = document.getElementById('conn-line');
+  line.setAttribute('stroke', r.connColor);
+  line.setAttribute('marker-end', r.markerUrl);
+
+  // Texts
+  document.getElementById('step-text').textContent = r.stepText;
+  document.getElementById('info-title').textContent = r.titleText;
+  document.getElementById('info-title').style.color = r.color;
+  document.getElementById('info-body').innerHTML = r.body;
+  document.getElementById('perm-grid-label').textContent = r.gridLabel;
+
+  // Perms grid
+  const grid = document.getElementById('perms-grid');
+  grid.innerHTML = r.perms.map(p => `
+    <div class="perm-card ${p.allowed ? 'allowed' : 'denied'}">
+      <div class="perm-icon">${p.icon}</div>
+      <div class="perm-name">${p.name}</div>
+      <div class="perm-status">${p.allowed ? '✓ Permitido' : '✗ No permitido'}</div>
+    </div>
+  `).join('');
+}
+
+selectRole('owner');
+</script>
+
+</body>
+</html>

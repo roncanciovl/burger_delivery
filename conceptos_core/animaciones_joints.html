@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animaciones de Joints en ROS 2</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 3rem 2rem;
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: -webkit-linear-gradient(45deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        p.subtitle {
+            color: #94a3b8;
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(12px);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(56, 189, 248, 0.4);
+        }
+
+        .card h2 {
+            font-size: 1.5rem;
+            margin-top: 0;
+            color: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .card h2 code {
+            background: rgba(15, 23, 42, 0.6);
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 1.2rem;
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+        }
+
+        .card p {
+            color: #cbd5e1;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 1.5rem;
+            min-height: 40px;
+        }
+
+        .svg-container {
+            background: rgba(15, 23, 42, 0.4);
+            border-radius: 12px;
+            height: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 1px inset rgba(255, 255, 255, 0.05);
+        }
+
+        /* SVG Shared Styles */
+        .parent { fill: #475569; stroke: #94a3b8; stroke-width: 2; }
+        .child { fill: rgba(14, 165, 233, 0.8); stroke: #38bdf8; stroke-width: 2; }
+        .joint { fill: #f59e0b; stroke: #fbbf24; stroke-width: 3; }
+        .rail { fill: none; stroke: #475569; stroke-width: 4; stroke-dasharray: 6 4; }
+        .grid-bg { fill: none; stroke: rgba(255, 255, 255, 0.05); stroke-width: 1; }
+
+        /* Animations */
+        @keyframes revoluteAnim {
+            0%, 100% { transform: rotate(-60deg); }
+            50% { transform: rotate(60deg); }
+        }
+        .anim-revolute { transform-origin: 100px 100px; animation: revoluteAnim 3s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+
+        @keyframes continuousAnim {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .anim-continuous { transform-origin: 100px 100px; animation: continuousAnim 2s linear infinite; }
+
+        @keyframes prismaticAnim {
+            0%, 100% { transform: translateX(-40px); }
+            50% { transform: translateX(40px); }
+        }
+        .anim-prismatic { animation: prismaticAnim 3s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+
+        @keyframes planarAnim {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(30px, -20px) rotate(20deg); }
+            50% { transform: translate(40px, 30px) rotate(-10deg); }
+            75% { transform: translate(-10px, 20px) rotate(-30deg); }
+        }
+        .anim-planar { transform-origin: center; animation: planarAnim 8s ease-in-out infinite; }
+
+        @keyframes floatingAnim {
+            0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+            33% { transform: translate(25px, -30px) scale(1.15) rotate(15deg); }
+            66% { transform: translate(-20px, -15px) scale(0.85) rotate(-10deg); }
+        }
+        .anim-floating { transform-origin: center; animation: floatingAnim 6s ease-in-out infinite; }
+
+        @keyframes mimicLeft {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(25deg); }
+        }
+        @keyframes mimicRight {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(-25deg); }
+        }
+        .anim-mimic-l { transform-origin: 80px 150px; animation: mimicLeft 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+        .anim-mimic-r { transform-origin: 120px 150px; animation: mimicRight 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Visualización de Joints en ROS 2</h1>
+        <p class="subtitle">Animaciones interactivas de los tipos de juntas disponibles en URDF para entender sus grados de libertad (DoF).</p>
+    </div>
+
+    <div class="grid">
+        
+        <!-- FIXED -->
+        <div class="card">
+            <h2><code>fixed</code></h2>
+            <p>Unión rígida. Cero grados de libertad. Ideal para soportes o sensores estáticos.</p>
+            <div class="svg-container">
+                <svg width="200" height="200" viewBox="0 0 200 200">
+                    <rect x="50" y="90" width="100" height="30" rx="4" class="parent" />
+                    <rect x="85" y="40" width="30" height="50" rx="4" class="child" />
+                    <circle cx="100" cy="90" r="6" class="joint" />
+                    <line x1="80" y1="90" x2="120" y2="90" stroke="#1e293b" stroke-width="2" stroke-dasharray="2 2" />
+                </svg>
+            </div>
+        </div>
+
+        <!-- REVOLUTE -->
+        <div class="card">
+            <h2><code>revolute</code></h2>
+            <p>Rotación con límites mecánicos (min/max). 1 DoF. Como un codo o rodilla.</p>
+            <div class="svg-container">
+                <svg width="200" height="200" viewBox="0 0 200 200">
+                    <!-- Limits Arc -->
+                    <path d="M 50 100 A 50 50 0 0 1 150 100" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="20" />
+                    <rect x="85" y="100" width="30" height="70" rx="4" class="parent" />
+                    <g class="anim-revolute">
+                        <rect x="90" y="30" width="20" height="80" rx="10" class="child" />
+                    </g>
+                    <circle cx="100" cy="100" r="8" class="joint" />
+                </svg>
+            </div>
+        </div>
+
+        <!-- CONTINUOUS -->
+        <div class="card">
+            <h2><code>continuous</code></h2>
+            <p>Rotación sin límites (360°). 1 DoF. Ideal para ruedas de robots móviles.</p>
+            <div class="svg-container">
+                <svg width="200" height="200" viewBox="0 0 200 200">
+                    <rect x="40" y="145" width="120" height="8" rx="2" class="parent" />
+                    <g class="anim-continuous">
+                        <circle cx="100" cy="100" r="45" class="child" fill-opacity="0.3" />
+                        <circle cx="100" cy="100" r="35" fill="none" stroke="#38bdf8" stroke-width="2" />
+                        <!-- Spokes -->
+                        <line x1="100" y1="55" x2="100" y2="145" stroke="#38bdf8" stroke-width="4" />
+                        <line x1="55" y1="100" x2="145" y2="100" stroke="#38bdf8" stroke-width="4" />
+                    </g>
+                    <circle cx="100" cy="100" r="10" class="joint" />
+                </svg>
+            </div>
+        </div>
+
+        <!-- PRISMATIC -->
+        <div class="card">
+            <h2><code>prismatic</code></h2>
+            <p>Traslación lineal a lo largo de un eje, con límites. 1 DoF. Guías lineales.</p>
+            <div class="svg-container">
+                <svg width="200" height="200" viewBox="0 0 200 200">
+                    <line x1="20" y1="100" x2="180" y2="100" class="rail" />
+                    <rect x="15" y="85" width="10" height="30" rx="2" class="parent" />
+                    <rect x="175" y="85" width="10" height="30" rx="2" class="parent" />
+                    <g class="anim-prismatic">
+                        <rect x="75" y="75" width="50" height="50" rx="8" class="child" />
+                        <circle cx="100" cy="100" r="6" class="joint" />
+                    </g>
+                </svg>
+            </div>
+        </div>
+
+        <!-- PLANAR -->
+        <div class="card">
+            <h2><code>planar</code></h2>
+            <p>Movimiento libre en un plano (X, Y) más rotación (Yaw). 3 DoF. Bases móviles.</p>
+            <div class="svg-container">
+                <svg width="200" height="200" viewBox="0 0 200 200">
+                    <!-- Background Grid -->
+                    <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                        <path d="M 20 0 L 0 0 0 20" class="grid-bg" />
+                    </pattern>
+                    <rect width="200" height="200" fill="url(#grid)" />
+                    <g class="anim-planar">
+                        <rect x="70" y="70" width="60" height="60" rx="12" class="child" />
+                        <!-- Wheels to indicate base -->
+                        <rect x="65" y="80" width="8" height="40" rx="4" fill="#0f172a" />
+                        <rect x="127" y="80" width="8" height="40" rx="4" fill="#0f172a" />
+                        <circle cx="100" cy="100" r="6" class="joint" />
+                        <!-- Direction Vector -->
+                        <polygon points="100,75 95,85 105,85" fill="#f59e0b" />
+                    </g>
+                </svg>
+            </div>
+        </div>
+
+        <!-- FLOATING -->
+        <div class="card">
+            <h2><code>floating</code></h2>
+            <p>Total libertad en 3D. Traslación (x,y,z) y Rotación (roll,pitch,yaw). 6 DoF.</p>
+            <div class="svg-container">
+                <svg width="200" height="200" viewBox="0 0 200 200">
+                    <g class="anim-floating">
+                        <!-- Drone chassis -->
+                        <path d="M 60 100 L 140 100 M 100 60 L 100 140" stroke="#0ea5e9" stroke-width="6" stroke-linecap="round" />
+                        <!-- Propellers -->
+                        <circle cx="60" cy="100" r="18" fill="rgba(14, 165, 233, 0.4)" stroke="#38bdf8" stroke-width="2" />
+                        <circle cx="140" cy="100" r="18" fill="rgba(14, 165, 233, 0.4)" stroke="#38bdf8" stroke-width="2" />
+                        <circle cx="100" cy="60" r="18" fill="rgba(14, 165, 233, 0.4)" stroke="#38bdf8" stroke-width="2" />
+                        <circle cx="100" cy="140" r="18" fill="rgba(14, 165, 233, 0.4)" stroke="#38bdf8" stroke-width="2" />
+                        <!-- Core joint -->
+                        <circle cx="100" cy="100" r="10" class="joint" />
+                    </g>
+                </svg>
+            </div>
+        </div>
+
+        <!-- MIMIC -->
+        <div class="card">
+            <h2><code>mimic</code></h2>
+            <p>Joint esclavo. Su estado depende de un joint maestro (ej. dedos de un gripper).</p>
+            <div class="svg-container">
+                <svg width="200" height="200" viewBox="0 0 200 200">
+                    <rect x="60" y="150" width="80" height="30" rx="4" class="parent" />
+                    
+                    <!-- Left finger (master) -->
+                    <g class="anim-mimic-l">
+                        <rect x="70" y="40" width="15" height="110" rx="5" class="child" />
+                    </g>
+                    <circle cx="80" cy="150" r="7" class="joint" />
+                    
+                    <!-- Right finger (slave) -->
+                    <g class="anim-mimic-r">
+                        <rect x="115" y="40" width="15" height="110" rx="5" class="child" />
+                    </g>
+                    <circle cx="120" cy="150" r="7" class="joint" />
+
+                    <!-- Connection indicator -->
+                    <path d="M 80 150 Q 100 120 120 150" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4 2" />
+                </svg>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

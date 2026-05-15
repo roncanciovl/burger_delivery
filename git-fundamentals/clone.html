@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Git Clone — Animación SVG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d1117; --surface: #161b22; --border: #30363d;
+      --green: #3fb950; --blue: #58a6ff; --purple: #bc8cff;
+      --orange: #f0883e; --red: #f85149; --text: #e6edf3; --muted: #8b949e;
+      --cyan: #39d353; /* Using a bright cyan-green for clone */
+      --yellow: #d29922;
+      --clone-color: #58a6ff;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    nav { padding: 16px 32px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+    nav a { color: var(--muted); text-decoration: none; font-size: 14px; }
+    nav a:hover { color: var(--text); }
+    .nav-sep { color: var(--border); }
+    .hero { text-align: center; padding: 40px 20px 20px; }
+    .hero h1 { font-size: clamp(24px,4vw,42px); font-weight: 900; color: var(--clone-color); }
+    .hero p { color: var(--muted); margin-top: 10px; max-width: 600px; margin-left: auto; margin-right: auto; font-size: 15px; }
+    .controls { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; padding: 20px; }
+    .btn {
+      padding: 9px 18px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text); font-family: 'Fira Code', monospace;
+      font-size: 12px; cursor: pointer; transition: all 0.2s;
+    }
+    .btn:hover { border-color: var(--clone-color); color: var(--clone-color); background: rgba(88,166,255,0.08); }
+    .btn.active { border-color: var(--clone-color); color: var(--clone-color); background: rgba(88,166,255,0.12); }
+    .stage { max-width: 920px; margin: 0 auto; padding: 10px 20px 30px; }
+    #flow-svg { width: 100%; height: auto; display: block; }
+    .info-panel {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px 24px; margin: 0 20px 30px;
+      max-width: 880px; margin-left: auto; margin-right: auto;
+    }
+    .info-panel h3 { color: var(--clone-color); font-size: 16px; margin-bottom: 8px; }
+    .info-panel p { color: var(--muted); font-size: 14px; line-height: 1.7; }
+    .cmd { font-family: 'Fira Code', monospace; background: rgba(88,166,255,0.12); color: var(--clone-color); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html">🏠 Inicio</a>
+  <span class="nav-sep">/</span>
+  <span style="color:var(--clone-color)">📥 Git Clone</span>
+</nav>
+
+<div class="hero">
+  <h1>📥 Git Clone</h1>
+  <p>Crea una copia local exacta de un repositorio que se encuentra en un servidor remoto (como GitHub).</p>
+</div>
+
+<div class="controls">
+  <button class="btn active" id="btn-0" onclick="goStep(0)">1. Repositorio en GitHub</button>
+  <button class="btn" id="btn-1" onclick="goStep(1)">2. git clone</button>
+  <button class="btn" id="btn-2" onclick="goStep(2)">3. Descarga de datos</button>
+  <button class="btn" id="btn-3" onclick="goStep(3)">4. Copia Local completa</button>
+</div>
+
+<div class="stage">
+<svg id="flow-svg" viewBox="0 0 900 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="glow-clone">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="arr-clone" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#58a6ff"/>
+    </marker>
+  </defs>
+
+  <rect width="900" height="400" fill="#0d1117" rx="12"/>
+
+  <!-- Remote Area -->
+  <rect x="550" y="40" width="310" height="320" rx="12" fill="#161b22" stroke="#30363d" stroke-width="2"/>
+  <text x="570" y="70" font-family="Inter" font-size="14" fill="#8b949e" font-weight="700">☁️ GitHub (Remoto)</text>
+
+  <!-- Local Machine Area -->
+  <rect x="40" y="40" width="450" height="320" rx="12" fill="#0f1a1a" stroke="#30363d" stroke-width="2" id="local-box"/>
+  <text x="60" y="70" font-family="Inter" font-size="14" fill="#8b949e" font-weight="700">💻 Tu Máquina (Local)</text>
+
+  <!-- GitHub Repo Contents -->
+  <g id="remote-repo">
+    <rect x="580" y="100" width="250" height="240" rx="8" fill="#0d1117" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="705" y="130" text-anchor="middle" font-family="Inter" font-size="13" fill="#58a6ff" font-weight="600">Repo: "mi-proyecto"</text>
+    
+    <!-- Commits in Remote -->
+    <circle cx="650" cy="190" r="15" fill="#161b22" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="650" y="194" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#58a6ff">C1</text>
+    
+    <circle cx="705" cy="190" r="15" fill="#161b22" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="705" y="194" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#58a6ff">C2</text>
+    
+    <circle cx="760" cy="190" r="15" fill="#161b22" stroke="#58a6ff" stroke-width="1.5"/>
+    <text x="760" y="194" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#58a6ff">C3</text>
+    
+    <path d="M 665 190 L 690 190" stroke="#30363d" stroke-width="1.5"/>
+    <path d="M 720 190 L 745 190" stroke="#30363d" stroke-width="1.5"/>
+    
+    <text x="705" y="230" text-anchor="middle" font-family="Inter" font-size="11" fill="#8b949e">Historial completo + Archivos</text>
+  </g>
+
+  <!-- Terminal / Command -->
+  <g id="command-clone" opacity="0">
+    <rect x="70" y="100" width="390" height="40" rx="6" fill="#0d1117" stroke="#30363d"/>
+    <text x="90" y="125" font-family="Fira Code" font-size="12" fill="#58a6ff">$ git clone https://github.com/user/repo.git</text>
+  </g>
+
+  <!-- Downloading Animation -->
+  <g id="download-flow" opacity="0">
+    <path d="M 580 250 L 150 250" stroke="#58a6ff" stroke-width="2" stroke-dasharray="10 5" marker-end="url(#arr-clone)">
+        <animate attributeName="stroke-dashoffset" from="100" to="0" dur="2s" repeatCount="indefinite" />
+    </path>
+    <text x="365" y="240" text-anchor="middle" font-family="Inter" font-size="11" fill="#58a6ff">Copiando .git/ y archivos...</text>
+  </g>
+
+  <!-- Local Repo Created -->
+  <g id="local-repo" opacity="0">
+    <rect x="70" y="160" width="390" height="180" rx="8" fill="#0d1117" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="265" y="185" text-anchor="middle" font-family="Inter" font-size="13" fill="#3fb950" font-weight="600">Carpeta: "mi-proyecto"</text>
+    
+    <!-- Commits in Local (Same as remote) -->
+    <circle cx="150" cy="240" r="15" fill="#161b22" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="150" y="244" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#3fb950">C1</text>
+    
+    <circle cx="205" cy="240" r="15" fill="#161b22" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="205" y="244" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#3fb950">C2</text>
+    
+    <circle cx="260" cy="240" r="15" fill="#161b22" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="260" y="244" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#3fb950">C3</text>
+    
+    <path d="M 165 240 L 190 240" stroke="#30363d" stroke-width="1.5"/>
+    <path d="M 220 240 L 245 240" stroke="#30363d" stroke-width="1.5"/>
+
+    <rect x="330" y="210" width="100" height="80" rx="4" fill="rgba(63,185,80,0.05)" stroke="#3fb950" stroke-width="1" stroke-dasharray="4 2"/>
+    <text x="380" y="235" text-anchor="middle" font-family="Inter" font-size="12" fill="#3fb950" font-weight="700">.git/</text>
+    <text x="380" y="255" text-anchor="middle" font-family="Inter" font-size="9" fill="#8b949e">Configuración</text>
+    <text x="380" y="270" text-anchor="middle" font-family="Inter" font-size="9" fill="#8b949e">remote: origin</text>
+  </g>
+
+</svg>
+</div>
+
+<div class="info-panel" id="info-box">
+  <h3 id="info-title">1. Repositorio en GitHub</h3>
+  <p id="info-body">Todo comienza con un repositorio existente en la nube (Remote). Este repositorio contiene todos los archivos, pero lo más importante: todo el <b>historial de cambios</b> (commits).</p>
+</div>
+
+<script>
+const steps = [
+  {
+    title: "1. Repositorio en GitHub",
+    body: "Todo comienza con un repositorio existente en la nube (Remote). Este repositorio contiene todos los archivos y todo el <b>historial de cambios</b> (commits). Para trabajar en él, necesitas traerlo a tu máquina.",
+    show: ["remote-repo"],
+    hide: ["command-clone", "download-flow", "local-repo"]
+  },
+  {
+    title: "2. Ejecutar git clone",
+    body: "En tu terminal local, ejecutas <span class='cmd'>git clone &lt;url&gt;</span>. Este comando le dice a Git: 'Conéctate a esta dirección y descarga todo lo que haya allí'.",
+    show: ["remote-repo", "command-clone"],
+    hide: ["download-flow", "local-repo"]
+  },
+  {
+    title: "3. Descarga de datos",
+    body: "Git no solo descarga la última versión de los archivos. Descarga <b>toda la base de datos</b> del proyecto (la carpeta <span class='cmd'>.git</span>), incluyendo cada rama y cada commit hecho en el pasado.",
+    show: ["remote-repo", "command-clone", "download-flow"],
+    hide: ["local-repo"]
+  },
+  {
+    title: "4. Copia Local completa",
+    body: "Al finalizar, tienes una carpeta local idéntica al remoto. Git configura automáticamente un enlace llamado <span class='cmd'>origin</span> que apunta a GitHub, para que puedas hacer <span class='cmd'>push</span> y <span class='cmd'>pull</span> fácilmente.",
+    show: ["remote-repo", "command-clone", "local-repo"],
+    hide: ["download-flow"]
+  }
+];
+
+let current = 0;
+
+function goStep(n) {
+  current = n;
+  const s = steps[n];
+  document.querySelectorAll('.btn').forEach((b,i) => b.classList.toggle('active', i===n));
+  document.getElementById('info-title').textContent = s.title;
+  document.getElementById('info-body').innerHTML = s.body;
+
+  s.show.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) { el.style.transition='opacity 0.5s'; el.setAttribute('opacity','1'); el.style.opacity='1'; }
+  });
+  s.hide.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) { el.style.transition='opacity 0.4s'; el.setAttribute('opacity','0'); el.style.opacity='0'; }
+  });
+  
+  // Special handling for local-box border color
+  const localBox = document.getElementById('local-box');
+  if (n >= 3) {
+      localBox.style.stroke = '#3fb950';
+      localBox.style.transition = 'stroke 0.5s';
+  } else {
+      localBox.style.stroke = '#30363d';
+  }
+}
+
+goStep(0);
+</script>
+
+</body>
+</html>
