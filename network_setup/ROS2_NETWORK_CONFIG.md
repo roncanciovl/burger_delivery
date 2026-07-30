@@ -192,10 +192,16 @@ If nodes are not visible across PCs, check firewall:
 
 ### Windows Firewall (on Windows host):
 
+Para asegurar que ROS 2 funcione correctamente a través de WSL, las siguientes reglas están activas y configuradas en el Firewall de Windows Defender:
+
 ```powershell
-# Allow ROS 2 DDS ports (run as Admin)
-New-NetFirewallRule -DisplayName "ROS2 Discovery (UDP)" -Direction Inbound -Action Allow -Protocol UDP -LocalPort 7400-7500
-New-NetFirewallRule -DisplayName "ROS2 Discovery (UDP)" -Direction Outbound -Action Allow -Protocol UDP -LocalPort 7400-7500
+# Reglas para permitir tráfico entrante de ROS 2 DDS y Discovery
+New-NetFirewallRule -DisplayName "ROS 2 DDS UDP" -Direction Inbound -Action Allow -Protocol UDP
+New-NetFirewallRule -DisplayName "ROS 2 DDS TCP" -Direction Inbound -Action Allow -Protocol TCP
+New-NetFirewallRule -DisplayName "ROS2 Discovery (UDP)" -Direction Inbound -Action Allow -Protocol UDP
+
+# Regla para permitir tráfico saliente de ROS 2 DDS
+New-NetFirewallRule -DisplayName "ROS 2 DDS" -Direction Outbound -Action Allow
 
 # Allow Ping (ICMPv4) for network diagnostics
 New-NetFirewallRule -DisplayName "Allow Ping (ICMPv4-In)" -Protocol ICMPv4 -IcmpType 8 -RemoteAddress Any -Action Allow
