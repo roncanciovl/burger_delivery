@@ -192,17 +192,39 @@ If nodes are not visible across PCs, check firewall:
 
 ### Windows Firewall (on Windows host):
 
-Para asegurar que ROS 2 funcione correctamente a través de WSL, las siguientes reglas están activas y configuradas en el Firewall de Windows Defender:
+Para asegurar que ROS 2 funcione correctamente a través de WSL, debes configurar el Firewall de Windows Defender. Puedes optar por reglas generales (más fácil, menos seguro) o específicas por puerto (más seguro, pero requiere mantenimiento si cambias de dominio).
+
+#### Opción 1: Reglas Generales (Todos los puertos)
+⚠️ **Advertencia:** Esta opción es más rápida porque funcionará sin importar qué `ROS_DOMAIN_ID` uses, pero es **menos segura** ya que abre el tráfico UDP y TCP de forma indiscriminada. (Estas son las reglas que tienes actualmente activas).
 
 ```powershell
-# Reglas para permitir tráfico entrante de ROS 2 DDS y Discovery
+# Reglas para permitir tráfico entrante y saliente sin restricciones de puerto
 New-NetFirewallRule -DisplayName "ROS 2 DDS UDP" -Direction Inbound -Action Allow -Protocol UDP
 New-NetFirewallRule -DisplayName "ROS 2 DDS TCP" -Direction Inbound -Action Allow -Protocol TCP
 New-NetFirewallRule -DisplayName "ROS2 Discovery (UDP)" -Direction Inbound -Action Allow -Protocol UDP
-
-# Regla para permitir tráfico saliente de ROS 2 DDS
 New-NetFirewallRule -DisplayName "ROS 2 DDS" -Direction Outbound -Action Allow
+```
 
+#### Opción 2: Reglas Específicas por Puerto (Recomendado)
+⚠️ **Advertencia:** Esta opción es mucho más segura, pero **debes actualizar las reglas manualmente si alguna vez decides cambiar tu `ROS_DOMAIN_ID`**. (Fórmula: `7400 + (250 * ROS_DOMAIN_ID)`).
+
+**Para `ROS_DOMAIN_ID=0` (Puertos 7400-7650):**
+```powershell
+New-NetFirewallRule -DisplayName "ROS 2 DDS UDP (Domain 0)" -Direction Inbound -Action Allow -Protocol UDP -LocalPort 7400-7650
+New-NetFirewallRule -DisplayName "ROS 2 DDS TCP (Domain 0)" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 7400-7650
+New-NetFirewallRule -DisplayName "ROS 2 DDS Outbound (Domain 0)" -Direction Outbound -Action Allow -Protocol UDP -LocalPort 7400-7650
+```
+
+**Para `ROS_DOMAIN_ID=42` (Configuración actual del proyecto - Puertos 17900-18150):**
+```powershell
+New-NetFirewallRule -DisplayName "ROS 2 DDS UDP (Domain 42)" -Direction Inbound -Action Allow -Protocol UDP -LocalPort 17900-18150
+New-NetFirewallRule -DisplayName "ROS 2 DDS TCP (Domain 42)" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 17900-18150
+New-NetFirewallRule -DisplayName "ROS 2 DDS Outbound (Domain 42)" -Direction Outbound -Action Allow -Protocol UDP -LocalPort 17900-18150
+```
+
+> **Nota:** No uses ambas opciones al mismo tiempo. Si decides migrar a la Opción 2, asegúrate de borrar o deshabilitar las reglas generales de la Opción 1 de tu Firewall.
+
+```powershell
 # Allow Ping (ICMPv4) for network diagnostics
 New-NetFirewallRule -DisplayName "Allow Ping (ICMPv4-In)" -Protocol ICMPv4 -IcmpType 8 -RemoteAddress Any -Action Allow
 ```
