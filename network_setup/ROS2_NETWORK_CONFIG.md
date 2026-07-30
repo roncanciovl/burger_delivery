@@ -209,9 +209,21 @@ New-NetFirewallRule -DisplayName "Allow Ping (ICMPv4-In)" -Protocol ICMPv4 -Icmp
 
 ### Linux Firewall (on other PCs):
 
-```bash
-sudo ufw allow 7400:7500/udp
-```
+**⚠️ Importante: Puertos según el `ROS_DOMAIN_ID`**
+Los puertos UDP que utiliza ROS 2 (DDS) para descubrir otros nodos dependen matemáticamente del valor de `ROS_DOMAIN_ID`. DDS reserva un bloque de 250 puertos por cada dominio usando la fórmula de puerto base: `7400 + (250 * ROS_DOMAIN_ID)`.
+
+* **Si usas `ROS_DOMAIN_ID=0` (por defecto):**
+  Los puertos se encuentran en el rango 7400 al 7650.
+  ```bash
+  sudo ufw allow 7400:7650/udp
+  ```
+
+* **Si usas `ROS_DOMAIN_ID=42` (configuración actual del proyecto):**
+  El puerto base cambia drásticamente: `7400 + (250 * 42) = 17900`.
+  Debes abrir el rango 17900 al 18150 para que la comunicación y el descubrimiento funcionen correctamente.
+  ```bash
+  sudo ufw allow 17900:18150/udp
+  ```
 
 ## Troubleshooting
 
