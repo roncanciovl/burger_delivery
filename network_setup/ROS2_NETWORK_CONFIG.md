@@ -1,303 +1,229 @@
-# ROS 2 Network Configuration
+# Guía de Análisis y Configuración de Red en ROS 2
 
-## Current Setup
+Este documento proporciona un camino lógico, paso a paso, para configurar, comprender y solucionar problemas en tu red de ROS 2, especialmente en entornos mixtos (Linux, Windows, WSL).
 
-Your ROS 2 installation is now configured for **network communication** between multiple PCs.
+---
 
-### Environment Variables
+## 1. Conceptos Fundamentales de Red
 
-The following variables have been added to `~/.bashrc`:
+Antes de configurar la red, es importante comprender cómo se comunican los nodos y las tres variables fundamentales que controlan esto en ROS 2:
 
+**El Rol del UDP Multicast en DDS:**
+ROS 2 utiliza el estándar DDS (Data Distribution Service) como su capa subyacente. Para que los nodos se encuentren entre sí automáticamente en una red sin necesidad de un servidor central (como el antiguo `roscore`), DDS emplea **UDP Multicast**. Esto significa que cuando un nodo se inicia, "grita" su presencia enviando paquetes a una dirección IP de Multicast dedicada. Todos los demás nodos de ROS 2 en la red "escuchan" en esa dirección, lo que les permite descubrirse mutuamente y establecer conexiones (peer-to-peer). Si tu enrutador (router) o firewall bloquea el tráfico UDP Multicast, los nodos jamás se verán, sin importar cuán bien esté configurado ROS 2.
+
+1. **`ROS_DOMAIN_ID=42`**
+   - Crea un "grupo de red" aislado para tus nodos de ROS.
+   - Solo los nodos con el **mismo ID de dominio** pueden comunicarse entre sí.
+   - Rango: 0-101 (Utilizamos `42` para este proyecto).
+
+2. **`ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET`**
+   - `SUBNET` = Descubre cualquier nodo alcanzable a través de Multicast (por defecto).
+   - `LOCALHOST` = Solo descubre nodos en la misma máquina física.
+   - `OFF` = No descubre ningún otro nodo.
+   - *(Esta variable reemplaza a la antigua y obsoleta `ROS_LOCALHOST_ONLY`)*
+
+3. **`RMW_IMPLEMENTATION=rmw_cyclonedds_cpp`**
+   - **¿Por qué usarlo?** CycloneDDS es significativamente más estable en entornos Wi-Fi. Genera menos "ruido" durante el descubrimiento de nodos y maneja la pérdida de paquetes y la latencia mucho mejor que Fast DDS (el predeterminado).
+   - **Verificación:** Ejecuta `printenv RMW_IMPLEMENTATION`. Debería retornar `rmw_cyclonedds_cpp`.
+
+---
+
+## 2. Configuración del Host: Resolviendo el Aislamiento de Red en WSL
+
+Si estás utilizando Windows Subsystem for Linux (WSL), por defecto utiliza una red virtual (NAT) que oculta tus nodos de ROS del resto de la red física. Debes solucionar esto primero.
+
+### Opción A: Modo Espejo (Mirrored Mode) (Recomendado ⭐)
+Este modo hace que WSL comparta la misma dirección IP que tu host de Windows, haciendo que todos los nodos de ROS sean visibles instantáneamente en la red física.
+
+1. Abre el Explorador de Windows y ve a `%USERPROFILE%` (ej. `C:\Users\TuUsuario`).
+2. Crea o edita un archivo llamado `.wslconfig`.
+3. Añade las siguientes líneas:
+   ```ini
+   [wsl2]
+   networkingMode=mirrored
+   ```
+4. Reinicia WSL desde PowerShell:
+   ```powershell
+   wsl --shutdown
+   ```
+5. Verifica en WSL: El comando `ip addr` ahora debería mostrar tu IP de Windows.
+
+### Opción B: Proxy de Puertos (Alternativa)
+Si no puedes usar el modo Espejo, debes redirigir los puertos DDS/micro-ROS desde Windows hacia WSL usando PowerShell (como Administrador):
+```powershell
+netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=8888 connectaddress=<IP_DE_WSL> connectport=8888
+```
+
+---
+
+## 3. Aplicando Configuraciones de Entorno
+
+Una vez que la red del host es accesible, aplica las variables principales a todas las PCs que participarán.
+
+### En Linux / WSL (Ubuntu)
+Añade al archivo `~/.bashrc`:
 ```bash
 export ROS_DOMAIN_ID=42
 export ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET
 export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 ```
+Luego ejecuta: `source ~/.bashrc`
 
-### What Each Variable Does
-
-1. **`ROS_DOMAIN_ID=42`**
-   - Creates a "network group" for your ROS nodes
-   - Only nodes with the **same domain ID** can communicate
-   - Range: 0-101 (use different IDs for different robot systems)
-
-2. **`ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET`**
-   - `SUBNET` = Discover any node reachable via multicast (default).
-   - `LOCALHOST` = Only discover nodes on the same machine.
-   - `OFF` = Do not discover any other nodes.
-   - *Note: This replaces the deprecated `ROS_LOCALHOST_ONLY` variable.*
-
-3. **`RMW_IMPLEMENTATION=rmw_cyclonedds_cpp`**
-   - **Why use it?** CycloneDDS is significantly more stable in WiFi environments. It generates less "chatter" during node discovery and handles packet loss/latency (common in wireless) much better than the default Fast DDS.
-   - **Installation:** It's not installed by default. Run:
-     ```bash
-     sudo apt update && sudo apt install ros-jazzy-rmw-cyclonedds-cpp
-     ```
-   - **Verification:** Run `printenv RMW_IMPLEMENTATION`. It should return `rmw_cyclonedds_cpp`.
-   - **Alternative:** `rmw_fastrtps_cpp` (default). Use this only if you are using the *Discovery Server* (see below), otherwise, stay with CycloneDDS for mobile robots.
-
-## Fast DDS Discovery Server (Advanced)
-
-If you have issues with **multicast** (common in corporate or restricted WiFi), you can use the Discovery Server. This replaces the automatic "shouting" of nodes with a central "phonebook" (the Server).
-
-### 1. The Configuration File (`fastdds_discovery.xml`)
-
-This file configures your ROS nodes to act as **Super Clients**. Instead of searching the whole network, they connect directly to the IP of the Discovery Server.
-
-*   **`<address>`**: Set to `192.168.1.100` (the PC Principal running the Agent/Server).
-*   **`<port>`**: Default is `11811`.
-*   **`<discoveryProtocol>`**: `SUPER_CLIENT` allows this node to see all other nodes, even if they aren't using the server (hybrid mode).
-
-### 2. How to Use
-
-**A. Start the Server (only on PC Principal):**
-```bash
-fastdds discovery --server-id 0 --ip-address 192.168.1.100 --port 11811
-```
-
-**B. Configure Clients (on all PCs):**
-Add these variables to your `~/.bashrc`:
-```bash
-export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
-export FASTRTPS_DEFAULT_PROFILES_FILE=~/ros2_ws/src/burger_delivery/network_setup/fastdds_discovery.xml
-```
-
-*Note: You can also use the simpler `export ROS_DISCOVERY_SERVER="192.168.1.100:11811"` but the XML file gives more control over QoS and discovery behavior.*
-
-## Network Information
-
-- **WSL IP Address:** 172.27.119.126
-- **Network:** Your local network (WiFi/Ethernet)
-
-### Network Topology Diagram
-![Network Diagram](ros_network_diagram.svg)
-
-## 💻 WSL Networking Configuration (Windows Users)
-
-WSL2 uses a virtual network (NAT) by default, which can hide ROS nodes from the rest of the physical network.
-
-#### Option A: Mirrored Mode (Recommended & Easiest) ⭐
-This mode makes WSL share the same IP address as your Windows host (`192.168.1.100`), making all ROS nodes visible instantly.
-
-1. Open Windows Explorer and go to `%USERPROFILE%` (e.g., `C:\Users\YourUser`).
-2. Create or edit a file named `.wslconfig`.
-3. Add the following lines:
-   ```ini
-   [wsl2]
-   networkingMode=mirrored
-   ```
-4. Restart WSL from PowerShell:
-   ```powershell
-   wsl --shutdown
-   ```
-5. Verify in WSL: `ip addr` should now show your Windows IP.
-
-#### Option B: Port Proxy (Alternative)
-If you cannot use Mirrored mode, you must forward the DDS/micro-ROS ports from Windows to WSL.
-
-Run in PowerShell as **Administrator**:
+### En Windows (Nativo)
+Configura las variables de entorno (PowerShell como Administrador):
 ```powershell
-# Forward micro-ROS Agent port
-netsh interface portproxy add v4tov4 listenaddress=192.168.1.100 listenport=8888 connectaddress=<WSL_IP> connectport=8888
+[System.Environment]::SetEnvironmentVariable('ROS_DOMAIN_ID', '42', 'User')
+[System.Environment]::SetEnvironmentVariable('ROS_AUTOMATIC_DISCOVERY_RANGE', 'SUBNET', 'User')
+[System.Environment]::SetEnvironmentVariable('RMW_IMPLEMENTATION', 'rmw_cyclonedds_cpp', 'User')
 ```
-*(Note: You'll also need to forward DDS ports 7400-7500 for general ROS 2 discovery).*
+Reinicia tu terminal para aplicar los cambios.
 
-## Configuring Other PCs
+---
 
-To connect another PC to this ROS 2 system:
+## 4. Verificación y Pruebas
 
-### On Linux/Ubuntu PC:
+Verifica que tus nodos puedan comunicarse a través de la red.
 
-1. Install ROS 2 Jazzy
-2. Add to `~/.bashrc`:
-   ```bash
-   export ROS_DOMAIN_ID=42
-   export ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET
-   export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
-   ```
-3. Restart terminal or run: `source ~/.bashrc`
+### Diagnósticos Automatizados
+- **Lista de Verificación de Red y ROS 2:** `bash test_ros2_network.sh`
+- **Estabilidad Wi-Fi:** `bash diagnostico_wifi.sh`
 
-### On Windows PC (with ROS 2):
+### Prueba Manual 1: Validación de Multicast a Nivel de Red (Muy Recomendado)
+Esta prueba es altamente viable y crucial para diagnosticar problemas, ya que utiliza una herramienta nativa (`ros2 multicast`) que envía un paquete UDP Multicast "crudo", evadiendo por completo la compleja capa de DDS. Si esto falla, el problema radica estrictamente en tu red física, Firewall o Router, y no en tus configuraciones del dominio de ROS 2.
 
-1. Set environment variables (PowerShell as Admin):
-   ```powershell
-   [System.Environment]::SetEnvironmentVariable('ROS_DOMAIN_ID', '42', 'User')
-   [System.Environment]::SetEnvironmentVariable('ROS_AUTOMATIC_DISCOVERY_RANGE', 'SUBNET', 'User')
-   [System.Environment]::SetEnvironmentVariable('RMW_IMPLEMENTATION', 'rmw_cyclonedds_cpp', 'User')
-   ```
-2. Restart terminal
-
-## Testing Network Communication
-
-### Test 1: Verify Configuration
-
-You can use the automated scripts for a complete diagnostic:
-
-**For ROS 2 & General Network:**
+**PC 1 (Receptor):**
 ```bash
-bash test_ros2_network.sh
+ros2 multicast receive
 ```
+*(Se quedará esperando recibir datos...)*
 
-**For WiFi Quality & Stability:**
+**PC 2 (Emisor):**
 ```bash
-# Linux
-bash diagnostico_wifi.sh
-
-# Windows (PowerShell)
-.\diagnostico_wifi.ps1
+ros2 multicast send
 ```
+Si la red está permitiendo tráfico multicast, la PC 1 mostrará el mensaje: `Received from <IP_PC2>: 'Hello World!'`.
+*Nota: Si esta prueba falla, detente aquí y revisa la Sección 6 (Firewall) o intenta usar el Discovery Server (Sección 7).*
 
-**Network Diagnostics (All Levels):**
-Check the unified guide: [`DIAGNOSTICO_RED.md`](DIAGNOSTICO_RED.md)
+### Prueba Manual 2: Publicador / Suscriptor a Nivel de Nodos
+Si la prueba de multicast fue exitosa, ahora verificamos que DDS pueda establecer la comunicación formal de tópicos.
 
-**What the scripts verify:**
-1.  **WiFi Status:** Signal strength, channel congestion, and interface health.
-2.  **Environment Variables:** Checks `ROS_DOMAIN_ID`, `ROS_AUTOMATIC_DISCOVERY_RANGE`, and `RMW_IMPLEMENTATION`.
-3.  **Network Layer:** Extracts WSL IP, Gateway (Router) address, and DNS.
-4.  **Core ROS 2:** Verifies the `ros2` CLI installation and version.
-5.  **Discovery Scan:** Lists visible nodes and topics (confirms discovery is working).
-6.  **DDS Ports:** Checks if UDP ports 7400-7500 are active.
-7.  **Latency Test:** Measures ping response time to the router (critical for real-time control).
-
-Or run manual checks:
-# In WSL
-source ~/.bashrc
-echo $ROS_DOMAIN_ID  # Should show: 42
-echo $ROS_AUTOMATIC_DISCOVERY_RANGE  # Should show: SUBNET
-```
-
-### Test 2: Publish from PC1, Subscribe from PC2
-
-**PC1 (this WSL):**
+**PC 1 (Publicador):**
 ```bash
-source ~/ros2_ws/install/setup.bash
-ros2 topic pub /test std_msgs/String "data: 'Hello from PC1'"
+ros2 topic pub /test std_msgs/String "data: 'Hola desde PC1'"
 ```
-
-**PC2 (other computer):**
+**PC 2 (Suscriptor):**
 ```bash
 ros2 topic echo /test
-# Should see: data: 'Hello from PC1'
 ```
 
-### Test 3: See All Nodes on Network
+---
 
+## 5. Análisis: El Problema del Bloqueo del Daemon de ROS 2
+
+**Introducción: Comandos de Inspección en ROS 2**
+Para comprender qué está sucediendo en tu red de ROS 2, típicamente utilizas dos comandos fundamentales de la interfaz de línea de comandos (CLI):
+- `ros2 node list`: Muestra todos los nodos activos que se han descubierto en tu red actual.
+- `ros2 topic list`: Muestra todos los canales de comunicación (tópicos) por los cuales los nodos están enviando o recibiendo datos.
+Estos comandos son esenciales para observar el estado de tu red, pero dependen de un proceso en segundo plano que a veces falla.
+
+**¿En qué consiste el problema?**
+A menudo, al ejecutar comandos de inspección como los mencionados arriba (`ros2 topic list` o `ros2 node list`), la terminal se queda congelada (bloqueada) o tarda demasiado en responder sin mostrar los datos reales de la red.
+
+**Análisis de la causa:**
+ROS 2 utiliza un proceso en segundo plano llamado **Daemon** (`_ros2_daemon`). Su propósito es mantener un caché de la topología de la red (nodos, tópicos, servicios) para responder rápidamente a los comandos de la CLI, evitando tener que redescubrir toda la red cada vez que escribes un comando.
+
+El problema ocurre porque este daemon es susceptible a **cambios e inconsistencias en la red**:
+1. **Cambios de IP / Interfaz:** Si pasas de una red Wi-Fi a otra, enciendes una VPN, o WSL cambia su IP, el daemon mantiene en caché las rutas antiguas. Al intentar comunicarse con las direcciones cacheadas, los paquetes se pierden y provoca un "timeout" o bloqueo.
+2. **Problemas de Multicast:** En redes Wi-Fi saturadas o corporativas, los paquetes UDP Multicast (usados para descubrimiento) se pierden. El daemon se queda esperando respuestas de nodos que sabe que existen pero que no puede alcanzar.
+3. **Conflictos del RMW:** Fast DDS (el default) a veces genera bloqueos internos de descubrimiento (deadlocks) si hay mucho ruido en la red o si la red es inestable.
+
+**Alternativas y Soluciones:**
+
+1. **Evitar el Daemon (Bypass CLI):**
+   Puedes forzar a la CLI a no usar el caché del daemon añadiendo la bandera `--no-daemon`. Esto hará que el comando tarde un par de segundos más (porque descubre la red desde cero), pero garantiza que mostrará la información real y evitará el bloqueo.
+   ```bash
+   ros2 topic list --no-daemon
+   ros2 node list --no-daemon
+   ```
+
+2. **Reiniciar el Daemon (Hard Reset):**
+   Si la red cambió (ej. activaste el Modo Espejo o cambiaste de red), debes purgar el daemon para que vuelva a escanear.
+   ```bash
+   ros2 daemon stop
+   ros2 daemon start
+   
+   # Si el proceso no se detiene correctamente, fuérzalo:
+   pkill -f _ros2_daemon
+   ```
+
+3. **Cambiar el RMW a CycloneDDS:**
+   Como configuramos en el Paso 1, usar `rmw_cyclonedds_cpp` reduce drásticamente los problemas de bloqueo del daemon. CycloneDDS maneja la memoria y el descubrimiento de forma mucho más eficiente en redes inalámbricas frente a caídas de paquetes.
+
+4. **Usar Discovery Server (Ver sección 7):**
+   Si el multicast sigue bloqueando el daemon, cambiar a un servidor de descubrimiento centralizado elimina el problema de raíz al erradicar la dependencia del tráfico Multicast.
+
+---
+
+## 6. Configuración del Firewall
+
+Si los nodos aún no son visibles en la red, es muy probable que tu Firewall esté bloqueando los puertos UDP de DDS. DDS asigna puertos dinámicamente basándose en tu `ROS_DOMAIN_ID`.
+Fórmula: `7400 + (250 * ROS_DOMAIN_ID)`
+Para `ROS_DOMAIN_ID=42`, el rango de puertos UDP es **17900 a 18150**.
+
+### Linux / Ubuntu (UFW)
 ```bash
-ros2 node list  # Shows nodes from ALL PCs with domain ID 42
+sudo ufw allow 17900:18150/udp
 ```
 
-## Firewall Configuration
+### Windows Firewall (Configuración en Host de Windows)
 
-If nodes are not visible across PCs, check firewall:
+Para permitir el paso de datos desde/hacia tu máquina Windows (y por ende WSL), tienes dos opciones principales.
 
-### Windows Firewall (on Windows host):
-
-Para asegurar que ROS 2 funcione correctamente a través de WSL, debes configurar el Firewall de Windows Defender. Puedes optar por reglas generales (más fácil, menos seguro) o específicas por puerto (más seguro, pero requiere mantenimiento si cambias de dominio).
-
-#### Opción 1: Reglas Generales (Todos los puertos)
-⚠️ **Advertencia:** Esta opción es más rápida porque funcionará sin importar qué `ROS_DOMAIN_ID` uses, pero es **menos segura** ya que abre el tráfico UDP y TCP de forma indiscriminada. (Estas son las reglas que tienes actualmente activas).
-
+#### Opción A: Reglas Específicas por Dominio (Recomendado y Seguro)
+Esta opción abre **únicamente** los puertos estrictamente necesarios para tu ID de dominio.
+Ejecuta en PowerShell (como Administrador):
 ```powershell
-# Reglas para permitir tráfico entrante y saliente sin restricciones de puerto
-New-NetFirewallRule -DisplayName "ROS 2 DDS UDP" -Direction Inbound -Action Allow -Protocol UDP
-New-NetFirewallRule -DisplayName "ROS 2 DDS TCP" -Direction Inbound -Action Allow -Protocol TCP
-New-NetFirewallRule -DisplayName "ROS2 Discovery (UDP)" -Direction Inbound -Action Allow -Protocol UDP
-New-NetFirewallRule -DisplayName "ROS 2 DDS" -Direction Outbound -Action Allow
-```
-
-#### Opción 2: Reglas Específicas por Puerto (Recomendado)
-⚠️ **Advertencia:** Esta opción es mucho más segura, pero **debes actualizar las reglas manualmente si alguna vez decides cambiar tu `ROS_DOMAIN_ID`**. (Fórmula: `7400 + (250 * ROS_DOMAIN_ID)`).
-
-**Para `ROS_DOMAIN_ID=0` (Puertos 7400-7650):**
-```powershell
-New-NetFirewallRule -DisplayName "ROS 2 DDS UDP (Domain 0)" -Direction Inbound -Action Allow -Protocol UDP -LocalPort 7400-7650
-New-NetFirewallRule -DisplayName "ROS 2 DDS TCP (Domain 0)" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 7400-7650
-New-NetFirewallRule -DisplayName "ROS 2 DDS Outbound (Domain 0)" -Direction Outbound -Action Allow -Protocol UDP -LocalPort 7400-7650
-```
-
-**Para `ROS_DOMAIN_ID=42` (Configuración actual del proyecto - Puertos 17900-18150):**
-```powershell
+# Para el ROS_DOMAIN_ID=42 (Puertos 17900-18150)
 New-NetFirewallRule -DisplayName "ROS 2 DDS UDP (Domain 42)" -Direction Inbound -Action Allow -Protocol UDP -LocalPort 17900-18150
 New-NetFirewallRule -DisplayName "ROS 2 DDS TCP (Domain 42)" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 17900-18150
 New-NetFirewallRule -DisplayName "ROS 2 DDS Outbound (Domain 42)" -Direction Outbound -Action Allow -Protocol UDP -LocalPort 17900-18150
 ```
+*Si alguna vez cambias tu `ROS_DOMAIN_ID`, deberás recalcular los puertos y actualizar estas reglas.*
 
-> **Nota:** No uses ambas opciones al mismo tiempo. Si decides migrar a la Opción 2, asegúrate de borrar o deshabilitar las reglas generales de la Opción 1 de tu Firewall.
+#### Opción B: Desbloqueo General de Puertos UDP/TCP (Rápido, pero de Alto Riesgo)
+⚠️ **ADVERTENCIA CRÍTICA DE CIBERSEGURIDAD:** Esta opción abre el tráfico de **todos los puertos UDP y TCP** a través del firewall para ROS 2. 
+- **¿Por qué hacerlo?** Si trabajas con múltiples dominios a la vez o cambias constantemente de `ROS_DOMAIN_ID` y no quieres recalcular puertos, esto garantiza que la red siempre funcionará de inmediato.
+- **Riesgos de Seguridad:** Al permitir todo el tráfico entrante UDP/TCP sin restricción de puertos, tu sistema queda expuesto en la red local. Si te conectas a redes públicas (como una cafetería, aeropuerto o Wi-Fi público de la universidad) o si tu red está comprometida, atacantes podrían aprovechar servicios vulnerables, realizar escaneos completos de puertos, lanzar ataques de denegación de servicio (DDoS) a nivel de red, o interceptar e inyectar paquetes maliciosos hacia servicios que ahora son accesibles en tu sistema.
+- **Veredicto:** Solo utiliza esta opción en **redes locales privadas, confiables y completamente aisladas** (ej. la red dedicada de tu laboratorio de robótica), NUNCA en redes públicas o corporativas donde no tengas control absoluto de los dispositivos conectados.
 
+Si entiendes los riesgos y decides aplicarlo, ejecuta en PowerShell (como Administrador):
 ```powershell
-# Allow Ping (ICMPv4) for network diagnostics
-New-NetFirewallRule -DisplayName "Allow Ping (ICMPv4-In)" -Protocol ICMPv4 -IcmpType 8 -RemoteAddress Any -Action Allow
+New-NetFirewallRule -DisplayName "ROS 2 DDS ALL UDP" -Direction Inbound -Action Allow -Protocol UDP
+New-NetFirewallRule -DisplayName "ROS 2 DDS ALL TCP" -Direction Inbound -Action Allow -Protocol TCP
+New-NetFirewallRule -DisplayName "ROS2 DDS Discovery (UDP)" -Direction Inbound -Action Allow -Protocol UDP
+New-NetFirewallRule -DisplayName "ROS 2 DDS Outbound" -Direction Outbound -Action Allow
 ```
 
-### Linux Firewall (on other PCs):
+---
 
-**⚠️ Importante: Puertos según el `ROS_DOMAIN_ID`**
-Los puertos UDP que utiliza ROS 2 (DDS) para descubrir otros nodos dependen matemáticamente del valor de `ROS_DOMAIN_ID`. DDS reserva un bloque de 250 puertos por cada dominio usando la fórmula de puerto base: `7400 + (250 * ROS_DOMAIN_ID)`.
+## 7. Avanzado: Servidor de Descubrimiento (Fast DDS Discovery Server)
 
-* **Si usas `ROS_DOMAIN_ID=0` (por defecto):**
-  Los puertos se encuentran en el rango 7400 al 7650.
-  ```bash
-  sudo ufw allow 7400:7650/udp
-  ```
+Si tienes problemas persistentes con el **multicast** (común en redes corporativas o de universidades), puedes utilizar el *Discovery Server*. Esto reemplaza el sistema automático en el que los nodos "gritan" su existencia por toda la red, centralizándolo en una "agenda telefónica" única (el Servidor).
 
-* **Si usas `ROS_DOMAIN_ID=42` (configuración actual del proyecto):**
-  El puerto base cambia drásticamente: `7400 + (250 * 42) = 17900`.
-  Debes abrir el rango 17900 al 18150 para que la comunicación y el descubrimiento funcionen correctamente.
-  ```bash
-  sudo ufw allow 17900:18150/udp
-  ```
+### 1. El Archivo de Configuración (`fastdds_discovery.xml`)
+Crea un archivo XML que configure tus nodos de ROS para que actúen como **Super Clientes**. En lugar de buscar por toda la red usando multicast, se conectarán directamente a la IP estática del Discovery Server.
 
-## Troubleshooting
+### 2. Cómo Utilizarlo
 
-### Nodes not visible across network?
-
-1. **Check domain ID matches:**
-   ```bash
-   echo $ROS_DOMAIN_ID  # Must be same on all PCs
-   ```
-
-2. **Check discovery range setting:**
-   ```bash
-   echo $ROS_AUTOMATIC_DISCOVERY_RANGE  # Should be SUBNET (or unset defaults to SUBNET)
-   ```
-
-3. **Verify network connectivity:**
-   ```bash
-   ping <other-pc-ip>
-   ```
-
-4. **Check firewall** (see above)
-
-5. **Restart ROS 2 Daemon:**
-   If `ros2 topic list` hangs or doesn't show expected topics after a network change (like switching to Mirrored Mode), the daemon might be using outdated network information.
-   ```bash
-   # Force kill and restart
-   pkill -f _ros2_daemon
-   ros2 daemon start
-   ```
-   *Reason: The daemon caches network interfaces and IP addresses. If your IP changes (e.g., WSL switching to Mirrored Mode), the daemon can point to the old address, causing timeouts.*
-
-6. **Restart ROS nodes** after changing environment variables
-
-### Change Domain ID
-
-To use a different domain (e.g., to isolate from other robots):
-
+**A. Iniciar el Servidor (Solo en la PC Principal):**
 ```bash
-# Edit ~/.bashrc, change:
-export ROS_DOMAIN_ID=99  # Use any number 0-101
+fastdds discovery --server-id 0 --ip-address 192.168.1.100 --port 11811
 ```
 
-Then restart terminal or `source ~/.bashrc`.
-
-## Apply Changes
-
-To apply the new configuration **immediately**:
-
+**B. Configurar los Clientes (En todas las PCs):**
+Añade estas variables a tu `~/.bashrc`:
 ```bash
-source ~/.bashrc
+export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+export FASTRTPS_DEFAULT_PROFILES_FILE=~/ros2_ws/src/burger_delivery/network_setup/fastdds_discovery.xml
 ```
-
-Or close and reopen your terminal.
-
-**Note:** Any ROS nodes already running will need to be restarted to use the new settings.
+*(Nota: También puedes usar una configuración más simple como `export ROS_DISCOVERY_SERVER="192.168.1.100:11811"`, pero el archivo XML te otorga mucho más control sobre la calidad de servicio y el comportamiento del descubrimiento).*
