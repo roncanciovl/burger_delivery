@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>¿Qué es un Workspace? VS Code vs Bitbucket vs ROS 2 — Guía Visual</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface-hover: #1f242c;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --vscode-blue: #007acc;
+      --atlassian-sky: #2684ff;
+      --green: #3fb950;
+      --purple: #bc8cff;
+      --orange: #f0883e;
+      --yellow: #d29922;
+      --red: #f85149;
+      --cyan: #39c5bb;
+      --text: #e6edf3;
+      --muted: #8b949e;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      padding-bottom: 60px;
+    }
+
+    header {
+      text-align: center;
+      padding: 50px 20px 30px;
+      background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(88,166,255,0.15), transparent);
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+
+    .back-btn {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    .back-btn:hover {
+      background: var(--surface-hover);
+      border-color: var(--accent);
+      transform: translateX(-3px);
+    }
+
+    .badge-header {
+      font-size: 12px;
+      font-family: 'Fira Code', monospace;
+      color: var(--cyan);
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      font-size: clamp(26px, 4.5vw, 46px);
+      font-weight: 900;
+      background: linear-gradient(135deg, #58a6ff 0%, #39c5bb 50%, #bc8cff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.2;
+      margin-bottom: 12px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 15px;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    /* NAVIGATION TABS */
+    .tab-bar {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      padding: 16px 20px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      padding: 10px 18px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.25s ease;
+      white-space: nowrap;
+    }
+    .tab-btn:hover {
+      transform: translateY(-2px);
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+    .tab-btn.active {
+      background: rgba(57, 197, 187, 0.15);
+      border-color: var(--cyan);
+      color: #ffffff;
+      box-shadow: 0 0 15px rgba(57, 197, 187, 0.25);
+    }
+
+    /* Container sections */
+    .content-section {
+      display: none;
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 30px 20px;
+      animation: fadeIn 0.3s ease;
+    }
+    .content-section.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .card-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .callout {
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin: 16px 0;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      font-size: 13.5px;
+      line-height: 1.6;
+    }
+    .callout-icon { font-size: 22px; flex-shrink: 0; }
+    .callout-info { background: rgba(38, 132, 255, 0.08); border: 1px solid rgba(38, 132, 255, 0.25); color: #c8e1ff; }
+    .callout-tip { background: rgba(63, 185, 80, 0.08); border: 1px solid rgba(63, 185, 80, 0.25); color: #b4f0be; }
+    .callout-warn { background: rgba(240, 136, 62, 0.08); border: 1px solid rgba(240, 136, 62, 0.25); color: #ffd8b3; }
+
+    .cmd {
+      font-family: 'Fira Code', monospace;
+      font-size: 12.5px;
+      background: #090d13;
+      padding: 2px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      color: var(--cyan);
+    }
+
+    /* Side by side comparison */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      margin: 20px 0;
+    }
+
+    .box {
+      background: #090d13;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    /* VS Code Mockup */
+    .vscode-window {
+      background: #181a1f;
+      border: 1px solid #282c34;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      font-family: 'Inter', sans-serif;
+    }
+    .vscode-titlebar {
+      background: #21252b;
+      padding: 8px 14px;
+      font-size: 11px;
+      color: #9da5b4;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #181a1f;
+    }
+    .vscode-dots { display: flex; gap: 6px; }
+    .vscode-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-r { background: #ff5f56; }
+    .dot-y { background: #ffbd2e; }
+    .dot-g { background: #27c93f; }
+
+    .vscode-body {
+      display: flex;
+      min-height: 280px;
+    }
+    .vscode-activitybar {
+      width: 48px;
+      background: #21252b;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 0;
+      gap: 16px;
+      border-right: 1px solid #181a1f;
+      color: #5c6370;
+      font-size: 18px;
+    }
+    .vscode-activitybar .active { color: #ffffff; }
+
+    .vscode-sidebar {
+      width: 260px;
+      background: #1e2227;
+      padding: 12px;
+      font-size: 12px;
+      font-family: 'Fira Code', monospace;
+      border-right: 1px solid #181a1f;
+    }
+    .sidebar-header {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: #abb2bf;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .tree-item {
+      padding: 4px 6px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #abb2bf;
+      cursor: pointer;
+      margin-bottom: 2px;
+    }
+    .tree-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+    .tree-item.folder { font-weight: 600; color: #61afef; }
+    .tree-item.indent-1 { margin-left: 14px; }
+    .tree-item.indent-2 { margin-left: 28px; }
+
+    .vscode-editor {
+      flex: 1;
+      background: #1e2227;
+      padding: 16px;
+      font-family: 'Fira Code', monospace;
+      font-size: 12px;
+      color: #abb2bf;
+      line-height: 1.7;
+      overflow-x: auto;
+    }
+
+    /* Interactive Stepper / Chips */
+    .step-selector {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .step-chip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .step-chip:hover { border-color: var(--cyan); }
+    .step-chip.active {
+      background: rgba(57, 197, 187, 0.15);
+      border-color: var(--cyan);
+      color: #fff;
+    }
+
+    /* Comparison Table */
+    .table-container {
+      overflow-x: auto;
+      margin: 20px 0;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+      text-align: left;
+    }
+    th {
+      background: #11151c;
+      color: var(--muted);
+      font-weight: 700;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    td {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* Interactive Quiz */
+    .quiz-card {
+      background: #0f141c;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .quiz-q { font-weight: 700; font-size: 15px; margin-bottom: 12px; }
+    .quiz-options { display: flex; flex-direction: column; gap: 8px; }
+    .quiz-opt {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: left;
+      color: var(--text);
+    }
+    .quiz-opt:hover { border-color: var(--cyan); background: var(--surface-hover); }
+    .quiz-opt.correct { background: rgba(63, 185, 80, 0.15); border-color: var(--green); color: #3fb950; font-weight: 600; }
+    .quiz-opt.incorrect { background: rgba(248, 81, 73, 0.15); border-color: var(--red); color: #f85149; }
+    .quiz-feedback { margin-top: 10px; font-size: 12.5px; display: none; line-height: 1.5; }
+
+    footer {
+      text-align: center;
+      padding: 30px;
+      color: var(--muted);
+      font-size: 13px;
+      border-top: 1px solid var(--border);
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <a class="back-btn" href="index.html">← Volver al Índice</a>
+    <div class="badge-header">Conceptos Fundamentales de Ingeniería</div>
+    <h1>¿Qué es un Workspace?<br/>VS Code vs Bitbucket vs ROS 2</h1>
+    <p class="subtitle">
+      La misma palabra, tres mundos completamente diferentes. Descubre la diferencia entre un Folder y un Workspace en VS Code, una Organización en Bitbucket y un entorno de compilación en ROS 2.
+    </p>
+  </header>
+
+  <!-- NAVIGATION TABS -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="showSection('vscode-sec')">🪟 1. VS Code (Folder vs Workspace)</button>
+    <button class="tab-btn" onclick="showSection('bitbucket-sec')">🏢 2. Bitbucket (Cloud & Proyectos)</button>
+    <button class="tab-btn" onclick="showSection('ros2-sec')">🤖 3. ROS 2 (Entorno de Compilación)</button>
+    <button class="tab-btn" onclick="showSection('comparativa-sec')">⚔️ 4. Comparativa & Quiz</button>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- SECTION 1: VS CODE (FOLDER VS WORKSPACE) -->
+  <!-- ========================================== -->
+  <section id="vscode-sec" class="content-section active">
+    <div class="card">
+      <div class="card-title">🪟 En VS Code: ¿Es "Workspace" lo mismo que "Folder"?</div>
+      <p style="color:var(--muted); font-size:14.5px; line-height:1.7;">
+        <strong>No son lo mismo.</strong> Aunque en el uso diario muchas personas los confunden, en Visual Studio Code existen dos modos de trabajo bien definidos:
+      </p>
+
+      <div class="grid-2">
+        <!-- FOLDER BOX -->
+        <div class="box" style="border-top: 4px solid var(--vscode-blue);">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+            <span style="font-size:24px;">📁</span>
+            <div>
+              <h3 style="font-size:16px; font-weight:700; color:var(--accent);">1. Folder (Carpeta simple)</h3>
+              <span style="font-size:11px; color:var(--muted);">Single-folder workspace implícito</span>
+            </div>
+          </div>
+          <p style="font-size:13px; color:var(--muted); line-height:1.6; margin-bottom:12px;">
+            Ocurre cuando abres <strong>un solo directorio</strong> (<span class="cmd">File &gt; Open Folder...</span> o ejecutando <span class="cmd">code .</span>).
+          </p>
+          <ul style="font-size:12.5px; color:var(--text); padding-left:18px; margin-bottom:12px; line-height:1.6;">
+            <li>El explorador solo muestra lo que hay dentro de esa carpeta raíz.</li>
+            <li>La configuración local se almacena en la subcarpeta <span class="cmd">.vscode/settings.json</span>.</li>
+            <li>No permite mezclar proyectos que viven en distintas partes de tu disco duro.</li>
+          </ul>
+        </div>
+
+        <!-- WORKSPACE BOX -->
+        <div class="box" style="border-top: 4px solid var(--purple);">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+            <span style="font-size:24px;">🪟</span>
+            <div>
+              <h3 style="font-size:16px; font-weight:700; color:var(--purple);">2. Multi-root Workspace (.code-workspace)</h3>
+              <span style="font-size:11px; color:var(--muted);">Espacio multi-carpeta explícito</span>
+            </div>
+          </div>
+          <p style="font-size:13px; color:var(--muted); line-height:1.6; margin-bottom:12px;">
+            Ocurre cuando guardas un archivo <span class="cmd">nombre.code-workspace</span> (<span class="cmd">File &gt; Save Workspace As...</span>).
+          </p>
+          <ul style="font-size:12.5px; color:var(--text); padding-left:18px; margin-bottom:12px; line-height:1.6;">
+            <li>Permite tener <strong>múltiples carpetas independientes</strong> abiertas juntas en el mismo explorador.</li>
+            <li>Ideal si trabajas en el paquete ROS 2, la API en FastAPI y la documentación en una sola ventana.</li>
+            <li>Define extensiones recomendadas, tareas (<span class="cmd">tasks.json</span>) y depuradores comunes.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- INTERACTIVE VS CODE EXPLORER SIMULATOR -->
+    <div class="card">
+      <div class="card-title">🎮 Simulador Interactivo: Alterna entre Folder y Multi-root Workspace</div>
+      <p style="color:var(--muted); font-size:13.5px; margin-bottom:16px;">
+        Haz clic en los botones para ver cómo cambia la interfaz de VS Code y el archivo de configuración correspondiente:
+      </p>
+
+      <div class="step-selector">
+        <button class="step-chip active" id="chip-vs-folder" onclick="setVSMode('folder')">📁 Modo 1: Carpeta Simple (burger_delivery)</button>
+        <button class="step-chip" id="chip-vs-multi" onclick="setVSMode('multi')">🪟 Modo 2: Multi-Root Workspace (Robotics Full-Stack)</button>
+      </div>
+
+      <div class="vscode-window">
+        <div class="vscode-titlebar">
+          <div class="vscode-dots">
+            <span class="vscode-dot dot-r"></span>
+            <span class="vscode-dot dot-y"></span>
+            <span class="vscode-dot dot-g"></span>
+          </div>
+          <span id="vs-titlebar-text">burger_delivery - Visual Studio Code</span>
+          <span style="font-size:10px;">Linux (x64)</span>
+        </div>
+
+        <div class="vscode-body">
+          <!-- Activity Bar -->
+          <div class="vscode-activitybar">
+            <span class="active">📁</span>
+            <span>🔍</span>
+            <span>🌿</span>
+            <span>▶️</span>
+            <span>🧩</span>
+          </div>
+
+          <!-- Sidebar File Explorer -->
+          <div class="vscode-sidebar">
+            <div class="sidebar-header">
+              <span id="vs-sidebar-title">EXPLORER: BURGER_DELIVERY</span>
+              <span>⋯</span>
+            </div>
+            <div id="vs-filetree">
+              <!-- Tree injected via JS -->
+            </div>
+          </div>
+
+          <!-- Code Editor View -->
+          <div class="vscode-editor">
+            <div style="border-bottom:1px solid #282c34; padding-bottom:8px; margin-bottom:12px; color:#5c6370; display:flex; justify-content:space-between;">
+              <span id="vs-tab-name">.vscode/settings.json</span>
+              <span>JSON</span>
+            </div>
+            <pre id="vs-code-content" style="font-family:'Fira Code', monospace;"></pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="vs-explanation-box" class="callout callout-info" style="margin-top:20px;">
+        <div class="callout-icon">💡</div>
+        <div id="vs-explanation-text">
+          En <strong>Modo Carpeta Simple</strong>, VS Code solo monitorea los archivos dentro de <span class="cmd">~/ros2_ws/src/burger_delivery</span>. Sus configuraciones viven en la carpeta oculta <span class="cmd">.vscode/</span>.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================== -->
+  <!-- SECTION 2: BITBUCKET WORKSPACES -->
+  <!-- ========================================== -->
+  <section id="bitbucket-sec" class="content-section">
+    <div class="card">
+      <div class="card-title">🏢 En Bitbucket: El Workspace es tu Organización en la Nube</div>
+      <p style="color:var(--muted); font-size:14.5px; line-height:1.7;">
+        A diferencia de VS Code, en <strong>Bitbucket</strong> un Workspace <em>no es un archivo de tu computadora</em>. Es una <strong>cuenta/organización remota en los servidores de Atlassian</strong>.
+      </p>
+
+      <div class="grid-2">
+        <div class="box">
+          <h4 style="color:var(--atlassian-sky); margin-bottom:10px; font-size:15px;">🏢 Responsabilidades del Workspace en Bitbucket</h4>
+          <ul style="font-size:13px; color:var(--text); padding-left:18px; line-height:1.7;">
+            <li><strong>Facturación y Plan:</strong> Define si la empresa usa plan Free, Standard o Premium.</li>
+            <li><strong>Gestión de Usuarios:</strong> Grupos como <span class="cmd">@developers</span>, <span class="cmd">@robotics-qa</span>.</li>
+            <li><strong>Espacio de Nombres de URL:</strong> Define la URL de Git (<span class="cmd">bitbucket.org/nombre-workspace/repo.git</span>).</li>
+            <li><strong>Proyectos y Repos:</strong> Agrupa proyectos como <em>AUTONOMY</em> o <em>CLOUD</em>.</li>
+          </ul>
+        </div>
+
+        <div class="box">
+          <h4 style="color:var(--cyan); margin-bottom:10px; font-size:15px;">🌐 ¿Tu cuenta puede tener varios Workspaces?</h4>
+          <p style="font-size:13px; color:var(--muted); line-height:1.6; margin-bottom:14px;">
+            ¡Sí! Tu cuenta personal de Atlassian puede pertenecer a tu Workspace personal (gratuito) y al de tu empresa simultáneamente.
+          </p>
+          <a href="https://bitbucket.org/account/workspaces/" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:8px; background:rgba(38,132,255,0.15); border:1px solid var(--atlassian-sky); color:#fff; text-decoration:none; padding:8px 14px; border-radius:8px; font-size:12.5px; font-weight:600; font-family:'Fira Code', monospace;">
+            🔗 bitbucket.org/account/workspaces/ ↗
+          </a>
+        </div>
+      </div>
+
+      <!-- SVG Diagram for Bitbucket Cloud -->
+      <div style="background:#090d13; border:1px solid var(--border); border-radius:12px; padding:20px; margin-top:20px;">
+        <svg viewBox="0 0 900 240" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:auto; display:block;">
+          <rect width="900" height="240" fill="#0d1117" rx="10"/>
+
+          <!-- Workspace Cloud Box -->
+          <rect x="30" y="20" width="840" height="200" rx="10" fill="rgba(38,132,255,0.06)" stroke="#2684ff" stroke-width="1.8"/>
+          <text x="50" y="50" font-family="Inter" font-size="14" fill="#2684ff" font-weight="700">🏢 BITBUCKET CLOUD WORKSPACE (@robotics-fleet)</text>
+          <text x="50" y="70" font-family="Inter" font-size="11" fill="#8b949e">Alojado en servidores de Atlassian • Facturación única • Permisos globales</text>
+
+          <!-- Project 1 -->
+          <rect x="50" y="95" width="370" height="110" rx="8" fill="#161b22" stroke="#bc8cff" stroke-width="1.4"/>
+          <text x="65" y="120" font-family="Inter" font-size="12" fill="#bc8cff" font-weight="700">📁 Project: ROBOT-AUTONOMY (AUT)</text>
+          <rect x="65" y="135" width="165" height="55" rx="6" fill="#0d1117" stroke="#3fb950"/>
+          <text x="75" y="155" font-family="Fira Code" font-size="10" fill="#3fb950">📦 burger_delivery</text>
+          <text x="75" y="172" font-family="Inter" font-size="9" fill="#8b949e">ROS 2 Navigation</text>
+
+          <rect x="240" y="135" width="165" height="55" rx="6" fill="#0d1117" stroke="#3fb950"/>
+          <text x="250" y="155" font-family="Fira Code" font-size="10" fill="#3fb950">📦 arm_driver</text>
+          <text x="250" y="172" font-family="Inter" font-size="9" fill="#8b949e">Kinematics</text>
+
+          <!-- Project 2 -->
+          <rect x="450" y="95" width="400" height="110" rx="8" fill="#161b22" stroke="#39c5bb" stroke-width="1.4"/>
+          <text x="465" y="120" font-family="Inter" font-size="12" fill="#39c5bb" font-weight="700">📁 Project: FLEET-CLOUD (FLT)</text>
+          <rect x="465" y="135" width="180" height="55" rx="6" fill="#0d1117" stroke="#39c5bb"/>
+          <text x="475" y="155" font-family="Fira Code" font-size="10" fill="#39c5bb">📦 fleet_api_server</text>
+          <text x="475" y="172" font-family="Inter" font-size="9" fill="#8b949e">FastAPI Telemetry</text>
+
+          <rect x="655" y="135" width="180" height="55" rx="6" fill="#0d1117" stroke="#39c5bb"/>
+          <text x="665" y="155" font-family="Fira Code" font-size="10" fill="#39c5bb">📦 web_dashboard</text>
+          <text x="665" y="172" font-family="Inter" font-size="9" fill="#8b949e">React Operator UI</text>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================== -->
+  <!-- SECTION 3: ROS 2 WORKSPACES -->
+  <!-- ========================================== -->
+  <section id="ros2-sec" class="content-section">
+    <div class="card">
+      <div class="card-title">🤖 En ROS 2: El Workspace es tu Entorno de Compilación (`ros2_ws`)</div>
+      <p style="color:var(--muted); font-size:14.5px; line-height:1.7;">
+        En robótica con ROS 2, un <strong>Workspace</strong> es un <strong>directorio físico en tu sistema operativo Linux</strong> estructurado de manera específica para que la herramienta <span class="cmd">colcon</span> pueda compilar múltiples paquetes de nodos en C++ o Python.
+      </p>
+
+      <!-- 4 Directories of ROS 2 WS -->
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:14px; margin:20px 0;">
+        <div style="background:#090d13; border:1px solid #3fb950; border-radius:10px; padding:16px;">
+          <div style="color:#3fb950; font-family:'Fira Code'; font-weight:700; font-size:14px; margin-bottom:6px;">1. src/ (Source)</div>
+          <p style="font-size:12px; color:var(--muted); line-height:1.5;">
+            Aquí clonas o creas tus paquetes (<span class="cmd">burger_delivery</span>). Es el único directorio donde editas código manualmente.
+          </p>
+        </div>
+
+        <div style="background:#090d13; border:1px solid #bc8cff; border-radius:10px; padding:16px;">
+          <div style="color:#bc8cff; font-family:'Fira Code'; font-weight:700; font-size:14px; margin-bottom:6px;">2. build/ (Build)</div>
+          <p style="font-size:12px; color:var(--muted); line-height:1.5;">
+            Creado automáticamente por <span class="cmd">colcon build</span>. Almacena objetos compilados y llamadas a CMake/setuptools.
+          </p>
+        </div>
+
+        <div style="background:#090d13; border:1px solid #f0883e; border-radius:10px; padding:16px;">
+          <div style="color:#f0883e; font-family:'Fira Code'; font-weight:700; font-size:14px; margin-bottom:6px;">3. install/ (Install)</div>
+          <p style="font-size:12px; color:var(--muted); line-height:1.5;">
+            Contiene los ejecutables listos para correr y el script vital <span class="cmd">source install/setup.bash</span>.
+          </p>
+        </div>
+
+        <div style="background:#090d13; border:1px solid #8b949e; border-radius:10px; padding:16px;">
+          <div style="color:#8b949e; font-family:'Fira Code'; font-weight:700; font-size:14px; margin-bottom:6px;">4. log/ (Logs)</div>
+          <p style="font-size:12px; color:var(--muted); line-height:1.5;">
+            Guarda el registro de errores y advertencias de cada invocación de compilación de <span class="cmd">colcon</span>.
+          </p>
+        </div>
+      </div>
+
+      <div class="callout callout-tip">
+        <div class="callout-icon">🚀</div>
+        <div>
+          <strong>Ciclo de vida en el ROS 2 Workspace:</strong>
+          <pre style="margin-top:8px; font-family:'Fira Code', monospace; font-size:12px; color:#e6edf3;">
+cd ~/ros2_ws
+colcon build --symlink-install
+source install/setup.bash
+ros2 run burger_delivery delivery_navigator</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================== -->
+  <!-- SECTION 4: COMPARATIVA DIRECTA & QUIZ -->
+  <!-- ========================================== -->
+  <section id="comparativa-sec" class="content-section">
+    <div class="card">
+      <div class="card-title">⚔️ La Gran Comparativa: ¿Cuál Workspace es Cuál?</div>
+      
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Criterio</th>
+              <th style="color:var(--vscode-blue);">🪟 VS Code Workspace</th>
+              <th style="color:var(--atlassian-sky);">🏢 Bitbucket Workspace</th>
+              <th style="color:var(--green);">🤖 ROS 2 Workspace</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>¿Dónde reside?</strong></td>
+              <td>Local en tu PC (archivo <span class="cmd">.code-workspace</span>).</td>
+              <td>En la Nube (servidores Atlassian Cloud).</td>
+              <td>Local en tu disco Linux (<span class="cmd">~/ros2_ws</span>).</td>
+            </tr>
+            <tr>
+              <td><strong>¿Qué contiene?</strong></td>
+              <td>Rutas a carpetas abiertas + configuraciones de extensiones y depuración del IDE.</td>
+              <td>Facturación, usuarios, grupos de permisos, proyectos y repositorios Git.</td>
+              <td>Código fuente en <span class="cmd">src/</span> y binarios compilados en <span class="cmd">install/</span>.</td>
+            </tr>
+            <tr>
+              <td><strong>¿Quién lo procesa?</strong></td>
+              <td>El editor de código (Visual Studio Code).</td>
+              <td>El servidor web de Bitbucket y Pipelines de CI/CD.</td>
+              <td>El compilador <span class="cmd">colcon</span> y el middleware de ROS 2.</td>
+            </tr>
+            <tr>
+              <td><strong>¿Cómo se crea?</strong></td>
+              <td><span class="cmd">File &gt; Save Workspace As...</span></td>
+              <td>Desde la web en <span class="cmd">bitbucket.org/account/workspaces/</span></td>
+              <td><span class="cmd">mkdir -p ~/ros2_ws/src</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- QUIZ CARD -->
+    <div class="card">
+      <div class="card-title">🧠 Pon a prueba tus conocimientos</div>
+      <p style="color:var(--muted); font-size:13.5px; margin-bottom:18px;">
+        Selecciona la respuesta correcta en cada pregunta para comprobar tu comprensión:
+      </p>
+
+      <!-- Question 1 -->
+      <div class="quiz-card" id="q1">
+        <div class="quiz-q">1. Si abres VS Code con <code>code ~/ros2_ws/src/burger_delivery</code>, ¿qué estás abriendo?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="checkAnswer(1, 0, false)">A) Un Multi-root Workspace con archivo .code-workspace</button>
+          <button class="quiz-opt" onclick="checkAnswer(1, 1, true)">B) Una Carpeta Simple (Folder) con configuración local opcional en .vscode/</button>
+          <button class="quiz-opt" onclick="checkAnswer(1, 2, false)">C) El Workspace de Bitbucket Cloud</button>
+        </div>
+        <div class="quiz-feedback" id="fb1"></div>
+      </div>
+
+      <!-- Question 2 -->
+      <div class="quiz-card" id="q2">
+        <div class="quiz-q">2. Quieres trabajar al mismo tiempo en el código de navegación de ROS 2 y en la API del servidor web que están en carpetas distintas. ¿Qué deberías usar en VS Code?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="checkAnswer(2, 0, true)">A) Guardar un Multi-root Workspace (.code-workspace) agregando ambas carpetas</button>
+          <button class="quiz-opt" onclick="checkAnswer(2, 1, false)">B) Mover la API dentro de src/ de ROS 2 obligatoriamente</button>
+          <button class="quiz-opt" onclick="checkAnswer(2, 2, false)">C) Crear un nuevo Workspace en Bitbucket</button>
+        </div>
+        <div class="quiz-feedback" id="fb2"></div>
+      </div>
+
+      <!-- Question 3 -->
+      <div class="quiz-card" id="q3">
+        <div class="quiz-q">3. ¿Qué parte de la URL de Git representa el Workspace de Bitbucket? <code>git@bitbucket.org:robotics-fleet/burger_delivery.git</code></div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="checkAnswer(3, 0, false)">A) burger_delivery</button>
+          <button class="quiz-opt" onclick="checkAnswer(3, 1, true)">B) robotics-fleet</button>
+          <button class="quiz-opt" onclick="checkAnswer(3, 2, false)">C) bitbucket.org</button>
+        </div>
+        <div class="quiz-feedback" id="fb3"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Animaciones SVG y Guías Educativas — <code>git-fundamentals/workspaces_conceptos.html</code>
+  </footer>
+
+  <script>
+    // Tab switching
+    function showSection(sectionId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
+
+      event.currentTarget.classList.add('active');
+      const target = document.getElementById(sectionId);
+      if (target) target.classList.add('active');
+    }
+
+    // VS Code Mockup Modes
+    const vsModes = {
+      'folder': {
+        titlebar: 'burger_delivery - Visual Studio Code',
+        sidebarTitle: 'EXPLORER: BURGER_DELIVERY',
+        tabName: '.vscode/settings.json',
+        tree: `
+          <div class="tree-item folder">📂 burger_delivery</div>
+          <div class="tree-item indent-1">📁 .vscode</div>
+          <div class="tree-item indent-2" style="color:#e5c07b;">📄 settings.json</div>
+          <div class="tree-item indent-1">📁 src</div>
+          <div class="tree-item indent-2">📄 navigator_node.py</div>
+          <div class="tree-item indent-1">📁 launch</div>
+          <div class="tree-item indent-2">📄 delivery.launch.py</div>
+          <div class="tree-item indent-1">📄 package.xml</div>
+          <div class="tree-item indent-1">📄 CMakeLists.txt</div>
+        `,
+        code: `// .vscode/settings.json (Dentro de burger_delivery)
+{
+  "python.analysis.extraPaths": [
+    "/opt/ros/humble/lib/python3.10/site-packages"
+  ],
+  "editor.formatOnSave": true,
+  "files.autoSave": "afterDelay"
+}`,
+        explanation: 'En <strong>Modo Carpeta Simple</strong>, el explorador está limitado a la raíz de <span class="cmd">burger_delivery</span>. Si necesitas editar otro repositorio o servicio, tendrías que abrir otra ventana de VS Code por separado.'
+      },
+      'multi': {
+        titlebar: 'Robotics Full-Stack (Workspace) - Visual Studio Code',
+        sidebarTitle: 'EXPLORER: ROBOTICS FULL-STACK (WORKSPACE)',
+        tabName: 'robotics.code-workspace',
+        tree: `
+          <div class="tree-item folder" style="color:#c678dd;">📂 [Folder 1] burger_delivery (ROS 2)</div>
+          <div class="tree-item indent-1">📁 src/navigator_node.py</div>
+          <div class="tree-item indent-1">📄 package.xml</div>
+          <div class="tree-item folder" style="color:#61afef;">📂 [Folder 2] fleet_backend (FastAPI)</div>
+          <div class="tree-item indent-1">📁 app/main.py</div>
+          <div class="tree-item indent-1">📄 requirements.txt</div>
+          <div class="tree-item folder" style="color:#98c379;">📂 [Folder 3] documentation (Markdown)</div>
+          <div class="tree-item indent-1">📄 architecture.md</div>
+        `,
+        code: `// robotics.code-workspace (Archivo central)
+{
+  "folders": [
+    { "name": "1. ROS 2 Robot", "path": "/home/roncanciovl/ros2_ws/src/burger_delivery" },
+    { "name": "2. Cloud Backend", "path": "/home/roncanciovl/projects/fleet_backend" },
+    { "name": "3. Documentación", "path": "/home/roncanciovl/docs/robotics" }
+  ],
+  "settings": {
+    "editor.tabSize": 2,
+    "terminal.integrated.defaultProfile.linux": "bash"
+  },
+  "extensions": {
+    "recommendations": ["ms-iot.vscode-ros", "ms-python.python"]
+  }
+}`,
+        explanation: 'En <strong>Modo Multi-Root Workspace</strong>, tienes 3 carpetas completamente independientes de tu disco unificadas en un solo explorador con búsqueda global cruzada y terminales preconfiguradas.'
+      }
+    };
+
+    function setVSMode(mode) {
+      document.querySelectorAll('.step-chip').forEach(c => c.classList.remove('active'));
+      const chip = document.getElementById(mode === 'folder' ? 'chip-vs-folder' : 'chip-vs-multi');
+      if (chip) chip.classList.add('active');
+
+      const data = vsModes[mode];
+      document.getElementById('vs-titlebar-text').textContent = data.titlebar;
+      document.getElementById('vs-sidebar-title').textContent = data.sidebarTitle;
+      document.getElementById('vs-tab-name').textContent = data.tabName;
+      document.getElementById('vs-filetree').innerHTML = data.tree;
+      document.getElementById('vs-code-content').textContent = data.code;
+      document.getElementById('vs-explanation-text').innerHTML = data.explanation;
+    }
+
+    // Initialize default mode
+    setVSMode('folder');
+
+    // Quiz logic
+    function checkAnswer(qNum, optIdx, isCorrect) {
+      const qCard = document.getElementById(`q${qNum}`);
+      const buttons = qCard.querySelectorAll('.quiz-opt');
+      const fb = document.getElementById(`fb${qNum}`);
+
+      buttons.forEach((btn, idx) => {
+        btn.disabled = true;
+        if (idx === optIdx) {
+          btn.classList.add(isCorrect ? 'correct' : 'incorrect');
+        }
+      });
+
+      fb.style.display = 'block';
+      if (isCorrect) {
+        fb.style.color = '#3fb950';
+        fb.innerHTML = '🎉 <strong>¡Correcto!</strong> Has identificado con precisión la diferencia conceptual.';
+      } else {
+        fb.style.color = '#f85149';
+        fb.innerHTML = '❌ <strong>Respuesta incorrecta.</strong> Revisa las secciones anteriores para recordar el alcance de cada tipo de Workspace.';
+      }
+    }
+  </script>
+</body>
+</html>
