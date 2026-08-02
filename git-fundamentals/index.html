@@ -106,6 +106,7 @@
     .card[data-color="purple"]:hover{ border-color: var(--purple);  box-shadow: 0 20px 50px rgba(188,140,255,0.15); }
     .card[data-color="orange"]:hover{ border-color: var(--orange);  box-shadow: 0 20px 50px rgba(240,136,62,0.15); }
     .card[data-color="red"]:hover   { border-color: var(--red);     box-shadow: 0 20px 50px rgba(248,81,73,0.15); }
+    .card[data-color="cyan"]:hover  { border-color: #39c5bb;        box-shadow: 0 20px 50px rgba(57,197,187,0.15); }
 
     .card-icon {
       width: 56px;
@@ -122,6 +123,7 @@
     .card[data-color="purple"] .card-icon { background: rgba(188,140,255,0.15); }
     .card[data-color="orange"] .card-icon { background: rgba(240,136,62,0.15); }
     .card[data-color="red"]    .card-icon { background: rgba(248,81,73,0.15); }
+    .card[data-color="cyan"]   .card-icon { background: rgba(57,197,187,0.15); }
 
     .card-title {
       font-size: 22px;
@@ -133,6 +135,7 @@
     .card[data-color="purple"] .card-title { color: var(--purple); }
     .card[data-color="orange"] .card-title { color: var(--orange); }
     .card[data-color="red"]    .card-title { color: var(--red); }
+    .card[data-color="cyan"]   .card-title { color: #39c5bb; }
 
     .card-desc {
       color: var(--muted);
@@ -154,6 +157,7 @@
     .card[data-color="purple"] .card-tag { background: rgba(188,140,255,0.1);  color: var(--purple); }
     .card[data-color="orange"] .card-tag { background: rgba(240,136,62,0.1);   color: var(--orange); }
     .card[data-color="red"]    .card-tag { background: rgba(248,81,73,0.1);    color: var(--red); }
+    .card[data-color="cyan"]   .card-tag { background: rgba(57,197,187,0.1);   color: #39c5bb; }
 
     footer {
       text-align: center;
@@ -219,6 +223,13 @@
       <div class="card-title">Pull Requests</div>
       <p class="card-desc">Visualiza el ciclo completo de un PR: desde abrir la solicitud hasta el merge final en la rama principal.</p>
       <span class="card-tag">PR → review → merge</span>
+    </a>
+
+    <a class="card" href="bitbucket_atlassian.html" data-color="cyan">
+      <div class="card-icon">🏢</div>
+      <div class="card-title">GitHub, Bitbucket & Atlassian</div>
+      <p class="card-desc">Explora el ecosistema Atlassian (Jira, Confluence), la estructura jerárquica de Workspaces y repositorios en Bitbucket.</p>
+      <span class="card-tag">Workspace → Project → Repo</span>
     </a>
 
   </div>
