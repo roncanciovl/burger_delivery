@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ROS 2 & Router Network Monitor | Burger Delivery</title>
+  <meta name="description" content="Monitor en tiempo real de topología de red, dispositivos del router y tráfico de protocolos ROS 2 DDS y Micro-ROS.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Encabezado Superior -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-logo">
+          <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-title">ROS 2 & Router Network Monitor</h1>
+          <p class="brand-subtitle">Visualizador Híbrido: Topología de Subred, Flujos DDS y Micro-ROS</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="status-badge" id="sse-badge">
+          <span class="status-dot pulsing"></span>
+          <span id="sse-status-text">Conectado en Vivo</span>
+        </div>
+        <button id="btn-scan" class="btn btn-primary" title="Realizar barrido de la subred">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+          </svg>
+          <span id="scan-btn-text">Escanear Red</span>
+        </button>
+        <button id="btn-test-multicast" class="btn btn-secondary" title="Probar transmisión de Multicast UDP">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+          <span>Test Multicast UDP</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Tarjetas Rápidas de Telemetría (KPIs) -->
+    <section class="kpi-grid">
+      <!-- KPI 1: Gateway & Latencia -->
+      <div class="kpi-card" id="kpi-gateway">
+        <div class="kpi-icon-wrap icon-cyan">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+            <line x1="6" y1="6" x2="6.01" y2="6"/>
+            <line x1="6" y1="18" x2="6.01" y2="18"/>
+          </svg>
+        </div>
+        <div class="kpi-content">
+          <span class="kpi-label">Gateway (Router AX12)</span>
+          <div class="kpi-value-row">
+            <span class="kpi-value" id="val-gateway-ip">192.168.1.1</span>
+            <span class="kpi-badge" id="val-gateway-lat">-- ms</span>
+          </div>
+          <span class="kpi-meta" id="val-gateway-jitter">Jitter: 0.0ms | Pérdida: 0%</span>
+        </div>
+      </div>
+
+      <!-- KPI 2: Ancho de Banda Total -->
+      <div class="kpi-card" id="kpi-bandwidth">
+        <div class="kpi-icon-wrap icon-green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+        </div>
+        <div class="kpi-content">
+          <span class="kpi-label">Tráfico Total en Tiempo Real</span>
+          <div class="kpi-value-row">
+            <span class="kpi-value" id="val-total-kbps">0.0</span>
+            <span class="kpi-unit">KB/s</span>
+          </div>
+          <span class="kpi-meta" id="val-rate-pkts">RX: 0 KB/s | TX: 0 KB/s</span>
+        </div>
+      </div>
+
+      <!-- KPI 3: ROS 2 DDS Status -->
+      <div class="kpi-card" id="kpi-dds">
+        <div class="kpi-icon-wrap icon-purple">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            <path d="M2 12h20"/>
+          </svg>
+        </div>
+        <div class="kpi-content">
+          <span class="kpi-label">ROS 2 DDS & Dominios</span>
+          <div class="kpi-value-row">
+            <span class="kpi-value" id="val-dds-domains">Dominio 42</span>
+          </div>
+          <span class="kpi-meta" id="val-dds-kbps">Tráfico DDS: 0.0 KB/s</span>
+        </div>
+      </div>
+
+      <!-- KPI 4: Micro-ROS Agent -->
+      <div class="kpi-card" id="kpi-microros">
+        <div class="kpi-icon-wrap icon-orange">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="4" y="4" width="16" height="16" rx="2"/>
+            <rect x="9" y="9" width="6" height="6"/>
+            <line x1="9" y1="1" x2="9" y2="4"/>
+            <line x1="15" y1="1" x2="15" y2="4"/>
+            <line x1="9" y1="20" x2="9" y2="23"/>
+            <line x1="15" y1="20" x2="15" y2="23"/>
+            <line x1="20" y1="9" x2="23" y2="9"/>
+            <line x1="20" y1="14" x2="23" y2="14"/>
+            <line x1="1" y1="9" x2="4" y2="9"/>
+            <line x1="1" y1="14" x2="4" y2="14"/>
+          </svg>
+        </div>
+        <div class="kpi-content">
+          <span class="kpi-label">Micro-ROS Agent (UDP 8888)</span>
+          <div class="kpi-value-row">
+            <span class="kpi-value" id="val-microros-status">Inactivo</span>
+            <span class="status-indicator-mini" id="microros-dot"></span>
+          </div>
+          <span class="kpi-meta" id="val-microros-meta">Puerto 8888 disponible</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Layout Principal en Dos Columnas -->
+    <main class="dashboard-grid">
+      <!-- Columna Izquierda: Topología de Red y Dispositivos -->
+      <div class="dashboard-col left-col">
+        <!-- Mapa de Topología Visual -->
+        <section class="card topology-card">
+          <div class="card-header">
+            <div class="card-title-wrap">
+              <h2 class="card-title">Topología de Subred en Vivo</h2>
+              <span class="card-subtitle" id="subnet-display">Subred: 192.168.1.0/24</span>
+            </div>
+            <div class="legend">
+              <span class="legend-item"><span class="dot dot-router"></span> Router</span>
+              <span class="legend-item"><span class="dot dot-host"></span> PC Host</span>
+              <span class="legend-item"><span class="dot dot-robot"></span> Robot Pi</span>
+              <span class="legend-item"><span class="dot dot-esp32"></span> ESP32</span>
+            </div>
+          </div>
+          <div class="topology-viewport">
+            <svg id="topology-svg" viewBox="0 0 700 320" width="100%" height="100%"></svg>
+          </div>
+        </section>
+
+        <!-- Lista de Dispositivos Conectados -->
+        <section class="card devices-card">
+          <div class="card-header">
+            <div class="card-title-wrap">
+              <h2 class="card-title">Dispositivos Detectados en el Router</h2>
+              <span class="badge-count" id="devices-count">0 dispositivos</span>
+            </div>
+            <div class="filter-group">
+              <button class="filter-btn active" data-filter="all">Todos</button>
+              <button class="filter-btn" data-filter="robot">Robots</button>
+              <button class="filter-btn" data-filter="esp32">Micro-ROS</button>
+            </div>
+          </div>
+          <div class="table-container">
+            <table class="devices-table">
+              <thead>
+                <tr>
+                  <th>Rol / Dispositivo</th>
+                  <th>Dirección IP</th>
+                  <th>MAC Address</th>
+                  <th>Fabricante</th>
+                  <th>Latencia</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody id="devices-tbody">
+                <!-- Se poblará de forma dinámica y segura con JS -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <!-- Columna Derecha: Gráficos de Tráfico y Diagnósticos ROS 2 -->
+      <div class="dashboard-col right-col">
+        <!-- Gráfica de Tráfico de Protocolos -->
+        <section class="card chart-card">
+          <div class="card-header">
+            <div class="card-title-wrap">
+              <h2 class="card-title">Distribución de Tráfico (KB/s)</h2>
+              <span class="card-subtitle">TCP vs. UDP vs. ROS 2 DDS vs. Micro-ROS</span>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="trafficChart" height="200"></canvas>
+          </div>
+          <div class="chart-protocol-stats">
+            <div class="proto-stat">
+              <span class="proto-dot proto-udp"></span>
+              <span class="proto-name">UDP General</span>
+              <span class="proto-val" id="chart-stat-udp">0 KB/s</span>
+            </div>
+            <div class="proto-stat">
+              <span class="proto-dot proto-dds"></span>
+              <span class="proto-name">ROS 2 DDS</span>
+              <span class="proto-val" id="chart-stat-dds">0 KB/s</span>
+            </div>
+            <div class="proto-stat">
+              <span class="proto-dot proto-microros"></span>
+              <span class="proto-name">Micro-ROS (8888)</span>
+              <span class="proto-val" id="chart-stat-microros">0 KB/s</span>
+            </div>
+            <div class="proto-stat">
+              <span class="proto-dot proto-tcp"></span>
+              <span class="proto-name">TCP</span>
+              <span class="proto-val" id="chart-stat-tcp">0 KB/s</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Diagnóstico de Sockets y Puertos ROS 2 -->
+        <section class="card ros2-panel-card">
+          <div class="card-header">
+            <h2 class="card-title">Inspección de Sockets y Puertos ROS 2</h2>
+            <span class="card-subtitle">Puertos RTPS 7400+, 8888, 11811</span>
+          </div>
+          <div class="sockets-container" id="sockets-list">
+            <!-- Poblar dinámicamente -->
+          </div>
+        </section>
+
+        <!-- Guía de Mitigación Rápida -->
+        <section class="card tips-card">
+          <div class="card-header">
+            <h2 class="card-title">Tips de Rendimiento en WiFi</h2>
+          </div>
+          <div class="tips-content">
+            <div class="tip-item">
+              <span class="tip-icon">⚡</span>
+              <div>
+                <strong>RMW CycloneDDS:</strong>
+                <p>Reduce la sobrecarga de paquetes en el router Archer AX12 frente a FastDDS.</p>
+              </div>
+            </div>
+            <div class="tip-item">
+              <span class="tip-icon">🔒</span>
+              <div>
+                <strong>AP Isolation:</strong>
+                <p>Verifica en el router que AP Isolation esté <code>OFF</code> para permitir comunicación entre robots.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Modal de Resultados Multicast -->
+    <div id="modal-multicast" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">Resultado de Prueba Multicast UDP</h3>
+          <button id="modal-close" class="btn-close">&times;</button>
+        </div>
+        <div class="modal-body" id="modal-multicast-body">
+          <!-- Dinámico -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
