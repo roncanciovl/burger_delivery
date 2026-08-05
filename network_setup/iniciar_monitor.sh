@@ -5,7 +5,7 @@
 # ==============================================================================
 
 PORT=${1:-8080}
-HOST="127.0.0.1"
+HOST="0.0.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SERVER_SCRIPT="$SCRIPT_DIR/monitor_red/server.py"
 
@@ -23,22 +23,17 @@ if ! command -v python3 &>/dev/null; then
     exit 1
 fi
 
-URL="http://${HOST}:${PORT}"
+URL="http://localhost:${PORT}"
 echo -e "  ${GREEN}🌐 URL del Dashboard:${NC} ${CYAN}${URL}${NC}"
 echo -e "  ${YELLOW}💡 Abriendo navegador...${NC}\n"
 
-# Intentar abrir navegador según el entorno
-if grep -qi "microsoft" /proc/version 2>/dev/null; then
-    # Entorno WSL2
-    if command -v wslview &>/dev/null; then
-        wslview "$URL" 2>/dev/null &
-    elif command -v cmd.exe &>/dev/null; then
-        cmd.exe /c start "$URL" 2>/dev/null &
-    fi
-elif command -v xdg-open &>/dev/null; then
-    # Linux Nativo
-    xdg-open "$URL" 2>/dev/null &
-fi
 
-# Ejecutar el servidor web en primer plano
+# Limpiar posibles instancias anteriores huérfanas
+pkill -f "monitor_red/server.py" 2>/dev/null
+sleep 0.2
+
+# Ejecutar el servidor web en primer plano (server.py abre automáticamente el navegador en el puerto activo)
 python3 "$SERVER_SCRIPT" --host "$HOST" --port "$PORT"
+
+
+

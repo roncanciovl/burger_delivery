@@ -5,11 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ROS 2 & Router Network Monitor | Burger Delivery</title>
   <meta name="description" content="Monitor en tiempo real de topología de red, dispositivos del router y tráfico de protocolos ROS 2 DDS y Micro-ROS.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/app.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 </head>
+
 <body>
   <div class="app-container">
     <!-- Encabezado Superior -->
@@ -27,6 +28,11 @@
       </div>
 
       <div class="header-actions">
+        <div class="domain-selector-box" title="Cambiar el ROS_DOMAIN_ID activo del proyecto">
+          <span class="domain-label">⚡ DOMAIN_ID:</span>
+          <input type="number" id="input-domain-id" min="0" max="232" value="42" class="domain-input">
+          <button id="btn-save-domain" class="btn-domain-save" title="Aplicar nuevo ROS_DOMAIN_ID">Aplicar</button>
+        </div>
         <div class="status-badge" id="sse-badge">
           <span class="status-dot pulsing"></span>
           <span id="sse-status-text">Conectado en Vivo</span>
@@ -46,8 +52,24 @@
       </div>
     </header>
 
+
+    <!-- Barra de Estado de Sincronización y Tiempo de Calibración -->
+    <aside class="sync-banner" id="sync-banner" aria-live="polite">
+      <div class="sync-banner-left">
+        <span class="sync-spinner" id="sync-spinner"></span>
+        <div>
+          <strong id="sync-banner-title">📡 Calibrando telemetría de red y descubriendo nodos...</strong>
+          <p id="sync-banner-subtitle">Recopilando métricas iniciales del Router AX12 y dominios ROS 2 (tiempo de estabilización: ~3 a 5 seg).</p>
+        </div>
+      </div>
+      <div class="sync-banner-right">
+        <span class="sync-time-badge" id="sync-time-badge">Acumulando datos: <span id="sync-counter">0</span>s</span>
+      </div>
+    </aside>
+
     <!-- Tarjetas Rápidas de Telemetría (KPIs) -->
     <section class="kpi-grid">
+
       <!-- KPI 1: Gateway & Latencia -->
       <div class="kpi-card" id="kpi-gateway">
         <div class="kpi-icon-wrap icon-cyan">
@@ -144,8 +166,9 @@
             <div class="legend">
               <span class="legend-item"><span class="dot dot-router"></span> Router</span>
               <span class="legend-item"><span class="dot dot-host"></span> PC Host</span>
-              <span class="legend-item"><span class="dot dot-robot"></span> Robot Pi</span>
+              <span class="legend-item"><span class="dot dot-robot"></span> Robot Pi/Kinova</span>
               <span class="legend-item"><span class="dot dot-esp32"></span> ESP32</span>
+              <span class="legend-item"><span class="dot dot-dds"></span> ⚡ ROS 2 DDS</span>
             </div>
           </div>
           <div class="topology-viewport">
@@ -162,6 +185,7 @@
             </div>
             <div class="filter-group">
               <button class="filter-btn active" data-filter="all">Todos</button>
+              <button class="filter-btn" data-filter="dds">⚡ Solo ROS 2 DDS</button>
               <button class="filter-btn" data-filter="robot">Robots</button>
               <button class="filter-btn" data-filter="esp32">Micro-ROS</button>
             </div>
@@ -174,10 +198,12 @@
                   <th>Dirección IP</th>
                   <th>MAC Address</th>
                   <th>Fabricante</th>
+                  <th>Canal / Protocolo ROS 2</th>
                   <th>Latencia</th>
                   <th>Estado</th>
                 </tr>
               </thead>
+
               <tbody id="devices-tbody">
                 <!-- Se poblará de forma dinámica y segura con JS -->
               </tbody>

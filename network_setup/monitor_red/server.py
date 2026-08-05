@@ -11,17 +11,23 @@ import json
 import os
 import socket
 import struct
+import subprocess
 import sys
 import threading
 import time
 from http import HTTPStatus
-from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
+
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+if CURRENT_DIR not in sys.path:
+    sys.path.insert(0, CURRENT_DIR)
 
 from device_scanner import DeviceScanner
 from traffic_sniffer import TrafficSniffer
 
-STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+STATIC_DIR = os.path.join(CURRENT_DIR, "static")
+
 
 # Inicialización de servicios
 scanner = DeviceScanner()
@@ -76,32 +82,71 @@ def test_udp_multicast(group="239.255.0.1", port=7400, timeout_sec=1.5) -> dict:
     }
 
 
-class NetworkMonitorHandler(SimpleHTTPRequestHandler):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, directory=STATIC_DIR, **kwargs)
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-    def _set_json_headers(self, status=HTTPStatus.OK):
+class NetworkMonitorHandler(BaseHTTPRequestHandler):
+    protocol_version = "HTTP/1.1"
+
+    def _send_bytes(self, data: bytes, content_type: str, status=HTTPStatus.OK):
         self.send_response(status)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(data)))
         self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
-        self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Connection", "close")
         self.end_headers()
+        self.wfile.write(data)
+
+    def _set_json_headers(self, data_dict: dict, status=HTTPStatus.OK):
+        payload = json.dumps(data_dict, ensure_ascii=False).encode("utf-8")
+        self._send_bytes(payload, "application/json; charset=utf-8", status)
+
+    def do_HEAD(self):
+        self.do_GET()
 
     def do_OPTIONS(self):
         self.send_response(HTTPStatus.NO_CONTENT)
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, HEAD")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Connection", "close")
         self.end_headers()
+
 
     def do_GET(self):
         parsed = urlparse(self.path)
         path = parsed.path
 
-        # 1. API: Estado general del entorno ROS 2 y Red
-        if path == "/api/status":
-            self._set_json_headers()
+        # 1. Archivos estáticos principales
+        if path in ("/", "/index.html"):
+            index_path = os.path.join(STATIC_DIR, "index.html")
+            try:
+                with open(index_path, "rb") as f:
+                    self._send_bytes(f.read(), "text/html; charset=utf-8")
+            except Exception as e:
+                self._send_bytes(f"Error cargando index.html: {e}".encode("utf-8"), "text/plain", HTTPStatus.INTERNAL_SERVER_ERROR)
+            return
+
+        elif path == "/app.css":
+            css_path = os.path.join(STATIC_DIR, "app.css")
+            try:
+                with open(css_path, "rb") as f:
+                    self._send_bytes(f.read(), "text/css; charset=utf-8")
+            except Exception as e:
+                self._send_bytes(b"", "text/css; charset=utf-8", HTTPStatus.NOT_FOUND)
+            return
+
+        elif path == "/app.js":
+            js_path = os.path.join(STATIC_DIR, "app.js")
+            try:
+                with open(js_path, "rb") as f:
+                    self._send_bytes(f.read(), "application/javascript; charset=utf-8")
+            except Exception as e:
+                self._send_bytes(b"", "application/javascript; charset=utf-8", HTTPStatus.NOT_FOUND)
+            return
+
+        # 2. API: Estado general del entorno ROS 2 y Red
+        elif path == "/api/status":
             status_data = {
                 "environment": {
                     "ROS_DOMAIN_ID": os.environ.get("ROS_DOMAIN_ID", "42 (Default proyecto)"),
@@ -115,57 +160,26 @@ class NetworkMonitorHandler(SimpleHTTPRequestHandler):
                 },
                 "traffic_summary": sniffer.current_metrics
             }
-            self.wfile.write(json.dumps(status_data, ensure_ascii=False).encode("utf-8"))
+            self._set_json_headers(status_data)
             return
 
-        # 2. API: Lista de dispositivos descubiertos
+        # 3. API: Lista de dispositivos descubiertos
         elif path == "/api/devices":
-            self._set_json_headers()
-            # Si aún no hay dispositivos escaneados, ejecutar escaneo inicial
-            if not scanner.cached_devices:
-                scanner.scan_network(full_sweep=False)
-            
             resp = {
                 "count": len(scanner.cached_devices),
                 "last_scan": time.strftime("%H:%M:%S", time.localtime(scanner.last_scan_time)) if scanner.last_scan_time else "--",
                 "devices": scanner.cached_devices
             }
-            self.wfile.write(json.dumps(resp, ensure_ascii=False).encode("utf-8"))
+            self._set_json_headers(resp)
             return
 
-        # 3. API: Snapshot de tráfico en tiempo real e historial
+        # 4. API: Snapshot de tráfico en tiempo real e historial
         elif path == "/api/traffic":
-            self._set_json_headers()
             snapshot = sniffer.get_snapshot()
-            self.wfile.write(json.dumps(snapshot, ensure_ascii=False).encode("utf-8"))
+            self._set_json_headers(snapshot)
             return
 
-        # 4. API: Streaming Server-Sent Events (SSE) en vivo
-        elif path == "/api/events":
-            self.send_response(HTTPStatus.OK)
-            self.send_header("Content-Type", "text/event-stream")
-            self.send_header("Cache-Control", "no-cache")
-            self.send_header("Connection", "keep-alive")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.end_headers()
-
-            try:
-                while True:
-                    snap = sniffer.get_snapshot()
-                    payload = json.dumps({
-                        "traffic": snap["current"],
-                        "devices_count": len(scanner.cached_devices),
-                        "timestamp": time.strftime("%H:%M:%S")
-                    })
-                    self.wfile.write(f"data: {payload}\n\n".encode("utf-8"))
-                    self.wfile.flush()
-                    time.sleep(1.0)
-            except (BrokenPipeError, ConnectionResetError):
-                pass
-            return
-
-        # Servir archivos estáticos por defecto
-        super().do_GET()
+        self._send_bytes(b"Recurso no encontrado", "text/plain", HTTPStatus.NOT_FOUND)
 
     def do_POST(self):
         parsed = urlparse(self.path)
@@ -173,7 +187,6 @@ class NetworkMonitorHandler(SimpleHTTPRequestHandler):
 
         # 1. API: Forzar re-escaneo completo de la subred
         if path == "/api/scan":
-            self._set_json_headers()
             devices = scanner.scan_network(full_sweep=True)
             resp = {
                 "status": "success",
@@ -181,39 +194,107 @@ class NetworkMonitorHandler(SimpleHTTPRequestHandler):
                 "devices": devices,
                 "timestamp": time.strftime("%H:%M:%S")
             }
-            self.wfile.write(json.dumps(resp, ensure_ascii=False).encode("utf-8"))
+            self._set_json_headers(resp)
             return
 
         # 2. API: Prueba de UDP Multicast
         elif path == "/api/test_multicast":
-            self._set_json_headers()
             result = test_udp_multicast()
-            self.wfile.write(json.dumps(result, ensure_ascii=False).encode("utf-8"))
+            self._set_json_headers(result)
             return
 
-        self.send_error(HTTPStatus.NOT_FOUND, "Endpoint no encontrado")
+        # 3. API: Actualización de Configuración (ROS_DOMAIN_ID)
+        elif path == "/api/config":
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                raw_body = self.rfile.read(length).decode("utf-8")
+                data = json.loads(raw_body)
+                if "ros_domain_id" in data:
+                    domain_id = int(data["ros_domain_id"])
+                    scanner.set_target_domain(domain_id)
+                    threading.Thread(target=lambda: scanner.scan_network(full_sweep=False), daemon=True).start()
+                    self._set_json_headers({"status": "success", "ROS_DOMAIN_ID": domain_id})
+                    return
+            except Exception as e:
+                self._set_json_headers({"status": "error", "message": str(e)}, status=HTTPStatus.BAD_REQUEST)
+                return
+
+
+        self._send_bytes(b"Endpoint no encontrado", "text/plain", HTTPStatus.NOT_FOUND)
 
     def log_message(self, format, *args):
-        """Silenciar logs continuos de SSE para mantener la terminal limpia"""
-        if "/api/events" not in format and "/api/traffic" not in format:
-            super().log_message(format, *args)
+        """Silenciar logs continuos de telemetría para no saturar consola"""
+        pass
 
 
-def run_server(host="127.0.0.1", port=8080):
+
+def open_browser(url: str):
+    """Abre el navegador en el puerto activo según el entorno (WSL2 o Linux nativo)"""
+    def _open():
+        time.sleep(0.4)
+        is_wsl = False
+        if os.path.exists("/proc/version"):
+            try:
+                with open("/proc/version", "r") as f:
+                    if "microsoft" in f.read().lower():
+                        is_wsl = True
+            except Exception:
+                pass
+        
+        if is_wsl:
+            for explorer_path in ["explorer.exe", "/mnt/c/WINDOWS/explorer.exe", "/mnt/c/Windows/explorer.exe"]:
+                try:
+                    subprocess.Popen([explorer_path, url], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    return
+                except Exception:
+                    continue
+        
+        try:
+            subprocess.Popen(["xdg-open", url], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            pass
+
+    threading.Thread(target=_open, daemon=True).start()
+
+
+def run_server(host="0.0.0.0", port=8080):
+    ThreadingHTTPServer.allow_reuse_address = True
+
+    # Intentar enlazar en el puerto solicitado o buscar el siguiente disponible
+    server = None
+    actual_port = port
+    for attempt in range(10):
+        try:
+            server = ThreadingHTTPServer((host, actual_port), NetworkMonitorHandler)
+            break
+        except OSError as e:
+            if e.errno == 98:  # Address already in use
+                actual_port = port + attempt + 1
+            else:
+                raise e
+
+    if server is None:
+        print(f"Error: No se pudo enlazar el servidor en el rango de puertos {port}-{port+10}")
+        sys.exit(1)
+
     # Iniciar escaneo inicial en segundo plano
     threading.Thread(target=lambda: scanner.scan_network(full_sweep=True), daemon=True).start()
     
     # Iniciar recolector de tráfico en segundo plano (cada 1s)
     sniffer.start_background_collector(interval=1.0)
 
-    server = ThreadingHTTPServer((host, port), NetworkMonitorHandler)
-    url = f"http://{host}:{port}"
+    display_host = "localhost" if host in ("0.0.0.0", "127.0.0.1") else host
+    url = f"http://{display_host}:{actual_port}"
     print(f"\n=======================================================")
     print(f" 🚀 Monitor de Red Híbrido ROS 2 & Router Activo")
     print(f" 🌐 Interfaz Web disponible en: {url}")
     print(f" 📡 Gateway detectado: {scanner.gateway_ip} | IP Local: {scanner.local_ip}")
     print(f"=======================================================\n")
     print("Presiona Ctrl+C para detener el servidor.\n")
+
+    # Abrir navegador automáticamente con la URL y puerto exacto
+    open_browser(url)
+
 
     try:
         server.serve_forever()
@@ -227,8 +308,10 @@ def run_server(host="127.0.0.1", port=8080):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Monitor de Red Híbrido para ROS 2 y Router")
-    parser.add_argument("--host", default="127.0.0.1", help="Dirección IP de escucha (default: 127.0.0.1)")
+    parser.add_argument("--host", default="0.0.0.0", help="Dirección IP de escucha (default: 0.0.0.0)")
     parser.add_argument("--port", type=int, default=8080, help="Puerto HTTP (default: 8080)")
     args = parser.parse_args()
 
     run_server(host=args.host, port=args.port)
+
+

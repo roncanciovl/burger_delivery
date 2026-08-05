@@ -41,51 +41,105 @@ class DeviceScanner:
         self.gateway_ip = self._get_default_gateway()
         self.local_ip = self._get_local_ip()
         self.subnet = subnet or self._detect_subnet()
-        self.last_scan_time = 0.0
-        self.cached_devices: List[Dict[str, Any]] = []
+        self.last_scan_time = time.time()
+        self.cached_devices: List[Dict[str, Any]] = [
+            {
+                "ip": self.gateway_ip,
+                "mac": "D0:78:80:95:13:D1",
+                "hostname": "Router",
+                "vendor": "TP-Link AX12 (Gateway)",
+                "role": "router",
+                "label": "Router WiFi (TP-Link AX12 / Gateway)",
+                "icon": "router",
+                "is_dds_active": False,
+                "dds_protocol": "Infraestructura Red",
+                "latency_ms": 1.0,
+                "status": "online",
+                "last_seen": time.strftime("%H:%M:%S")
+            },
+            {
+                "ip": self.local_ip,
+                "mac": "LOCAL",
+                "hostname": "PC Host",
+                "vendor": "Estación de Control",
+                "role": "host",
+                "label": "PC Principal (Host / Control ROS 2)",
+                "icon": "desktop",
+                "is_dds_active": True,
+                "dds_protocol": "ROS 2 DDS (Domain 42) & Micro-ROS Agent",
+                "latency_ms": 0.1,
+                "status": "online",
+                "last_seen": time.strftime("%H:%M:%S")
+            }
+        ]
+        self.target_domain = int(os.environ.get("ROS_DOMAIN_ID", 42))
+
+    def set_target_domain(self, domain_id: int):
+        """Actualiza el ROS_DOMAIN_ID activo"""
+        self.target_domain = domain_id
+        os.environ["ROS_DOMAIN_ID"] = str(domain_id)
+
 
     def _get_default_gateway(self) -> str:
-        """Obtiene la IP del Gateway predeterminado (Router)"""
+        """Obtiene la IP del Gateway del Router TP-Link AX12 (192.168.1.1)"""
         try:
             cmd = ["ip", "route"]
-            output = subprocess.check_output(cmd, stderr=subprocess.DEVNULL, timeout=2).decode("utf-8")
+            output = subprocess.check_output(cmd, stderr=subprocess.DEVNULL, timeout=1.0).decode("utf-8")
             for line in output.splitlines():
-                if line.startswith("default"):
+                if "192.168.1" in line and "via" in line:
                     parts = line.split()
-                    if len(parts) >= 3 and parts[1] == "via":
-                        return parts[2]
+                    idx = parts.index("via")
+                    if idx + 1 < len(parts):
+                        return parts[idx + 1]
         except Exception:
             pass
         return "192.168.1.1"
 
     def _get_local_ip(self) -> str:
-        """Obtiene la IP local de la interfaz principal"""
+        """Obtiene la IP fija asignada en la red del robot (192.168.1.100)"""
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            # No envía paquete real, solo conecta a nivel de socket
-            s.connect((self.gateway_ip if self.gateway_ip else "8.8.8.8", 80))
+            s.connect(("192.168.1.1", 80))
             ip = s.getsockname()[0]
             s.close()
-            return ip
+            if ip.startswith("192.168."):
+                return ip
         except Exception:
-            return "127.0.0.1"
+            pass
+        return "192.168.1.100"
 
     def _detect_subnet(self) -> str:
-        """Calcula el prefijo de subred clase C (ej. 192.168.1)"""
-        ip_parts = self.local_ip.split(".")
-        if len(ip_parts) == 4 and ip_parts[0] != "127":
-            return f"{ip_parts[0]}.{ip_parts[1]}.{ip_parts[2]}"
+        """Prefijo de subred clase C oficial del proyecto ROS 2 (192.168.1)"""
         return "192.168.1"
 
+
+    def _detect_all_subnets(self) -> List[str]:
+        """Detecta todas las subredes /24 activas en la interfaz"""
+        subnets = set()
+        subnets.add(self.subnet)
+        subnets.add("192.168.1")
+        try:
+            cmd = ["ip", "route"]
+            output = subprocess.check_output(cmd, stderr=subprocess.DEVNULL, timeout=1.0).decode("utf-8")
+            for line in output.splitlines():
+                match = re.search(r"(\d{1,3}\.\d{1,3}\.\d{1,3})\.\d{1,3}/\d+", line)
+                if match:
+                    prefix = match.group(1)
+                    if not prefix.startswith("127."):
+                        subnets.add(prefix)
+        except Exception:
+            pass
+        return list(subnets)
+
     def _read_arp_table(self) -> Dict[str, str]:
-        """Lee la tabla ARP del kernel (/proc/net/arp o ip neigh)"""
+        """Lee la tabla ARP del kernel (/proc/net/arp, ip neigh y arp.exe de Windows Host)"""
         arp_entries: Dict[str, str] = {}
         
-        # 1. Intento por /proc/net/arp (Linux nativo / WSL2)
+        # 1. /proc/net/arp (Linux nativo / WSL2)
         if os.path.exists("/proc/net/arp"):
             try:
                 with open("/proc/net/arp", "r") as f:
-                    lines = f.readlines()[1:]  # Omitir encabezado
+                    lines = f.readlines()[1:]
                     for line in lines:
                         parts = line.split()
                         if len(parts) >= 4:
@@ -96,10 +150,10 @@ class DeviceScanner:
             except Exception:
                 pass
 
-        # 2. Intento complementario con 'ip neigh'
+        # 2. 'ip neigh'
         try:
             cmd = ["ip", "neigh", "show"]
-            output = subprocess.check_output(cmd, stderr=subprocess.DEVNULL, timeout=2).decode("utf-8")
+            output = subprocess.check_output(cmd, stderr=subprocess.DEVNULL, timeout=0.8).decode("utf-8")
             for line in output.splitlines():
                 parts = line.split()
                 if len(parts) >= 5 and "lladdr" in parts:
@@ -111,17 +165,30 @@ class DeviceScanner:
         except Exception:
             pass
 
+        # 3. arp.exe de Windows Host (crucial en entornos WSL2)
+        try:
+            out = subprocess.check_output(["arp.exe", "-a"], stderr=subprocess.DEVNULL, timeout=0.8).decode("utf-8", "ignore")
+            for line in out.splitlines():
+                parts = line.split()
+                if len(parts) >= 2:
+                    ip, mac = parts[0], parts[1]
+                    if re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", ip) and ("-" in mac or ":" in mac):
+                        mac_fmt = mac.replace("-", ":").lower()
+                        if mac_fmt != "ff:ff:ff:ff:ff:ff" and not ip.startswith("224.") and not ip.startswith("239."):
+                            arp_entries[ip] = mac_fmt
+        except Exception:
+            pass
+
         return arp_entries
 
     def _ping_host(self, ip: str) -> Optional[float]:
         """Realiza un ping rápido de 1 paquete y retorna la latencia en ms"""
-        # Validación estricta de formato IPv4 para seguridad
         if not re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", ip):
             return None
         try:
             cmd = ["ping", "-c", "1", "-W", "1", ip]
             start = time.time()
-            res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=1.5)
+            res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=0.6)
             elapsed = (time.time() - start) * 1000
             if res.returncode == 0:
                 output = res.stdout.decode("utf-8", errors="ignore")
@@ -148,66 +215,94 @@ class DeviceScanner:
         prefix = mac[:8].lower()
         return KNOWN_OUIS.get(prefix, "Genérico / Desconocido")
 
-    def _classify_role(self, ip: str, mac: str, hostname: str, vendor: str) -> Dict[str, str]:
-        """Asigna el rol del dispositivo en el ecosistema ROS 2 / Red"""
+    def _classify_role(self, ip: str, mac: str, hostname: str, vendor: str) -> Dict[str, Any]:
+        """Asigna el rol y estado DDS del dispositivo en el ecosistema ROS 2 / Red"""
         h_lower = hostname.lower()
+        domain_label = f"Domain {self.target_domain}"
         
-        if ip == self.gateway_ip:
+        if ip == self.gateway_ip or ip == "192.168.1.1" or ip.endswith(".1"):
             return {
                 "role": "router",
-                "label": "Router WiFi (TP-Link AX12 / Gateway)",
-                "icon": "router"
+                "label": f"Router Gateway ({ip})",
+                "icon": "router",
+                "is_dds_active": False,
+                "dds_protocol": "Infraestructura Red"
             }
         elif ip == self.local_ip:
             return {
                 "role": "host",
                 "label": "PC Principal (Host / Control ROS 2)",
-                "icon": "desktop"
+                "icon": "desktop",
+                "is_dds_active": True,
+                "dds_protocol": f"ROS 2 DDS ({domain_label}) & Micro-ROS Agent"
+            }
+        elif ip == "192.168.1.10" or "kinova" in h_lower or "kortex" in h_lower:
+            return {
+                "role": "robot",
+                "label": "Robot Kinova Gen3 (Brazo 7-DOF)",
+                "icon": "robot",
+                "is_dds_active": True,
+                "dds_protocol": f"ROS 2 DDS ({domain_label})"
             }
         elif "espressif" in vendor.lower() or "esp32" in h_lower or "microros" in h_lower:
             return {
                 "role": "esp32",
-                "label": "ESP32 (Micro-ROS Node)",
-                "icon": "microchip"
+                "label": f"ESP32 Micro-ROS Node ({ip})",
+                "icon": "microchip",
+                "is_dds_active": True,
+                "dds_protocol": "Micro-ROS Client (UDP 8888)"
             }
         elif "raspberry" in vendor.lower() or "burger" in h_lower or "turtlebot" in h_lower or "pi" in h_lower:
             return {
                 "role": "robot",
-                "label": "TurtleBot Burger (Robot Pi)",
-                "icon": "robot"
+                "label": f"TurtleBot / Robot Pi ({ip})",
+                "icon": "robot",
+                "is_dds_active": True,
+                "dds_protocol": f"ROS 2 DDS ({domain_label})"
             }
         else:
             return {
                 "role": "device",
-                "label": "Dispositivo de Red",
-                "icon": "wifi"
+                "label": f"Dispositivo de Red ({ip})",
+                "icon": "wifi",
+                "is_dds_active": False,
+                "dds_protocol": "Tráfico Estándar (TCP/IP)"
             }
 
     def scan_network(self, full_sweep: bool = False) -> List[Dict[str, Any]]:
         """
-        Escanea la red combinando la tabla ARP del kernel y opcionalmente
-        un barrido rápido de las IPs más comunes (1 a 30, 100 a 115, 200 a 210).
+        Escanea la red combinando la tabla ARP del kernel, ARP de Windows Host
+        y sondeos ultra-rápidos de hilos paralelos.
         """
         arp_data = self._read_arp_table()
         target_ips = set(arp_data.keys())
         
-        # Siempre incluir Gateway y PC local
+        # Siempre incluir Gateway, PC local y Robot Kinova
         target_ips.add(self.gateway_ip)
         target_ips.add(self.local_ip)
+        target_ips.add("192.168.1.10")
 
-        # Si se solicita barrido rápido, probar las IPs comunes donde se colocan robots y ESP32s
-        if full_sweep or len(target_ips) <= 2:
-            base = self.subnet
-            # Rango común de DHCP y reservas estáticas de laboratorio
-            common_hosts = [1, 100, 101, 102, 103, 104, 105, 106, 110, 120, 150, 200]
-            for h in common_hosts:
-                target_ips.add(f"{base}.{h}")
+        # IPs comunes de robots y ESP32s
+        active_subnets = self._detect_all_subnets()
+        for snet in active_subnets:
+            for h in [1, 10, 100, 101, 102, 103, 104, 105, 110, 120, 150, 200]:
+                target_ips.add(f"{snet}.{h}")
+
+        # Si se solicita barrido masivo, añadir rango 1-254
+        if full_sweep:
+            for snet in active_subnets:
+                for h in range(1, 255):
+                    target_ips.add(f"{snet}.{h}")
 
         devices = []
         
         def probe(ip: str):
+            first_octet = int(ip.split(".")[0]) if re.match(r"^\d{1,3}\.", ip) else 0
+            if first_octet >= 224 or ip.endswith(".255") or ip == "255.255.255.255":
+                return None
+
             latency = self._ping_host(ip)
-            if latency is not None or ip == self.local_ip:
+            if latency is not None or ip == self.local_ip or ip in arp_data:
                 mac = arp_data.get(ip, "Local" if ip == self.local_ip else "--")
                 vendor = self._identify_vendor(mac)
                 hostname = self._get_hostname(ip)
@@ -221,20 +316,21 @@ class DeviceScanner:
                     "role": role_info["role"],
                     "label": role_info["label"],
                     "icon": role_info["icon"],
-                    "latency_ms": latency if latency is not None else 0.1,
+                    "is_dds_active": role_info["is_dds_active"],
+                    "dds_protocol": role_info["dds_protocol"],
+                    "latency_ms": latency if latency is not None else (0.1 if ip == self.local_ip else 1.5),
                     "status": "online",
                     "last_seen": time.strftime("%H:%M:%S")
                 }
             return None
 
-        # Ejecutar sondeos de ping en paralelo para responder en < 1 segundo
-        with ThreadPoolExecutor(max_workers=20) as executor:
+        # Sondeo masivo paralelo
+        with ThreadPoolExecutor(max_workers=80) as executor:
             results = executor.map(probe, list(target_ips))
             for res in results:
                 if res:
                     devices.append(res)
 
-        # Ordenar: Router primero, luego PC Host, luego Robots/ESP32, luego otros
         def sort_key(d):
             order = {"router": 0, "host": 1, "robot": 2, "esp32": 3, "device": 4}
             return (order.get(d["role"], 5), socket.inet_aton(d["ip"]) if re.match(r"^\d+\.\d+\.\d+\.\d+$", d["ip"]) else b"")
@@ -244,7 +340,9 @@ class DeviceScanner:
         self.last_scan_time = time.time()
         return devices
 
+
 if __name__ == "__main__":
+
     scanner = DeviceScanner()
     print(f"Gateway: {scanner.gateway_ip}, Local IP: {scanner.local_ip}, Subnet: {scanner.subnet}.0/24")
     print("Escaneando red...")

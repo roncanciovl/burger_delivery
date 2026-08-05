@@ -51,6 +51,14 @@ Or run it manually:
 ros2 launch burger_description display.launch.py
 ```
 
+### 🌐 Network & ROS 2 Telemetry Monitor (Web Dashboard)
+To monitor devices connected to the router (AX12), WiFi latency/jitter, DDS domain traffic, and Micro-ROS agent status (port 8888) in real-time:
+
+```bash
+bash network_setup/iniciar_monitor.sh
+```
+*(Automatically opens the dashboard at `http://localhost:8080`).*
+
 ---
 
 ## 📂 Project Structure
@@ -59,7 +67,8 @@ ros2 launch burger_description display.launch.py
   - `urdf/delivery_scene_fixed.urdf`: Main static scene.
   - `visual/` & `vendor/`: 3D meshes and third-party resources (Kinova).
 - `scripts/`: Vital Python tools for patching Kinova latencies and CLI physical unit testing.
-- `network_setup/` & `vision_setup/`: Advanced diagnostic guides for networks, micro-ROS, and RTSP camera connectivity.
+- `network_setup/`: Advanced network diagnostics, WiFi 6/AX12 configuration, telemetry tools, and the **Hybrid Web Network Monitor** (`monitor_red/`).
+- `vision_setup/`: RTSP camera connectivity guides and AprilTags localization.
 - `ros2_setup/`: Jazzy environment setup notes, scripts, and configurations.
 
 ---
@@ -84,10 +93,12 @@ We have organized the extensive technical documentation to facilitate your learn
 - [Visual Latency Isolation (TCP vs ROS 2)](vision_setup/DIAGNOSTICO_RED_VISION.md)
 
 ### 🌐 4. Networking, Setup & micro-ROS
+- [⭐ Hybrid Network Monitor (ROS 2 & Router AX12 Web Dashboard)](network_setup/iniciar_monitor.sh) *(Launcher: `bash network_setup/iniciar_monitor.sh`)*
 - [ROS 2 Network Diagnostics](network_setup/DIAGNOSTICO_RED.md)
 - [Recommended Network Configuration](network_setup/ROS2_NETWORK_CONFIG.md)
+- [TP-Link Archer AX12 Configuration Guide](network_setup/router_tplink_ax12_config.md)
 - [ROS 2 Jazzy Environment Verification](ros2_setup/verificar_ros2.md)
-- **Diagnostic Scripts**: Find tools like `test_ros2_network.sh`, `diagnostico_wifi.sh`, `analisis_trafico_ros2.sh` and more in the `network_setup/` folder.
+- **Diagnostic Scripts**: Find tools like `test_ros2_network.sh`, `diagnostico_wifi.sh`, `diagnostico_microros.sh`, `analisis_trafico_ros2.sh` and more in the `network_setup/` folder.
 
 ---
 

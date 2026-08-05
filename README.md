@@ -51,6 +51,14 @@ O hacerlo manualmente:
 ros2 launch burger_description display.launch.py
 ```
 
+### 🌐 Monitor de Red y Telemetría ROS 2 (Dashboard Web)
+Para supervisar dispositivos conectados al router (AX12), latencia/jitter WiFi, tráfico de dominios DDS y estado del agente Micro-ROS (puerto 8888) en tiempo real:
+
+```bash
+bash network_setup/iniciar_monitor.sh
+```
+*(Abre automáticamente la interfaz en `http://127.0.0.1:8080`).*
+
 ---
 
 ## 📂 Estructura del Proyecto
@@ -59,7 +67,8 @@ ros2 launch burger_description display.launch.py
   - `urdf/delivery_scene_fixed.urdf`: Escena estática principal.
   - `visual/` y `vendor/`: Mallas 3D y recursos de terceros (Kinova).
 - `scripts/`: Herramientas vitales en Python para parcheado de latencias del Kinova y testeos unitarios físicos CLI.
-- `network_setup/` & `vision_setup/`: Guías de diagnóstico avanzado de red, micro-ROS y conectividad RTSP de cámaras.
+- `network_setup/`: Diagnóstico avanzado de red, configuración para WiFi 6/AX12, herramientas de telemetría y el **Monitor de Red Web Híbrido** (`monitor_red/`).
+- `vision_setup/`: Guías de conectividad RTSP de cámaras y localización con AprilTags.
 - `ros2_setup/`: Notas de instalación, scripts y configuración del entorno Jazzy.
 
 ---
@@ -84,10 +93,12 @@ Hemos organizado la extensa documentación técnica para facilitar tu aprendizaj
 - [Aislamiento de Latencia Visual (TCP vs ROS 2)](vision_setup/DIAGNOSTICO_RED_VISION.md)
 
 ### 🌐 4. Redes, Configuración y micro-ROS
+- [⭐ Monitor de Red Híbrido (ROS 2 & Router AX12 Web Dashboard)](network_setup/iniciar_monitor.sh) *(Lanzador: `bash network_setup/iniciar_monitor.sh`)*
 - [Diagnóstico de Red ROS 2](network_setup/DIAGNOSTICO_RED.md)
 - [Configuración de Red Recomendada](network_setup/ROS2_NETWORK_CONFIG.md)
+- [Guía de Configuración TP-Link Archer AX12](network_setup/router_tplink_ax12_config.md)
 - [Verificación de Entorno ROS 2 Jazzy](ros2_setup/verificar_ros2.md)
-- **Scripts de diagnóstico**: Encuentra herramientas como `test_ros2_network.sh`, `diagnostico_wifi.sh`, `analisis_trafico_ros2.sh` y más en la carpeta `network_setup/`.
+- **Scripts de diagnóstico**: Encuentra herramientas como `test_ros2_network.sh`, `diagnostico_wifi.sh`, `diagnostico_microros.sh`, `analisis_trafico_ros2.sh` y más en la carpeta `network_setup/`.
 
 ---
 
