@@ -1,0 +1,42 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+
+title: "burger_delivery"
+abstract: >-
+  Advanced collaborative robotics environment built on ROS 2 Jazzy. Integrates
+  manipulation with a Kinova Gen3 arm, mobile robots, AprilTag-based visual
+  perception, motion planning with MoveIt 2, and the integration of AI models
+  (Gemini-Robotics) for semantic scene understanding. Developed for teaching
+  and applied research in Mechatronics Engineering at Universidad Militar
+  Nueva Granada.
+
+authors:
+  - family-names: "Roncancio Velandia"
+    given-names: "Henry Antonio"
+    orcid: "https://orcid.org/0009-0009-9954-9813"
+    affiliation: "Universidad Militar Nueva Granada"
+    email: "henry.roncancio@unimilitar.edu.co"
+
+contact:
+  - family-names: "Roncancio Velandia"
+    given-names: "Henry Antonio"
+    email: "henry.roncancio@unimilitar.edu.co"
+
+repository-code: "https://github.com/roncanciovl/burger_delivery"
+url: "https://roncanciovl.github.io"
+license: Apache-2.0
+
+keywords:
+  - "ROS 2"
+  - "MoveIt 2"
+  - "Kinova Gen3"
+  - "AprilTag"
+  - "micro-ROS"
+  - "collaborative robotics"
+  - "robotic manipulation"
+  - "computer vision"
+  - "embodied AI"
+
+version: "1.0.0"
+date-released: "2026-08-05"
