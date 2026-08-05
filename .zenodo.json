@@ -1,0 +1,41 @@
+TEST{
+  "title": "burger_delivery: Collaborative robotics environment in ROS 2 with Kinova Gen3 manipulation, AprilTag perception and AI model integration",
+  "description": "<p>Advanced collaborative robotics environment built on ROS 2 Jazzy. Integrates manipulation with a Kinova Gen3 arm, mobile robots, AprilTag-based visual perception, motion planning with MoveIt 2, and the integration of AI models (Gemini-Robotics) for semantic scene understanding.</p><p>Developed for teaching and applied research in the Mechatronics Engineering program at Universidad Militar Nueva Granada (Campus Cajicá). The repository includes laboratory guides, conceptual material on MoveIt 2, and experimental reports on AI-based localization.</p>",
+  "upload_type": "software",
+  "language": "eng",
+  "license": "Apache-2.0",
+  "access_right": "open",
+  "creators": [
+    {
+      "name": "Roncancio Velandia, Henry Antonio",
+      "affiliation": "Universidad Militar Nueva Granada",
+      "orcid": "0009-0009-9954-9813"
+    }
+  ],
+  "contributors": [
+    {
+      "name": "Mechatronics Engineering Students, Universidad Militar Nueva Granada",
+      "affiliation": "Universidad Militar Nueva Granada",
+      "type": "Other"
+    }
+  ],
+  "keywords": [
+    "ROS 2",
+    "MoveIt 2",
+    "Kinova Gen3",
+    "AprilTag",
+    "micro-ROS",
+    "collaborative robotics",
+    "robotic manipulation",
+    "computer vision",
+    "embodied AI",
+    "robotics education"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/roncanciovl/burger_delivery",
+      "relation": "isSupplementTo",
+      "scheme": "url"
+    }
+  ]
+}
