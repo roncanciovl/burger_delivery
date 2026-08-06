@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Script to generate a high-impact, professional academic PDF proposal for Grupo VOLTA (UMNG).
-Uses WeasyPrint for pixel-perfect PDF rendering with modern CSS styling and clickable hyperlinks.
+Uses WeasyPrint for pixel-perfect PDF rendering with modern CSS styling, official research lines,
+verified DataCite DOI references, and interactive hyperlinks.
 """
 
 import os
@@ -14,7 +15,7 @@ HTML_CONTENT = """<!DOCTYPE html>
 <style>
   @page {
     size: A4;
-    margin: 1.7cm 1.5cm 1.7cm 1.5cm;
+    margin: 1.6cm 1.5cm 1.6cm 1.5cm;
     @bottom-right {
       content: "Página " counter(page) " de " counter(pages);
       font-family: 'Liberation Sans', Helvetica, Arial, sans-serif;
@@ -22,7 +23,7 @@ HTML_CONTENT = """<!DOCTYPE html>
       color: #64748b;
     }
     @bottom-left {
-      content: "Propuesta de Vinculación Científica — Grupo VOLTA (A1 - MinCiencias)";
+      content: "Propuesta de Vinculación Científica — Grupo VOLTA (Categoría A1 - MinCiencias)";
       font-family: 'Liberation Sans', Helvetica, Arial, sans-serif;
       font-size: 8pt;
       color: #64748b;
@@ -32,8 +33,8 @@ HTML_CONTENT = """<!DOCTYPE html>
   body {
     font-family: 'Liberation Sans', Helvetica, Arial, sans-serif;
     color: #1e293b;
-    line-height: 1.42;
-    font-size: 9.2pt;
+    line-height: 1.40;
+    font-size: 9.0pt;
   }
 
   a {
@@ -50,23 +51,23 @@ HTML_CONTENT = """<!DOCTYPE html>
   .header-table {
     width: 100%;
     border-bottom: 3px solid #1e3a8a;
-    padding-bottom: 10px;
-    margin-bottom: 14px;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
   }
 
   .header-title {
-    font-size: 14pt;
+    font-size: 13.5pt;
     font-weight: 800;
     color: #1e3a8a;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.4px;
     margin: 0;
   }
 
   .header-subtitle {
-    font-size: 9pt;
+    font-size: 8.8pt;
     color: #475569;
-    margin-top: 3px;
+    margin-top: 2px;
     font-weight: 600;
   }
 
@@ -76,12 +77,12 @@ HTML_CONTENT = """<!DOCTYPE html>
 
   .badge {
     display: inline-block;
-    padding: 3px 8px;
+    padding: 2.5px 7px;
     border-radius: 4px;
-    font-size: 7.8pt;
+    font-size: 7.5pt;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.4px;
+    letter-spacing: 0.3px;
   }
 
   .badge-a1 {
@@ -94,14 +95,14 @@ HTML_CONTENT = """<!DOCTYPE html>
     background-color: #e0f2fe;
     color: #0369a1;
     border: 1px solid #38bdf8;
-    margin-top: 4px;
+    margin-top: 3px;
   }
 
   .badge-github {
     background-color: #f1f5f9;
     color: #0f172a;
     border: 1px solid #94a3b8;
-    margin-top: 4px;
+    margin-top: 3px;
   }
 
   /* Addressees box */
@@ -110,8 +111,8 @@ HTML_CONTENT = """<!DOCTYPE html>
     border: 1px solid #e2e8f0;
     border-left: 4px solid #1e3a8a;
     border-radius: 4px;
-    padding: 9px 12px;
-    margin-bottom: 14px;
+    padding: 8px 12px;
+    margin-bottom: 12px;
   }
 
   .destinatarios-table {
@@ -120,33 +121,33 @@ HTML_CONTENT = """<!DOCTYPE html>
 
   .destinatarios-table td {
     vertical-align: top;
-    font-size: 8.8pt;
+    font-size: 8.6pt;
   }
 
   /* Project Title Box */
   .title-card {
     background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
     color: #ffffff;
-    padding: 12px 14px;
-    border-radius: 6px;
-    margin-bottom: 14px;
+    padding: 10px 13px;
+    border-radius: 5px;
+    margin-bottom: 12px;
   }
 
   .title-card h2 {
-    font-size: 10.5pt;
-    margin: 0 0 6px 0;
+    font-size: 10pt;
+    margin: 0 0 5px 0;
     color: #f8fafc;
     font-weight: 700;
-    line-height: 1.35;
+    line-height: 1.32;
   }
 
   .title-meta {
-    font-size: 8.2pt;
+    font-size: 8.0pt;
     color: #cbd5e1;
   }
 
   .title-meta span {
-    margin-right: 14px;
+    margin-right: 12px;
   }
 
   .title-meta a {
@@ -156,12 +157,12 @@ HTML_CONTENT = """<!DOCTYPE html>
 
   /* Section Headings */
   h3 {
-    font-size: 10pt;
+    font-size: 9.6pt;
     color: #1e3a8a;
     border-bottom: 1.5px solid #cbd5e1;
-    padding-bottom: 3px;
-    margin-top: 12px;
-    margin-bottom: 6px;
+    padding-bottom: 2px;
+    margin-top: 10px;
+    margin-bottom: 5px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.3px;
@@ -169,7 +170,7 @@ HTML_CONTENT = """<!DOCTYPE html>
 
   p {
     margin-top: 0;
-    margin-bottom: 6px;
+    margin-bottom: 5px;
     text-align: justify;
   }
 
@@ -177,21 +178,21 @@ HTML_CONTENT = """<!DOCTYPE html>
   table.data-table {
     width: 100%;
     border-collapse: collapse;
-    margin: 8px 0 12px 0;
-    font-size: 8.3pt;
+    margin: 6px 0 10px 0;
+    font-size: 8.1pt;
   }
 
   table.data-table th {
     background-color: #1e3a8a;
     color: #ffffff;
-    padding: 5px 8px;
+    padding: 5px 7px;
     text-align: left;
     font-weight: 700;
     border: 1px solid #1e3a8a;
   }
 
   table.data-table td {
-    padding: 5px 8px;
+    padding: 4px 7px;
     border: 1px solid #cbd5e1;
     vertical-align: top;
   }
@@ -203,12 +204,12 @@ HTML_CONTENT = """<!DOCTYPE html>
   /* Lists */
   ul, ol {
     margin-top: 0;
-    margin-bottom: 6px;
-    padding-left: 16px;
+    margin-bottom: 5px;
+    padding-left: 15px;
   }
 
   li {
-    margin-bottom: 3px;
+    margin-bottom: 2.5px;
   }
 
   /* Callout box */
@@ -216,16 +217,16 @@ HTML_CONTENT = """<!DOCTYPE html>
     background-color: #eff6ff;
     border: 1px solid #bfdbfe;
     border-left: 3px solid #2563eb;
-    padding: 7px 10px;
+    padding: 6px 9px;
     border-radius: 4px;
-    margin: 8px 0;
-    font-size: 8.6pt;
+    margin: 7px 0;
+    font-size: 8.4pt;
   }
 
   /* Signatures */
   .signature-table {
     width: 100%;
-    margin-top: 20px;
+    margin-top: 18px;
     border-collapse: collapse;
   }
 
@@ -233,14 +234,14 @@ HTML_CONTENT = """<!DOCTYPE html>
     width: 50%;
     text-align: center;
     vertical-align: top;
-    padding: 8px 16px;
-    font-size: 8.6pt;
+    padding: 6px 14px;
+    font-size: 8.4pt;
   }
 
   .signature-line {
     border-top: 1px solid #475569;
-    margin-top: 36px;
-    padding-top: 5px;
+    margin-top: 32px;
+    padding-top: 4px;
     font-weight: 600;
   }
 
@@ -256,7 +257,7 @@ HTML_CONTENT = """<!DOCTYPE html>
     <tr>
       <td style="width: 65%;">
         <div class="header-title">Propuesta de Vinculación y Plan Científico</div>
-        <div class="header-subtitle">Universidad Militar Nueva Granada — Facultad de Ingeniería (Campus Cajicá)</div>
+        <div class="header-subtitle">Universidad Militar Nueva Granada — Facultad de Ingeniería (Campus Nueva Granada)</div>
       </td>
       <td class="badge-container" style="width: 35%;">
         <div class="badge badge-a1">Grupo VOLTA (A1 MinCiencias)</div><br>
@@ -271,17 +272,17 @@ HTML_CONTENT = """<!DOCTYPE html>
     <table class="destinatarios-table">
       <tr>
         <td style="width: 50%; padding-right: 10px;">
-          <strong style="color: #1e3a8a;">Para revisión y aval de:</strong><br>
-          <strong>Prof. William Gómez Rivera, M.Sc.</strong><br>
-          <a href="mailto:william.gomezr@unimilitar.edu.co" style="font-size: 8.2pt;">william.gomezr@unimilitar.edu.co</a><br>
-          Docente Investigador — Grupo VOLTA (A1)<br>
-          Programa de Ingeniería Mecatrónica — Campus Cajicá
+          <strong style="color: #1e3a8a;">Para consideración previa de:</strong><br>
+          <strong>Dr. William Gómez Rivera, Ph.D.</strong><br>
+          <a href="mailto:william.gomezr@unimilitar.edu.co" style="font-size: 8.0pt;">william.gomezr@unimilitar.edu.co</a><br>
+          Docente Investigador — Grupo VOLTA (Categoría A1)<br>
+          Programa de Ingeniería Mecatrónica — Campus Nueva Granada
         </td>
         <td style="width: 50%; border-left: 1px solid #cbd5e1; padding-left: 10px;">
           <strong style="color: #1e3a8a;">Dirigida a:</strong><br>
           <strong>Dr. William Arnulfo Aperador Chaparro</strong><br>
           Líder del Grupo de Investigación VOLTA (Categoría A1)<br>
-          Comité de Investigaciones de Mecatrónica — UMNG
+          Comité de Investigaciones — Facultad de Ingeniería
         </td>
       </tr>
     </table>
@@ -292,42 +293,59 @@ HTML_CONTENT = """<!DOCTYPE html>
     <h2>Burger-Cell: Framework Abierto y Banco Experimental de Manufactura Flexible Heterogénea en ROS 2 para Manipulación Robótica (Kinova Gen3), Telemetría de Red QoS y Razonamiento Espacial con Inteligencia Artificial</h2>
     <div class="title-meta">
       <span><strong>GitHub:</strong> <a href="https://github.com/roncanciovl/burger_delivery" target="_blank">github.com/roncanciovl/burger_delivery</a></span>
-      <span><strong>DOI:</strong> <a href="https://doi.org/10.5281/zenodo.21809949" target="_blank">10.5281/zenodo.21809949</a></span>
+      <span><strong>DOI Zenodo:</strong> <a href="https://doi.org/10.5281/zenodo.21809949" target="_blank">10.5281/zenodo.21809949</a></span>
       <span><strong>TRL:</strong> 4 - 5</span>
-      <span><strong>Sede:</strong> Campus Cajicá</span>
+      <span><strong>Sede:</strong> Campus Nueva Granada</span>
     </div>
   </div>
 
   <!-- 1. Executive Summary -->
   <h3>1. Resumen Ejecutivo y Justificación Estratégica</h3>
   <p>
-    La presente propuesta formaliza la vinculación del suscrito <strong>Docente de Cátedra e Investigador</strong> al <strong>Grupo de Investigación VOLTA (Categoría A1 - MinCiencias)</strong>, aportando una plataforma que <strong>ya cuenta con un proyecto de software abierto y activo en GitHub (<a href="https://github.com/roncanciovl/burger_delivery" target="_blank">github.com/roncanciovl/burger_delivery</a>) en fase de pruebas experimentales de laboratorio</strong>, registrado y respaldado formalmente con identificador digital persistente <strong>DOI en Zenodo (<a href="https://doi.org/10.5281/zenodo.21809949" target="_blank">10.5281/zenodo.21809949</a>)</strong>.
+    La presente propuesta formaliza la postulación del suscrito <strong>Docente e Investigador</strong> para vincularse al <strong>Grupo de Investigación VOLTA (Categoría A1 - MinCiencias)</strong>, aportando una plataforma de investigación aplicada que <strong>ya cuenta con un proyecto de software funcional y abierto en GitHub (<a href="https://github.com/roncanciovl/burger_delivery" target="_blank">github.com/roncanciovl/burger_delivery</a>)</strong>, validado experimentalmente en laboratorio y registrado formalmente en <strong>DataCite / Zenodo con DOI persistente (<a href="https://doi.org/10.5281/zenodo.21809949" target="_blank">10.5281/zenodo.21809949</a>)</strong>.
   </p>
   <p>
-    La celda articula sinérgicamente la <strong>robótica de manipulación industrial (Kinova Gen3 7-DOF)</strong>, los <strong>sistemas embebidos distribuidos (micro-ROS en ESP32)</strong>, la <strong>telemetría ciber-física en tiempo real</strong> y la <strong>Inteligencia Artificial Multimodal (Embodied AI con Gemini Robotics)</strong>. Al ser un desarrollo en ejecución y con datos experimentales en curso, ofrece al grupo VOLTA un retorno científico inmediato sin tiempos muertos de prototipado inicial.
+    La plataforma articula de forma sinérgica la <strong>robótica de manipulación industrial (Kinova Gen3 7-DOF)</strong>, los <strong>sistemas embebidos distribuidos (micro-ROS en ESP32)</strong>, la <strong>telemetría ciber-física en tiempo real</strong> y la <strong>Inteligencia Artificial Multimodal (Embodied AI con Gemini Robotics)</strong>. Al tratarse de una celda con protocolos de medición terminados y toma de datos activa, ofrece a VOLTA un retorno científico inmediato sin tiempos muertos de desarrollo inicial.
   </p>
 
   <!-- 2. Alignment Table -->
-  <h3>2. Alineación con las Líneas de Investigación de VOLTA</h3>
+  <h3>2. Articulación Estratégica con las Líneas de Investigación de VOLTA</h3>
+  <p>
+    Frente a las tres líneas oficiales de VOLTA (<em>1. Energías Renovables</em>, <em>2. Diseños Mecatrónicos</em>, <em>3. Materiales y Procesos de Manufactura</em>), el proyecto se integra en el núcleo de la <strong>Línea 2</strong> e incorpora dos extensiones de frontera tecnológica ausentes hoy en su GrupLAC:
+  </p>
   <table class="data-table">
     <thead>
       <tr>
-        <th style="width: 38%;">Línea de Investigación VOLTA</th>
-        <th style="width: 62%;">Contribución Específica de Burger-Cell</th>
+        <th style="width: 32%;">Línea Oficial VOLTA</th>
+        <th style="width: 25%;">Estado en VOLTA</th>
+        <th style="width: 43%;">Aporte y Extensión con Burger-Cell</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td><strong>1. Diseños Mecatrónicos y Aplicaciones Industriales</strong></td>
-        <td>Celda colaborativa de pick & place de alta precisión con cinemática inversa MoveIt 2, servoing visual 3D con AprilTags y control con reducción de jerk inercial.</td>
+        <td><strong>1. Energías Renovables</strong></td>
+        <td>Consolidada</td>
+        <td>—</td>
       </tr>
       <tr>
-        <td><strong>2. Sistemas Embebidos y Telemetría Ciber-Física</strong></td>
-        <td>Medición y registro continuo a 1 Hz de latencia RTT, Jitter y pérdida de paquetes en buses DDS/RTPS de ROS 2 y micro-ROS (ESP32) sobre WiFi 6.</td>
+        <td><strong>2. Diseños Mecatrónicos</strong></td>
+        <td><strong>Núcleo de la Propuesta</strong></td>
+        <td><strong>Aporte Directo:</strong> Celda colaborativa de pick & place de alta precisión con manipulador Kinova Gen3 (7-DOF), cinemática inversa en MoveIt 2, servoing visual 3D (AprilTags) y control de trayectoria suave (<em>jerk reduction</em>).</td>
       </tr>
       <tr>
-        <td><strong>3. Inteligencia Artificial Aplicada a Mecatrónica</strong></td>
-        <td>Razonamiento espacial 3D <em>zero-shot</em> con <strong>Gemini Robotics VLM</strong> (<code>gemini-robotics-er-1.6-preview</code>) para grasping semántico multi-vista y affordances físicas.</td>
+        <td><em>Extensión 2.A (Nueva Capacidad)</em></td>
+        <td><em>Ausente en GrupLAC</em></td>
+        <td><strong>Telemetría Ciber-Física y QoS en Tiempo Real:</strong> Medición y registro a 1 Hz de latencia RTT, Jitter y pérdida de paquetes en buses DDS/RTPS de ROS 2 y micro-ROS (ESP32) sobre WiFi 6.</td>
+      </tr>
+      <tr>
+        <td><em>Extensión 2.B (Nueva Capacidad)</em></td>
+        <td><em>Ausente en GrupLAC</em></td>
+        <td><strong>Inteligencia Artificial Física (Embodied AI):</strong> Razonamiento espacial 3D <em>zero-shot</em> con Modelos de Visión-Lenguaje (<strong>Gemini Robotics <code>gemini-robotics-er-1.6-preview</code></strong>) para grasping semántico multi-vista y affordances.</td>
+      </tr>
+      <tr>
+        <td><strong>3. Materiales y Procesos de Manufactura</strong></td>
+        <td>Consolidada</td>
+        <td>Potencial sinergia futura en caracterización de agarre sobre probetas manufacturadas.</td>
       </tr>
     </tbody>
   </table>
@@ -338,7 +356,7 @@ HTML_CONTENT = """<!DOCTYPE html>
   <!-- 3. Scientific Commitments -->
   <h3>3. Compromisos de Producción Científica para el GrupLAC (2026 - 2027)</h3>
   <p>
-    Para maximizar los indicadores de productividad del grupo VOLTA y optimizar los tiempos de ejecución, se focaliza el esfuerzo en <strong>un Artículo Insignia (Flagship Paper) de Categoría Q1/Q2</strong> que fusiona la IA Multimodal con la Telemetría de Red:
+    Para maximizar los indicadores de productividad de VOLTA y focalizar los esfuerzos, se plantea <strong>un Artículo Insignia (Flagship Paper) de Categoría Q1/Q2</strong> que fusiona la IA Multimodal con la Telemetría de Red:
   </p>
 
   <div class="callout">
@@ -350,13 +368,13 @@ HTML_CONTENT = """<!DOCTYPE html>
   <ul>
     <li><strong>Software Científico Registrado:</strong> Registro formal ante MinCiencias del repositorio <a href="https://github.com/roncanciovl/burger_delivery" target="_blank">Burger-Cell en GitHub</a> con DOI persistente <a href="https://doi.org/10.5281/zenodo.21809949" target="_blank">10.5281/zenodo.21809949</a>.</li>
     <li><strong>Dataset Abierto Unificado:</strong> Publicación en <em>IEEE DataPort / Zenodo</em> correlacionando métricas DDS (1 Hz), latencias VLM y precisión cinemática articular (RMSE).</li>
-    <li><strong>Formación de Talento en Campus Cajicá:</strong> Dirección de 1 a 2 trabajos de grado para la <strong>Maestría en Ingeniería Mecatrónica</strong> y talleres para el semillero de robótica.</li>
+    <li><strong>Formación de Talento Humano:</strong> Dirección de 1 a 2 trabajos de grado para la <strong>Maestría en Ingeniería Mecatrónica</strong> y vinculación de estudiantes del semillero de robótica.</li>
   </ul>
 
   <!-- 4. MVP Demonstration -->
-  <h3>4. Demostración Tecnológica en Laboratorio (MVP Campus Cajicá)</h3>
+  <h3>4. Demostración Tecnológica en Laboratorio (MVP Campus Nueva Granada)</h3>
   <p>
-    Se ofrece una sesión de demostración funcional (10 minutos) en los laboratorios de Mecatrónica del Campus Nueva Granada:
+    Se ofrece una sesión de demostración funcional (10 minutos) en los laboratorios de la Facultad de Ingeniería:
   </p>
   <ul>
     <li><strong>Demostrador 1 (Pipeline Unificado IA + Cinemática):</strong> Captura multi-vista, inferencia espacial con Gemini Robotics y ejecución de trayectoria MoveIt 2 con el Kinova Gen3.</li>
@@ -365,35 +383,36 @@ HTML_CONTENT = """<!DOCTYPE html>
   </ul>
 
   <!-- 5. Requested Resources -->
-  <h3>5. Recursos Solicitados y Apoyo Institucional</h3>
+  <h3>5. Recursos y Apoyo Solicitado al Grupo VOLTA / VRI</h3>
   <p>
-    Se solicita el respaldo y aval del grupo VOLTA para gestionar ante la Vicerrectoría de Investigaciones (VRI) los siguientes rubros:
+    Para consolidar la infraestructura experimental y acelerar los tiempos de publicación, se solicita el respaldo de VOLTA para tramitar ante la Vicerrectoría de Investigaciones (VRI):
   </p>
   <ol>
-    <li><strong>Hardware Embebido:</strong> Adquisición de tarjetas de desarrollo <strong>ESP32 / ESP32-S3 (x3 unidades)</strong> para nodos de micro-ROS y sensores, además de una cámara de profundidad RGB-D (Intel RealSense) para el efector final.</li>
-    <li><strong>Fondo de Publicación (APC Open Access):</strong> Cobertura de cargos de procesamiento para el Flagship Paper Q1 al ser aceptado.</li>
-    <li><strong>Créditos de Cómputo e Inferencia IA:</strong> Asignación de tokens API para inferencia en la nube con Gemini Robotics durante los ensayos.</li>
-    <li><strong>Vinculación Contractual de Investigación (Modalidad Docente de Cátedra):</strong> Gestión institucional para formalizar un contrato de investigación adicional / remuneración por horas de proyecto (4 a 6 horas semanales dedicadas a investigación) con cargo al proyecto o fondos de fortalecimiento del grupo VOLTA.</li>
-    <li><strong>Estudiante Auxiliar:</strong> Asignación de 1 auxiliar de investigación de pregrado o maestría para apoyo en calibraciones de laboratorio en Campus Cajicá.</li>
+    <li><strong>Equipamiento Embebido y Sensores:</strong> Adquisición de tarjetas de desarrollo <strong>ESP32 / ESP32-S3 (x3 unidades)</strong> para nodos de micro-ROS y una cámara de profundidad RGB-D (Intel RealSense) para el manipulador Kinova Gen3.</li>
+    <li><strong>Fondo de Publicación (APC Open Access):</strong> Respaldo para la cobertura de cargos de procesamiento para el Flagship Paper Q1 al momento de su aceptación.</li>
+    <li><strong>Créditos de Cómputo e Inferencia IA:</strong> Soporte de tokens API para inferencia en la nube con Gemini Robotics durante las campañas experimentales.</li>
+    <li><strong>Articulación de Estudiantes:</strong> Asignación de 1 estudiante auxiliar de pregrado o maestría para soporte en calibración de hardware y pruebas de laboratorio.</li>
   </ol>
 
   <!-- Signatures -->
   <table class="signature-table">
     <tr>
       <td>
+        <strong style="color: #1e3a8a;">Postula:</strong>
         <div class="signature-line">
-          <strong>Prof. Henry Roncancio</strong><br>
-          Docente de Cátedra / Investigador<br>
-          Programa de Ingeniería Mecatrónica<br>
-          Campus Nueva Granada — UMNG
+          <strong>Prof. Henry Antonio Roncancio Velandia</strong><br>
+          Docente e Investigador — Programa de Ingeniería Mecatrónica<br>
+          Facultad de Ingeniería — Campus Nueva Granada<br>
+          <span style="font-size: 7.8pt; color: #475569;">ORCID: 0009-0009-9954-9813 | henry.roncancio@unimilitar.edu.co</span>
         </div>
       </td>
       <td>
+        <strong style="color: #1e3a8a;">Visto Bueno / Aval (Grupo VOLTA):</strong>
         <div class="signature-line">
-          <strong>Prof. William Gómez Rivera, M.Sc.</strong><br>
-          Docente Investigador — Grupo VOLTA (A1)<br>
-          Programa de Ingeniería Mecatrónica<br>
-          Campus Nueva Granada — UMNG
+          <strong>Dr. William Gómez Rivera, Ph.D.</strong><br>
+          Docente Investigador — Grupo de Investigación VOLTA (A1)<br>
+          Programa de Ingeniería Mecatrónica — Campus Nueva Granada<br>
+          <span style="font-size: 7.8pt; color: #475569;">william.gomezr@unimilitar.edu.co</span>
         </div>
       </td>
     </tr>
