@@ -9,6 +9,7 @@ import collections
 import os
 import re
 import socket
+import struct
 import subprocess
 import threading
 import time
