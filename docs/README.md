@@ -11,9 +11,10 @@ Bienvenido a la sección de **documentación técnica, papers y reportes de inve
 
 ```text
 docs/
-├── research/                    # Experimentos, benchmarks e investigación en IA
+├── research/                    # Experimentos, benchmarks e investigación en IA y Redes
 │   ├── EXPERIMENTO_IA_LOCALIZACION_GEMINI.md
-│   └── EXPERIMENTO_IA_LOCALIZACION_GEMINI.pdf
+│   ├── EXPERIMENTO_IA_LOCALIZACION_GEMINI.pdf
+│   └── EXPERIMENTO_QOS_TELEMETRIA.md
 ├── architecture/                # Especificaciones formales del sistema y cinemática
 │   ├── ros_burger_delivery.md
 │   ├── ros_burger_delivery.pdf
@@ -31,11 +32,14 @@ docs/
 
 ## 📑 Artículos y Reportes Destacados
 
-### 🤖 1. Investigación en Inteligencia Artificial y Razonamiento Espacial (`research/`)
+### 🤖 1. Investigación en Inteligencia Artificial, QoS y Telemetría (`research/`)
 - [**Razonamiento Espacial 3D y Localización con Gemini Robotics**](research/EXPERIMENTO_IA_LOCALIZACION_GEMINI.md): Estudio y arquitectura para localización *zero-shot* 3D basada en VLM (`gemini-robotics-er-1.6-preview`), affordances de agarre y triangulación multi-vista como alternativa a modelos clásicos como YOLO.
+- [**Protocolo Experimental: QoS, Jitter y Telemetría Robótica**](research/EXPERIMENTO_QOS_TELEMETRIA.md): Metodología cuantitativa y matemática para evaluar el impacto de la degradación inalámbrica en el seguimiento articular del Kinova Gen3 y la latencia de percepción espacial.
 
-### 📐 2. Arquitectura del Sistema (`architecture/`)
+### 📐 2. Arquitectura del Sistema y Redes (`architecture/` & `network_setup/`)
 - [**Documento Técnico de Arquitectura (Burger Delivery)**](architecture/ros_burger_delivery.md): Descripción global de la celda colaborativa, árbol TF completo, nodos y protocolos de comunicación.
+- [**Guía de Configuración de Red y Firewall ROS 2**](../network_setup/ROS2_NETWORK_CONFIG.md): Configuración de dominio, CycloneDDS, modo espejo en WSL2 y diagnóstico de multicast.
+- [**Manual Completo de la UI del Monitor de Red**](../network_setup/MONITOR_UI_GUIA.md): Explicación exhaustiva del dashboard web, KPIs, modo experimento de telemetría y visualizador de topología.
 - [**Fundamentos de ROS 2 y Redes**](architecture/ros.md): Guía de referencia de topología de red, micro-ROS y localización 2D.
 - [**Visualizador Web URDF**](architecture/VISUALIZAR_URDF_WEB.md): Métodos para renderizar modelos robóticos URDF en navegadores web.
 

@@ -18,7 +18,15 @@ const state = {
   currentTraffic: null,
   isScanning: false,
   syncSeconds: 0,
-  isCalibrated: false
+  isCalibrated: false,
+  benchmark: {
+    isActive: false,
+    sessionName: 'ensayo_01_kinova',
+    scenario: 'Linea_Base_WiFi6',
+    elapsedSec: 0,
+    samplesCount: 0,
+    lastFile: null
+  }
 };
 
 // ==========================================================================
@@ -29,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupLivePolling();
   fetchInitialData();
   setupEventListeners();
+  setupBenchmarkModule();
   setupCanvasChart();
   setupTopologyRenderer();
   
@@ -79,6 +88,8 @@ function setupLivePolling() {
 
   // Polling de tráfico cada 1000ms
   setInterval(fetchTrafficSnapshot, 1000);
+  // Polling de benchmark cada 1000ms
+  setInterval(fetchBenchmarkStatus, 1000);
   // Polling de dispositivos cada 4000ms
   setInterval(fetchDevicesSnapshot, 4000);
 }
@@ -786,3 +797,150 @@ function setupEventListeners() {
     modal.classList.add('hidden');
   });
 }
+
+// ==========================================================================
+// Módulo de Benchmark / Experimento de Telemetría QoS & ROS 2
+// ==========================================================================
+function setupBenchmarkModule() {
+  const btnToggle = document.getElementById('btn-benchmark-toggle');
+  const btnDownload = document.getElementById('btn-benchmark-download');
+  const sessionInput = document.getElementById('benchmark-session-input');
+  const scenarioSelect = document.getElementById('benchmark-scenario-select');
+
+  if (!btnToggle) return;
+
+  btnToggle.addEventListener('click', async () => {
+    btnToggle.disabled = true;
+
+    if (!state.benchmark.isActive) {
+      // Iniciar Grabación
+      const sessionName = sessionInput ? sessionInput.value.trim() || 'ensayo_qos' : 'ensayo_qos';
+      const scenario = scenarioSelect ? scenarioSelect.value : 'Linea_Base_WiFi6';
+
+      try {
+        const res = await fetch('/api/benchmark/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_name: sessionName, scenario: scenario })
+        });
+        const data = await res.json();
+        if (data.status === 'started') {
+          state.benchmark.isActive = true;
+          state.benchmark.sessionName = data.session_name;
+          state.benchmark.scenario = data.scenario;
+          updateBenchmarkUI(true);
+        }
+      } catch (err) {
+        console.error('Error iniciando benchmark:', err);
+      } finally {
+        btnToggle.disabled = false;
+      }
+    } else {
+      // Detener Grabación
+      try {
+        const res = await fetch('/api/benchmark/stop', { method: 'POST' });
+        const data = await res.json();
+        state.benchmark.isActive = false;
+        if (data.filename) {
+          state.benchmark.lastFile = data.filename;
+        }
+        updateBenchmarkUI(false, data);
+      } catch (err) {
+        console.error('Error deteniendo benchmark:', err);
+      } finally {
+        btnToggle.disabled = false;
+      }
+    }
+  });
+
+  if (btnDownload) {
+    btnDownload.addEventListener('click', () => {
+      window.location.href = '/api/benchmark/download';
+    });
+  }
+}
+
+async function fetchBenchmarkStatus() {
+  try {
+    const res = await fetch('/api/benchmark/status');
+    const data = await res.json();
+
+    state.benchmark.isActive = !!data.is_active;
+    if (data.last_file) state.benchmark.lastFile = data.last_file;
+
+    if (data.is_active) {
+      // Actualizar contadores en vivo
+      const mins = Math.floor((data.elapsed_sec || 0) / 60).toString().padStart(2, '0');
+      const secs = Math.floor((data.elapsed_sec || 0) % 60).toString().padStart(2, '0');
+      
+      const timeEl = document.getElementById('b-live-time');
+      if (timeEl) timeEl.textContent = `${mins}:${secs}`;
+
+      const sampEl = document.getElementById('b-live-samples');
+      if (sampEl) sampEl.textContent = `${data.samples_count || 0}`;
+
+      const rttEl = document.getElementById('b-live-rtt');
+      if (rttEl) rttEl.textContent = `${data.current_avg_rtt_ms || 0} ms`;
+
+      const jitEl = document.getElementById('b-live-jitter');
+      if (jitEl) jitEl.textContent = `${data.current_avg_jitter_ms || 0} ms`;
+
+      const lossEl = document.getElementById('b-live-loss');
+      if (lossEl) lossEl.textContent = `${data.current_avg_loss_percent || 0}%`;
+
+      updateBenchmarkUI(true);
+    } else {
+      if (data.last_file) {
+        const lastEl = document.getElementById('b-last-file');
+        if (lastEl) lastEl.textContent = data.last_file;
+        const btnDl = document.getElementById('btn-benchmark-download');
+        if (btnDl) btnDl.disabled = false;
+      }
+    }
+  } catch (err) {
+    // Silencioso para evitar saturar consola
+  }
+}
+
+function updateBenchmarkUI(isRecording, stopResult = null) {
+  const btnToggle = document.getElementById('btn-benchmark-toggle');
+  const btnText = document.getElementById('benchmark-btn-text');
+  const statusBadge = document.getElementById('benchmark-status-badge');
+  const statusText = document.getElementById('benchmark-status-text');
+  const btnDownload = document.getElementById('btn-benchmark-download');
+  const lastFileEl = document.getElementById('b-last-file');
+  const sessionInput = document.getElementById('benchmark-session-input');
+  const scenarioSelect = document.getElementById('benchmark-scenario-select');
+
+  if (isRecording) {
+    if (btnToggle) {
+      btnToggle.classList.add('btn-benchmark-stop');
+      btnToggle.title = 'Detener grabación y exportar CSV';
+    }
+    if (btnText) btnText.textContent = '⏹ Detener y Exportar';
+    if (statusBadge) statusBadge.classList.add('recording');
+    if (statusText) statusText.textContent = '🔴 GRABANDO TELEMETRÍA EN VIVO';
+    if (btnDownload) btnDownload.disabled = true;
+    if (sessionInput) sessionInput.disabled = true;
+    if (scenarioSelect) scenarioSelect.disabled = true;
+  } else {
+    if (btnToggle) {
+      btnToggle.classList.remove('btn-benchmark-stop');
+      btnToggle.title = 'Iniciar registro de telemetría';
+    }
+    if (btnText) btnText.textContent = 'Iniciar Grabación';
+    if (statusBadge) statusBadge.classList.remove('recording');
+    if (statusText) statusText.textContent = 'Listo para Experimentar';
+    if (sessionInput) sessionInput.disabled = false;
+    if (scenarioSelect) scenarioSelect.disabled = false;
+
+    if (stopResult && stopResult.filename) {
+      if (lastFileEl) lastFileEl.textContent = stopResult.filename;
+      if (btnDownload) btnDownload.disabled = false;
+    } else if (state.benchmark.lastFile) {
+      if (lastFileEl) lastFileEl.textContent = state.benchmark.lastFile;
+      if (btnDownload) btnDownload.disabled = false;
+    }
+  }
+}
+

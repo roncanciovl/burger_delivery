@@ -264,3 +264,14 @@ Al evaluar la comunicación en vivo entre el PC de control, el robot (Kinova Gen
    - Mide el porcentaje de paquetes UDP que no llegaron a su destino durante la ráfaga de transmisión.
    - Como DDS utiliza UDP para la transmisión de baja latencia, una pérdida de paquetes mayor al 2% causará caídas de mensajes en tópicos Best Effort o retrasos por retransmisión en tópicos Reliable.
 
+### D. Modo Experimento y Benchmark de Telemetría Científica
+El monitor cuenta con un panel integrado para **grabar datasets experimentales** en tiempo real bajo 3 condiciones controladas (Línea Base WiFi 6, Carga Multi-Robot y Estrés Severo):
+- **Iniciar/Detener:** Permite iniciar ensayos catalogados (ej. `ensayo_01_kinova`) y detenerlos generando un dataset estructurado en `.csv`.
+- **Exportación Directa:** Descarga inmediata desde el botón `📥 Descargar CSV`.
+- **Análisis Estadístico:** Procesamiento automático con [analyze_telemetry_benchmark.py](file:///home/roncanciovl/ros2_ws/src/burger_delivery/scripts/analyze_telemetry_benchmark.py).
+
+> 📘 **Manual Completo de la Interfaz Web:**  
+> Para una explicación detallada de todos los componentes visuales, KPIs, gráficas Canvas y endpoints de la API, consulta la [Guía Completa de la Interfaz del Monitor (MONITOR_UI_GUIA.md)](file:///home/roncanciovl/ros2_ws/src/burger_delivery/network_setup/MONITOR_UI_GUIA.md).  
+> Para el diseño metodológico del experimento y pruebas estadísticas, consulta [EXPERIMENTO_QOS_TELEMETRIA.md](file:///home/roncanciovl/ros2_ws/src/burger_delivery/docs/research/EXPERIMENTO_QOS_TELEMETRIA.md).
+
+

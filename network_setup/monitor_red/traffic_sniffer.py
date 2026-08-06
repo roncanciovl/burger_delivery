@@ -54,6 +54,16 @@ class TrafficSniffer:
             "active_sockets": []
         }
 
+        # Grabador de Sesión de Benchmark / Experimento
+        self.benchmark_active = False
+        self.benchmark_session_name = ""
+        self.benchmark_scenario = "Linea_Base_WiFi6"
+        self.benchmark_start_time = 0.0
+        self.benchmark_records: List[Dict[str, Any]] = []
+        self.benchmark_logs_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "benchmark_logs")
+        os.makedirs(self.benchmark_logs_dir, exist_ok=True)
+        self.last_saved_benchmark_file: Optional[str] = None
+
         # Contadores de referencia para cálculo delta
         self._last_counters = self._get_raw_net_counters()
         self._last_time = time.time()
@@ -194,20 +204,17 @@ class TrafficSniffer:
 
     def _measure_dds_quality(self) -> Dict[str, float]:
         """Mide estimación de Latencia, Jitter UDP y Pérdida de paquetes en el canal ROS 2 DDS"""
-        # Probar target DDS (Robot Kinova 192.168.1.10, Gateway 192.168.1.1 o Gateway alternativo)
         target_ip = "192.168.1.10" if self.gateway_ip.startswith("192.168") else self.gateway_ip
         
         try:
-            cmd = ["ping", "-c", "4", "-i", "0.15", "-W", "1", target_ip]
-            res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=2.0)
+            cmd = ["ping", "-c", "2", "-i", "0.1", "-W", "1", target_ip]
+            res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=0.6)
             if res.returncode == 0:
                 out = res.stdout.decode("utf-8", errors="ignore")
                 
-                # Pérdida de paquetes DDS
                 loss_match = re.search(r"(\d+)%\s*packet loss", out)
                 loss = float(loss_match.group(1)) if loss_match else 0.0
                 
-                # Latencias y Jitter (mdev)
                 rtt_match = re.search(r"rtt\s+min/avg/max/mdev\s*=\s*([0-9.]+)/([0-9.]+)/([0-9.]+)/([0-9.]+)", out)
                 if rtt_match:
                     avg_lat = float(rtt_match.group(2))
@@ -228,8 +235,8 @@ class TrafficSniffer:
             return {"latency_ms": 0.0, "jitter_ms": 0.0, "loss_percent": 0.0}
 
         try:
-            cmd = ["ping", "-c", "3", "-i", "0.2", "-W", "1", self.gateway_ip]
-            res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=2.0)
+            cmd = ["ping", "-c", "2", "-i", "0.1", "-W", "1", self.gateway_ip]
+            res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=0.6)
             if res.returncode == 0:
                 out = res.stdout.decode("utf-8", errors="ignore")
                 
@@ -335,6 +342,146 @@ class TrafficSniffer:
             self.history_dds_kbps.append(dds_kbps)
             self.history_microros_kbps.append(microros_kbps)
             self.history_latency_ms.append(gw_quality["latency_ms"])
+
+            # Si el benchmark está activo, guardar registro estructurado
+            if self.benchmark_active:
+                elapsed = round(now - self.benchmark_start_time, 2)
+                record = {
+                    "timestamp_iso": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(now)),
+                    "elapsed_sec": elapsed,
+                    "session_name": self.benchmark_session_name,
+                    "scenario": self.benchmark_scenario,
+                    "total_kbps": total_kbps,
+                    "dds_kbps": dds_kbps,
+                    "microros_kbps": microros_kbps,
+                    "tcp_kbps": tcp_kbps,
+                    "udp_kbps": udp_kbps,
+                    "bytes_recv_rate": round(bytes_recv_delta / dt, 1),
+                    "bytes_sent_rate": round(bytes_sent_delta / dt, 1),
+                    "packets_recv_rate": round(pkts_recv_delta / dt, 1),
+                    "packets_sent_rate": round(pkts_sent_delta / dt, 1),
+                    "gateway_latency_ms": gw_quality["latency_ms"],
+                    "gateway_jitter_ms": gw_quality["jitter_ms"],
+                    "gateway_loss_percent": gw_quality["loss_percent"],
+                    "dds_latency_ms": dds_quality["dds_latency_ms"],
+                    "dds_jitter_ms": dds_quality["dds_jitter_ms"],
+                    "dds_loss_percent": dds_quality["dds_packet_loss_percent"],
+                    "active_dds_domains": ";".join(str(d) for d in port_info["active_dds_domains"]) if port_info["active_dds_domains"] else "none",
+                    "microros_active": 1 if port_info["microros_agent_active"] else 0
+                }
+                self.benchmark_records.append(record)
+
+    def start_benchmark(self, session_name: str = "ensayo_qos", scenario: str = "Linea_Base_WiFi6") -> Dict[str, Any]:
+        """Inicia una sesión de recolección de datos de benchmark"""
+        with self._lock:
+            self.benchmark_session_name = re.sub(r'[^a-zA-Z0-9_-]', '_', session_name) or "ensayo_qos"
+            self.benchmark_scenario = scenario
+            self.benchmark_start_time = time.time()
+            self.benchmark_records = []
+            self.benchmark_active = True
+            
+            return {
+                "status": "started",
+                "session_name": self.benchmark_session_name,
+                "scenario": self.benchmark_scenario,
+                "start_time": time.strftime("%H:%M:%S")
+            }
+
+    def stop_benchmark(self) -> Dict[str, Any]:
+        """Detiene la sesión y persiste el archivo CSV con las métricas acumuladas"""
+        with self._lock:
+            if not self.benchmark_active:
+                return {"status": "error", "message": "No hay ningún benchmark en ejecución."}
+
+            self.benchmark_active = False
+            records_count = len(self.benchmark_records)
+            
+            if records_count == 0:
+                return {"status": "warning", "message": "Sesión detenida sin muestras capturadas.", "count": 0}
+
+            # Nombre de archivo estandarizado
+            timestamp_str = time.strftime("%Y%m%d_%H%M%S")
+            filename = f"benchmark_{self.benchmark_scenario}_{self.benchmark_session_name}_{timestamp_str}.csv"
+            filepath = os.path.join(self.benchmark_logs_dir, filename)
+
+            # Escribir CSV
+            headers = [
+                "timestamp_iso", "elapsed_sec", "session_name", "scenario",
+                "total_kbps", "dds_kbps", "microros_kbps", "tcp_kbps", "udp_kbps",
+                "bytes_recv_rate", "bytes_sent_rate", "packets_recv_rate", "packets_sent_rate",
+                "gateway_latency_ms", "gateway_jitter_ms", "gateway_loss_percent",
+                "dds_latency_ms", "dds_jitter_ms", "dds_loss_percent",
+                "active_dds_domains", "microros_active"
+            ]
+
+            try:
+                with open(filepath, "w", encoding="utf-8") as f:
+                    f.write(",".join(headers) + "\n")
+                    for r in self.benchmark_records:
+                        row = [str(r.get(h, "")) for h in headers]
+                        f.write(",".join(row) + "\n")
+                
+                self.last_saved_benchmark_file = filepath
+            except Exception as e:
+                return {"status": "error", "message": f"Error escribiendo CSV: {e}"}
+
+            # Calcular promedios del benchmark
+            avg_rtt = round(sum(r["gateway_latency_ms"] for r in self.benchmark_records) / max(records_count, 1), 2)
+            avg_jitter = round(sum(r["gateway_jitter_ms"] for r in self.benchmark_records) / max(records_count, 1), 2)
+            avg_loss = round(sum(r["gateway_loss_percent"] for r in self.benchmark_records) / max(records_count, 1), 2)
+            avg_dds_kbps = round(sum(r["dds_kbps"] for r in self.benchmark_records) / max(records_count, 1), 2)
+
+            return {
+                "status": "completed",
+                "filename": filename,
+                "filepath": filepath,
+                "samples_count": records_count,
+                "duration_sec": self.benchmark_records[-1]["elapsed_sec"] if self.benchmark_records else 0,
+                "summary": {
+                    "avg_rtt_ms": avg_rtt,
+                    "avg_jitter_ms": avg_jitter,
+                    "avg_loss_percent": avg_loss,
+                    "avg_dds_kbps": avg_dds_kbps
+                }
+            }
+
+    def get_benchmark_status(self) -> Dict[str, Any]:
+        """Obtiene el estado en vivo de la sesión de benchmark"""
+        with self._lock:
+            if not self.benchmark_active:
+                return {
+                    "is_active": False,
+                    "last_file": os.path.basename(self.last_saved_benchmark_file) if self.last_saved_benchmark_file else None
+                }
+
+            elapsed = max(0, time.time() - self.benchmark_start_time)
+            samples = len(self.benchmark_records)
+            
+            avg_rtt = round(sum(r["gateway_latency_ms"] for r in self.benchmark_records) / max(samples, 1), 2) if samples > 0 else 0.0
+            avg_jitter = round(sum(r["gateway_jitter_ms"] for r in self.benchmark_records) / max(samples, 1), 2) if samples > 0 else 0.0
+            avg_loss = round(sum(r["gateway_loss_percent"] for r in self.benchmark_records) / max(samples, 1), 2) if samples > 0 else 0.0
+
+            return {
+                "is_active": True,
+                "session_name": self.benchmark_session_name,
+                "scenario": self.benchmark_scenario,
+                "elapsed_sec": round(elapsed, 1),
+                "samples_count": samples,
+                "current_avg_rtt_ms": avg_rtt,
+                "current_avg_jitter_ms": avg_jitter,
+                "current_avg_loss_percent": avg_loss,
+                "last_file": os.path.basename(self.last_saved_benchmark_file) if self.last_saved_benchmark_file else None
+            }
+
+    def get_latest_benchmark_csv_content(self) -> Optional[str]:
+        """Devuelve el contenido CSV de la última sesión guardada"""
+        if self.last_saved_benchmark_file and os.path.exists(self.last_saved_benchmark_file):
+            try:
+                with open(self.last_saved_benchmark_file, "r", encoding="utf-8") as f:
+                    return f.read()
+            except Exception:
+                pass
+        return None
 
     def start_background_collector(self, interval: float = 1.0):
         """Inicia el hilo recolector de métricas en segundo plano"""

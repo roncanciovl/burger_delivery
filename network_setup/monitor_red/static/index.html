@@ -67,6 +67,85 @@
       </div>
     </aside>
 
+    <!-- Panel de Experimento / Benchmark de Telemetría QoS & DDS -->
+    <section class="card benchmark-card" id="benchmark-section">
+      <div class="benchmark-header">
+        <div class="benchmark-title-wrap">
+          <div class="benchmark-badge-tag">CIENCIA & TELEMETRÍA</div>
+          <h2 class="benchmark-title">🔬 Modo Experimento: Registro de Telemetría QoS & ROS 2</h2>
+          <p class="benchmark-subtitle">Captura muestras cuantitativas de RTT, Jitter, Pérdida de Paquetes y Ancho de Banda DDS para publicaciones científicas.</p>
+        </div>
+        <div class="benchmark-status-badge" id="benchmark-status-badge">
+          <span class="status-dot" id="benchmark-rec-dot"></span>
+          <span id="benchmark-status-text">Listo para Experimentar</span>
+        </div>
+      </div>
+
+      <div class="benchmark-controls-grid">
+        <div class="benchmark-field">
+          <label class="field-label" for="benchmark-scenario-select">Escenario de Red:</label>
+          <select id="benchmark-scenario-select" class="benchmark-select">
+            <option value="Linea_Base_WiFi6">1. Línea Base (WiFi 6 AX12 Limpio - Baja Carga)</option>
+            <option value="Carga_MultiRobot">2. Carga Típica (Multi-Robot / Tráfico Concurrente)</option>
+            <option value="Estres_Severo">3. Estrés Severo (Congestión / Pérdida Forzada)</option>
+            <option value="Personalizado">4. Ensayo Personalizado</option>
+          </select>
+        </div>
+
+        <div class="benchmark-field">
+          <label class="field-label" for="benchmark-session-input">Identificador del Ensayo:</label>
+          <input type="text" id="benchmark-session-input" class="benchmark-input" placeholder="ej. ensayo_01_kinova_vlm" value="ensayo_01_kinova">
+        </div>
+
+        <div class="benchmark-actions">
+          <button id="btn-benchmark-toggle" class="btn btn-benchmark-start" title="Iniciar registro de telemetría">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/>
+            </svg>
+            <span id="benchmark-btn-text">Iniciar Grabación</span>
+          </button>
+          
+          <button id="btn-benchmark-download" class="btn btn-secondary btn-benchmark-download" disabled title="Descargar último dataset CSV">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span>Descargar CSV</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Barra de Estado en Vivo durante la Grabación -->
+      <div class="benchmark-live-bar" id="benchmark-live-bar">
+        <div class="benchmark-live-stat">
+          <span class="live-label">⏱ Tiempo:</span>
+          <strong class="live-val" id="b-live-time">00:00</strong>
+        </div>
+        <div class="benchmark-live-stat">
+          <span class="live-label">📊 Muestras:</span>
+          <strong class="live-val" id="b-live-samples">0</strong>
+        </div>
+        <div class="benchmark-live-stat">
+          <span class="live-label">📶 RTT Promedio:</span>
+          <strong class="live-val" id="b-live-rtt">0.0 ms</strong>
+        </div>
+        <div class="benchmark-live-stat">
+          <span class="live-label">〰 Jitter Promedio:</span>
+          <strong class="live-val" id="b-live-jitter">0.0 ms</strong>
+        </div>
+        <div class="benchmark-live-stat">
+          <span class="live-label">📉 Pérdida:</span>
+          <strong class="live-val" id="b-live-loss">0.0%</strong>
+        </div>
+        <div class="benchmark-live-stat file-stat" id="b-file-box">
+          <span class="live-label">📁 Archivo:</span>
+          <span class="live-filename" id="b-last-file">Ninguno aún</span>
+        </div>
+      </div>
+    </section>
+
     <!-- Tarjetas Rápidas de Telemetría (KPIs) -->
     <section class="kpi-grid">
 

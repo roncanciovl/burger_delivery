@@ -46,12 +46,17 @@ Este documento centraliza las tareas pendientes, oportunidades de mejora identif
 
 ## 🌐 4. Telemetría de Red y Determinismo DDS / micro-ROS
 
+- [x] **Protocolo Experimental Formal de Telemetría QoS**:
+  - [x] Documento metodológico y matemático: [EXPERIMENTO_QOS_TELEMETRIA.md](file:///home/roncanciovl/ros2_ws/src/burger_delivery/docs/research/EXPERIMENTO_QOS_TELEMETRIA.md).
+  - [x] Definición de 3 escenarios de red controlados (Línea Base, Carga Multi-Robot, Estrés Severo).
+- [x] **Módulo de Benchmarking en el Monitor de Red (`network_setup/monitor_red`)**:
+  - [x] Grabación y muestreo de RTT, Jitter, Pérdida de Paquetes y Ancho de Banda DDS a 1 Hz.
+  - [x] Endpoints API REST `/api/benchmark/start`, `/stop`, `/status`, `/download`.
+  - [x] Panel visual interactivo en la UI con selectores de escenario, estado REC y descarga directa de CSV.
+  - [x] Script de análisis estadístico y generación de figuras para papers: [analyze_telemetry_benchmark.py](file:///home/roncanciovl/ros2_ws/src/burger_delivery/scripts/analyze_telemetry_benchmark.py).
 - [ ] **Inyección de Tráfico y Estrés de Red**:
   - [ ] Scripts para emular degradación de enlace WiFi (pérdida de paquetes, jitter, latencia artificial con `tc/netem`).
   - [ ] Evaluar estabilidad de trayectorias articulares del Kinova bajo congestión de red.
-- [ ] **Extensión del Dashboard Web (`network_setup/monitor_red`)**:
-  - [ ] Añadir gráfica en tiempo real del error de posición 3D y latencia del modelo de IA.
-  - [ ] Monitorización directa de frecuencia de publicación de tópicos críticos (`/tf`, `/joint_states`).
 
 ---
 

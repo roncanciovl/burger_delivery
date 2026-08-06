@@ -179,6 +179,30 @@ class NetworkMonitorHandler(BaseHTTPRequestHandler):
             self._set_json_headers(snapshot)
             return
 
+        # 5. API: Estado del Benchmark de Telemetría
+        elif path == "/api/benchmark/status":
+            b_status = sniffer.get_benchmark_status()
+            self._set_json_headers(b_status)
+            return
+
+        # 6. API: Descarga del último CSV de Benchmark
+        elif path == "/api/benchmark/download":
+            csv_content = sniffer.get_latest_benchmark_csv_content()
+            if csv_content:
+                csv_bytes = csv_content.encode("utf-8")
+                filename = os.path.basename(sniffer.last_saved_benchmark_file) if sniffer.last_saved_benchmark_file else "benchmark.csv"
+                self.send_response(HTTPStatus.OK)
+                self.send_header("Content-Type", "text/csv; charset=utf-8")
+                self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
+                self.send_header("Content-Length", str(len(csv_bytes)))
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(csv_bytes)
+                return
+            else:
+                self._set_json_headers({"status": "error", "message": "No hay archivo CSV disponible para descargar"}, status=HTTPStatus.NOT_FOUND)
+                return
+
         self._send_bytes(b"Recurso no encontrado", "text/plain", HTTPStatus.NOT_FOUND)
 
     def do_POST(self):
@@ -217,6 +241,33 @@ class NetworkMonitorHandler(BaseHTTPRequestHandler):
                     return
             except Exception as e:
                 self._set_json_headers({"status": "error", "message": str(e)}, status=HTTPStatus.BAD_REQUEST)
+                return
+
+        # 4. API: Iniciar Benchmark de Telemetría
+        elif path == "/api/benchmark/start":
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                raw_body = self.rfile.read(length).decode("utf-8") if length > 0 else "{}"
+                data = json.loads(raw_body) if raw_body else {}
+                
+                session_name = data.get("session_name", "ensayo_qos")
+                scenario = data.get("scenario", "Linea_Base_WiFi6")
+                
+                res = sniffer.start_benchmark(session_name=session_name, scenario=scenario)
+                self._set_json_headers(res)
+                return
+            except Exception as e:
+                self._set_json_headers({"status": "error", "message": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+                return
+
+        # 5. API: Detener Benchmark y Guardar CSV
+        elif path == "/api/benchmark/stop":
+            try:
+                res = sniffer.stop_benchmark()
+                self._set_json_headers(res)
+                return
+            except Exception as e:
+                self._set_json_headers({"status": "error", "message": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
                 return
 
 
