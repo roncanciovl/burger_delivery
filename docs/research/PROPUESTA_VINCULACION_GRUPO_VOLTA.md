@@ -17,14 +17,14 @@ Universidad Militar Nueva Granada (Sede Campus Nueva Granada - Cajicá)
 
 > **"Burger-Cell: Framework Abierto y Banco Experimental de Manufactura Flexible Heterogénea en ROS 2 para Manipulación Robótica (Kinova Gen3), Telemetría de Red QoS y Razonamiento Espacial con Inteligencia Artificial"**  
 > **Repositorio GitHub:** [https://github.com/roncanciovl/burger_delivery](https://github.com/roncanciovl/burger_delivery) *(Activo, documentado y en pruebas de laboratorio)*  
-> **DOI Persistente Zenodo:** [`10.5281/zenodo.16781702`](https://doi.org/10.5281/zenodo.16781702) *(Software Científico Registrado y Versionado)*  
+> **DOI Persistente Zenodo:** [`10.5281/zenodo.21809949`](https://doi.org/10.5281/zenodo.21809949) *(Software Científico Registrado y Versionado)*  
 > **Nivel de Madurez Tecnológica:** TRL 4 - TRL 5 (Validado en entorno de celda robótica real)  
 
 ---
 
 ## 2. Resumen Ejecutivo y Justificación Estratégica
 
-La presente propuesta formaliza la vinculación del suscrito **Docente de Cátedra e Investigador** al **Grupo de Investigación VOLTA**, aportando un desarrollo que **ya cuenta con un proyecto de software activo en GitHub ([github.com/roncanciovl/burger_delivery](https://github.com/roncanciovl/burger_delivery)) y en fase de pruebas experimentales**, respaldado con identificador digital persistente **DOI en Zenodo ([10.5281/zenodo.16781702](https://doi.org/10.5281/zenodo.16781702))**. 
+La presente propuesta formaliza la vinculación del suscrito **Docente de Cátedra e Investigador** al **Grupo de Investigación VOLTA**, aportando un desarrollo que **ya cuenta con un proyecto de software activo en GitHub ([github.com/roncanciovl/burger_delivery](https://github.com/roncanciovl/burger_delivery)) y en fase de pruebas experimentales**, respaldado con identificador digital persistente **DOI en Zenodo ([10.5281/zenodo.21809949](https://doi.org/10.5281/zenodo.21809949))**. 
 
 La plataforma articula de forma sinérgica la **robótica de manipulación industrial (Kinova Gen3 7-DOF)**, los **sistemas embebidos distribuidos (micro-ROS / ESP32)**, la **telemetría ciber-física en tiempo real** y la **Inteligencia Artificial Multimodal (Embodied AI con Gemini Robotics)**.
 
@@ -72,7 +72,7 @@ flowchart TD
   * *Mechatronics (Elsevier)*
 
 #### 2. Producto Tecnológico - Software Científico Registrado:
-* Registro formal ante MinCiencias del repositorio [Burger-Cell](file:///home/roncanciovl/ros2_ws/src/burger_delivery) con DOI `10.5281/zenodo.16781702`.
+* Registro formal ante MinCiencias del repositorio [Burger-Cell](file:///home/roncanciovl/ros2_ws/src/burger_delivery) con DOI `10.5281/zenodo.21809949`.
 
 #### 3. Dataset de Acceso Abierto Unificado:
 * Publicación en **Zenodo / IEEE DataPort** del dataset integrado que correlaciona: métricas de tráfico DDS a $1\text{ Hz}$, latencias de inferencia VLM (ms), coordenadas de grasping 3D y error cuadrático medio de seguimiento articular (RMSE).

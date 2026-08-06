@@ -261,7 +261,7 @@ HTML_CONTENT = """<!DOCTYPE html>
       <td class="badge-container" style="width: 35%;">
         <div class="badge badge-a1">Grupo VOLTA (A1 MinCiencias)</div><br>
         <a href="https://github.com/roncanciovl/burger_delivery" target="_blank"><div class="badge badge-github">GitHub: roncanciovl/burger_delivery</div></a><br>
-        <a href="https://doi.org/10.5281/zenodo.16781702" target="_blank"><div class="badge badge-doi">DOI: 10.5281/zenodo.16781702</div></a>
+        <a href="https://doi.org/10.5281/zenodo.21809949" target="_blank"><div class="badge badge-doi">DOI: 10.5281/zenodo.21809949</div></a>
       </td>
     </tr>
   </table>
@@ -292,7 +292,7 @@ HTML_CONTENT = """<!DOCTYPE html>
     <h2>Burger-Cell: Framework Abierto y Banco Experimental de Manufactura Flexible Heterogénea en ROS 2 para Manipulación Robótica (Kinova Gen3), Telemetría de Red QoS y Razonamiento Espacial con Inteligencia Artificial</h2>
     <div class="title-meta">
       <span><strong>GitHub:</strong> <a href="https://github.com/roncanciovl/burger_delivery" target="_blank">github.com/roncanciovl/burger_delivery</a></span>
-      <span><strong>DOI:</strong> <a href="https://doi.org/10.5281/zenodo.16781702" target="_blank">10.5281/zenodo.16781702</a></span>
+      <span><strong>DOI:</strong> <a href="https://doi.org/10.5281/zenodo.21809949" target="_blank">10.5281/zenodo.21809949</a></span>
       <span><strong>TRL:</strong> 4 - 5</span>
       <span><strong>Sede:</strong> Campus Cajicá</span>
     </div>
@@ -301,7 +301,7 @@ HTML_CONTENT = """<!DOCTYPE html>
   <!-- 1. Executive Summary -->
   <h3>1. Resumen Ejecutivo y Justificación Estratégica</h3>
   <p>
-    La presente propuesta formaliza la vinculación del suscrito <strong>Docente de Cátedra e Investigador</strong> al <strong>Grupo de Investigación VOLTA (Categoría A1 - MinCiencias)</strong>, aportando una plataforma que <strong>ya cuenta con un proyecto de software abierto y activo en GitHub (<a href="https://github.com/roncanciovl/burger_delivery" target="_blank">github.com/roncanciovl/burger_delivery</a>) en fase de pruebas experimentales de laboratorio</strong>, registrado y respaldado formalmente con identificador digital persistente <strong>DOI en Zenodo (<a href="https://doi.org/10.5281/zenodo.16781702" target="_blank">10.5281/zenodo.16781702</a>)</strong>.
+    La presente propuesta formaliza la vinculación del suscrito <strong>Docente de Cátedra e Investigador</strong> al <strong>Grupo de Investigación VOLTA (Categoría A1 - MinCiencias)</strong>, aportando una plataforma que <strong>ya cuenta con un proyecto de software abierto y activo en GitHub (<a href="https://github.com/roncanciovl/burger_delivery" target="_blank">github.com/roncanciovl/burger_delivery</a>) en fase de pruebas experimentales de laboratorio</strong>, registrado y respaldado formalmente con identificador digital persistente <strong>DOI en Zenodo (<a href="https://doi.org/10.5281/zenodo.21809949" target="_blank">10.5281/zenodo.21809949</a>)</strong>.
   </p>
   <p>
     La celda articula sinérgicamente la <strong>robótica de manipulación industrial (Kinova Gen3 7-DOF)</strong>, los <strong>sistemas embebidos distribuidos (micro-ROS en ESP32)</strong>, la <strong>telemetría ciber-física en tiempo real</strong> y la <strong>Inteligencia Artificial Multimodal (Embodied AI con Gemini Robotics)</strong>. Al ser un desarrollo en ejecución y con datos experimentales en curso, ofrece al grupo VOLTA un retorno científico inmediato sin tiempos muertos de prototipado inicial.
@@ -348,7 +348,7 @@ HTML_CONTENT = """<!DOCTYPE html>
   </div>
 
   <ul>
-    <li><strong>Software Científico Registrado:</strong> Registro formal ante MinCiencias del repositorio <a href="https://github.com/roncanciovl/burger_delivery" target="_blank">Burger-Cell en GitHub</a> con DOI persistente <a href="https://doi.org/10.5281/zenodo.16781702" target="_blank">10.5281/zenodo.16781702</a>.</li>
+    <li><strong>Software Científico Registrado:</strong> Registro formal ante MinCiencias del repositorio <a href="https://github.com/roncanciovl/burger_delivery" target="_blank">Burger-Cell en GitHub</a> con DOI persistente <a href="https://doi.org/10.5281/zenodo.21809949" target="_blank">10.5281/zenodo.21809949</a>.</li>
     <li><strong>Dataset Abierto Unificado:</strong> Publicación en <em>IEEE DataPort / Zenodo</em> correlacionando métricas DDS (1 Hz), latencias VLM y precisión cinemática articular (RMSE).</li>
     <li><strong>Formación de Talento en Campus Cajicá:</strong> Dirección de 1 a 2 trabajos de grado para la <strong>Maestría en Ingeniería Mecatrónica</strong> y talleres para el semillero de robótica.</li>
   </ul>

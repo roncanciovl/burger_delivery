@@ -184,8 +184,8 @@ Si utilizas este entorno en tu investigación o cursos académicos, por favor c�
   title = {Burger-Cell: An Open-Source Heterogeneous ROS 2 Framework for Kinova Gen3 Manipulation, AprilTag Perception, and VLM-Guided Spatial Reasoning},
   year = {2026},
   publisher = {Zenodo},
-  doi = {10.5281/zenodo.xxxxxxx},
-  url = {https://github.com/roncanciovl/burger_delivery}
+  doi = {10.5281/zenodo.21809949},
+  url = {https://doi.org/10.5281/zenodo.21809949}
 }
 ```
 *(Consulta también [CITATION.cff](CITATION.cff) y [.zenodo.json](.zenodo.json)).*
