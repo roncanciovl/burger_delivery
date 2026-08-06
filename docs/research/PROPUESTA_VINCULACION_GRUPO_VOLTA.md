@@ -111,7 +111,8 @@ Para garantizar la ejecución en los tiempos comprometidos, se solicita el respa
 
 | **Docente Proponente** | **Aval y Visto Bueno (Grupo VOLTA)** |
 |:---:|:---:|
-| <br><br>___________________________________<br>**Docente de Cátedra / Investigador**<br>Programa de Ingeniería Mecatrónica<br>Campus Nueva Granada — UMNG | <br><br>___________________________________<br>**Prof. William Gómez Rivera, M.Sc.**<br>Docente Investigador — Grupo VOLTA (A1)<br>Campus Nueva Granada — UMNG |
+| <br><br>___________________________________<br>**Prof. Henry Roncancio**<br>Docente de Cátedra / Investigador<br>Programa de Ingeniería Mecatrónica<br>Campus Nueva Granada — UMNG | <br><br>___________________________________<br>**Prof. William Gómez Rivera, M.Sc.**<br>Docente Investigador — Grupo VOLTA (A1)<br>Campus Nueva Granada — UMNG |
+
 
 
 

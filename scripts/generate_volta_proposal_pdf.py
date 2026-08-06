@@ -382,7 +382,7 @@ HTML_CONTENT = """<!DOCTYPE html>
     <tr>
       <td>
         <div class="signature-line">
-          <strong>Docente Proponente</strong><br>
+          <strong>Prof. Henry Roncancio</strong><br>
           Docente de Cátedra / Investigador<br>
           Programa de Ingeniería Mecatrónica<br>
           Campus Nueva Granada — UMNG
