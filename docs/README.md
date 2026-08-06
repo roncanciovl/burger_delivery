@@ -1,6 +1,9 @@
-# 🔬 Documentación Técnica y de Investigación — Burger Delivery
+# 🔬 Documentación Técnica y de Investigación — Burger-Cell (Burger Delivery)
 
-Bienvenido a la sección de **documentación técnica, papers y reportes de investigación** del proyecto **Burger Delivery**.
+> **Título Formal del Proyecto:**  
+> *Burger-Cell: An Open-Source Heterogeneous ROS 2 Framework for Kinova Gen3 Manipulation, AprilTag Perception, and VLM-Guided Spatial Reasoning*
+
+Bienvenido a la sección de **documentación técnica, papers y reportes de investigación** del proyecto **Burger-Cell / Burger Delivery**.
 
 ---
 

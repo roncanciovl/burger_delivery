@@ -1,10 +1,12 @@
-# Burger Delivery — ROS 2 Jazzy Robotics Project
+# Burger Delivery (Burger-Cell) — ROS 2 Jazzy Robotics Project
 
+> **Formal Title**: *Burger-Cell: An Open-Source Heterogeneous ROS 2 Framework for Kinova Gen3 Manipulation, AprilTag Perception, and VLM-Guided Spatial Reasoning*
 > URDF description package, documentation hub, and configuration center for an advanced collaborative robotics work cell. A Kinova Gen3 7-DOF manipulator delivers trays to differential mobile robots (TurtleBot-style carts) using tf2, AprilTag visual localization, MoveIt 2 planning, and micro-ROS protocols — optimized for high-density wireless environments.
 
 ## Project Identity
 
-- **Name**: burger_delivery / burger_description
+- **Code/Repo Name**: burger_delivery / burger_description
+- **Formal Scientific Title**: Burger-Cell: An Open-Source Heterogeneous ROS 2 Framework for Kinova Gen3 Manipulation, AprilTag Perception, and VLM-Guided Spatial Reasoning
 - **Author**: Henry Antonio Roncancio Velandia — Associate Professor of Robotics and Artificial Intelligence at UMNG. Founder of economiaia LLC.
 - **Institution**: Universidad Militar Nueva Granada (UMNG), Colombia
 - **ROS 2 Distro**: Jazzy

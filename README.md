@@ -1,4 +1,7 @@
-# 🍔 Burger Delivery (ROS 2 Jazzy)
+# 🍔 Burger Delivery (Burger-Cell) — ROS 2 Jazzy
+
+**Título Formal del Proyecto:**  
+> *Burger-Cell: Framework Abierto de Robótica Colaborativa en ROS 2 con Manipulación Kinova Gen3, Percepción AprilTag e Integración de Modelos VLM*
 
 [🇪🇸 Español](README.md) | [🇬🇧 English](README_en.md)
 
@@ -176,9 +179,9 @@ En `scripts/`:
 Si utilizas este entorno en tu investigación o cursos académicos, por favor cítalo como:
 
 ```bibtex
-@software{burger_delivery_2026,
+@software{burger_cell_2026,
   author = {Roncancio Velandia, Henry Antonio},
-  title = {burger_delivery: Collaborative robotics environment in ROS 2 with Kinova Gen3 manipulation, AprilTag perception and AI model integration},
+  title = {Burger-Cell: An Open-Source Heterogeneous ROS 2 Framework for Kinova Gen3 Manipulation, AprilTag Perception, and VLM-Guided Spatial Reasoning},
   year = {2026},
   publisher = {Zenodo},
   doi = {10.5281/zenodo.xxxxxxx},

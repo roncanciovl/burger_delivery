@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 type: software
 
-title: "burger_delivery"
+title: "Burger-Cell: An Open-Source Heterogeneous ROS 2 Framework for Kinova Gen3 Manipulation, AprilTag Perception, and VLM-Guided Spatial Reasoning (burger_delivery)"
 abstract: >-
   Advanced collaborative robotics environment built on ROS 2 Jazzy. Integrates
   manipulation with a Kinova Gen3 arm, mobile robots, AprilTag-based visual
