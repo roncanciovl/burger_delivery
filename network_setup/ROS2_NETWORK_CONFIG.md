@@ -227,3 +227,40 @@ export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
 export FASTRTPS_DEFAULT_PROFILES_FILE=~/ros2_ws/src/burger_delivery/network_setup/fastdds_discovery.xml
 ```
 *(Nota: También puedes usar una configuración más simple como `export ROS_DISCOVERY_SERVER="192.168.1.100:11811"`, pero el archivo XML te otorga mucho más control sobre la calidad de servicio y el comportamiento del descubrimiento).*
+
+---
+
+## 8. Diagnóstico y Diagnósticos con el Monitor de Red (`monitor_red`)
+
+El proyecto incluye un monitor web interactivo (`network_setup/iniciar_monitor.sh`) diseñado para visualizar en tiempo real la topología de la red, los nodos activos en el `ROS_DOMAIN_ID` y las métricas de calidad de enlace.
+
+### A. Detección de Sockets ROS 2 sin Privilegios de Administrador
+Para identificar si hay nodos publicando o escuchando en un `ROS_DOMAIN_ID` sin necesidad de ejecutar el script con `sudo` o depender de `psutil` elevado:
+- El monitor inspecciona directamente la tabla del kernel en `/proc/net/udp` y `/proc/net/udp6`.
+- Mapea los puertos abiertos con la fórmula RTPS estándar de DDS: 
+  $$\text{Puerto Base} = 7400 + (250 \times \text{ROS\_DOMAIN\_ID})$$
+- Por ejemplo, para el **Dominio 0**, los puertos del canal UDP RTPS corresponden a los rangos `7400-7415`.
+
+### B. Diagnóstico de Subred: Red del Robot (`192.168.1.x`) vs Red de Respaldo (`10.0.28.x`)
+Por defecto, la red del proyecto y del enjambre de robots opera en la subred **`192.168.1.x`** (con el Router TP-Link AX12 en `192.168.1.1`).
+- **Si el monitor o `ifconfig` reportan una subred `10.0.28.x` / `10.0.29.x`:** Indica un **problema de conexión física con el router del robot** (ej. la Wi-Fi se desconectó y la PC conmutó a la red de la institución/edificio).
+- **Solución:** Verifica que el adaptador Wi-Fi de Windows o el cable Ethernet estén conectados a la red del router del robot (SSID: `ros`). Con el **Modo Espejo (`networkingMode=mirrored`)** en `.wslconfig`, Ubuntu pasará automáticamente a la red `192.168.1.x` al restablecerse el enlace con el router.
+
+
+### C. Métricas de Calidad de Enlace: Latencia, Jitter y Pérdida de Paquetes
+
+Al evaluar la comunicación en vivo entre el PC de control, el robot (Kinova Gen3) y los microcontroladores (ESP32 con Micro-ROS), el monitor mide tres métricas críticas:
+
+1. **Latencia (RTT - Round Trip Time):** 
+   - Mide el tiempo total en milisegundos que tarda un paquete de datos en ir desde el emisor hasta el receptor y regresar.
+   - En una red local Wi-Fi / Ethernet dedicada para ROS 2, la latencia ideal debe ser $< 5\text{ ms}$.
+
+2. **¿Qué es el Jitter (Variación de Retardo)?**
+   - **Definición:** El **Jitter** mide la *inestabilidad o fluctuación* en el tiempo de llegada entre paquetes de datos consecutivos en la red.
+   - **Ejemplo Práctico en Robótica:** Si un nodo en el robot publica la odometría o los comandos de velocidad `/cmd_vel` de manera uniforme a 10 Hz (un paquete cada 100 ms), pero debido a la saturación o interferencia de la red Wi-Fi los paquetes llegan en lapsos irregulares (ej. 70 ms, 140 ms, 60 ms, 130 ms), esa desviación representa un **Jitter elevado**.
+   - **Impacto:** En ROS 2, un Jitter alto provoca tirones en los motores, desincronización de transformadas TF2, retardos en los filtros de estimación de estado (EKF) y desconexiones intermitentes en Micro-ROS.
+
+3. **Pérdida de Paquetes (`Packet Loss`):**
+   - Mide el porcentaje de paquetes UDP que no llegaron a su destino durante la ráfaga de transmisión.
+   - Como DDS utiliza UDP para la transmisión de baja latencia, una pérdida de paquetes mayor al 2% causará caídas de mensajes en tópicos Best Effort o retrasos por retransmisión en tópicos Reliable.
+
