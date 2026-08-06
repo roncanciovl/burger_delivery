@@ -27,7 +27,7 @@ El **Monitor de Red de Burger-Cell** es una aplicación web ligera, reactiva y d
                                           │             │
                     ┌─────────────────────▼─┐         ┌─▼─────────────────────┐
                     │   traffic_sniffer.py  │         │   device_scanner.py   │
-                    │ - /proc/net/udp parser│         │ - Escaneo ARP/ICMP    │
+                    │ - Observador SPDP     │         │ - Escaneo ARP/ICMP    │
                     │ - Medición RTT/Jitter │         │ - Mapeo de IPs y MACs │
                     │ - Data Logger CSV     │         │ - Detección de roles  │
                     └───────────────────────┘         └───────────────────────┘
@@ -35,7 +35,7 @@ El **Monitor de Red de Burger-Cell** es una aplicación web ligera, reactiva y d
 
 ### Características Principales:
 1. **Cero Dependencias Pesadas:** Backend en Python puro (`http.server`, `socket`, `subprocess`) y frontend en HTML5/Vanilla CSS/Canvas sin frameworks pesados (Node.js o React no requeridos).
-2. **Inspección sin Privilegios (`No sudo`):** Lee sockets RTPS directamente del kernel Linux (`/proc/net/udp` y `/proc/net/udp6`).
+2. **Observación sin privilegios (`No sudo`):** Escucha pasivamente los anuncios SPDP multicast y valida la cabecera RTPS antes de asociar una IP con un dominio.
 3. **Grabador Científico de Telemetría:** Registra métricas de QoS (latencia, jitter, pérdida, ancho de banda DDS) con exportación automática a formato `.csv`.
 4. **Resiliente a Subredes Mixtas:** Detecta automáticamente si el host está en la red del robot (`192.168.1.x`) o en redes institucionales (`10.0.28.x`), alertando desajustes en tiempo real.
 
@@ -128,7 +128,7 @@ Este módulo fue diseñado para investigaciones cuantitativas y publicaciones ci
 | Tarjeta KPI | Métrica Principal | Submétricas e Indicadores | Diagnóstico / Alerta |
 |---|---|---|---|
 | **Gateway (Router AX12)** | IP del Gateway (ej. `192.168.1.1`) | - RTT Latencia (ms)<br>- Jitter de dispersión (ms)<br>- Pérdida de paquetes (%) | Si RTT $> 10\text{ ms}$ o Pérdida $> 2\%$, la tarjeta muestra advertencia visual. |
-| **Canal ROS 2 DDS** | `ROS_DOMAIN_ID` Activo (ej. `42` o `0`) | - Número de sockets RTPS abiertos<br>- Estado de Discovery Server (`Activo`/`Inactivo`) | Confirma si los procesos locales están escuchando en el dominio correcto. |
+| **Canal ROS 2 DDS** | Dominios RTPS observados (ej. `42` o `0`) | - Dominio configurado localmente<br>- Estado del observador y Discovery Server | Distingue configuración local de actividad DDS realmente observada. |
 | **micro-ROS Agent** | Estado del Agente (`ONLINE` / `OFFLINE`) | - Puerto UDP `8888`<br>- PID del proceso daemon en ejecución | Alerta si el agente para los ESP32 no está corriendo en segundo plano. |
 | **Tráfico de Red Global** | Tasa total de transferencia ($\text{KB/s}$) | - Tráfico TCP ($\text{KB/s}$)<br>- Tráfico UDP / DDS ($\text{KB/s}$) | Permite monitorear el consumo de ancho de banda en ráfagas de control. |
 
@@ -164,8 +164,18 @@ Cada nodo muestra un punto de estado:
 ### 3.7. Tabla de Dispositivos e Inspección de Sockets
 
 - **Filtros Rápidos:** Botones para filtrar la tabla por `Todos`, `ROS 2`, `micro-ROS` e `Infraestructura`.
-- **Inspección de Sockets RTPS:** Muestra los puertos UDP locales abiertos por el RMW (`rmw_cyclonedds_cpp` o `rmw_fastrtps_cpp`), calculando el dominio DDS al que pertenece cada socket mediante la fórmula:
+- **Observaciones RTPS:** Muestra los dominios para los cuales llegaron anuncios RTPS válidos y el puerto multicast SPDP utilizado para atribuirlos:
   $$\text{Puerto} = 7400 + (250 \times \text{ROS\_DOMAIN\_ID})$$
+
+La tabla diferencia tres estados:
+
+- **Observado:** se recibió tráfico RTPS válido desde la IP indicada; el dominio es evidencia de ejecución.
+- **Configurado:** aplica solamente al PC que ejecuta el monitor; expresa `ROS_DOMAIN_ID`, pero no afirma que exista un nodo activo.
+- **Desconocido:** el dispositivo está en red, pero no se observó RTPS. El monitor no sustituye ese dato con el dominio local.
+
+La detección remota requiere anuncios SPDP multicast visibles. Si el RMW usa exclusivamente un Discovery Server, descubrimiento unicast, `LOCALHOST`, una VPN que filtra multicast o el punto de acceso aísla clientes, el dominio remoto se mostrará como desconocido en vez de inferirse.
+
+El observador evita los dominios cuyo bloque DDS se cruza con el rango UDP efímero configurado en `/proc/sys/net/ipv4/ip_local_port_range`. En WSL también considera el rango dinámico de Windows. Un dominio en cualquiera de esos rangos se marca como no observable para no bloquear puertos de otras aplicaciones.
 
 ---
 

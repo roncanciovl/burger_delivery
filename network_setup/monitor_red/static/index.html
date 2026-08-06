@@ -28,9 +28,9 @@
       </div>
 
       <div class="header-actions">
-        <div class="domain-selector-box" title="Cambiar el ROS_DOMAIN_ID activo del proyecto">
+        <div class="domain-selector-box" title="Cambiar el ROS_DOMAIN_ID configurado localmente en el monitor">
           <span class="domain-label">⚡ DOMAIN_ID:</span>
-          <input type="number" id="input-domain-id" min="0" max="232" value="42" class="domain-input">
+          <input type="number" id="input-domain-id" min="0" max="232" value="0" class="domain-input">
           <button id="btn-save-domain" class="btn-domain-save" title="Aplicar nuevo ROS_DOMAIN_ID">Aplicar</button>
         </div>
         <div class="status-badge" id="sse-badge">
@@ -160,7 +160,7 @@
           </svg>
         </div>
         <div class="kpi-content">
-          <span class="kpi-label">Gateway (Router AX12)</span>
+          <span class="kpi-label">Gateway de red activo</span>
           <div class="kpi-value-row">
             <span class="kpi-value" id="val-gateway-ip">192.168.1.1</span>
             <span class="kpi-badge" id="val-gateway-lat">-- ms</span>

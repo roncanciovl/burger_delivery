@@ -6,6 +6,7 @@ consultando la tabla ARP/Neighbor del kernel y realizando sondeos de latencia.
 """
 
 import os
+import ipaddress
 import re
 import socket
 import subprocess
@@ -66,20 +67,27 @@ KNOWN_OUIS = {
 class DeviceScanner:
     def __init__(self, subnet: Optional[str] = None):
         self.gateway_ip = self._get_default_gateway()
+        self.local_ips = self._get_local_ips()
         self.local_ip = self._get_local_ip()
+        self.local_ips.add(self.local_ip)
         self.subnet = subnet or self._detect_subnet()
-        self.target_domain = int(os.environ.get("ROS_DOMAIN_ID", 42))
+        self.subnet_cidr = self._detect_network_cidr()
+        self.target_domain = int(os.environ.get("ROS_DOMAIN_ID", 0))
         self.last_scan_time = time.time()
         self.cached_devices: List[Dict[str, Any]] = [
             {
                 "ip": self.gateway_ip,
                 "mac": "D0:78:80:95:13:D1",
                 "hostname": "Router",
-                "vendor": "TP-Link AX12 (Gateway)",
+                "vendor": "Gateway de red activo",
                 "role": "router",
-                "label": "Router WiFi (TP-Link AX12 / Gateway)",
+                "label": "Gateway de red activo",
                 "icon": "router",
                 "is_dds_active": False,
+                "domain_id": None,
+                "dds_domains": [],
+                "configured_domain_id": None,
+                "domain_source": "none",
                 "dds_protocol": "Infraestructura Red",
                 "latency_ms": 1.0,
                 "status": "online",
@@ -93,8 +101,12 @@ class DeviceScanner:
                 "role": "host",
                 "label": "PC Principal (Host / Control ROS 2)",
                 "icon": "desktop",
-                "is_dds_active": True,
-                "dds_protocol": f"ROS 2 DDS (Domain {self.target_domain}) & Micro-ROS Agent",
+                "is_dds_active": False,
+                "domain_id": self.target_domain,
+                "dds_domains": [],
+                "configured_domain_id": self.target_domain,
+                "domain_source": "configured",
+                "dds_protocol": f"ROS 2 configurado (Domain {self.target_domain}); esperando RTPS",
                 "latency_ms": 0.1,
                 "status": "online",
                 "last_seen": time.strftime("%H:%M:%S")
@@ -108,12 +120,12 @@ class DeviceScanner:
 
 
     def _get_default_gateway(self) -> str:
-        """Obtiene la IP del Gateway del Router TP-Link AX12 (192.168.1.1)"""
+        """Obtiene el gateway de la ruta predeterminada activa."""
         try:
-            cmd = ["ip", "route"]
+            cmd = ["ip", "route", "show", "default"]
             output = subprocess.check_output(cmd, stderr=subprocess.DEVNULL, timeout=1.0).decode("utf-8")
             for line in output.splitlines():
-                if "192.168.1" in line and "via" in line:
+                if "via" in line:
                     parts = line.split()
                     idx = parts.index("via")
                     if idx + 1 < len(parts):
@@ -123,37 +135,95 @@ class DeviceScanner:
         return "192.168.1.1"
 
     def _get_local_ip(self) -> str:
-        """Obtiene la IP fija asignada en la red del robot (192.168.1.100)"""
+        """Elige la IP usada para alcanzar el gateway activo."""
+        try:
+            output = subprocess.check_output(
+                ["ip", "route", "get", self.gateway_ip],
+                stderr=subprocess.DEVNULL,
+                timeout=1.0,
+            ).decode("utf-8", errors="ignore")
+            match = re.search(r"\bsrc\s+(\d+(?:\.\d+){3})", output)
+            if match:
+                return match.group(1)
+        except Exception:
+            pass
+        if self.local_ips:
+            return sorted(self.local_ips)[0]
+
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             s.connect(("192.168.1.1", 80))
             ip = s.getsockname()[0]
             s.close()
-            if ip.startswith("192.168."):
+            if not ip.startswith("127."):
                 return ip
         except Exception:
             pass
-        return "192.168.1.100"
+        return "127.0.0.1"
+
+    def _get_local_ips(self) -> set:
+        """Obtiene todas las IPv4 locales para consolidar hosts multiinterfaz."""
+        local_ips = set()
+        try:
+            output = subprocess.check_output(
+                ["ip", "-o", "-4", "addr", "show", "scope", "global"],
+                stderr=subprocess.DEVNULL,
+                timeout=1.0,
+            ).decode("utf-8", errors="ignore")
+            for match in re.finditer(r"\binet\s+(\d+(?:\.\d+){3})/", output):
+                local_ips.add(match.group(1))
+        except Exception:
+            pass
+        return local_ips
+
+    def _is_local_ip(self, ip: str) -> bool:
+        return ip == self.local_ip or ip in getattr(self, "local_ips", set())
+
+    def _normalize_domains_map(self, ip_domains_map: Dict[str, List[int]]) -> Dict[str, List[int]]:
+        """Combina observaciones de todas las interfaces del PC en su IP principal."""
+        normalized: Dict[str, set] = {}
+        for ip, domains in ip_domains_map.items():
+            normalized_ip = self.local_ip if self._is_local_ip(ip) else ip
+            normalized.setdefault(normalized_ip, set()).update(domains)
+        return {ip: sorted(values) for ip, values in normalized.items()}
 
     def _detect_subnet(self) -> str:
-        """Prefijo de subred clase C oficial del proyecto ROS 2 (192.168.1)"""
-        return "192.168.1"
+        """Prefijo /24 que contiene la IP principal activa."""
+        return ".".join(self.local_ip.split(".")[:3])
+
+    def _detect_network_cidr(self) -> str:
+        """Obtiene el CIDR real de la interfaz principal."""
+        try:
+            output = subprocess.check_output(
+                ["ip", "-o", "-4", "addr", "show", "scope", "global"],
+                stderr=subprocess.DEVNULL,
+                timeout=1.0,
+            ).decode("utf-8", errors="ignore")
+            pattern = rf"\binet\s+({re.escape(self.local_ip)}/\d+)"
+            match = re.search(pattern, output)
+            if match:
+                return str(ipaddress.ip_interface(match.group(1)).network)
+        except Exception:
+            pass
+        return f"{self.subnet}.0/24"
 
 
     def _detect_all_subnets(self) -> List[str]:
         """Detecta todas las subredes /24 activas en la interfaz"""
         subnets = set()
         subnets.add(self.subnet)
-        subnets.add("192.168.1")
         try:
-            cmd = ["ip", "route"]
-            output = subprocess.check_output(cmd, stderr=subprocess.DEVNULL, timeout=1.0).decode("utf-8")
-            for line in output.splitlines():
-                match = re.search(r"(\d{1,3}\.\d{1,3}\.\d{1,3})\.\d{1,3}/\d+", line)
-                if match:
-                    prefix = match.group(1)
-                    if not prefix.startswith("127."):
-                        subnets.add(prefix)
+            output = subprocess.check_output(
+                ["ip", "-o", "-4", "addr", "show", "scope", "global"],
+                stderr=subprocess.DEVNULL,
+                timeout=1.0,
+            ).decode("utf-8", errors="ignore")
+            for cidr in re.findall(r"\binet\s+(\d+(?:\.\d+){3}/\d+)", output):
+                network = ipaddress.ip_interface(cidr).network
+                networks = list(network.subnets(new_prefix=24)) if network.prefixlen < 24 else [network]
+                for subnet in networks[:16]:
+                    if not subnet.network_address.is_loopback:
+                        subnets.add(".".join(str(subnet.network_address).split(".")[:3]))
         except Exception:
             pass
         return list(subnets)
@@ -243,42 +313,53 @@ class DeviceScanner:
         return KNOWN_OUIS.get(prefix, "Genérico / Desconocido")
 
     def _get_local_domains(self) -> List[int]:
-        """Detecta dominios ROS 2 con sockets UDP abiertos en este host"""
-        domains = set()
+        """Retorna solo el dominio configurado; no implica actividad DDS."""
         env_d = os.environ.get("ROS_DOMAIN_ID")
         if env_d is not None and env_d.isdigit():
-            domains.add(int(env_d))
-        
-        for proc_file in ["/proc/net/udp", "/proc/net/udp6"]:
-            if os.path.exists(proc_file):
-                try:
-                    with open(proc_file, "r") as f:
-                        for line in f.readlines()[1:]:
-                            parts = line.split()
-                            if len(parts) >= 2 and ":" in parts[1]:
-                                port = int(parts[1].split(":")[-1], 16)
-                                if 7400 <= port <= 32000:
-                                    d = (port - 7400) // 250
-                                    if 0 <= d <= 230:
-                                        domains.add(d)
-                except Exception:
-                    pass
-        if not domains:
-            domains.add(self.target_domain)
-        return sorted(list(domains))
+            domain_id = int(env_d)
+            if 0 <= domain_id <= 232:
+                return [domain_id]
+        return [self.target_domain]
 
     def _classify_role(self, ip: str, mac: str, hostname: str, vendor: str, detected_domains: Optional[List[int]] = None) -> Dict[str, Any]:
         """Asigna el rol y estado DDS del dispositivo en el ecosistema ROS 2 / Red con discriminación de Domain ID"""
         h_lower = hostname.lower()
         v_lower = vendor.lower()
-        local_domains = self._get_local_domains()
-        
-        # Determinar lista de dominios para este host específico
-        host_domains: List[int] = []
-        if detected_domains:
-            host_domains = list(detected_domains)
-        elif ip == self.local_ip:
-            host_domains = local_domains
+        configured_domain = self._get_local_domains()[0]
+        host_domains = sorted(set(detected_domains or []))
+
+        def observed_dds(role: str, label: str, icon: str) -> Dict[str, Any]:
+            dom_text = ", ".join(str(d) for d in host_domains)
+            protocol = (
+                f"ROS 2 DDS observado (Domain {dom_text})"
+                if len(host_domains) == 1
+                else f"ROS 2 DDS observado (Multidominio: {dom_text})"
+            )
+            return {
+                "role": role,
+                "label": label,
+                "icon": icon,
+                "is_dds_active": True,
+                "domain_id": host_domains[0],
+                "dds_domains": host_domains,
+                "configured_domain_id": configured_domain if self._is_local_ip(ip) else None,
+                "domain_source": "observed",
+                "dds_protocol": protocol,
+            }
+
+        def inactive_device(role: str, label: str, icon: str, protocol: str) -> Dict[str, Any]:
+            is_local = self._is_local_ip(ip)
+            return {
+                "role": role,
+                "label": label,
+                "icon": icon,
+                "is_dds_active": False,
+                "domain_id": configured_domain if is_local else None,
+                "dds_domains": [],
+                "configured_domain_id": configured_domain if is_local else None,
+                "domain_source": "configured" if is_local else "unknown",
+                "dds_protocol": protocol,
+            }
 
         if ip == self.gateway_ip or ip == "192.168.1.1" or ip.endswith(".1"):
             return {
@@ -288,94 +369,50 @@ class DeviceScanner:
                 "is_dds_active": False,
                 "domain_id": None,
                 "dds_domains": [],
+                "configured_domain_id": None,
+                "domain_source": "none",
                 "dds_protocol": "Infraestructura Red"
             }
-        elif ip == self.local_ip:
-            dom_text = ", ".join(str(d) for d in local_domains) if local_domains else str(self.target_domain)
-            return {
-                "role": "host",
-                "label": "PC Principal (Host / Control ROS 2)",
-                "icon": "desktop",
-                "is_dds_active": True,
-                "domain_id": local_domains[0] if local_domains else self.target_domain,
-                "dds_domains": local_domains,
-                "dds_protocol": f"ROS 2 DDS (Domain {dom_text}) & Micro-ROS Agent"
-            }
-        elif ip == "192.168.1.10" or "kinova" in h_lower or "kortex" in h_lower:
-            dom_val = host_domains[0] if host_domains else self.target_domain
-            return {
-                "role": "robot",
-                "label": "Robot Kinova Gen3 (Brazo 7-DOF)",
-                "icon": "robot",
-                "is_dds_active": True,
-                "domain_id": dom_val,
-                "dds_domains": host_domains or [dom_val],
-                "dds_protocol": f"ROS 2 DDS (Domain {dom_val})"
-            }
-        elif "espressif" in v_lower or "esp32" in h_lower or "microros" in h_lower:
-            return {
-                "role": "esp32",
-                "label": f"ESP32 Micro-ROS Node ({ip})",
-                "icon": "microchip",
-                "is_dds_active": True,
-                "domain_id": self.target_domain,
-                "dds_domains": [self.target_domain],
-                "dds_protocol": f"Micro-ROS Client (UDP 8888 -> Dom {self.target_domain})"
-            }
-        elif "raspberry" in v_lower or "burger" in h_lower or "turtlebot" in h_lower or "pi" in h_lower:
-            dom_val = host_domains[0] if host_domains else self.target_domain
-            return {
-                "role": "robot",
-                "label": f"TurtleBot / Robot Pi ({ip})",
-                "icon": "robot",
-                "is_dds_active": True,
-                "domain_id": dom_val,
-                "dds_domains": host_domains or [dom_val],
-                "dds_protocol": f"ROS 2 DDS (Domain {dom_val})"
-            }
-        elif self._is_computer_node(hostname, vendor):
-            # Computadores / Laptops / Workstations en la red ROS 2 DDS
-            host_title = hostname if hostname and hostname != "Desconocido" else f"Estación / PC ({ip})"
-            
+        elif self._is_local_ip(ip):
             if host_domains:
-                dom_str = ", ".join(str(d) for d in host_domains)
-                dom_label = f"Domain {dom_str}" if len(host_domains) == 1 else f"Multidominio: {dom_str}"
-                primary_dom = host_domains[0]
-            else:
-                primary_dom = self.target_domain
-                host_domains = [self.target_domain]
-                dom_label = f"Domain {self.target_domain} (Proyecto Burger-Cell)"
-
-            return {
-                "role": "host",
-                "label": f"PC / Nodo ROS 2 ({host_title})",
-                "icon": "desktop",
-                "is_dds_active": True,
-                "domain_id": primary_dom,
-                "dds_domains": host_domains,
-                "dds_protocol": f"ROS 2 DDS ({dom_label})"
-            }
+                return observed_dds("host", "PC Principal (Host / Control ROS 2)", "desktop")
+            return inactive_device(
+                "host", "PC Principal (Host / Control ROS 2)", "desktop",
+                f"ROS 2 configurado (Domain {configured_domain}); sin RTPS observado",
+            )
+        elif ip == "192.168.1.10" or "kinova" in h_lower or "kortex" in h_lower:
+            label = "Robot Kinova Gen3 (Brazo 7-DOF)"
+            if host_domains:
+                return observed_dds("robot", label, "robot")
+            return inactive_device("robot", label, "robot", "Sin tráfico RTPS observado")
+        elif "espressif" in v_lower or "esp32" in h_lower or "microros" in h_lower:
+            label = f"ESP32 Micro-ROS Node ({ip})"
+            if host_domains:
+                return observed_dds("esp32", label, "microchip")
+            return inactive_device(
+                "esp32", label, "microchip",
+                "Micro-ROS: dominio administrado por el agente; no observado",
+            )
+        elif "raspberry" in v_lower or "burger" in h_lower or "turtlebot" in h_lower or "pi" in h_lower:
+            label = f"TurtleBot / Robot Pi ({ip})"
+            if host_domains:
+                return observed_dds("robot", label, "robot")
+            return inactive_device("robot", label, "robot", "ROS 2 no detectado; Domain desconocido")
+        elif self._is_computer_node(hostname, vendor):
+            host_title = hostname if hostname and hostname != "Desconocido" else f"Estación / PC ({ip})"
+            if host_domains:
+                return observed_dds("host", f"PC / Nodo ROS 2 ({host_title})", "desktop")
+            return inactive_device(
+                "host", f"PC / Estación ({host_title})", "desktop",
+                "ROS 2 no detectado; Domain desconocido",
+            )
         else:
             if host_domains:
-                dom_str = ", ".join(str(d) for d in host_domains)
-                return {
-                    "role": "host",
-                    "label": f"Nodo ROS 2 ({ip})",
-                    "icon": "desktop",
-                    "is_dds_active": True,
-                    "domain_id": host_domains[0],
-                    "dds_domains": host_domains,
-                    "dds_protocol": f"ROS 2 DDS (Domain {dom_str})"
-                }
-            return {
-                "role": "device",
-                "label": f"Dispositivo de Red ({ip})",
-                "icon": "wifi",
-                "is_dds_active": False,
-                "domain_id": None,
-                "dds_domains": [],
-                "dds_protocol": "Tráfico Estándar (TCP/IP)"
-            }
+                return observed_dds("host", f"Nodo ROS 2 ({ip})", "desktop")
+            return inactive_device(
+                "device", f"Dispositivo de Red ({ip})", "wifi",
+                "Tráfico estándar (TCP/IP)",
+            )
 
     def _is_computer_node(self, hostname: str, vendor: str) -> bool:
         """Determina si un host es una estación o computador en la subred ROS 2"""
@@ -390,17 +427,20 @@ class DeviceScanner:
         Escanea la red combinando la tabla ARP del kernel, ARP de Windows Host
         y sondeos ultra-rápidos de hilos paralelos con discriminación de Domain ID.
         """
-        domains_map = ip_domains_map or {}
+        domains_map = self._normalize_domains_map(ip_domains_map or {})
         arp_data = self._read_arp_table()
         target_ips = set(arp_data.keys())
+        target_ips.update(domains_map.keys())
+
+        # IPs comunes de las subredes realmente conectadas.
+        active_subnets = self._detect_all_subnets()
         
-        # Siempre incluir Gateway, PC local y Robot Kinova
+        # Siempre incluir Gateway y PC local. Kinova solo pertenece a la red del proyecto.
         target_ips.add(self.gateway_ip)
         target_ips.add(self.local_ip)
-        target_ips.add("192.168.1.10")
+        if "192.168.1" in active_subnets:
+            target_ips.add("192.168.1.10")
 
-        # IPs comunes de robots y ESP32s
-        active_subnets = self._detect_all_subnets()
         for snet in active_subnets:
             for h in [1, 10, 100, 101, 102, 103, 104, 105, 110, 120, 150, 200]:
                 target_ips.add(f"{snet}.{h}")
@@ -417,10 +457,12 @@ class DeviceScanner:
             first_octet = int(ip.split(".")[0]) if re.match(r"^\d{1,3}\.", ip) else 0
             if first_octet >= 224 or ip.endswith(".255") or ip == "255.255.255.255":
                 return None
+            if self._is_local_ip(ip) and ip != self.local_ip:
+                return None
 
             latency = self._ping_host(ip)
-            if latency is not None or ip == self.local_ip or ip in arp_data or ip in domains_map:
-                mac = arp_data.get(ip, "Local" if ip == self.local_ip else "--")
+            if latency is not None or self._is_local_ip(ip) or ip in arp_data or ip in domains_map:
+                mac = arp_data.get(ip, "Local" if self._is_local_ip(ip) else "--")
                 vendor = self._identify_vendor(mac)
                 hostname = self._get_hostname(ip)
                 detected_doms = domains_map.get(ip)
@@ -437,8 +479,10 @@ class DeviceScanner:
                     "is_dds_active": role_info["is_dds_active"],
                     "domain_id": role_info.get("domain_id"),
                     "dds_domains": role_info.get("dds_domains", []),
+                    "configured_domain_id": role_info.get("configured_domain_id"),
+                    "domain_source": role_info.get("domain_source", "unknown"),
                     "dds_protocol": role_info["dds_protocol"],
-                    "latency_ms": latency if latency is not None else (0.1 if ip == self.local_ip else 1.5),
+                    "latency_ms": latency if latency is not None else (0.1 if self._is_local_ip(ip) else 1.5),
                     "status": "online",
                     "last_seen": time.strftime("%H:%M:%S")
                 }
@@ -459,6 +503,24 @@ class DeviceScanner:
         self.cached_devices = devices
         self.last_scan_time = time.time()
         return devices
+
+    def refresh_cached_domains(self, ip_domains_map: Optional[Dict[str, List[int]]] = None) -> List[Dict[str, Any]]:
+        """Actualiza y también elimina observaciones DDS vencidas en la caché."""
+        domains_map = self._normalize_domains_map(ip_domains_map or {})
+        for device in self.cached_devices:
+            role_info = self._classify_role(
+                device["ip"],
+                device.get("mac", ""),
+                device.get("hostname", ""),
+                device.get("vendor", ""),
+                domains_map.get(device["ip"]),
+            )
+            for field in (
+                "role", "label", "icon", "is_dds_active", "domain_id",
+                "dds_domains", "configured_domain_id", "domain_source", "dds_protocol",
+            ):
+                device[field] = role_info[field]
+        return self.cached_devices
 
 
 if __name__ == "__main__":

@@ -234,12 +234,16 @@ export FASTRTPS_DEFAULT_PROFILES_FILE=~/ros2_ws/src/burger_delivery/network_setu
 
 El proyecto incluye un monitor web interactivo (`network_setup/iniciar_monitor.sh`) diseñado para visualizar en tiempo real la topología de la red, los nodos activos en el `ROS_DOMAIN_ID` y las métricas de calidad de enlace.
 
-### A. Detección de Sockets ROS 2 sin Privilegios de Administrador
-Para identificar si hay nodos publicando o escuchando en un `ROS_DOMAIN_ID` sin necesidad de ejecutar el script con `sudo` o depender de `psutil` elevado:
-- El monitor inspecciona directamente la tabla del kernel en `/proc/net/udp` y `/proc/net/udp6`.
-- Mapea los puertos abiertos con la fórmula RTPS estándar de DDS: 
+### A. Observación de dominios RTPS sin privilegios de administrador
+Para asociar una IP con un `ROS_DOMAIN_ID` sin ejecutar el monitor con `sudo`:
+- El monitor escucha pasivamente los anuncios SPDP multicast y valida que contengan una cabecera RTPS.
+- Atribuye el dominio usando el puerto multicast estándar:
   $$\text{Puerto Base} = 7400 + (250 \times \text{ROS\_DOMAIN\_ID})$$
-- Por ejemplo, para el **Dominio 0**, los puertos del canal UDP RTPS corresponden a los rangos `7400-7415`.
+- Por ejemplo, el anuncio SPDP del **Dominio 0** llega al puerto `7400` y el del **Dominio 42** al `17900`.
+
+El dominio configurado localmente no se presenta como actividad. Para computadores remotos, si no llega un anuncio RTPS válido, la interfaz muestra **Domain desconocido**. El uso exclusivo de Discovery Server, descubrimiento unicast, `LOCALHOST`, aislamiento Wi-Fi o filtrado multicast puede impedir la observación remota.
+
+El observador tampoco abre puertos dentro del rango UDP efímero de Linux. En WSL considera además el rango dinámico de Windows, ya que esa capa puede reservar puertos que no aparecen en `ss` dentro de Linux.
 
 ### B. Diagnóstico de Subred: Red del Robot (`192.168.1.x`) vs Red de Respaldo (`10.0.28.x`)
 Por defecto, la red del proyecto y del enjambre de robots opera en la subred **`192.168.1.x`** (con el Router TP-Link AX12 en `192.168.1.1`).
@@ -273,5 +277,3 @@ El monitor cuenta con un panel integrado para **grabar datasets experimentales**
 > 📘 **Manual Completo de la Interfaz Web:**  
 > Para una explicación detallada de todos los componentes visuales, KPIs, gráficas Canvas y endpoints de la API, consulta la [Guía Completa de la Interfaz del Monitor (MONITOR_UI_GUIA.md)](file:///home/roncanciovl/ros2_ws/src/burger_delivery/network_setup/MONITOR_UI_GUIA.md).  
 > Para el diseño metodológico del experimento y pruebas estadísticas, consulta [EXPERIMENTO_QOS_TELEMETRIA.md](file:///home/roncanciovl/ros2_ws/src/burger_delivery/docs/research/EXPERIMENTO_QOS_TELEMETRIA.md).
-
-

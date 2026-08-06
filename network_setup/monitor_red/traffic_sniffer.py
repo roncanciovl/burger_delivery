@@ -8,8 +8,8 @@ dominios DDS de ROS 2, Micro-ROS (puerto 8888) y rendimiento TCP/UDP.
 import collections
 import os
 import re
+import select
 import socket
-import struct
 import subprocess
 import threading
 import time
@@ -23,6 +23,9 @@ except ImportError:
 
 
 class TrafficSniffer:
+    MAX_ROS_DOMAIN_ID = 232
+    RTPS_MULTICAST_GROUP = "239.255.0.1"
+
     def __init__(self, gateway_ip: str = "192.168.1.1", history_size: int = 30):
         self.gateway_ip = gateway_ip
         self.history_size = history_size
@@ -49,6 +52,10 @@ class TrafficSniffer:
             "jitter_ms": 0.0,
             "packet_loss_percent": 0.0,
             "active_dds_domains": [],
+            "configured_ros_domain_id": self._get_configured_domain(),
+            "configured_domain_observable": True,
+            "rtps_observer_status": "starting",
+            "rtps_observer_failed_domains": [],
             "microros_agent_active": False,
             "microros_agent_pid": None,
             "discovery_server_active": False,
@@ -68,7 +75,12 @@ class TrafficSniffer:
         # Mapeo en tiempo real de IP -> {domain_id: last_seen_timestamp}
         self.ip_detected_domains: Dict[str, Dict[int, float]] = {}
         self._rtps_sniffer_thread: Optional[threading.Thread] = None
-        self._candidate_domains = [0, 42, 1, 2, 3, 10, 11, 20, 30, 40, 100]
+        # Evitar el rango efímero del kernel: ROS 2 tampoco recomienda dominios
+        # cuyos puertos DDS caen allí porque pueden colisionar con otros procesos.
+        self._candidate_domains = self._get_observable_domains()
+        self._rtps_observer_error: Optional[str] = None
+        self._rtps_observer_status = "starting"
+        self._rtps_observer_failed_domains: List[int] = []
 
         # Contadores de referencia para cálculo delta
         self._last_counters = self._get_raw_net_counters()
@@ -76,6 +88,58 @@ class TrafficSniffer:
         self._lock = threading.Lock()
         self._running = False
         self._worker_thread: Optional[threading.Thread] = None
+
+    @staticmethod
+    def _get_configured_domain() -> int:
+        """Retorna el dominio configurado localmente; ROS 2 usa 0 si no está definido."""
+        raw_domain = os.environ.get("ROS_DOMAIN_ID", "0")
+        try:
+            domain_id = int(raw_domain)
+        except (TypeError, ValueError):
+            return 0
+        return domain_id if 0 <= domain_id <= TrafficSniffer.MAX_ROS_DOMAIN_ID else 0
+
+    @classmethod
+    def _get_observable_domains(cls) -> List[int]:
+        """Dominios cuyo puerto SPDP no invade el rango UDP efímero local."""
+        ephemeral_ranges = [(32768, 60999)]
+        try:
+            with open("/proc/sys/net/ipv4/ip_local_port_range", "r") as port_range:
+                ephemeral_ranges = [tuple(map(int, port_range.read().split()[:2]))]
+        except (OSError, ValueError):
+            pass
+
+        # WSL comparte la pila con Windows, cuyo rango dinámico UDP habitual
+        # también puede reservar puertos aunque no aparezcan en `ss` de Linux.
+        try:
+            with open("/proc/version", "r") as version_file:
+                if "microsoft" in version_file.read().lower():
+                    ephemeral_ranges.append((49152, 65535))
+        except OSError:
+            pass
+
+        def overlaps_ephemeral(domain_id: int) -> bool:
+            block_start = 7400 + 250 * domain_id
+            block_end = block_start + 249
+            return any(
+                block_start <= ephemeral_end and block_end >= ephemeral_start
+                for ephemeral_start, ephemeral_end in ephemeral_ranges
+            )
+
+        return [
+            domain_id
+            for domain_id in range(cls.MAX_ROS_DOMAIN_ID + 1)
+            if not overlaps_ephemeral(domain_id)
+        ]
+
+    @staticmethod
+    def _is_rtps_packet(data: bytes) -> bool:
+        """Valida la cabecera RTPS mínima antes de atribuir un dominio a una IP."""
+        if len(data) < 20 or data[:4] != b"RTPS":
+            return False
+        protocol_major = data[4]
+        guid_prefix = data[8:20]
+        return protocol_major == 2 and any(guid_prefix)
 
     def _get_raw_net_counters(self) -> Dict[str, int]:
         """Obtiene los contadores crudos de bytes y paquetes de la red"""
@@ -116,16 +180,18 @@ class TrafficSniffer:
 
     def _scan_active_ports(self) -> Dict[str, Any]:
         """
-        Escanea sockets abiertos (UDP y TCP) en el sistema para detectar
-        Dominios ROS 2, Micro-ROS y servidores de red.
+        Detecta servicios locales auxiliares y resume dominios RTPS observados.
+
+        Los dominios no se infieren desde cualquier puerto dentro del rango DDS:
+        los sockets pasivos del propio monitor producirían falsos positivos. La
+        fuente de verdad es el mapa de paquetes RTPS validados por IP.
         """
-        active_domains = set()
         microros_active = False
         microros_pid = None
         discovery_server_active = False
         socket_list = []
 
-        # Detección ultra-rápida sin necesidad de sudo vía /proc/net/udp y /proc/net/udp6
+        # /proc basta para servicios con puertos inequívocos (micro-ROS y Discovery Server).
         for proc_file in ["/proc/net/udp", "/proc/net/udp6"]:
             if os.path.exists(proc_file):
                 try:
@@ -142,25 +208,8 @@ class TrafficSniffer:
                                         microros_active = True
                                     elif p == 11811:
                                         discovery_server_active = True
-                                    elif 7400 <= p <= 32000:
-                                        d_id = (p - 7400) // 250
-                                        if 0 <= d_id <= 230:
-                                            active_domains.add(d_id)
-                                            if not any(s["port"] == p for s in socket_list):
-                                                socket_list.append({
-                                                    "proto": "UDP",
-                                                    "port": p,
-                                                    "role": f"ROS 2 DDS (Domain {d_id})",
-                                                    "pid": None,
-                                                    "status": "LISTENING"
-                                                })
                 except Exception:
                     pass
-
-        # Si el usuario configuró un ROS_DOMAIN_ID en entorno
-        env_domain = os.environ.get("ROS_DOMAIN_ID")
-        if env_domain is not None and env_domain.isdigit():
-            active_domains.add(int(env_domain))
 
         if PSUTIL_AVAILABLE:
             try:
@@ -174,10 +223,6 @@ class TrafficSniffer:
                         microros_pid = c.pid
                     elif lport == 11811:
                         discovery_server_active = True
-                    elif 7400 <= lport <= 32000 and proto == "UDP":
-                        domain_id = (lport - 7400) // 250
-                        if 0 <= domain_id <= 230:
-                            active_domains.add(domain_id)
             except Exception:
                 pass
         
@@ -189,22 +234,42 @@ class TrafficSniffer:
                     microros_active = True
                 if ":11811 " in line:
                     discovery_server_active = True
-                match = re.search(r":(\d{4,5})\s", line)
-                if match:
-                    p = int(match.group(1))
-                    if 7400 <= p <= 32000:
-                        d_id = (p - 7400) // 250
-                        if 0 <= d_id <= 230:
-                            active_domains.add(d_id)
         except Exception:
             pass
 
+        ip_domains = self.get_ip_domains_map()
+        active_domains = sorted({domain for domains in ip_domains.values() for domain in domains})
+        for domain_id in active_domains[:15]:
+            socket_list.append({
+                "proto": "RTPS",
+                "port": 7400 + 250 * domain_id,
+                "role": f"Tráfico observado (Domain {domain_id})",
+                "pid": None,
+                "status": "OBSERVED"
+            })
+
+        if microros_active:
+            socket_list.append({
+                "proto": "UDP", "port": 8888, "role": "Micro-ROS Agent",
+                "pid": microros_pid, "status": "LISTENING"
+            })
+        if discovery_server_active:
+            socket_list.append({
+                "proto": "UDP", "port": 11811, "role": "DDS Discovery Server",
+                "pid": None, "status": "LISTENING"
+            })
+
         return {
-            "active_dds_domains": sorted(list(active_domains)),
+            "active_dds_domains": active_domains,
+            "configured_ros_domain_id": self._get_configured_domain(),
+            "configured_domain_observable": self._get_configured_domain() in self._candidate_domains,
+            "rtps_observer_status": self._rtps_observer_status,
+            "rtps_observer_error": self._rtps_observer_error,
+            "rtps_observer_failed_domains": list(self._rtps_observer_failed_domains),
             "microros_agent_active": microros_active,
             "microros_agent_pid": microros_pid,
             "discovery_server_active": discovery_server_active,
-            "active_sockets": socket_list[:15]  # Primeros 15 sockets relevantes
+            "active_sockets": socket_list[:15]
         }
 
 
@@ -334,6 +399,11 @@ class TrafficSniffer:
                 "dds_jitter_ms": dds_quality["dds_jitter_ms"],
                 "dds_packet_loss_percent": dds_quality["dds_packet_loss_percent"],
                 "active_dds_domains": port_info["active_dds_domains"],
+                "configured_ros_domain_id": port_info["configured_ros_domain_id"],
+                "configured_domain_observable": port_info["configured_domain_observable"],
+                "rtps_observer_status": port_info["rtps_observer_status"],
+                "rtps_observer_error": port_info["rtps_observer_error"],
+                "rtps_observer_failed_domains": port_info["rtps_observer_failed_domains"],
                 "microros_agent_active": port_info["microros_agent_active"],
                 "microros_agent_pid": port_info["microros_agent_pid"],
                 "discovery_server_active": port_info["discovery_server_active"],
@@ -490,89 +560,96 @@ class TrafficSniffer:
         return None
 
     def _start_rtps_discovery_sniffer(self):
-        """Inicia escucha activa y sondeo en puertos DDS multicast/broadcast para mapear IP -> Domain ID"""
+        """Observa pasivamente SPDP multicast para mapear IP -> Domain ID."""
         if self._rtps_sniffer_thread and self._rtps_sniffer_thread.is_alive():
             return
 
         def sniffer_loop():
-            sockets = []
-            # Escuchar tanto en puertos multicast (7400 + 250*d) como unicast (7410 + 250*d)
+            sockets: List[socket.socket] = []
+            socket_domains: Dict[socket.socket, int] = {}
+            failed_domains = set()
+
+            def open_listener(domain_id: int) -> bool:
+                listener = None
+                port = 7400 + 250 * domain_id
+                try:
+                    listener = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+                    listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                    if hasattr(socket, "SO_REUSEPORT"):
+                        listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+                    # Enlazar la dirección multicast evita colisiones con puertos
+                    # unicast efímeros que coincidan numéricamente con SPDP.
+                    listener.bind((self.RTPS_MULTICAST_GROUP, port))
+                    membership = (
+                        socket.inet_aton(self.RTPS_MULTICAST_GROUP)
+                        + socket.inet_aton("0.0.0.0")
+                    )
+                    listener.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, membership)
+                    listener.setblocking(False)
+                    sockets.append(listener)
+                    socket_domains[listener] = domain_id
+                    return True
+                except OSError:
+                    if listener is not None:
+                        listener.close()
+                    return False
+
+            def update_observer_status() -> None:
+                self._rtps_observer_failed_domains = sorted(failed_domains)
+                if not sockets:
+                    self._rtps_observer_error = "No fue posible abrir puertos multicast RTPS"
+                    self._rtps_observer_status = "error"
+                elif failed_domains:
+                    self._rtps_observer_error = (
+                        f"No se pudieron observar {len(failed_domains)} de "
+                        f"{len(self._candidate_domains)} dominios"
+                    )
+                    self._rtps_observer_status = "degraded"
+                else:
+                    self._rtps_observer_error = None
+                    self._rtps_observer_status = "active"
+
+            # SPDP anuncia participantes en 7400 + 250*d. No se envían sondeos:
+            # el observador no debe convertirse en el tráfico que intenta medir.
             for d in self._candidate_domains:
-                ports = [7400 + 250 * d, 7410 + 250 * d]
-                for port in ports:
-                    try:
-                        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-                        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                        s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-                        if hasattr(socket, "SO_REUSEPORT"):
-                            try:
-                                s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-                            except Exception:
-                                pass
-                        s.bind(("", port))
-                        mreq = struct.pack("4sl", socket.inet_aton("239.255.0.1"), socket.INADDR_ANY)
-                        try:
-                            s.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
-                        except Exception:
-                            pass
-                        s.settimeout(0.3)
-                        sockets.append((d, port, s))
-                    except Exception:
-                        pass
+                if not open_listener(d):
+                    failed_domains.add(d)
 
-            # Socket transmisor de sondeos SPDP
-            tx_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-            tx_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-
-            guid = b"\x01\x0f\x00\x00\x12\x34\x56\x78\x9a\xbc\xde\xf0"
-            rtps_probe = b"RTPS" + struct.pack("BB", 2, 2) + struct.pack("BB", 1, 15) + guid
-            last_probe_time = 0.0
-
-            subnet_bcast = "192.168.1.255"
-            if self.gateway_ip and "." in self.gateway_ip:
-                prefix = ".".join(self.gateway_ip.split(".")[:3])
-                subnet_bcast = f"{prefix}.255"
+            update_observer_status()
+            last_retry_time = time.time()
 
             while self._running:
-                now = time.time()
-                # Enviar sondeo activo SPDP cada 2.5s para forzar respuestas de descubrimiento
-                if now - last_probe_time > 2.5:
-                    last_probe_time = now
-                    for d_id in [42, 0, 1, 10]:
-                        m_port = 7400 + 250 * d_id
-                        u_port = 7410 + 250 * d_id
-                        for target in ["239.255.0.1", subnet_bcast, "255.255.255.255"]:
-                            try:
-                                tx_sock.sendto(rtps_probe, (target, m_port))
-                                tx_sock.sendto(rtps_probe, (target, u_port))
-                            except Exception:
-                                pass
+                if failed_domains and time.time() - last_retry_time >= 5.0:
+                    last_retry_time = time.time()
+                    recovered = {d for d in failed_domains if open_listener(d)}
+                    failed_domains.difference_update(recovered)
+                    update_observer_status()
 
-                # Recibir paquetes RTPS entrantes
-                for d_id, p_num, sock in sockets:
+                if not sockets:
+                    time.sleep(0.5)
+                    continue
+                try:
+                    readable, _, _ = select.select(sockets, [], [], 0.5)
+                except (OSError, ValueError):
+                    break
+
+                for listener in readable:
                     try:
-                        data, addr = sock.recvfrom(2048)
-                        if data and len(data) >= 4 and data[:4] == b"RTPS":
+                        data, addr = listener.recvfrom(65535)
+                        if self._is_rtps_packet(data):
                             sender_ip = addr[0]
+                            domain_id = socket_domains[listener]
                             with self._lock:
                                 if sender_ip not in self.ip_detected_domains:
                                     self.ip_detected_domains[sender_ip] = {}
-                                self.ip_detected_domains[sender_ip][d_id] = now
-                    except socket.timeout:
+                                self.ip_detected_domains[sender_ip][domain_id] = time.time()
+                    except (BlockingIOError, OSError):
                         pass
-                    except Exception:
-                        pass
-                time.sleep(0.05)
 
-            try:
-                tx_sock.close()
-            except Exception:
-                pass
-
-            for _, _, sock in sockets:
+            for listener in sockets:
                 try:
-                    sock.close()
-                except Exception:
+                    listener.close()
+                except OSError:
                     pass
 
         self._rtps_sniffer_thread = threading.Thread(target=sniffer_loop, daemon=True)

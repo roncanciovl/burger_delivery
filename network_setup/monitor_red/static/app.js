@@ -123,14 +123,14 @@ async function fetchInitialData() {
         const subEl = document.getElementById('subnet-display');
         if (subEl) subEl.textContent = `Subred: ${statusRes.network.subnet}`;
       }
-      if (statusRes.environment && statusRes.environment.ROS_DOMAIN_ID) {
-        const rawDomain = statusRes.environment.ROS_DOMAIN_ID;
+      if (statusRes.environment && statusRes.environment.ROS_DOMAIN_ID !== undefined) {
+        const rawDomain = String(statusRes.environment.ROS_DOMAIN_ID);
         const match = rawDomain.match(/\d+/);
-        const domainId = match ? match[0] : '42';
+        const domainId = match ? match[0] : '0';
         const inputDomain = document.getElementById('input-domain-id');
         if (inputDomain) inputDomain.value = domainId;
         const ddsVal = document.getElementById('val-dds-domains');
-        if (ddsVal) ddsVal.textContent = `Dominio ${domainId}`;
+        if (ddsVal) ddsVal.textContent = `Configurado local: ${domainId}; esperando RTPS`;
       }
     })
     .catch(err => console.warn('Error cargando /api/status:', err));
@@ -196,11 +196,15 @@ function updateTelemetry(traffic) {
   // KPI 3: ROS 2 DDS
   const ddsVal = document.getElementById('val-dds-domains');
   if (traffic.active_dds_domains && traffic.active_dds_domains.length > 0) {
-    ddsVal.textContent = `Dominio: ${traffic.active_dds_domains.join(', ')}`;
+    ddsVal.textContent = `Observados: ${traffic.active_dds_domains.join(', ')}`;
+  } else if (traffic.rtps_observer_status === 'error') {
+    ddsVal.textContent = 'Observador RTPS no disponible';
+  } else if (traffic.configured_domain_observable === false) {
+    ddsVal.textContent = `Local: ${traffic.configured_ros_domain_id}; rango UDP efímero no observable`;
   } else {
-    ddsVal.textContent = 'Sin tráfico activo';
+    ddsVal.textContent = `Sin RTPS observado (local: ${traffic.configured_ros_domain_id ?? 0})`;
   }
-  document.getElementById('val-dds-kbps').textContent = `DDS: ${(traffic.dds_kbps || 0).toFixed(1)} KB/s | Jitter: ${(traffic.dds_jitter_ms || 0.2).toFixed(1)}ms | Pérdida: ${(traffic.dds_packet_loss_percent || 0).toFixed(0)}%`;
+  document.getElementById('val-dds-kbps').textContent = `DDS estimado: ${(traffic.dds_kbps ?? 0).toFixed(1)} KB/s | Jitter: ${(traffic.dds_jitter_ms ?? 0).toFixed(1)}ms | Pérdida: ${(traffic.dds_packet_loss_percent ?? 0).toFixed(0)}%`;
 
   // KPI 4: Micro-ROS
   const urosVal = document.getElementById('val-microros-status');
@@ -214,7 +218,7 @@ function updateTelemetry(traffic) {
     urosVal.textContent = 'En Espera';
     urosVal.style.color = '#94a3b8';
     urosDot.classList.remove('active');
-    document.getElementById('val-microros-meta').textContent = 'Puerto 8888 escuchando';
+    document.getElementById('val-microros-meta').textContent = 'Puerto UDP 8888 no detectado';
   }
 
   // Actualizar estadísticas de protocolos bajo la gráfica
@@ -254,12 +258,12 @@ function renderDevicesTable() {
     if (state.activeFilter === 'all') return true;
     if (state.activeFilter === 'dds') return d.is_dds_active;
     if (state.activeFilter === 'dom-0') {
-      const doms = d.dds_domains && d.dds_domains.length > 0 ? d.dds_domains : (d.domain_id !== null && d.domain_id !== undefined ? [d.domain_id] : []);
-      return doms.includes(0) || (d.dds_protocol && d.dds_protocol.includes('Domain 0'));
+      const doms = Array.isArray(d.dds_domains) ? d.dds_domains : [];
+      return d.is_dds_active && doms.includes(0);
     }
     if (state.activeFilter === 'dom-42') {
-      const doms = d.dds_domains && d.dds_domains.length > 0 ? d.dds_domains : (d.domain_id !== null && d.domain_id !== undefined ? [d.domain_id] : []);
-      return doms.includes(42) || (d.dds_protocol && d.dds_protocol.includes('Domain 42'));
+      const doms = Array.isArray(d.dds_domains) ? d.dds_domains : [];
+      return d.is_dds_active && doms.includes(42);
     }
     if (state.activeFilter === 'robot') return d.role === 'robot';
     if (state.activeFilter === 'esp32') return d.role === 'esp32';
@@ -331,7 +335,7 @@ function renderDevicesTable() {
     const tdDds = document.createElement('td');
     const ddsBadge = document.createElement('span');
     if (d.is_dds_active) {
-      const doms = d.dds_domains && d.dds_domains.length > 0 ? d.dds_domains : (d.domain_id !== null && d.domain_id !== undefined ? [d.domain_id] : [0]);
+      const doms = Array.isArray(d.dds_domains) ? d.dds_domains : [];
       const dot = document.createElement('span');
       dot.className = 'status-dot pulsing';
 
@@ -357,7 +361,7 @@ function renderDevicesTable() {
       ddsBadge.appendChild(textNode);
     } else {
       ddsBadge.className = 'dds-badge dds-badge-inactive';
-      ddsBadge.textContent = 'Standard TCP/IP';
+      ddsBadge.textContent = d.dds_protocol || 'ROS 2 no detectado; Domain desconocido';
     }
     tdDds.appendChild(ddsBadge);
     tr.appendChild(tdDds);
@@ -397,7 +401,7 @@ function renderSocketsList(sockets) {
     const p = document.createElement('p');
     p.style.color = 'var(--text-dim)';
     p.style.fontSize = '0.85rem';
-    p.textContent = 'No hay sockets DDS o Micro-ROS en escucha actualmente.';
+    p.textContent = 'No se ha observado tráfico RTPS ni servicios Micro-ROS activos.';
     container.appendChild(p);
     return;
   }
@@ -499,7 +503,7 @@ function renderTopology() {
   });
 
   // 2. Dibujar Router en el centro
-  const routerDev = state.devices.find(d => d.role === 'router') || { ip: '192.168.1.1', label: 'Router TP-Link AX12' };
+  const routerDev = state.devices.find(d => d.role === 'router') || { ip: '--', label: 'Gateway de red activo' };
   drawSvgNode(svg, ns, routerPos.x, routerPos.y, routerDev.label, routerDev.ip, 'router', '#00f2fe', false, '');
 }
 
@@ -528,7 +532,7 @@ function drawSvgNode(svg, ns, x, y, title, subtitle, role, color, isDds = false,
     if (role === 'esp32') {
       nodeColor = '#10b981';
       tagColor = '#10b981';
-      tagText = '⚡ µROS (Dom 42)';
+      tagText = doms && doms.length > 0 ? `⚡ µROS (Dom ${doms.join(', ')})` : '⚡ µROS';
     } else if (doms && doms.includes(0) && doms.includes(42)) {
       nodeColor = '#e879f9';
       tagColor = '#f472b6';
@@ -757,7 +761,11 @@ function setupEventListeners() {
       const data = await res.json();
       if (data.status === 'success') {
         const ddsVal = document.getElementById('val-dds-domains');
-        if (ddsVal) ddsVal.textContent = `Dominio ${val}`;
+        if (ddsVal) {
+          ddsVal.textContent = data.observable === false
+            ? `Local: ${val}; rango UDP efímero no observable`
+            : `Configurado local: ${val}; esperando RTPS`;
+        }
         fetchDevicesSnapshot();
       }
     } catch (err) {
@@ -1004,4 +1012,3 @@ function updateBenchmarkUI(isRecording, stopResult = null) {
     }
   }
 }
-

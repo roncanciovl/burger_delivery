@@ -149,14 +149,14 @@ class NetworkMonitorHandler(BaseHTTPRequestHandler):
         elif path == "/api/status":
             status_data = {
                 "environment": {
-                    "ROS_DOMAIN_ID": os.environ.get("ROS_DOMAIN_ID", "42 (Default proyecto)"),
+                    "ROS_DOMAIN_ID": os.environ.get("ROS_DOMAIN_ID", "0 (Default ROS 2)"),
                     "RMW_IMPLEMENTATION": os.environ.get("RMW_IMPLEMENTATION", "rmw_cyclonedds_cpp (Recomendado)"),
                     "ROS_AUTOMATIC_DISCOVERY_RANGE": os.environ.get("ROS_AUTOMATIC_DISCOVERY_RANGE", "SUBNET")
                 },
                 "network": {
                     "gateway_ip": scanner.gateway_ip,
                     "local_ip": scanner.local_ip,
-                    "subnet": f"{scanner.subnet}.0/24"
+                    "subnet": scanner.subnet_cidr
                 },
                 "traffic_summary": sniffer.current_metrics
             }
@@ -166,22 +166,11 @@ class NetworkMonitorHandler(BaseHTTPRequestHandler):
         # 3. API: Lista de dispositivos descubiertos
         elif path == "/api/devices":
             ip_map = sniffer.get_ip_domains_map()
-            # Si no hay dispositivos cacheados o se necesita refresco de dominios
             if not scanner.cached_devices:
                 scanner.scan_network(full_sweep=False, ip_domains_map=ip_map)
             else:
-                # Actualizar dinámicamente dominios de dispositivos existentes
-                for d in scanner.cached_devices:
-                    ip = d["ip"]
-                    if ip in ip_map and d.get("is_dds_active"):
-                        doms = ip_map[ip]
-                        d["dds_domains"] = doms
-                        d["domain_id"] = doms[0]
-                        dom_str = ", ".join(str(x) for x in doms)
-                        if len(doms) == 1:
-                            d["dds_protocol"] = f"ROS 2 DDS (Domain {dom_str})"
-                        else:
-                            d["dds_protocol"] = f"ROS 2 DDS (Multidominio: {dom_str})"
+                # Recalcular también los equipos cuya observación ya expiró.
+                scanner.refresh_cached_domains(ip_map)
             resp = {
                 "count": len(scanner.cached_devices),
                 "last_scan": time.strftime("%H:%M:%S", time.localtime(scanner.last_scan_time)) if scanner.last_scan_time else "--",
@@ -253,9 +242,23 @@ class NetworkMonitorHandler(BaseHTTPRequestHandler):
                 data = json.loads(raw_body)
                 if "ros_domain_id" in data:
                     domain_id = int(data["ros_domain_id"])
+                    if not 0 <= domain_id <= 232:
+                        raise ValueError("ROS_DOMAIN_ID debe estar entre 0 y 232")
                     scanner.set_target_domain(domain_id)
-                    threading.Thread(target=lambda: scanner.scan_network(full_sweep=False), daemon=True).start()
-                    self._set_json_headers({"status": "success", "ROS_DOMAIN_ID": domain_id})
+                    ip_map = sniffer.get_ip_domains_map()
+                    scanner.refresh_cached_domains(ip_map)
+                    threading.Thread(
+                        target=lambda: scanner.scan_network(
+                            full_sweep=False,
+                            ip_domains_map=sniffer.get_ip_domains_map(),
+                        ),
+                        daemon=True,
+                    ).start()
+                    self._set_json_headers({
+                        "status": "success",
+                        "ROS_DOMAIN_ID": domain_id,
+                        "observable": domain_id in sniffer._candidate_domains,
+                    })
                     return
             except Exception as e:
                 self._set_json_headers({"status": "error", "message": str(e)}, status=HTTPStatus.BAD_REQUEST)
@@ -389,5 +392,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     run_server(host=args.host, port=args.port)
-
-
