@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Métricas de Red y Animaciones de QoS en ROS 2</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Fira+Code:wght@500;700&display=swap');
+
+        :root {
+            --bg-dark: #07090e;
+            --card-bg: rgba(15, 23, 42, 0.75);
+            --border-glow: rgba(168, 85, 247, 0.3);
+            --accent-purple: #c084fc;
+            --accent-cyan: #38bdf8;
+            --accent-green: #34d399;
+            --accent-amber: #fbbf24;
+            --accent-rose: #f43f5e;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, var(--bg-dark) 70%);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 3rem 1.5rem;
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            max-width: 900px;
+            margin: 0 auto 3.5rem auto;
+        }
+
+        .badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(168, 85, 247, 0.15);
+            color: var(--accent-purple);
+            border: 1px solid rgba(168, 85, 247, 0.4);
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.2);
+        }
+
+        h1 {
+            font-size: 2.75rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #f8fafc 0%, #c084fc 50%, #38bdf8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0 0 1rem 0;
+            line-height: 1.2;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 1.15rem;
+            line-height: 1.6;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            max-width: 1300px;
+            margin: 3rem auto 1.5rem auto;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+            gap: 2rem;
+            max-width: 1300px;
+            margin: 0 auto 3rem auto;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 1.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(16px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card:hover {
+            transform: translateY(-6px);
+            border-color: var(--border-glow);
+            box-shadow: 0 25px 50px rgba(168, 85, 247, 0.15);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .card h2 {
+            font-size: 1.4rem;
+            margin: 0;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .card h2 code {
+            font-family: 'Fira Code', monospace;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .icon-cyan { background: rgba(56, 189, 248, 0.15); color: var(--accent-cyan); border: 1px solid rgba(56, 189, 248, 0.3); }
+        .icon-purple { background: rgba(192, 132, 252, 0.15); color: var(--accent-purple); border: 1px solid rgba(192, 132, 252, 0.3); }
+        .icon-rose { background: rgba(244, 63, 94, 0.15); color: var(--accent-rose); border: 1px solid rgba(244, 63, 94, 0.3); }
+        .icon-amber { background: rgba(251, 191, 36, 0.15); color: var(--accent-amber); border: 1px solid rgba(251, 191, 36, 0.3); }
+        .icon-green { background: rgba(52, 211, 153, 0.15); color: var(--accent-green); border: 1px solid rgba(52, 211, 153, 0.3); }
+
+        .card p {
+            color: #cbd5e1;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin: 0 0 1.25rem 0;
+        }
+
+        .svg-container {
+            background: rgba(7, 9, 14, 0.6);
+            border-radius: 14px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+        }
+
+        .formula-box {
+            background: rgba(0, 0, 0, 0.5);
+            border-left: 3px solid var(--accent-purple);
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.82rem;
+            color: #e2e8f0;
+            margin-top: 10px;
+        }
+
+        /* Canvas Animation Cards */
+        .anim-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(550px, 1fr));
+            gap: 2rem;
+            max-width: 1300px;
+            margin: 0 auto 3rem auto;
+        }
+
+        .anim-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 1.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(16px);
+        }
+
+        .anim-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .anim-card title {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .anim-canvas-wrap {
+            position: relative;
+            background: #05070b;
+            border-radius: 14px;
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 180px;
+        }
+
+        .anim-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 12px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 8px 14px;
+            border-radius: 8px;
+        }
+
+        .btn-anim {
+            background: linear-gradient(135deg, #a855f7, #7c3aed);
+            color: #fff;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .btn-anim:hover {
+            transform: scale(1.04);
+        }
+
+        .anim-status-text {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.8rem;
+            color: var(--accent-cyan);
+        }
+
+        /* SVG Basic Animations */
+        @keyframes rttPulse {
+            0% { transform: translateX(30px); opacity: 0.2; }
+            50% { transform: translateX(170px); opacity: 1; }
+            100% { transform: translateX(30px); opacity: 0.2; }
+        }
+        .anim-rtt-pkt { animation: rttPulse 2.4s ease-in-out infinite; }
+
+        @keyframes jitterIrregular {
+            0% { transform: translateX(20px); }
+            20% { transform: translateX(50px); }
+            35% { transform: translateX(110px); }
+            60% { transform: translateX(130px); }
+            80% { transform: translateX(170px); }
+            100% { transform: translateX(20px); }
+        }
+        .anim-jitter-1 { animation: jitterIrregular 1.8s ease-in-out infinite; }
+        .anim-jitter-2 { animation: jitterIrregular 3.2s cubic-bezier(0.6, 0.05, 0.28, 0.9) infinite 0.4s; }
+
+        @keyframes lossDrop {
+            0% { transform: translateX(30px); opacity: 1; }
+            45% { opacity: 1; }
+            50% { opacity: 0; transform: translateX(100px) scale(1.8); }
+            100% { opacity: 0; transform: translateX(30px); }
+        }
+        .anim-loss-pkt { animation: lossDrop 2.5s ease-out infinite; }
+
+        /* Interactive QoS Playground */
+        .qos-playground {
+            max-width: 1300px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 2.5rem;
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(20px);
+        }
+
+        .qos-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .qos-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 1.5rem 0 2rem 0;
+        }
+
+        .control-group {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 1.2rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--accent-purple);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.6rem;
+        }
+
+        .control-group select {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.9);
+            color: #fff;
+            border: 1px solid rgba(168, 85, 247, 0.5);
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .qos-output-box {
+            background: rgba(7, 9, 14, 0.8);
+            border-radius: 14px;
+            padding: 1.5rem;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            line-height: 1.7;
+            color: #e2e8f0;
+        }
+
+        .qos-code-tag {
+            color: var(--accent-cyan);
+            font-weight: 700;
+        }
+
+        .qos-desc-text {
+            color: var(--text-muted);
+            margin-top: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.92rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="badge-pill">⚡ ROS 2 DDS Network Quality & Interactive Animations</div>
+        <h1>Métricas de Red y Combinaciones de QoS</h1>
+        <p class="subtitle">Guía visual animada e interactiva: Latencia RTT, Jitter, Pérdida de Paquetes y las 4 combinaciones clave de Quality of Service (QoS) en ROS 2.</p>
+    </div>
+
+    <!-- SECCIÓN 1: MÉTRICAS FUNDAMENTALES DE RED -->
+    <div class="section-title">
+        <div class="card-icon icon-cyan">1</div>
+        <span>Métricas de Calidad de Red (Network Performance)</span>
+    </div>
+
+    <div class="grid">
+        <!-- CARD 1: LATENCIA RTT -->
+        <div class="card">
+            <div>
+                <div class="card-header">
+                    <h2>Latencia <code>RTT</code></h2>
+                    <div class="card-icon icon-cyan">ms</div>
+                </div>
+                <p><strong>Round Trip Time (RTT):</strong> Mide el tiempo exacto en milisegundos que tarda un paquete de datos RTPS/UDP en viajar desde la PC de control hasta el robot y retornar confirmación.</p>
+            </div>
+            <div>
+                <div class="svg-container">
+                    <svg width="280" height="160" viewBox="0 0 280 160">
+                        <rect x="20" y="55" width="50" height="50" rx="8" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/>
+                        <text x="45" y="85" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">HOST</text>
+                        <rect x="210" y="55" width="50" height="50" rx="8" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/>
+                        <text x="235" y="85" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">ROBOT</text>
+                        <line x1="70" y1="80" x2="210" y2="80" stroke="#334155" stroke-width="3" stroke-dasharray="4 4"/>
+                        <g class="anim-rtt-pkt">
+                            <circle cx="0" cy="80" r="7" fill="#38bdf8"/>
+                            <circle cx="0" cy="80" r="12" fill="none" stroke="#38bdf8" stroke-width="2" opacity="0.6"/>
+                        </g>
+                        <text x="140" y="115" fill="#94a3b8" font-size="11" text-anchor="middle">RTT Ideal < 5.0 ms</text>
+                    </svg>
+                </div>
+                <div class="formula-box">RTT = Tiempo_Respuesta - Tiempo_Envio</div>
+            </div>
+        </div>
+
+        <!-- CARD 2: JITTER -->
+        <div class="card">
+            <div>
+                <div class="card-header">
+                    <h2>Jitter <code>mdev</code></h2>
+                    <div class="card-icon icon-purple">Δt</div>
+                </div>
+                <p><strong>Variación de Retardo:</strong> Inestabilidad o dispersión en el tiempo de llegada entre paquetes consecutivos. Causa tirones en motores y desincronización de transformadas TF2.</p>
+            </div>
+            <div>
+                <div class="svg-container">
+                    <svg width="280" height="160" viewBox="0 0 280 160">
+                        <line x1="30" y1="50" x2="250" y2="50" stroke="#334155" stroke-width="2"/>
+                        <line x1="30" y1="110" x2="250" y2="110" stroke="#334155" stroke-width="2"/>
+                        <text x="35" y="40" fill="#a855f7" font-size="10">Teórico (10 Hz constante)</text>
+                        <circle cx="70" cy="50" r="5" fill="#a855f7"/>
+                        <circle cx="120" cy="50" r="5" fill="#a855f7"/>
+                        <circle cx="170" cy="50" r="5" fill="#a855f7"/>
+                        <circle cx="220" cy="50" r="5" fill="#a855f7"/>
+                        <text x="35" y="100" fill="#f43f5e" font-size="10">Real con Jitter (Wi-Fi inestable)</text>
+                        <g class="anim-jitter-1">
+                            <circle cx="30" cy="110" r="5" fill="#f43f5e"/>
+                        </g>
+                        <g class="anim-jitter-2">
+                            <circle cx="30" cy="110" r="5" fill="#fbbf24"/>
+                        </g>
+                        <text x="140" y="145" fill="#94a3b8" font-size="11" text-anchor="middle">Jitter Ideal < 1.0 ms</text>
+                    </svg>
+                </div>
+                <div class="formula-box">Jitter = StdDev(|RTT_k - RTT_{k-1}|)</div>
+            </div>
+        </div>
+
+        <!-- CARD 3: PACKET LOSS -->
+        <div class="card">
+            <div>
+                <div class="card-header">
+                    <h2>Packet Loss <code>%</code></h2>
+                    <div class="card-icon icon-rose">%</div>
+                </div>
+                <p><strong>Pérdida de Paquetes:</strong> Porcentaje de datagramas UDP no entregados. Ocurre por interferencia Wi-Fi o saturación del buffer del router. Provoca caídas en tópicos <code>Best Effort</code>.</p>
+            </div>
+            <div>
+                <div class="svg-container">
+                    <svg width="280" height="160" viewBox="0 0 280 160">
+                        <line x1="30" y1="80" x2="250" y2="80" stroke="#334155" stroke-width="3" stroke-dasharray="5 5"/>
+                        <g class="anim-loss-pkt">
+                            <circle cx="0" cy="80" r="8" fill="#f43f5e"/>
+                            <text cx="0" cy="84" fill="#fff" font-size="10" text-anchor="middle">✕</text>
+                        </g>
+                        <text x="140" y="125" fill="#f43f5e" font-size="11" font-weight="bold" text-anchor="middle">¡Paquete UDP Descartado!</text>
+                    </svg>
+                </div>
+                <div class="formula-box">Pérdida % = (1 - Rx / Tx) * 100</div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- SECCIÓN 2: ANIMACIONES DE COMBINACIONES DE QoS EN ROS 2 -->
+    <div class="section-title">
+        <div class="card-icon icon-purple">2</div>
+        <span>Animaciones Interactivas de Combinaciones de QoS</span>
+    </div>
+
+    <div class="anim-grid">
+
+        <!-- ANIMACIÓN 1: BEST EFFORT + VOLATILE (SENSORES) -->
+        <div class="anim-card">
+            <div class="anim-card-header">
+                <div>
+                    <span style="color: var(--accent-cyan); font-weight: 700; font-size: 0.8rem;">CASO 1: SENSORES DE ALTA FRECUENCIA</span>
+                    <h3 style="margin: 4px 0 0 0; color: #fff;"><code>Best Effort</code> + <code>Volatile</code> + <code>Keep Last(1)</code></h3>
+                </div>
+                <div class="card-icon icon-cyan">⚡</div>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.88rem;">
+                Utilizado en <strong>Lidar, Cámaras e IMU</strong>. Prioriza la mínima latencia. Si un paquete se pierde en Wi-Fi, <strong>no se re-transmite</strong>; se descarta y se procesa el siguiente dato fresco.
+            </p>
+            <div class="anim-canvas-wrap">
+                <canvas id="canvas-sensor"></canvas>
+            </div>
+            <div class="anim-controls">
+                <button class="btn-anim" onclick="triggerSensorDrop()">Simular Pérdida de Paquete</button>
+                <span class="anim-status-text" id="status-sensor">Estado: Flujo continuo (Zero-Re-transmission)</span>
+            </div>
+        </div>
+
+        <!-- ANIMACIÓN 2: RELIABLE + VOLATILE (COMANDOS CRÍTICOS) -->
+        <div class="anim-card">
+            <div class="anim-card-header">
+                <div>
+                    <span style="color: var(--accent-green); font-weight: 700; font-size: 0.8rem;">CASO 2: NAVEGACIÓN Y CONTROL</span>
+                    <h3 style="margin: 4px 0 0 0; color: #fff;"><code>Reliable</code> + <code>Volatile</code> + <code>Keep Last(10)</code></h3>
+                </div>
+                <div class="card-icon icon-green">🛡️</div>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.88rem;">
+                Utilizado en <strong><code>/cmd_vel</code> y Waypoints de Navegación</strong>. Si un paquete se pierde, DDS envía una confirmación <code>NACK</code> y el emisor re-transmite la muestra hasta confirmar entrega.
+            </p>
+            <div class="anim-canvas-wrap">
+                <canvas id="canvas-command"></canvas>
+            </div>
+            <div class="anim-controls">
+                <button class="btn-anim" onclick="triggerCommandDrop()">Simular Pérdida & Re-transmisión</button>
+                <span class="anim-status-text" id="status-command">Estado: Canal Fiable Garantizado</span>
+            </div>
+        </div>
+
+        <!-- ANIMACIÓN 3: RELIABLE + TRANSIENT LOCAL (MAPAS Y CONFIG) -->
+        <div class="anim-card">
+            <div class="anim-card-header">
+                <div>
+                    <span style="color: var(--accent-amber); font-weight: 700; font-size: 0.8rem;">CASO 3: MAPAS Y ESTADOS ESTÁTICOS</span>
+                    <h3 style="margin: 4px 0 0 0; color: #fff;"><code>Reliable</code> + <code>Transient Local</code></h3>
+                </div>
+                <div class="card-icon icon-amber">📌</div>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.88rem;">
+                Utilizado en <strong><code>/map</code> y <code>/tf_static</code></strong>. El publicador almacena el mapa en memoria. Cuando un <strong>Nodo Tardío (Late-Joiner)</strong> se conecta horas después, recibe el mapa guardado instantáneamente.
+            </p>
+            <div class="anim-canvas-wrap">
+                <canvas id="canvas-map"></canvas>
+            </div>
+            <div class="anim-controls">
+                <button class="btn-anim" onclick="connectLateJoiner()">Conectar Suscriptor Tardío</button>
+                <span class="anim-status-text" id="status-map">Estado: Mapa guardado en memoria del Publicador</span>
+            </div>
+        </div>
+
+        <!-- ANIMACIÓN 4: INCOMPATIBILIDAD DE QOS (ADVERTENCIA) -->
+        <div class="anim-card">
+            <div class="anim-card-header">
+                <div>
+                    <span style="color: var(--accent-rose); font-weight: 700; font-size: 0.8rem;">CASO 4: ADVERTENCIA DE ERROR</span>
+                    <h3 style="margin: 4px 0 0 0; color: #fff;">Incompatibilidad de Perfiles QoS</h3>
+                </div>
+                <div class="card-icon icon-rose">⚠️</div>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.88rem;">
+                <strong>Regla de Compatibilidad DDS:</strong> Si un Suscriptor exige <code>Reliable</code> pero el Publicador ofrece <code>Best Effort</code>, la conexión se rechaza y <strong>ningún mensaje es recibido</strong>.
+            </p>
+            <div class="anim-canvas-wrap">
+                <canvas id="canvas-incompat"></canvas>
+            </div>
+            <div class="anim-controls">
+                <button class="btn-anim" onclick="toggleIncompatibility()">Alternar Modo Incompatible</button>
+                <span class="anim-status-text" id="status-incompat" style="color: var(--accent-rose);">⚠️ ERROR: Discrepancia de QoS</span>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- SECCIÓN 3: SIMULADOR DE POLÍTICAS QoS EN ROS 2 -->
+    <div class="qos-playground">
+        <div class="qos-title">
+            <div class="card-icon icon-green">QoS</div>
+            <span>Configurador Interactivo de Perfiles de QoS</span>
+        </div>
+        <p style="color: var(--text-muted); margin-top: 0;">
+            Selecciona las políticas deseada para generar el perfil de QoS en C++ y Python y ver la explicación de comportamiento:
+        </p>
+
+        <div class="qos-controls">
+            <div class="control-group">
+                <label>1. Reliability (Fiabilidad)</label>
+                <select id="qos-reliability" onchange="updateQosDemo()">
+                    <option value="RELIABLE">RELIABLE (Garantiza entrega / Re-transmite)</option>
+                    <option value="BEST_EFFORT">BEST_EFFORT (Mínima latencia / Descarta perdidos)</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>2. Durability (Durabilidad)</label>
+                <select id="qos-durability" onchange="updateQosDemo()">
+                    <option value="VOLATILE">VOLATILE (No guarda historial para nodos tardíos)</option>
+                    <option value="TRANSIENT_LOCAL">TRANSIENT_LOCAL (Guarda muestras para nuevos suscriptores)</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>3. History & Depth</label>
+                <select id="qos-history" onchange="updateQosDemo()">
+                    <option value="KEEP_LAST_10">KEEP_LAST (Profundidad: 10)</option>
+                    <option value="KEEP_LAST_1">KEEP_LAST (Profundidad: 1 - Último valor)</option>
+                    <option value="KEEP_ALL">KEEP_ALL (Guarda todas las muestras)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="qos-output-box" id="qos-output"></div>
+    </div>
+
+
+    <!-- SCRIPT DE CANVAS ANIMATIONS -->
+    <script>
+        // ==========================================================================
+        // ANIMACIÓN 1: SENSOR HIGH FREQUENCY (BEST EFFORT + VOLATILE)
+        // ==========================================================================
+        const canvasSensor = document.getElementById('canvas-sensor');
+        const ctxSensor = canvasSensor.getContext('2d');
+        let sensorPkts = [];
+        let sensorDropTrigger = false;
+
+        function initCanvas(c) {
+            c.width = c.parentElement.clientWidth;
+            c.height = 180;
+        }
+        initCanvas(canvasSensor);
+
+        function drawSensor() {
+            ctxSensor.clearRect(0, 0, canvasSensor.width, canvasSensor.height);
+            const w = canvasSensor.width;
+            const h = canvasSensor.height;
+
+            // Nodes
+            ctxSensor.fillStyle = '#1e293b';
+            ctxSensor.strokeStyle = '#38bdf8';
+            ctxSensor.lineWidth = 2;
+            ctxSensor.fillRect(30, h/2 - 25, 70, 50);
+            ctxSensor.strokeRect(30, h/2 - 25, 70, 50);
+            ctxSensor.fillStyle = '#38bdf8';
+            ctxSensor.font = '11px Inter';
+            ctxSensor.fillText('LIDAR', 48, h/2 + 4);
+
+            ctxSensor.fillStyle = '#1e293b';
+            ctxSensor.strokeStyle = '#38bdf8';
+            ctxSensor.fillRect(w - 100, h/2 - 25, 70, 50);
+            ctxSensor.strokeRect(w - 100, h/2 - 25, 70, 50);
+            ctxSensor.fillStyle = '#38bdf8';
+            ctxSensor.fillText('NAV2', w - 82, h/2 + 4);
+
+            // Channel line
+            ctxSensor.strokeStyle = '#334155';
+            ctxSensor.lineWidth = 2;
+            ctxSensor.setLineDash([4, 4]);
+            ctxSensor.beginPath();
+            ctxSensor.moveTo(100, h/2);
+            ctxSensor.lineTo(w - 100, h/2);
+            ctxSensor.stroke();
+            ctxSensor.setLineDash([]);
+
+            // Spawn packets
+            if (Math.random() < 0.08) {
+                sensorPkts.push({ x: 100, isDrop: sensorDropTrigger });
+                if (sensorDropTrigger) sensorDropTrigger = false;
+            }
+
+            // Update & draw packets
+            for (let i = sensorPkts.length - 1; i >= 0; i--) {
+                let p = sensorPkts[i];
+                p.x += 4.5;
+
+                if (p.isDrop && p.x > w/2 - 20 && p.x < w/2 + 20) {
+                    ctxSensor.fillStyle = '#f43f5e';
+                    ctxSensor.font = '16px sans-serif';
+                    ctxSensor.fillText('💥', p.x, h/2 + 5);
+                    document.getElementById('status-sensor').textContent = '⚠️ Paquete Lidar Perdido: Ignorado sin re-transmisión (Best Effort)';
+                    document.getElementById('status-sensor').style.color = '#f43f5e';
+                    sensorPkts.splice(i, 1);
+                    continue;
+                }
+
+                ctxSensor.fillStyle = '#38bdf8';
+                ctxSensor.beginPath();
+                ctxSensor.arc(p.x, h/2, 8, 0, Math.PI * 2);
+                ctxSensor.fill();
+
+                if (p.x >= w - 100) {
+                    sensorPkts.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(drawSensor);
+        }
+        drawSensor();
+
+        function triggerSensorDrop() {
+            sensorDropTrigger = true;
+        }
+
+
+        // ==========================================================================
+        // ANIMACIÓN 2: COMMAND RELIABLE (RELIABLE + VOLATILE)
+        // ==========================================================================
+        const canvasCmd = document.getElementById('canvas-command');
+        const ctxCmd = canvasCmd.getContext('2d');
+        initCanvas(canvasCmd);
+
+        let cmdPkt = { x: 100, state: 'normal', retries: 0 };
+        let cmdDropTrigger = false;
+
+        function drawCommand() {
+            ctxCmd.clearRect(0, 0, canvasCmd.width, canvasCmd.height);
+            const w = canvasCmd.width;
+            const h = canvasCmd.height;
+
+            // Nodes
+            ctxCmd.fillStyle = '#1e293b';
+            ctxCmd.strokeStyle = '#34d399';
+            ctxCmd.lineWidth = 2;
+            ctxCmd.fillRect(30, h/2 - 25, 70, 50);
+            ctxCmd.strokeRect(30, h/2 - 25, 70, 50);
+            ctxCmd.fillStyle = '#34d399';
+            ctxCmd.font = '11px Inter';
+            ctxCmd.fillText('TELEOP', 42, h/2 + 4);
+
+            ctxCmd.fillStyle = '#1e293b';
+            ctxCmd.strokeStyle = '#34d399';
+            ctxCmd.fillRect(w - 100, h/2 - 25, 70, 50);
+            ctxCmd.strokeRect(w - 100, h/2 - 25, 70, 50);
+            ctxCmd.fillStyle = '#34d399';
+            ctxCmd.fillText('ROBOT', w - 85, h/2 + 4);
+
+            // Channel line
+            ctxCmd.strokeStyle = '#334155';
+            ctxCmd.setLineDash([4, 4]);
+            ctxCmd.beginPath();
+            ctxCmd.moveTo(100, h/2);
+            ctxCmd.lineTo(w - 100, h/2);
+            ctxCmd.stroke();
+            ctxCmd.setLineDash([]);
+
+            // Packet movement
+            if (cmdPkt.state === 'normal') {
+                cmdPkt.x += 3.5;
+                if (cmdDropTrigger && cmdPkt.x > w/2) {
+                    cmdPkt.state = 'dropped';
+                    cmdDropTrigger = false;
+                } else if (cmdPkt.x >= w - 100) {
+                    cmdPkt.x = 100;
+                    document.getElementById('status-command').textContent = '✅ Comando entregado correctamente';
+                    document.getElementById('status-command').style.color = '#34d399';
+                }
+            } else if (cmdPkt.state === 'dropped') {
+                ctxCmd.fillStyle = '#f43f5e';
+                ctxCmd.font = '14px Fira Code';
+                ctxCmd.fillText('❌ NACK: Solicitando Re-transmisión...', w/2 - 110, h/2 - 20);
+                document.getElementById('status-command').textContent = '🔄 Paquete perdido: Re-transmitiendo paquete de reemplazo (Reliable)';
+                document.getElementById('status-command').style.color = '#fbbf24';
+                
+                setTimeout(() => {
+                    cmdPkt.x = 100;
+                    cmdPkt.state = 'retransmitting';
+                }, 1000);
+            } else if (cmdPkt.state === 'retransmitting') {
+                cmdPkt.x += 4;
+                ctxCmd.fillStyle = '#fbbf24';
+                ctxCmd.beginPath();
+                ctxCmd.arc(cmdPkt.x, h/2, 10, 0, Math.PI * 2);
+                ctxCmd.fill();
+                ctxCmd.fillText('RETRY', cmdPkt.x - 18, h/2 - 14);
+
+                if (cmdPkt.x >= w - 100) {
+                    cmdPkt.x = 100;
+                    cmdPkt.state = 'normal';
+                }
+            }
+
+            if (cmdPkt.state === 'normal') {
+                ctxCmd.fillStyle = '#34d399';
+                ctxCmd.beginPath();
+                ctxCmd.arc(cmdPkt.x, h/2, 8, 0, Math.PI * 2);
+                ctxCmd.fill();
+            }
+
+            requestAnimationFrame(drawCommand);
+        }
+        drawCommand();
+
+        function triggerCommandDrop() {
+            cmdDropTrigger = true;
+        }
+
+
+        // ==========================================================================
+        // ANIMACIÓN 3: MAP TRANSIENT LOCAL
+        // ==========================================================================
+        const canvasMap = document.getElementById('canvas-map');
+        const ctxMap = canvasMap.getContext('2d');
+        initCanvas(canvasMap);
+
+        let lateJoinerActive = false;
+        let mapPacketX = -1;
+
+        function drawMapAnim() {
+            ctxMap.clearRect(0, 0, canvasMap.width, canvasMap.height);
+            const w = canvasMap.width;
+            const h = canvasMap.height;
+
+            // Publisher (SLAM / Map Server)
+            ctxMap.fillStyle = '#1e293b';
+            ctxMap.strokeStyle = '#fbbf24';
+            ctxMap.lineWidth = 2;
+            ctxMap.fillRect(30, h/2 - 30, 80, 60);
+            ctxMap.strokeRect(30, h/2 - 30, 80, 60);
+            ctxMap.fillStyle = '#fbbf24';
+            ctxMap.font = '11px Inter';
+            ctxMap.fillText('MAP_SERVER', 35, h/2 - 5);
+            ctxMap.fillStyle = '#94a3b8';
+            ctxMap.font = '10px Fira Code';
+            ctxMap.fillText('[Memoria 1]', 38, h/2 + 15);
+
+            // Channel
+            ctxMap.strokeStyle = '#334155';
+            ctxMap.setLineDash([4, 4]);
+            ctxMap.beginPath();
+            ctxMap.moveTo(110, h/2);
+            ctxSensor.lineTo(w - 110, h/2);
+            ctxMap.stroke();
+            ctxMap.setLineDash([]);
+
+            // Late Joiner Node
+            if (lateJoinerActive) {
+                ctxMap.fillStyle = '#1e293b';
+                ctxMap.strokeStyle = '#38bdf8';
+                ctxMap.fillRect(w - 110, h/2 - 30, 80, 60);
+                ctxMap.strokeRect(w - 110, h/2 - 30, 80, 60);
+                ctxMap.fillStyle = '#38bdf8';
+                ctxMap.font = '11px Inter';
+                ctxMap.fillText('RVIZ2', w - 92, h/2 - 5);
+                ctxMap.fillStyle = '#34d399';
+                ctxMap.font = '10px Fira Code';
+                ctxMap.fillText('(Late Joiner)', w - 100, h/2 + 15);
+
+                if (mapPacketX > 0) {
+                    mapPacketX += 4;
+                    ctxMap.fillStyle = '#fbbf24';
+                    ctxMap.fillRect(mapPacketX - 10, h/2 - 10, 20, 20);
+                    ctxMap.fillStyle = '#000';
+                    ctxMap.font = '10px Fira Code';
+                    ctxMap.fillText('MAP', mapPacketX - 9, h/2 + 4);
+
+                    if (mapPacketX >= w - 110) {
+                        mapPacketX = -1;
+                        document.getElementById('status-map').textContent = '🎉 Late-Joiner RViz2 recibió el mapa histórico retenido en memoria!';
+                        document.getElementById('status-map').style.color = '#34d399';
+                    }
+                }
+            } else {
+                ctxMap.fillStyle = 'rgba(255, 255, 255, 0.1)';
+                ctxMap.font = '12px Inter';
+                ctxMap.fillText('Esperando conexión de nuevo suscriptor...', w - 240, h/2 + 5);
+            }
+
+            requestAnimationFrame(drawMapAnim);
+        }
+        drawMapAnim();
+
+        function connectLateJoiner() {
+            lateJoinerActive = true;
+            mapPacketX = 110;
+            document.getElementById('status-map').textContent = '⚡ Enviando muestra histórica guardada al nuevo nodo...';
+            document.getElementById('status-map').style.color = '#fbbf24';
+        }
+
+
+        // ==========================================================================
+        // ANIMACIÓN 4: QOS INCOMPATIBILITY
+        // ==========================================================================
+        const canvasIncompat = document.getElementById('canvas-incompat');
+        const ctxIncompat = canvasIncompat.getContext('2d');
+        initCanvas(canvasIncompat);
+
+        let isIncompatibleMode = true;
+
+        function drawIncompatAnim() {
+            ctxIncompat.clearRect(0, 0, canvasIncompat.width, canvasIncompat.height);
+            const w = canvasIncompat.width;
+            const h = canvasIncompat.height;
+
+            // Pub
+            ctxIncompat.fillStyle = '#1e293b';
+            ctxIncompat.strokeStyle = isIncompatibleMode ? '#f43f5e' : '#34d399';
+            ctxIncompat.lineWidth = 2;
+            ctxIncompat.fillRect(30, h/2 - 30, 100, 60);
+            ctxIncompat.strokeRect(30, h/2 - 30, 100, 60);
+            ctxIncompat.fillStyle = '#fff';
+            ctxIncompat.font = '11px Inter';
+            ctxIncompat.fillText('PUBLICADOR', 40, h/2 - 5);
+            ctxIncompat.fillStyle = isIncompatibleMode ? '#f43f5e' : '#34d399';
+            ctxIncompat.font = '10px Fira Code';
+            ctxIncompat.fillText(isIncompatibleMode ? 'Best Effort' : 'Reliable', 42, h/2 + 15);
+
+            // Sub
+            ctxIncompat.fillStyle = '#1e293b';
+            ctxIncompat.strokeStyle = isIncompatibleMode ? '#f43f5e' : '#34d399';
+            ctxIncompat.fillRect(w - 130, h/2 - 30, 100, 60);
+            ctxIncompat.strokeRect(w - 130, h/2 - 30, 100, 60);
+            ctxIncompat.fillStyle = '#fff';
+            ctxIncompat.font = '11px Inter';
+            ctxIncompat.fillText('SUSCRIPTOR', w - 120, h/2 - 5);
+            ctxIncompat.fillStyle = '#34d399';
+            ctxIncompat.font = '10px Fira Code';
+            ctxIncompat.fillText('Reliable', w - 110, h/2 + 15);
+
+            // Wall or Channel
+            if (isIncompatibleMode) {
+                ctxIncompat.strokeStyle = '#f43f5e';
+                ctxIncompat.lineWidth = 4;
+                ctxIncompat.beginPath();
+                ctxIncompat.moveTo(w/2, h/2 - 40);
+                ctxIncompat.lineTo(w/2, h/2 + 40);
+                ctxIncompat.stroke();
+
+                ctxIncompat.fillStyle = '#f43f5e';
+                ctxIncompat.font = '22px sans-serif';
+                ctxIncompat.fillText('⛔', w/2 - 12, h/2 + 8);
+            } else {
+                ctxIncompat.strokeStyle = '#34d399';
+                ctxIncompat.lineWidth = 2;
+                ctxIncompat.setLineDash([4, 4]);
+                ctxIncompat.beginPath();
+                ctxIncompat.moveTo(130, h/2);
+                ctxIncompat.lineTo(w - 130, h/2);
+                ctxIncompat.stroke();
+                ctxIncompat.setLineDash([]);
+            }
+
+            requestAnimationFrame(drawIncompatAnim);
+        }
+        drawIncompatAnim();
+
+        function toggleIncompatibility() {
+            isIncompatibleMode = !isIncompatibleMode;
+            const st = document.getElementById('status-incompat');
+            if (isIncompatibleMode) {
+                st.textContent = '⚠️ ERROR: Discrepancia de QoS (Pub BestEffort / Sub Reliable)';
+                st.style.color = '#f43f5e';
+            } else {
+                st.textContent = '✅ Conexión QoS Compatible (Reliable <-> Reliable)';
+                st.style.color = '#34d399';
+            }
+        }
+
+
+        // ==========================================================================
+        // PLAYGROUND QOS SNIPPETS
+        // ==========================================================================
+        function updateQosDemo() {
+            const rel = document.getElementById('qos-reliability').value;
+            const dur = document.getElementById('qos-durability').value;
+            const hist = document.getElementById('qos-history').value;
+
+            let codeSnippet = `<span class="qos-code-tag">rclcpp::QoS</span> qos_profile(10);\n`;
+            codeSnippet += `qos_profile.reliability(<span class="qos-code-tag">rclcpp::ReliabilityPolicy::${rel}</span>);\n`;
+            codeSnippet += `qos_profile.durability(<span class="qos-code-tag">rclcpp::DurabilityPolicy::${dur}</span>);\n`;
+
+            let explanation = '';
+            if (rel === 'RELIABLE') {
+                explanation += '⚡ <strong>Reliable:</strong> Si un paquete UDP se pierde en Wi-Fi, DDS re-transmitirá el mensaje. Ideal para comandos críticos (ej. <code>/cmd_vel</code> o mapas).<br>';
+            } else {
+                explanation += '🚀 <strong>Best Effort:</strong> No se re-transmiten paquetes perdidos. Máxima velocidad para sensores de alta frecuencia (ej. <code>/scan</code> Lidar o cámaras).<br>';
+            }
+
+            if (dur === 'TRANSIENT_LOCAL') {
+                explanation += '📌 <strong>Transient Local:</strong> Si enciendes un nodo suscriptor <em>después</em> de haber publicado (ej. un mapa o configuración), el nodo recibirá la última muestra guardada.<br>';
+            } else {
+                explanation += '💨 <strong>Volatile:</strong> Los nuevos suscriptores solo recibirán datos publicados <em>después</em> de su conexión.<br>';
+            }
+
+            document.getElementById('qos-output').innerHTML = `
+                <div><strong>Perfil C++ / Python Generado:</strong></div>
+                <pre style="margin: 8px 0; font-family: inherit; color: #38bdf8;">${codeSnippet}</pre>
+                <div class="qos-desc-text">${explanation}</div>
+            `;
+        }
+
+        updateQosDemo();
+    </script>
+</body>
+</html>
