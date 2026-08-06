@@ -59,6 +59,7 @@
             font-weight: 800;
             background: linear-gradient(135deg, #f8fafc 0%, #c084fc 50%, #38bdf8 100%);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
             margin: 0 0 1rem 0;
             line-height: 1.2;
@@ -816,7 +817,7 @@
             ctxMap.setLineDash([4, 4]);
             ctxMap.beginPath();
             ctxMap.moveTo(110, h/2);
-            ctxSensor.lineTo(w - 110, h/2);
+            ctxMap.lineTo(w - 110, h/2);
             ctxMap.stroke();
             ctxMap.setLineDash([]);
 

@@ -253,6 +253,14 @@ function renderDevicesTable() {
   const filtered = state.devices.filter(d => {
     if (state.activeFilter === 'all') return true;
     if (state.activeFilter === 'dds') return d.is_dds_active;
+    if (state.activeFilter === 'dom-0') {
+      const doms = d.dds_domains && d.dds_domains.length > 0 ? d.dds_domains : (d.domain_id !== null && d.domain_id !== undefined ? [d.domain_id] : []);
+      return doms.includes(0) || (d.dds_protocol && d.dds_protocol.includes('Domain 0'));
+    }
+    if (state.activeFilter === 'dom-42') {
+      const doms = d.dds_domains && d.dds_domains.length > 0 ? d.dds_domains : (d.domain_id !== null && d.domain_id !== undefined ? [d.domain_id] : []);
+      return doms.includes(42) || (d.dds_protocol && d.dds_protocol.includes('Domain 42'));
+    }
     if (state.activeFilter === 'robot') return d.role === 'robot';
     if (state.activeFilter === 'esp32') return d.role === 'esp32';
     return true;
@@ -297,13 +305,14 @@ function renderDevicesTable() {
     // 1. Rol y Nombre
     const tdRole = document.createElement('td');
     const badge = document.createElement('span');
-    badge.className = `device-role-badge role-${d.role}`;
-    badge.textContent = d.label || d.role;
+    badge.className = `device-role-badge role-${d.role}${d.is_dds_active ? ' dds-role-highlight' : ''}`;
+    badge.textContent = (d.is_dds_active && !d.label?.startsWith('⚡') ? '⚡ ' : '') + (d.label || d.role);
     tdRole.appendChild(badge);
     tr.appendChild(tdRole);
 
     // 2. IP
     const tdIp = document.createElement('td');
+    tdIp.className = `ip-cell${d.is_dds_active ? ' ip-dds' : ''}`;
     tdIp.textContent = d.ip;
     tr.appendChild(tdIp);
 
@@ -318,14 +327,31 @@ function renderDevicesTable() {
     tdVendor.textContent = vText;
     tr.appendChild(tdVendor);
 
-    // 5. Indicador Visual de ROS 2 DDS / Micro-ROS
+    // 5. Indicador Visual de ROS 2 DDS / Micro-ROS con discriminación de Dominio
     const tdDds = document.createElement('td');
     const ddsBadge = document.createElement('span');
     if (d.is_dds_active) {
-      ddsBadge.className = 'dds-badge dds-badge-active';
+      const doms = d.dds_domains && d.dds_domains.length > 0 ? d.dds_domains : (d.domain_id !== null && d.domain_id !== undefined ? [d.domain_id] : [0]);
       const dot = document.createElement('span');
       dot.className = 'status-dot pulsing';
-      dot.style.background = '#a855f7';
+
+      if (d.role === 'esp32') {
+        ddsBadge.className = 'dds-badge badge-domain-esp32';
+        dot.style.background = '#10b981';
+      } else if (doms.includes(0) && doms.includes(42)) {
+        ddsBadge.className = 'dds-badge badge-domain-multi';
+        dot.style.background = 'linear-gradient(135deg, #38bdf8, #c084fc)';
+      } else if (doms.includes(42)) {
+        ddsBadge.className = 'dds-badge badge-domain-42';
+        dot.style.background = '#c084fc';
+      } else if (doms.includes(0)) {
+        ddsBadge.className = 'dds-badge badge-domain-0';
+        dot.style.background = '#38bdf8';
+      } else {
+        ddsBadge.className = 'dds-badge badge-domain-other';
+        dot.style.background = '#f59e0b';
+      }
+
       ddsBadge.appendChild(dot);
       const textNode = document.createTextNode(` ⚡ ${d.dds_protocol || 'ROS 2 DDS'}`);
       ddsBadge.appendChild(textNode);
@@ -468,8 +494,8 @@ function renderTopology() {
     circlePulse.appendChild(anim);
     svg.appendChild(circlePulse);
 
-    // Nodo del dispositivo
-    drawSvgNode(svg, ns, x, y, dev.label || dev.ip, dev.ip, dev.role, getColorByRole(dev.role), isDds, dev.dds_protocol);
+    // Nodo del dispositivo con discriminación de dominio
+    drawSvgNode(svg, ns, x, y, dev.label || dev.ip, dev.ip, dev.role, getColorByRole(dev.role, isDds, dev.dds_domains), isDds, dev.dds_protocol, dev.dds_domains);
   });
 
   // 2. Dibujar Router en el centro
@@ -477,47 +503,82 @@ function renderTopology() {
   drawSvgNode(svg, ns, routerPos.x, routerPos.y, routerDev.label, routerDev.ip, 'router', '#00f2fe', false, '');
 }
 
-function getColorByRole(role) {
-  switch (role) {
-    case 'router': return '#00f2fe';
-    case 'host': return '#4facfe';
-    case 'robot': return '#f97316';
-    case 'esp32': return '#a855f7';
-    default: return '#94a3b8';
+function getColorByRole(role, isDds = false, doms = []) {
+  if (role === 'router') return '#00f2fe';
+  if (role === 'esp32') return '#10b981';
+  if (role === 'robot') return '#f97316';
+  if (isDds) {
+    if (doms && doms.includes(42)) return '#c084fc';
+    if (doms && doms.includes(0)) return '#38bdf8';
+    return '#c084fc';
   }
+  return '#94a3b8';
 }
 
-function drawSvgNode(svg, ns, x, y, title, subtitle, role, color, isDds = false, ddsProtocol = '') {
+function drawSvgNode(svg, ns, x, y, title, subtitle, role, color, isDds = false, ddsProtocol = '', doms = []) {
   const g = document.createElementNS(ns, 'g');
   g.setAttribute('transform', `translate(${x}, ${y})`);
+
+  let nodeColor = color;
+  let tagColor = '#c084fc';
+  let tagText = '⚡ ROS 2 DDS';
+
+  if (isDds) {
+    const protoStr = ddsProtocol || '';
+    if (role === 'esp32') {
+      nodeColor = '#10b981';
+      tagColor = '#10b981';
+      tagText = '⚡ µROS (Dom 42)';
+    } else if (doms && doms.includes(0) && doms.includes(42)) {
+      nodeColor = '#e879f9';
+      tagColor = '#f472b6';
+      tagText = '⚡ DOM 0, 42';
+    } else if (doms && doms.includes(42)) {
+      nodeColor = '#c084fc';
+      tagColor = '#c084fc';
+      tagText = '⚡ DOM 42';
+    } else if (doms && doms.includes(0)) {
+      nodeColor = '#38bdf8';
+      tagColor = '#38bdf8';
+      tagText = '⚡ DOM 0';
+    } else if (protoStr.includes('Domain 42')) {
+      nodeColor = '#c084fc';
+      tagColor = '#c084fc';
+      tagText = '⚡ DOM 42';
+    } else if (protoStr.includes('Domain 0')) {
+      nodeColor = '#38bdf8';
+      tagColor = '#38bdf8';
+      tagText = '⚡ DOM 0';
+    }
+  }
 
   // Anillo exterior con glow especial para ROS 2 DDS
   const outerCircle = document.createElementNS(ns, 'circle');
   outerCircle.setAttribute('r', isDds ? '24' : '20');
   outerCircle.setAttribute('fill', 'rgba(13, 18, 29, 0.9)');
-  outerCircle.setAttribute('stroke', isDds ? '#a855f7' : color);
+  outerCircle.setAttribute('stroke', isDds ? nodeColor : color);
   outerCircle.setAttribute('stroke-width', isDds ? '3.5' : '2');
   if (isDds) {
-    outerCircle.setAttribute('style', 'filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.8));');
+    outerCircle.setAttribute('style', `filter: drop-shadow(0 0 8px ${nodeColor}cc);`);
   }
   g.appendChild(outerCircle);
 
   // Punto central
   const innerCircle = document.createElementNS(ns, 'circle');
   innerCircle.setAttribute('r', '8');
-  innerCircle.setAttribute('fill', isDds ? '#c084fc' : color);
+  innerCircle.setAttribute('fill', isDds ? nodeColor : color);
   g.appendChild(innerCircle);
 
-  // Etiqueta ⚡ DDS si está activo
+  // Etiqueta ⚡ DDS / Domain si está activo
   if (isDds) {
     const ddsTag = document.createElementNS(ns, 'text');
     ddsTag.setAttribute('y', '-28');
     ddsTag.setAttribute('text-anchor', 'middle');
-    ddsTag.setAttribute('fill', '#c084fc');
+    ddsTag.setAttribute('fill', tagColor);
     ddsTag.setAttribute('font-size', '10');
     ddsTag.setAttribute('font-weight', '700');
     ddsTag.setAttribute('font-family', 'var(--font-sans)');
-    ddsTag.textContent = '⚡ ROS 2 DDS';
+    ddsTag.textContent = tagText;
     g.appendChild(ddsTag);
   }
 

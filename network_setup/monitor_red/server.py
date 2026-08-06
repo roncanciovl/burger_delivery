@@ -165,6 +165,23 @@ class NetworkMonitorHandler(BaseHTTPRequestHandler):
 
         # 3. API: Lista de dispositivos descubiertos
         elif path == "/api/devices":
+            ip_map = sniffer.get_ip_domains_map()
+            # Si no hay dispositivos cacheados o se necesita refresco de dominios
+            if not scanner.cached_devices:
+                scanner.scan_network(full_sweep=False, ip_domains_map=ip_map)
+            else:
+                # Actualizar dinámicamente dominios de dispositivos existentes
+                for d in scanner.cached_devices:
+                    ip = d["ip"]
+                    if ip in ip_map and d.get("is_dds_active"):
+                        doms = ip_map[ip]
+                        d["dds_domains"] = doms
+                        d["domain_id"] = doms[0]
+                        dom_str = ", ".join(str(x) for x in doms)
+                        if len(doms) == 1:
+                            d["dds_protocol"] = f"ROS 2 DDS (Domain {dom_str})"
+                        else:
+                            d["dds_protocol"] = f"ROS 2 DDS (Multidominio: {dom_str})"
             resp = {
                 "count": len(scanner.cached_devices),
                 "last_scan": time.strftime("%H:%M:%S", time.localtime(scanner.last_scan_time)) if scanner.last_scan_time else "--",
@@ -211,7 +228,8 @@ class NetworkMonitorHandler(BaseHTTPRequestHandler):
 
         # 1. API: Forzar re-escaneo completo de la subred
         if path == "/api/scan":
-            devices = scanner.scan_network(full_sweep=True)
+            ip_map = sniffer.get_ip_domains_map()
+            devices = scanner.scan_network(full_sweep=True, ip_domains_map=ip_map)
             resp = {
                 "status": "success",
                 "count": len(devices),
@@ -328,11 +346,18 @@ def run_server(host="0.0.0.0", port=8080):
         print(f"Error: No se pudo enlazar el servidor en el rango de puertos {port}-{port+10}")
         sys.exit(1)
 
-    # Iniciar escaneo inicial en segundo plano
-    threading.Thread(target=lambda: scanner.scan_network(full_sweep=True), daemon=True).start()
-    
-    # Iniciar recolector de tráfico en segundo plano (cada 1s)
+    # Iniciar recolector de tráfico y sniffer RTPS en segundo plano (cada 1s)
     sniffer.start_background_collector(interval=1.0)
+
+    # Iniciar escaneo inicial y periódico en segundo plano con mapa dinámico de dominios
+    def _bg_scan_loop():
+        time.sleep(0.8)
+        scanner.scan_network(full_sweep=True, ip_domains_map=sniffer.get_ip_domains_map())
+        while True:
+            time.sleep(10.0)
+            scanner.scan_network(full_sweep=False, ip_domains_map=sniffer.get_ip_domains_map())
+
+    threading.Thread(target=_bg_scan_loop, daemon=True).start()
 
     display_host = "localhost" if host in ("0.0.0.0", "127.0.0.1") else host
     url = f"http://{display_host}:{actual_port}"

@@ -64,6 +64,11 @@ class TrafficSniffer:
         os.makedirs(self.benchmark_logs_dir, exist_ok=True)
         self.last_saved_benchmark_file: Optional[str] = None
 
+        # Mapeo en tiempo real de IP -> {domain_id: last_seen_timestamp}
+        self.ip_detected_domains: Dict[str, Dict[int, float]] = {}
+        self._rtps_sniffer_thread: Optional[threading.Thread] = None
+        self._candidate_domains = [0, 42, 1, 2, 3, 10, 11, 20, 30, 40, 100]
+
         # Contadores de referencia para cálculo delta
         self._last_counters = self._get_raw_net_counters()
         self._last_time = time.time()
@@ -483,11 +488,112 @@ class TrafficSniffer:
                 pass
         return None
 
+    def _start_rtps_discovery_sniffer(self):
+        """Inicia escucha activa y sondeo en puertos DDS multicast/broadcast para mapear IP -> Domain ID"""
+        if self._rtps_sniffer_thread and self._rtps_sniffer_thread.is_alive():
+            return
+
+        def sniffer_loop():
+            sockets = []
+            # Escuchar tanto en puertos multicast (7400 + 250*d) como unicast (7410 + 250*d)
+            for d in self._candidate_domains:
+                ports = [7400 + 250 * d, 7410 + 250 * d]
+                for port in ports:
+                    try:
+                        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+                        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                        s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+                        if hasattr(socket, "SO_REUSEPORT"):
+                            try:
+                                s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+                            except Exception:
+                                pass
+                        s.bind(("", port))
+                        mreq = struct.pack("4sl", socket.inet_aton("239.255.0.1"), socket.INADDR_ANY)
+                        try:
+                            s.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+                        except Exception:
+                            pass
+                        s.settimeout(0.3)
+                        sockets.append((d, port, s))
+                    except Exception:
+                        pass
+
+            # Socket transmisor de sondeos SPDP
+            tx_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+            tx_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+
+            guid = b"\x01\x0f\x00\x00\x12\x34\x56\x78\x9a\xbc\xde\xf0"
+            rtps_probe = b"RTPS" + struct.pack("BB", 2, 2) + struct.pack("BB", 1, 15) + guid
+            last_probe_time = 0.0
+
+            subnet_bcast = "192.168.1.255"
+            if self.gateway_ip and "." in self.gateway_ip:
+                prefix = ".".join(self.gateway_ip.split(".")[:3])
+                subnet_bcast = f"{prefix}.255"
+
+            while self._running:
+                now = time.time()
+                # Enviar sondeo activo SPDP cada 2.5s para forzar respuestas de descubrimiento
+                if now - last_probe_time > 2.5:
+                    last_probe_time = now
+                    for d_id in [42, 0, 1, 10]:
+                        m_port = 7400 + 250 * d_id
+                        u_port = 7410 + 250 * d_id
+                        for target in ["239.255.0.1", subnet_bcast, "255.255.255.255"]:
+                            try:
+                                tx_sock.sendto(rtps_probe, (target, m_port))
+                                tx_sock.sendto(rtps_probe, (target, u_port))
+                            except Exception:
+                                pass
+
+                # Recibir paquetes RTPS entrantes
+                for d_id, p_num, sock in sockets:
+                    try:
+                        data, addr = sock.recvfrom(2048)
+                        if data and len(data) >= 4 and data[:4] == b"RTPS":
+                            sender_ip = addr[0]
+                            with self._lock:
+                                if sender_ip not in self.ip_detected_domains:
+                                    self.ip_detected_domains[sender_ip] = {}
+                                self.ip_detected_domains[sender_ip][d_id] = now
+                    except socket.timeout:
+                        pass
+                    except Exception:
+                        pass
+                time.sleep(0.05)
+
+            try:
+                tx_sock.close()
+            except Exception:
+                pass
+
+            for _, _, sock in sockets:
+                try:
+                    sock.close()
+                except Exception:
+                    pass
+
+        self._rtps_sniffer_thread = threading.Thread(target=sniffer_loop, daemon=True)
+        self._rtps_sniffer_thread.start()
+
+    def get_ip_domains_map(self) -> Dict[str, List[int]]:
+        """Retorna el mapeo de cada IP a los dominios ROS 2 DDS detectados recientemente"""
+        now = time.time()
+        result: Dict[str, List[int]] = {}
+        with self._lock:
+            for ip, domains_dict in self.ip_detected_domains.items():
+                active_for_ip = [d for d, t in domains_dict.items() if now - t < 180]
+                if active_for_ip:
+                    result[ip] = sorted(active_for_ip)
+        return result
+
     def start_background_collector(self, interval: float = 1.0):
-        """Inicia el hilo recolector de métricas en segundo plano"""
+        """Inicia el hilo recolector de métricas y el detector de dominios en segundo plano"""
         if self._running:
             return
         self._running = True
+        self._start_rtps_discovery_sniffer()
         
         def loop():
             while self._running:
