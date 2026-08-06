@@ -191,7 +191,7 @@ T(tag_mesa → tag_carrito) = T(cam → tag_mesa)⁻¹ × T(cam → tag_carrito)
 - **Causa raíz:** El gripper usaba un canal de comunicación UDP separado al brazo (`use_internal_bus_gripper_comm=false` por default), causando desincronización.
 - **Solución:** Script `apply_kinova_smooth_movement.py` que inyecta `use_internal_bus_gripper_comm=true` en los XACRO del driver.
 - **Lección:** Los defaults de los fabricantes priorizan compatibilidad, no rendimiento. Siempre revisar la topología de comunicación interna.
-- **Archivos:** `scripts/apply_kinova_smooth_movement.py`, `MEJORAS_MOVIMIENTO_KINOVA.md`
+- **Archivos:** `scripts/apply_kinova_smooth_movement.py`, `docs/manipulation/MEJORAS_MOVIMIENTO_KINOVA.md`
 
 ---
 
@@ -209,7 +209,7 @@ T(tag_mesa → tag_carrito) = T(cam → tag_mesa)⁻¹ × T(cam → tag_carrito)
 - **Causa raíz:** Dos nodos publicaban `tag_mesa → tag_carrito1` con valores distintos. TF2 alternaba entre ambas fuentes.
 - **Solución:** Documentar como regla: "Nunca mezcles modos." Agregar advertencia prominente en README y launch file.
 - **Lección:** En TF2, un frame debe tener exactamente UN publicador. No hay prioridades ni override — solo caos.
-- **Archivos:** `README.md`, `TALLER_URDF_TF.md` (sección de errores comunes)
+- **Archivos:** `README.md`, `education/talleres/TALLER_URDF_TF.md` (sección de errores comunes)
 
 ---
 
@@ -218,7 +218,7 @@ T(tag_mesa → tag_carrito) = T(cam → tag_mesa)⁻¹ × T(cam → tag_carrito)
 - **Causa raíz:** El `RouterClientSendOptions` del driver tenía un timeout de 500ms-1000ms por default.
 - **Solución:** Reducir a 200ms vía el script de parcheo.
 - **Lección:** Los timeouts conservadores de los drivers son para demos, no para producción. Medir la latencia end-to-end antes de culpar a la red.
-- **Archivos:** `scripts/apply_kinova_smooth_movement.py`, `MEJORAS_MOVIMIENTO_KINOVA.md`
+- **Archivos:** `scripts/apply_kinova_smooth_movement.py`, `docs/manipulation/MEJORAS_MOVIMIENTO_KINOVA.md`
 
 ---
 

@@ -212,12 +212,13 @@ Modificación imprevista (15–20 min) diagnosticada con protocolo por capas:
 
 | Recurso | Ubicación | Descripción |
 |:---|:---|:---|
-| Arquitectura del Sistema | `ros_burger_delivery.md` | Red, nodos, TF tree, secuencia operativa. |
-| Taller URDF y TF2 | `TALLER_URDF_TF.md` | Guía con ejercicios y criterios de éxito. |
-| Marco Conceptual MoveIt 2 | `MARCO_CONCEPTUAL_MOVEIT2.md` | `move_group`, MTC, Planning Scene. |
-| Proyecto Evaluable | `PROYECTO_INTERMEDIO_MOVEIT2_DELIVERY.md` | Rúbricas y contrato de integración. |
-| Experimento IA | `EXPERIMENTO_IA_LOCALIZACION_GEMINI.md` | Percepción zero-shot, de-projection 3D. |
-| Guía de Redes | `ros.md` | Topología, micro-ROS, localización 2D. |
+| Arquitectura del Sistema | `docs/architecture/ros_burger_delivery.md` | Red, nodos, TF tree, secuencia operativa. |
+| Taller URDF y TF2 | `education/talleres/TALLER_URDF_TF.md` | Guía con ejercicios y criterios de éxito. |
+| Taller CLI ROS 2 | `education/talleres/TALLER_ROS2_CLI.md` | Comandos básicos, nodos y tópicos en consola. |
+| Marco Conceptual MoveIt 2 | `docs/manipulation/MARCO_CONCEPTUAL_MOVEIT2.md` | `move_group`, MTC, Planning Scene. |
+| Proyecto Evaluable | `education/proyectos_evaluables/PROYECTO_INTERMEDIO_MOVEIT2_DELIVERY.md` | Rúbricas y contrato de integración. |
+| Experimento IA | `docs/research/EXPERIMENTO_IA_LOCALIZACION_GEMINI.md` | Percepción zero-shot, de-projection 3D. |
+| Guía de Redes | `docs/architecture/ros.md` | Topología, micro-ROS, localización 2D. |
 | Fundamentos Git | `git-fundamentals/` | Tutoriales interactivos HTML. |
 | Diagnóstico de Red | `network_setup/` | Scripts diagnóstico WiFi y DDS. |
 

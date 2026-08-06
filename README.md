@@ -4,32 +4,41 @@
 
 ![Pipeline Pick and Place](pick_and_place_pipeline.svg)
 
-> **Contexto del Proyecto**: Este repositorio centraliza la documentación, los modelos y los recursos usados en un entorno avanzado de robótica colaborativa. El objetivo es simular y controlar una celda de trabajo donde un manipulador **Kinova Gen3** interactúa espacialmente para entregar bandejas a **robots móviles diferenciales** (estilo TurtleBot). Todo el ecosistema está coordinado mediante `tf2`, localización visual por **AprilTags**, framework de planificación **MoveIt 2** y protocolos **micro-ROS**, optimizado para entornos inalámbricos de alta densidad.
+> **Contexto del Proyecto**: Framework abierto de **investigación aplicada y docencia avanzada** en robótica colaborativa basado en **ROS 2 Jazzy**. Centraliza modelos, entornos de simulación y herramientas de control para una celda de trabajo donde un manipulador **Kinova Gen3** interactúa espacialmente con **robots móviles diferenciales** (TurtleBots). El ecosistema integra transformaciones dinámicas con `tf2`, localización visual por **AprilTags**, planificación de movimiento con **MoveIt 2**, protocolos **micro-ROS** optimizados para redes inalámbricas y modelos de visión-lenguaje (**Gemini Robotics-ER 1.6**) para razonamiento espacial 3D.
 
 ---
 
-## 🎯 Alcance actual
+## 🏛️ Pilares del Repositorio
 
-Este repositorio funciona actualmente como el paquete de descripción (`burger_description`) y el centro neurálgico de documentación y configuración. Contiene:
+| Pilar | Enfoque | Contenido Principal |
+|---|---|---|
+| 🔬 **Investigación Aplicada** | Banco de pruebas (*Testbed*) para Embodied AI, percepción 3D zero-shot y determinismo en redes DDS/micro-ROS. | [`docs/research/`](docs/research/), [`docs/architecture/`](docs/architecture/), [`docs/manipulation/`](docs/manipulation/), [`network_setup/`](network_setup/) |
+| 🎓 **Ecosistema Docente (Living Lab)** | Formación de talento y validación experimental en celdas colaborativas alineada a criterios **ABET**. | [`education/syllabus/`](education/syllabus/), [`education/talleres/`](education/talleres/), [`education/guias_laboratorio/`](education/guias_laboratorio/) |
 
-- ✅ Un paquete ROS 2 compilable con los URDF de la escena de entrega.
-- ✅ Mallas vendorizadas (Kinova Gen3, pinzas Robotiq, y carros móviles).
-- ✅ Entorno de lanzamiento (`launch`) para TF dinámicos, `robot_state_publisher` y RViz2.
-- ✅ Amplia documentación de arquitectura, instalación y diagnóstico de red.
-- ✅ Scripts nativos avanzados para estabilización de hardware y parcheo de latencias.
+---
 
-*Nota: Aún no contiene un stack completo "out-of-the-box" de operación autónoma (no incluye paquetes finales de navegación o lógica de negocio compilables aquí, sino la base arquitectónica y geométrica para integrarlos).*
+## 🎯 Alcance Actual
+
+Este repositorio funciona como el paquete de descripción (`burger_description`), plataforma experimental y centro de recursos:
+
+- ✅ **Paquete ROS 2 compilable** con los URDF de la escena colaborativa y robots móviles.
+- ✅ **Mallas vendorizadas** (Kinova Gen3, pinzas Robotiq 85 y carros diferenciales).
+- ✅ **Entorno de lanzamiento (`launch`)** para TF dinámicos, `robot_state_publisher` y RViz2.
+- ✅ **Monitor de Red Web Híbrido** (`network_setup/monitor_red/`) para telemetría de QoS, jitter WiFi y micro-ROS en tiempo real.
+- ✅ **Módulo de Percepción IA VLM** para inferencia semántica y de-projection 3D con Gemini Robotics.
+- ✅ **Scripts nativos de hardware** para estabilización inercial y mitigación de latencia en drivers C++.
+- ✅ **Currículo académico y guías de laboratorio** listas para docencia y semilleros de investigación.
 
 ---
 
 ## 🚀 Inicio Rápido (Quick Start)
 
 ### Requisitos Previos
-- Ubuntu con **ROS 2 Jazzy** instalado. (Si no lo tienes, revisa `install_ros2.sh` y la guía en `ros2_setup/`).
-- Herramienta `colcon` y paquetes de escritorio ROS 2 (RViz2, joint_state_publisher_gui).
+- Ubuntu 24.04 con **ROS 2 Jazzy** instalado. (Si no lo tienes, revisa `install_ros2.sh` y la guía en `ros2_setup/`).
+- Herramienta `colcon` y paquetes de escritorio ROS 2 (`rviz2`, `joint_state_publisher_gui`, `xacro`).
 
 ### Compilación
-Asegúrate de clonar este repositorio dentro de la carpeta `src` de tu workspace (ej. `~/ros2_ws/src`):
+Clona este repositorio dentro de la carpeta `src` de tu workspace (ej. `~/ros2_ws/src`):
 
 ```bash
 cd ~/ros2_ws
@@ -37,22 +46,22 @@ source /opt/ros/jazzy/setup.bash
 colcon build --packages-select burger_description
 source install/setup.bash
 ```
-*(Alternativa: usar el script `./build_burger.sh` incluido).*
+*(Alternativa: ejecutar `./build_burger.sh`).*
 
 ### Ejecución y Visualización
-Puedes lanzar la simulación base en RViz usando el script rápido:
+Lanza la escena base en RViz2:
 
 ```bash
 ./lanzar_robot.sh
 ```
 
-O hacerlo manualmente:
+O manualmente:
 ```bash
 ros2 launch burger_description display.launch.py
 ```
 
 ### 🌐 Monitor de Red y Telemetría ROS 2 (Dashboard Web)
-Para supervisar dispositivos conectados al router (AX12), latencia/jitter WiFi, tráfico de dominios DDS y estado del agente Micro-ROS (puerto 8888) en tiempo real:
+Para supervisar dispositivos conectados al router (AX12), latencia/jitter WiFi, tráfico de dominios DDS y estado del agente micro-ROS (puerto 8888) en tiempo real:
 
 ```bash
 bash network_setup/iniciar_monitor.sh
@@ -63,81 +72,117 @@ bash network_setup/iniciar_monitor.sh
 
 ## 📂 Estructura del Proyecto
 
-- `burger_description/`: Paquete ROS 2 principal (URDFs, meshes visuales/colisión, launch files).
-  - `urdf/delivery_scene_fixed.urdf`: Escena estática principal.
-  - `visual/` y `vendor/`: Mallas 3D y recursos de terceros (Kinova).
-- `scripts/`: Herramientas vitales en Python para parcheado de latencias del Kinova y testeos unitarios físicos CLI.
-- `network_setup/`: Diagnóstico avanzado de red, configuración para WiFi 6/AX12, herramientas de telemetría y el **Monitor de Red Web Híbrido** (`monitor_red/`).
-- `vision_setup/`: Guías de conectividad RTSP de cámaras y localización con AprilTags.
-- `ros2_setup/`: Notas de instalación, scripts y configuración del entorno Jazzy.
+```text
+burger_delivery/
+├── burger_description/            # Paquete ROS 2 principal (URDFs, meshes, launch files)
+│   ├── urdf/                      # Escena fija y descripciones de carritos
+│   ├── launch/                    # display.launch.py con switch de modos
+│   └── rviz/                      # Configuraciones de visualización RViz2
+├── scripts/                       # Herramientas Python de validación física y parcheo
+├── network_setup/                 # Monitor de red híbrido, QoS DDS, telemetría y configs
+├── vision_setup/                  # Pipeline visual RTSP y arquitectura AprilTag
+├── ros2_setup/                    # Guías de entorno Jazzy, Kortex y mapas de dependencias
+│
+├── docs/                          # 🔬 Documentación Técnica y de Investigación
+│   ├── research/                  # Razonamiento espacial 3D con Gemini Robotics
+│   ├── architecture/              # Arquitectura global y fundamentos ROS 2
+│   └── manipulation/              # Control MoveIt 2, MTC y cinemática Kinova
+│
+├── education/                     # 🎓 Ecosistema Pedagógico (Living Lab / ABET)
+│   ├── syllabus/                  # Programa curricular oficial y formato ABET
+│   ├── talleres/                  # Talleres de CLI ROS 2 y URDF/TF2
+│   ├── guias_laboratorio/         # Guías de laboratorio y plantillas editables
+│   ├── proyectos_evaluables/      # Contrato de integración MoveIt & Delivery
+│   └── metodologias/              # Bitácora de experticia técnica (SuperStudent)
+│
+├── visual/ & vendor/              # Recursos gráficos y mallas 3D vendorizadas
+├── conceptos_core/                # Herramientas interactivas HTML y visualizadores
+└── git-fundamentals/              # Módulos interactivos web de control de versiones
+```
 
 ---
 
 ## 📚 Índice de Documentación (Categorizado)
 
-Hemos organizado la extensa documentación técnica para facilitar tu aprendizaje y configuración:
+### 🔬 1. Investigación y Razonamiento Espacial IA
+- [**Estudio de Razonamiento Espacial 3D con Gemini Robotics**](docs/research/EXPERIMENTO_IA_LOCALIZACION_GEMINI.md) *(Localización zero-shot y affordances)*
+- [**Propuesta de Integración Gemini ER**](ros2_setup/PROPUESTA_GEMINI_ER.md)
 
-### 📖 1. Guías Generales y Arquitectura
-- [Guía Rápida de Uso](burger_description/GUIA_DE_USO.md)
-- [Documento Técnico de Arquitectura (Burger Delivery)](ros_burger_delivery.md)
-- [Proyecto Evaluable MoveIt2 & Delivery](PROYECTO_INTERMEDIO_MOVEIT2_DELIVERY.md)
+### 📐 2. Arquitectura General y Cinemática
+- [**Guía Rápida de Uso**](burger_description/GUIA_DE_USO.md)
+- [**Documento Técnico de Arquitectura (Burger Delivery)**](docs/architecture/ros_burger_delivery.md)
+- [**Fundamentos de ROS 2 y Redes**](docs/architecture/ros.md)
+- [**Visualizador Web URDF**](docs/architecture/VISUALIZAR_URDF_WEB.md)
 
-### 🤖 2. Manipulación y Movimiento (Kinova & MoveIt)
-- [Mejoras de Movimiento MTC y Ghost Visualizer](MEJORAS_MOVIMIENTO_KINOVA.md)
-- [Pruebas de Movimiento y Coordenadas Cartesianas CLI](PRUEBAS_MOVIMIENTO.md)
-- [Instalación del Stack Kortex](ros2_setup/INSTALACION_KORTEX.md)
+### 🦾 3. Manipulación y Movimiento (Kinova & MoveIt 2)
+- [**Marco Conceptual MoveIt 2**](docs/manipulation/MARCO_CONCEPTUAL_MOVEIT2.md)
+- [**Mejoras de Movimiento MTC y Ghost Visualizer**](docs/manipulation/MEJORAS_MOVIMIENTO_KINOVA.md)
+- [**Pruebas de Movimiento y Coordenadas Cartesianas CLI**](docs/manipulation/PRUEBAS_MOVIMIENTO.md)
+- [**Tipos de Joints y Cinemática**](docs/manipulation/joints.md)
+- [**Instalación del Stack Kortex**](ros2_setup/INSTALACION_KORTEX.md)
 
-### 👁️ 3. Visión Computacional y Localización
-- [⭐ Arquitectura del Sistema de Localización AprilTag](vision_setup/LOCALIZACION_APRILTAG.md) *(Muy recomendado para entender el árbol TF)*
-- [Verificación y Diagnóstico de Cámara Nativa](vision_setup/VERIFICACION_CAMARA.md)
-- [Aislamiento de Latencia Visual (TCP vs ROS 2)](vision_setup/DIAGNOSTICO_RED_VISION.md)
+### 👁️ 4. Visión Computacional y Localización
+- [⭐ **Arquitectura del Sistema de Localización AprilTag**](vision_setup/LOCALIZACION_APRILTAG.md) *(Árbol TF dinámico y cancelación de perspectiva)*
+- [**Verificación y Diagnóstico de Cámara Nativa**](vision_setup/VERIFICACION_CAMARA.md)
+- [**Aislamiento de Latencia Visual (TCP vs ROS 2)**](vision_setup/DIAGNOSTICO_RED_VISION.md)
 
-### 🌐 4. Redes, Configuración y micro-ROS
-- [⭐ Monitor de Red Híbrido (ROS 2 & Router AX12 Web Dashboard)](network_setup/iniciar_monitor.sh) *(Lanzador: `bash network_setup/iniciar_monitor.sh`)*
-- [Diagnóstico de Red ROS 2](network_setup/DIAGNOSTICO_RED.md)
-- [Configuración de Red Recomendada](network_setup/ROS2_NETWORK_CONFIG.md)
-- [Guía de Configuración TP-Link Archer AX12](network_setup/router_tplink_ax12_config.md)
-- [Verificación de Entorno ROS 2 Jazzy](ros2_setup/verificar_ros2.md)
-- **Scripts de diagnóstico**: Encuentra herramientas como `test_ros2_network.sh`, `diagnostico_wifi.sh`, `diagnostico_microros.sh`, `analisis_trafico_ros2.sh` y más en la carpeta `network_setup/`.
+### 🌐 5. Redes, micro-ROS y Telemetría
+- [⭐ **Monitor de Red Híbrido Web**](network_setup/iniciar_monitor.sh)
+- [**Diagnóstico de Red ROS 2**](network_setup/DIAGNOSTICO_RED.md)
+- [**Configuración de Red Recomendada**](network_setup/ROS2_NETWORK_CONFIG.md)
+- [**Guía TP-Link Archer AX12**](network_setup/router_tplink_ax12_config.md)
+
+### 🎓 6. Ecosistema Docente y Formación (ABET)
+- [**Hub de Educación**](education/README.md)
+- [**Syllabus del Curso (Formato ABET)**](education/syllabus/SYLLABUS_ROS2_ROBOTICA.md)
+- [**Taller URDF y TF2**](education/talleres/TALLER_URDF_TF.md)
+- [**Taller CLI ROS 2**](education/talleres/TALLER_ROS2_CLI.md)
+- [**Proyecto Evaluable MoveIt 2 & Delivery**](education/proyectos_evaluables/PROYECTO_INTERMEDIO_MOVEIT2_DELIVERY.md)
+- [**Bitácora Metodológica SuperStudent**](education/metodologias/SKILL_SUPERSTUDENT.md)
 
 ---
 
-## ⚙️ Notas de Uso Avanzado (TFs y Modos)
-
-El comportamiento de los carritos móviles en la escena depende del sistema de **AprilTags**.
+## ⚙️ Modos de Lanzamiento (TF Dinámico)
 
 | Modo | Comando de Launch | Cuándo usarlo |
 |---|---|---|
-| **Producción** (Por defecto) | `ros2 launch burger_description display.launch.py` | Para operación real. Los carritos se acoplan dinámicamente al mapa cuando el nodo de localización AprilTag publica los TFs (`tag_mesa -> tag_carrito*`). |
-| **Debug / Visualización** | `ros2 launch burger_description display.launch.py use_static_carts:=true` | Útil si el nodo de localización no está corriendo. Fuerza la publicación de TFs estáticos para visualizar dónde deberían estar los carritos. |
+| **Producción** (Por defecto) | `ros2 launch burger_description display.launch.py` | Operación real. Los carritos se acoplan dinámicamente al mapa cuando el nodo de localización AprilTag publica los TFs (`tag_mesa -> tag_carrito*`). |
+| **Debug / Visualización** | `ros2 launch burger_description display.launch.py use_static_carts:=true` | Visualización en RViz sin cámara. Publica TFs estáticos para ver la escena completa. |
 
 > ⚠️ **Advertencia de TF**: Nunca publiques `map -> car_base_link` si el sistema de AprilTag ya está publicando `tag_carrito -> car_base_link`. Romperá el árbol TF.
 
 ---
 
-## 🛠️ Scripts de Depuración Física y Hardware
-En `scripts/`, encontrarás potentes herramientas de parcheo que no afectan a la simulación estándar:
-- `apply_kinova_smooth_movement.py`: Parcheador que inyecta "Low Latency" a los drivers C++, corrigiendo vibraciones inerciales (jittering).
-- `test_kinova_pose.py`: Validador espacial para comprobar si una coordenada rompe la cinemática antes de probarla en MoveIt.
-- `test_kinova_camera.py`: Extractor GStreamer/OpenCV para evaluar cámara sin la sobrecarga de ROS.
+## 🛠️ Scripts de Depuración Física
+En `scripts/`:
+- `apply_kinova_smooth_movement.py`: Inyecta low-latency en drivers C++, suprimiendo vibraciones inerciales (jittering).
+- `test_kinova_pose.py`: Valida coordenadas cartesianas [X,Y,Z] contra límites cinemáticos antes de planificar en MoveIt 2.
+- `test_kinova_camera.py`: Extractor GStreamer/OpenCV para evaluar cámara RTSP sin sobrecarga de ROS.
 
 ---
 
-## 🖼️ Diagramas de Arquitectura Adicionales
+## 🖼️ Diagramas del Sistema
 
-### Esquema de Localización (AprilTag)
-Mapeo posicional relativo entre el brazo, la mesa y el marco estático de referencia de las etiquetas.
-![Esquema de localizacion AprilTag](vision_localizacion_whiteboard.svg)
+- **Localización AprilTag:** `vision_localizacion_whiteboard.svg`
+- **Navegación Móvil (Turtlebot):** `turtlebot_nav_service.svg`
+- **Árbol de Transformaciones (TF):** `tf_tree_diagram.svg`
+- **Dependencias de Red:** `network_setup/ros_network_diagram.svg`
+- **Dependencias de Software e IA:** `ros2_setup/MAPA_DEPENDENCIAS.svg` y `ros2_setup/MAPA_DEPENDENCIAS_AI.svg`
 
-### Navegación y Acciones (Turtlebot)
-Bucle de control para la interacción y peticiones del robot de reparto.
-![Arquitectura Nav2 Turtlebot](turtlebot_nav_service.svg)
+---
 
-### Árbol de Transformaciones (TF)
-*(Para generar uno en tiempo real: con el launch corriendo, usa `ros2 run tf2_tools view_frames` en otra terminal).*
-![Project TF Tree](tf_tree_diagram.svg)
+## 📄 Citación y DOI
 
-### Dependencias de Red y Software
-- [Diagrama de red ROS 2](network_setup/ros_network_diagram.svg)
-- [Mapa de Dependencias](ros2_setup/MAPA_DEPENDENCIAS.svg)
-- [Mapa de Dependencias AI](ros2_setup/MAPA_DEPENDENCIAS_AI.svg)
+Si utilizas este entorno en tu investigación o cursos académicos, por favor cítalo como:
+
+```bibtex
+@software{burger_delivery_2026,
+  author = {Roncancio Velandia, Henry Antonio},
+  title = {burger_delivery: Collaborative robotics environment in ROS 2 with Kinova Gen3 manipulation, AprilTag perception and AI model integration},
+  year = {2026},
+  publisher = {Zenodo},
+  doi = {10.5281/zenodo.xxxxxxx},
+  url = {https://github.com/roncanciovl/burger_delivery}
+}
+```
+*(Consulta también [CITATION.cff](CITATION.cff) y [.zenodo.json](.zenodo.json)).*

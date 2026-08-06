@@ -113,22 +113,27 @@ map → table_link → world → gen3_base_link → ... → kinova_tool_frame �
 ### General & Architecture (Spanish)
 - `README.md` — Main project README (Spanish)
 - `README_en.md` — Main project README (English)
-- `ros_burger_delivery.md` — Full technical architecture document
-- `ros.md` — ROS 2 fundamentals reference
+- `docs/architecture/ros_burger_delivery.md` — Full technical architecture document
+- `docs/architecture/ros.md` — ROS 2 fundamentals reference
 - `burger_description/GUIA_DE_USO.md` — Quick usage guide
 
-### Workshops & Pedagogy
-- `TALLER_URDF_TF.md` — Step-by-step URDF/TF2 workshop (11 sections, student-oriented)
-- `joints.md` — Joint types and kinematics reference
-- `MARCO_CONCEPTUAL_MOVEIT2.md` — MoveIt 2 conceptual framework
+### Research & AI Spatial Reasoning
+- `docs/research/EXPERIMENTO_IA_LOCALIZACION_GEMINI.md` — AI experiment: 3D spatial reasoning with Gemini Robotics-ER 1.6
+- `ros2_setup/PROPUESTA_GEMINI_ER.md` — Gemini Robotics-ER integration proposal
 
-### Projects & Evaluation
-- `PROYECTO_INTERMEDIO_MOVEIT2_DELIVERY.md` — Evaluable MoveIt 2 delivery project
-- `EXPERIMENTO_IA_LOCALIZACION_GEMINI.md` — AI experiment: 3D spatial reasoning with Gemini Robotics-ER 1.6
+### Educational Ecosystem (Living Lab / ABET)
+- `education/README.md` — Educational hub overview
+- `education/syllabus/SYLLABUS_ROS2_ROBOTICA.md` — Complete course syllabus (ABET format)
+- `education/talleres/TALLER_URDF_TF.md` — Step-by-step URDF/TF2 workshop (11 sections, student-oriented)
+- `education/talleres/TALLER_ROS2_CLI.md` — ROS 2 CLI guided workshop
+- `education/proyectos_evaluables/PROYECTO_INTERMEDIO_MOVEIT2_DELIVERY.md` — Evaluable MoveIt 2 delivery project
+- `education/metodologias/SKILL_SUPERSTUDENT.md` — Engineering lessons & problem-solving methodology
 
 ### Motion & Hardware
-- `MEJORAS_MOVIMIENTO_KINOVA.md` — MTC motion improvements and ghost visualizer
-- `PRUEBAS_MOVIMIENTO.md` — Motion tests and CLI Cartesian coordinates
+- `docs/manipulation/MARCO_CONCEPTUAL_MOVEIT2.md` — MoveIt 2 conceptual framework
+- `docs/manipulation/MEJORAS_MOVIMIENTO_KINOVA.md` — MTC motion improvements and ghost visualizer
+- `docs/manipulation/PRUEBAS_MOVIMIENTO.md` — Motion tests and CLI Cartesian coordinates
+- `docs/manipulation/joints.md` — Joint types and kinematics reference
 
 ### Diagrams (SVG)
 - `pick_and_place_pipeline.svg` — Pick & place pipeline architecture
