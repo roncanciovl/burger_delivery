@@ -15,7 +15,8 @@ docs/
 │   ├── EXPERIMENTO_IA_LOCALIZACION_GEMINI.md
 │   ├── EXPERIMENTO_IA_LOCALIZACION_GEMINI.pdf
 │   ├── EXPERIMENTO_QOS_TELEMETRIA.md
-│   └── PROPUESTA_VINCULACION_GRUPO_VOLTA.md
+│   ├── PROPUESTA_VINCULACION_GRUPO_VOLTA.md
+│   └── PROPUESTA_VINCULACION_GRUPO_VOLTA.pdf
 ├── architecture/                # Especificaciones formales del sistema y cinemática
 │   ├── ros_burger_delivery.md
 │   ├── ros_burger_delivery.pdf
@@ -34,7 +35,7 @@ docs/
 ## 📑 Artículos y Reportes Destacados
 
 ### 🤖 1. Investigación en Inteligencia Artificial, QoS y Telemetría (`research/`)
-- [**Propuesta de Vinculación al Grupo VOLTA (A1)**](research/PROPUESTA_VINCULACION_GRUPO_VOLTA.md): Documento formal de postulación y plan de trabajo científico para el Dr. William Aperador.
+- [**Propuesta de Vinculación al Grupo VOLTA (A1) [Markdown]**](research/PROPUESTA_VINCULACION_GRUPO_VOLTA.md) | [**[Versión PDF]**](research/PROPUESTA_VINCULACION_GRUPO_VOLTA.pdf): Documento formal de postulación y plan de trabajo científico para el Prof. William Gómez y el Dr. William Aperador.
 - [**Razonamiento Espacial 3D y Localización con Gemini Robotics**](research/EXPERIMENTO_IA_LOCALIZACION_GEMINI.md): Estudio y arquitectura para localización *zero-shot* 3D basada en VLM (`gemini-robotics-er-1.6-preview`), affordances de agarre y triangulación multi-vista como alternativa a modelos clásicos como YOLO.
 - [**Protocolo Experimental: QoS, Jitter y Telemetría Robótica**](research/EXPERIMENTO_QOS_TELEMETRIA.md): Metodología cuantitativa y matemática para evaluar el impacto de la degradación inalámbrica en el seguimiento articular del Kinova Gen3 y la latencia de percepción espacial.
 

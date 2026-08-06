@@ -1,9 +1,9 @@
 # PROPUESTA DE VINCULACIÓN Y PLAN DE TRABAJO CIENTÍFICO
 
 **Para revisión y aval de:**  
-**Prof. William Gómez**  
-Docente Investigador — Grupo de Investigación **VOLTA (A1)**  
-Programa de Ingeniería Mecatrónica — Campus Nueva Granada  
+**Prof. William Gómez Rivera, M.Sc.** (`william.gomezr@unimilitar.edu.co`)  
+Docente Investigador — Grupo de Investigación **VOLTA (A1 - MinCiencias)**  
+Programa de Ingeniería Mecatrónica — Campus Nueva Granada (Cajicá)  
 
 **Dirigida a:**  
 **Dr. William Arnulfo Aperador Chaparro**  
@@ -16,14 +16,17 @@ Universidad Militar Nueva Granada (Sede Campus Nueva Granada - Cajicá)
 ## 1. Título del Proyecto y Producto Tecnológico
 
 > **"Burger-Cell: Framework Abierto y Banco Experimental de Manufactura Flexible Heterogénea en ROS 2 para Manipulación Robótica (Kinova Gen3), Telemetría de Red QoS y Razonamiento Espacial con Inteligencia Artificial"**  
-> **DOI Zenodo:** `10.5281/zenodo.16781702` (Software Científico Registrado)  
-> **Nivel de Madurez Tecnológica:** TRL 4 - TRL 5 (Validado en entorno de laboratorio real)  
+> **Repositorio GitHub:** [https://github.com/roncanciovl/burger_delivery](https://github.com/roncanciovl/burger_delivery) *(Activo, documentado y en pruebas de laboratorio)*  
+> **DOI Persistente Zenodo:** [`10.5281/zenodo.16781702`](https://doi.org/10.5281/zenodo.16781702) *(Software Científico Registrado y Versionado)*  
+> **Nivel de Madurez Tecnológica:** TRL 4 - TRL 5 (Validado en entorno de celda robótica real)  
 
 ---
 
 ## 2. Resumen Ejecutivo y Justificación Estratégica
 
-La presente propuesta tiene como objetivo formalizar la vinculación del suscrito docente/investigador al **Grupo de Investigación VOLTA**, aportando una plataforma experimental operativa (*Living Lab*) que articula de forma sinérgica la **robótica de manipulación industrial**, los **sistemas embebidos distribuidos (micro-ROS)**, la **telemetría ciber-física en tiempo real** y la **Inteligencia Artificial Multimodal (Embodied AI)**.
+La presente propuesta formaliza la vinculación del suscrito **Docente de Cátedra e Investigador** al **Grupo de Investigación VOLTA**, aportando un desarrollo que **ya cuenta con un proyecto de software activo en GitHub ([github.com/roncanciovl/burger_delivery](https://github.com/roncanciovl/burger_delivery)) y en fase de pruebas experimentales**, respaldado con identificador digital persistente **DOI en Zenodo ([10.5281/zenodo.16781702](https://doi.org/10.5281/zenodo.16781702))**. 
+
+La plataforma articula de forma sinérgica la **robótica de manipulación industrial (Kinova Gen3 7-DOF)**, los **sistemas embebidos distribuidos (micro-ROS / ESP32)**, la **telemetría ciber-física en tiempo real** y la **Inteligencia Artificial Multimodal (Embodied AI con Gemini Robotics)**.
 
 ### ¿Por qué Burger-Cell fortalece los indicadores de VOLTA ante MinCiencias?
 1. **Línea de Diseños Mecatrónicos y Manufactura 4.0:** Integra hardware industrial real (brazo robótico de 7-DOF Kinova Gen3, gripper adaptativo y cámaras RGB-D) controlado mediante MoveIt 2 y C++ de baja latencia.
@@ -108,7 +111,8 @@ Para garantizar la ejecución en los tiempos comprometidos, se solicita el respa
 
 | **Docente Proponente** | **Aval y Visto Bueno (Grupo VOLTA)** |
 |:---:|:---:|
-| <br><br>___________________________________<br>**Docente de Cátedra / Investigador**<br>Programa de Ingeniería Mecatrónica<br>Campus Nueva Granada — UMNG | <br><br>___________________________________<br>**Prof. William Gómez**<br>Docente Investigador — Grupo VOLTA (A1)<br>Campus Nueva Granada — UMNG |
+| <br><br>___________________________________<br>**Docente de Cátedra / Investigador**<br>Programa de Ingeniería Mecatrónica<br>Campus Nueva Granada — UMNG | <br><br>___________________________________<br>**Prof. William Gómez Rivera, M.Sc.**<br>Docente Investigador — Grupo VOLTA (A1)<br>Campus Nueva Granada — UMNG |
+
 
 
 
