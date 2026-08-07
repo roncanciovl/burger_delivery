@@ -42,6 +42,7 @@ docs/
 ### 📐 2. Arquitectura del Sistema y Redes (`architecture/` & `network_setup/`)
 - [**Documento Técnico de Arquitectura (Burger Delivery)**](architecture/ros_burger_delivery.md): Descripción global de la celda colaborativa, árbol TF completo, nodos y protocolos de comunicación.
 - [**Guía de Configuración de Red y Firewall ROS 2**](../network_setup/ROS2_NETWORK_CONFIG.md): Configuración de dominio, CycloneDDS, modo espejo en WSL2 y diagnóstico de multicast.
+- [**Controles y Configuración del Monitor de Red**](../network_setup/MONITOR_RED_CONTROLES_Y_CONFIGURACION.md): Referencia operativa de todos los botones, filtros, selectores, indicadores, variables de entorno, API y límites de interpretación.
 - [**Manual Completo de la UI del Monitor de Red**](../network_setup/MONITOR_UI_GUIA.md): Explicación exhaustiva del dashboard web, KPIs, modo experimento de telemetría y visualizador de topología.
 - [**Fundamentos de ROS 2 y Redes**](architecture/ros.md): Guía de referencia de topología de red, micro-ROS y localización 2D.
 - [**Visualizador Web URDF**](architecture/VISUALIZAR_URDF_WEB.md): Métodos para renderizar modelos robóticos URDF en navegadores web.

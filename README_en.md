@@ -71,6 +71,8 @@ bash network_setup/iniciar_monitor.sh
 ```
 *(Automatically opens the dashboard at `http://127.0.0.1:8080`).*
 
+See the [**complete monitor controls, settings, and indicators guide**](network_setup/MONITOR_RED_CONTROLES_Y_CONFIGURACION.md) (Spanish) before interpreting DDS domains or recording benchmarks.
+
 ---
 
 ## 📂 Project Structure
@@ -131,6 +133,7 @@ burger_delivery/
 
 ### 🌐 5. Networking, micro-ROS & Telemetry
 - [⭐ **Hybrid Web Network Monitor**](network_setup/iniciar_monitor.sh)
+- [**Network Monitor Controls & Configuration Guide**](network_setup/MONITOR_RED_CONTROLES_Y_CONFIGURACION.md) *(Spanish)*
 - [**ROS 2 Network Diagnostics Guide**](network_setup/DIAGNOSTICO_RED.md)
 - [**Recommended Network Configuration**](network_setup/ROS2_NETWORK_CONFIG.md)
 - [**TP-Link Archer AX12 Configuration Guide**](network_setup/router_tplink_ax12_config.md)
