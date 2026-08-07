@@ -52,13 +52,8 @@ El Equipo Kinova (Cliente) solicitará posicionamiento al Equipo Carrito (Servid
   - Calcular dinámicamente la pose de entrega (Place) leyendo el frame `car1_delivery_tray_frame` vía TF2.
   - Planificar esquivando al carrito (actualizando la escena dinámicamente) y retornar a *Home*.
 
-### Rúbrica Específica - Equipo Kinova (50 Puntos)
-| Criterio | Puntos | Indicador de Logro |
-| :--- | :---: | :--- |
-| **Pipeline MoveIt 2** | 20 | Pick-Lift-Move-Place-Retreat ejecutado sin errores cinemáticos. |
-| **Manejo de Colisiones** | 10 | Uso correcto de la Planning Scene y del `AttachedCollisionObject`. |
-| **TF2 Dinámico** | 10 | El *Place* se adapta si el frame del carrito cambia de posición. |
-| **Cliente de Servicio** | 10 | Llama al servicio correctamente y maneja timeouts o errores del servidor. |
+> [!NOTE]
+> **Evaluación ABET**: Los criterios de evaluación para el **Equipo Kinova** han sido unificados con los del Equipo Carrito bajo la rúbrica institucional ABET. Consulta la **Sección 5** para ver los detalles técnicos y los indicadores evaluados.
 
 ---
 
@@ -76,37 +71,82 @@ El Equipo Kinova (Cliente) solicitará posicionamiento al Equipo Carrito (Servid
 - **Localización Activa:** Procesar el stream de la cámara del Kinova para publicar la TF `tag_mesa -> tag_carrito1` sin saltos bruscos en RViz.
 - **Validación del Servidor:** El servicio no debe devolver `success = True` instantáneamente. Debe simular (o ejecutar) el movimiento y verificar internamente mediante TF que el carrito está dentro de la `tolerance_xy` requerida antes de responder al Kinova.
 
-### Rúbrica Específica - Equipo Carrito (50 Puntos)
-| Criterio | Puntos | Indicador de Logro |
-| :--- | :---: | :--- |
-| **Robustez del Servicio** | 20 | El servidor valida la pose final mediante TF antes de confirmar el `success`. |
-| **Precisión de Localización** | 15 | El TF `tag_mesa -> tag_carrito1` es estable, continuo y usa timestamps correctos. |
-| **Estructura URDF/TF2** | 15 | La cadena `car1_base_link -> car1_delivery_tray_frame` es dimensionalmente correcta. |
+> [!NOTE]
+> **Evaluación ABET**: Los criterios de evaluación para el **Equipo Carrito** han sido unificados con los del Equipo Kinova bajo la rúbrica institucional ABET. Consulta la **Sección 5** para ver los detalles técnicos y los indicadores evaluados.
 
 ---
 
-## 5. El Reto de "Ingeniería en Tiempo Real" (Sustentación)
+## 5. Sistema de Evaluación y Rúbrica Unificada ABET (100 Puntos)
 
-Durante la sustentación (que evaluará los 50 puntos de cada equipo), el equipo docente introducirá una **modificación imprevista** en el workspace. Los estudiantes deberán diagnosticar la falla en vivo (15-20 min).
+La evaluación de este proyecto integrador está estructurada bajo el marco de acreditación internacional **ABET** (Student Outcomes SO1, SO2, SO5 y SO6) y alineada estrictamente con la **Rúbrica Oficial Ver. 1.7** del curso. Para simplificar y enfocar la evaluación en los elementos nucleares del proyecto de robótica, ambos equipos son evaluados bajo los mismos **4 indicadores de logro clave**, con una ponderación simétrica de **25 puntos cada uno** (Total: **100 Puntos por equipo**).
 
-**Ejemplos del Reto (Por Equipo):**
-- **Equipo Kinova:** "El objeto ahora pesa más y cambia el centro de gravedad, modifiquen los límites de aceleración de MoveIt en `joint_limits.yaml`." O "El carrito 1 se averió, enruten la entrega dinámicamente al `/car2/prepare_delivery_pose`".
-- **Equipo Carrito:** "El soporte de la cámara se aflojó (el tag rotó 15 grados). Apliquen un `static_transform_publisher` en su launch file para corregir el offset." O "El cliente envía coordenadas fuera del alcance del carrito; hagan que el servicio devuelva un error controlado en `status_message` sin crashear".
+### 5.1. Cuadro Resumen de Criterios y Pesos
 
-**Protocolo de Respuesta al Reto:**
-1. **Identificar Capa:** ¿Falla en URDF/Config, en Transformaciones (TF2), en Servicios o en Planificación?
-2. **Recolectar Evidencia:** Mostrar el fallo en terminal (`ros2 topic echo`, `ros2 run tf2_tools view_frames`, logs).
-3. **Aplicar Parche:** Modificar el código, el URDF o el Launch dentro del workspace y volver a lanzar (`colcon build` si es necesario).
+| Dimensión ABET | Peso | Indicador Oficial Evaluado (Rúbrica Ver. 1.7) | Foco del Criterio en el Proyecto |
+| :--- | :---: | :--- | :--- |
+| **SO1: Resolución de Problemas** | 25 pts | **1.1** Analiza las relaciones entre fenómenos físicos y modelos matemáticos de orientación y transformaciones, validando el árbol de transformaciones (TF2) en sistemas robóticos distribuidos. | Coherencia, estabilidad y transformaciones dinámicas del árbol de TFs globales y locales. |
+| **SO2: Diseño de Soluciones** | 25 pts | **2.3** Implementa y valida trayectorias libres de colisiones configurando pipelines de planificación de movimiento en MoveIt 2 sobre entornos industriales modelados experimentalmente. | Trayectorias robustas Pick-and-Place y lógica interactiva del servicio de coordinación. |
+| **SO5: Trabajo en Equipo** | 25 pts | **5.1** Reconoce habilidades técnicas y define interfaces y roles dentro del equipo de trabajo para el desarrollo distribuido de los nodos de la celda de automatización. | Definición y cumplimiento del **Contrato de Integración** (TF, servicios, Git Flow compartido). |
+| **SO6: Experimentación y Análisis** | 25 pts | **6.4** Interpreta fallas y diagnósticos experimentales aplicando protocolos de diagnóstico por capas (Sintaxis -> TF -> Red -> Lógica) para aislar errores en hardware y software. | Validación de tolerancias, pruebas del sistema y defensa del **Reto en Tiempo Real** en vivo. |
 
 ---
 
-## 6. Entregables Finales y Lanzamiento
+### 5.2. Desglose de Criterios y Tareas Técnicas Específicas
 
-Para demostrar la integración final en `~/ros2_ws/src/burger_delivery/`:
+#### Criterio 1: Coherencia Cinematográfica y TF2 Dinámico (SO1 - Indicador 1.1) - [25 Puntos]
+* **Descripción:** Evalúa la capacidad de comprender, formular y depurar las relaciones espaciales (orientación, translación) entre los múltiples sistemas de referencia del entorno distribuido.
+* **Tareas Técnicas - Equipo Kinova:**
+  - Configurar las transformaciones de la celda de manipulación (`map` -> `gen3_base_link` -> `burger_grip_frame`) y garantizar que el gripper sea capaz de leer dinámicamente y con precisión el frame de la bandeja del carrito.
+  - Asegurar la calibración de la posición del marcador fiduciario en la mesa (`tag_mesa`) con respecto a la base del robot.
+* **Tareas Técnicas - Equipo Carrito:**
+  - Estructurar cinemáticamente el URDF de la bandeja (`car1_base_link -> car1_delivery_tray_frame`).
+  - Desarrollar el nodo de visión que publica de forma activa y sin ruido la TF `tag_mesa -> tag_carrito1` usando la cámara del robot y marcadores AprilTags, con marcas de tiempo coherentes.
 
-1. **Launch de Integración Conjunta:** Debe existir un archivo `launch/system_integration.launch.py` (o scripts bash como `lanzar_robot.sh` actualizados) que levante ambos subsistemas simultáneamente.
-2. **Limpieza del Repositorio:** El paquete no debe tener código basura. Los `package.xml` deben tener las dependencias correctas.
-3. **Reporte (Markdown):** Un breve análisis justificando parámetros de control (timeouts, IK solver, tolerancias del carrito).
-4. **Demostración Práctica:** Flujo completo visualizado en **RViz** mostrando la coordinación de los árboles de TF y la evasión de colisiones.
+#### Criterio 2: Pipeline MoveIt 2 y Trayectorias Seguras (SO2 - Indicador 2.3) - [25 Puntos]
+* **Descripción:** Evalúa el diseño e implementación del flujo lógico de automatización, la validación de trayectorias libres de colisiones y la robustez cinemática del robot manipulador interactuando con la unidad móvil.
+* **Tareas Técnicas - Equipo Kinova:**
+  - Programar y ejecutar de forma autónoma el flujo cinemático *Pick-Lift-Move-Place-Retreat* en MoveIt 2/MTC, esquivando colisiones y actualizando la `PlanningScene` al sujetar el objeto (`AttachedCollisionObject`).
+  - Implementar la lógica de cliente que llama a `/car1/prepare_delivery_pose` con manejo de timeouts.
+* **Tareas Técnicas - Equipo Carrito:**
+  - Diseñar e implementar el servidor de servicio `/car1/prepare_delivery_pose` con QoS y validaciones geométricas.
+  - Programar la validación interna que verifique vía TF2 que la bandeja del carro se encuentre físicamente dentro de `tolerance_xy` antes de responder `success = True`, garantizando una respuesta controlada si las coordenadas están fuera de límites.
+
+#### Criterio 3: Contrato de Integración e Interfaces (SO5 - Indicador 5.1) - [25 Puntos]
+* **Descripción:** Evalúa la coordinación interdisciplinaria para definir interfaces de software y hardware claras, y el desarrollo colaborativo empleando herramientas profesionales de gestión de configuración.
+* **Tareas Técnicas (Colaboración de Ambos Equipos):**
+  - Definir, documentar y respetar el **Contrato de Integración**: ningún equipo debe alterar unilateralmente la interfaz del servicio `/car1/prepare_delivery_pose` o el árbol de TF compartido (`map` -> `table_link` -> `tag_mesa`).
+  - Desarrollar colaborativamente el Launch file conjunto (`system_integration.launch.py`) y gestionar el repositorio compartido en GitHub usando Git Flow (ramas limpias, Pull Requests obligatorios y revisión cruzada de código).
+
+#### Criterio 4: Diagnóstico de Fallas por Capas - Reto Real-Time (SO6 - Indicador 6.4) - [25 Puntos]
+* **Descripción:** Evalúa la capacidad de experimentación, aislamiento de errores y toma de decisiones basadas en datos técnicos mediante la defensa en vivo del sistema bajo condiciones imprevistas de falla.
+* **Tareas Técnicas (Prueba en vivo - Reto en Tiempo Real):**
+  - Enfrentar y resolver de manera exitosa el **Reto de Ingeniería en Tiempo Real** durante la sustentación. Cada equipo debe diagnosticar de forma sistemática y en caliente una falla introducida aleatoriamente por el docente en menos de 20 minutos (ej. offsets de visión de AprilTags, límites de aceleración o cambio de nombres de servicios), aplicando el protocolo por capas (Sintaxis -> TF -> Red -> Lógica) y justificando sus decisiones basadas en el análisis de datos recopilados (tópicos, logs, visualizadores).
+
+---
+
+### 5.3. Niveles de Desempeño Cualitativo (Alineados a Escala UMNG)
+
+| Nivel de Desempeño | Rango Equivalente (Total) | Rango por Indicador | Desempeño Cualitativo (ABET) |
+| :--- | :---: | :---: | :--- |
+| **Excelente** | 95 - 100 pts | 23.8 - 25.0 pts | Desarrolla las tareas técnicas completas superando los requerimientos de robustez, optimización y modularidad. Deja trazabilidad absoluta en Git y documentación, justificando decisiones con juicio de ingeniería avanzado. Resuelve el reto en vivo con rapidez y precisión diagnóstica. |
+| **Bueno** | 80 - 94 pts | 20.0 - 23.7 pts | Cumple de manera consistente con las tareas técnicas del respectivo equipo. El código es reproducible, las TFs son estables y el servicio valida correctamente. Resuelve el reto de ingeniería en tiempo real requiriendo mínimas guías. |
+| **Aceptable con Riesgo Menor** | 60 - 79 pts | 15.0 - 19.9 pts | Implementa las tareas principales de software, pero presenta deficiencias menores en estabilidad de TF, control de colisiones o manejo de excepciones en servicios. Requiere asistencia parcial para aislar fallas o solucionar el reto de integración. |
+| **Cumplimiento Parcial** | 30 - 59 pts | 7.5 - 14.9 pts | Integración incompleta. Existen fallas recurrentes de comunicación DDS, colisiones frecuentes en la trayectoria de MoveIt 2 o falta de validaciones geométricas en el servicio. La documentación y trazabilidad de Git es insuficiente. |
+| **No Cumple** | 0 - 29 pts | 0.0 - 7.4 pts | Desconocimiento de los conceptos de ROS 2, cinemática o interfaces. Ausencia de nodos funcionales, colisiones críticas no resueltas o falta de colaboración demostrable para la integración final. |
+
+---
+
+## 6. Entregables Finales y Trazabilidad de Evidencias ABET
+
+Para demostrar formalmente la integración final y proveer evidencias reproducibles para los auditores de acreditación ABET, se debe entregar en el repositorio la siguiente estructura dentro del paquete `burger_delivery`:
+
+1. **Launch de Integración Conjunta (Evidencia SO5 - Indicador 5.1):** Archivo `launch/system_integration.launch.py` que configure y levante simultáneamente la localización por AprilTags, el servidor de control del carrito, y el pipeline y mallas de colisiones del manipulador Kinova Gen3.
+2. **Historial de GitHub y Ramas (Evidencia SO5 - Indicador 5.1):** Ramas de desarrollo separadas y Pull Requests con comentarios técnicos que validen el trabajo colaborativo e interdisciplinar de los equipos de ingeniería.
+3. **Reporte Técnico en Markdown (Evidencia SO1, SO2 & SO6):** Archivo `README.md` detallado en la raíz del paquete que contenga:
+   - Diagrama completo de la arquitectura del software ROS 2 (nodos, tópicos, servicios) y QoS DDS (Evidencia SO2).
+   - Diagrama detallado del árbol cinemático global de TF2 (Evidencia SO1 - Indicador 1.1).
+   - Análisis y protocolo de experimentación utilizado para calibrar cámaras y tolerancias geométricas (Evidencia SO6).
+4. **Defensa en Vivo y Resolución del Reto (Evidencia SO6 - Indicador 6.4):** Demostración práctica del ciclo autónomo Pick-and-Place y resolución exitosa del reto sorpresa de diagnóstico en vivo en la sustentación.
 
 > *"En la robótica colaborativa, los sistemas no fallan por defecto en sus partes, sino en las interfaces que los unen."*
+

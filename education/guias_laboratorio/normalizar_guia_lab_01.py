@@ -393,7 +393,7 @@ def build():
     identification = doc.tables[-1]
     replace_text_preserving_cell(
         identification.cell(0, 0),
-        "Laboratorio de: Robótica Aplicada / Robótica con ROS 2",
+        "Laboratorio de: ROBOT OPERATING SYSTEM - ROS",
         bold=True, size=9,
     )
     replace_text_preserving_cell(
@@ -430,7 +430,7 @@ def build():
     for label, value in [
         ("FACULTAD O UNIDAD ACADÉMICA:", "Facultad de Ingeniería"),
         ("PROGRAMA:", "Ingeniería Mecatrónica"),
-        ("ASIGNATURA:", "Robótica Aplicada con ROS 2 Experimental"),
+        ("ASIGNATURA:", "ROBOT OPERATING SYSTEM - ROS"),
         ("SEMESTRE:", "VIII – IX"),
     ]:
         p = add_body(doc, "", keep=True)
@@ -530,7 +530,7 @@ def build():
     configure_footer(doc)
     set_update_fields(doc)
     doc.core_properties.title = "Guía de Laboratorio 1 – Red ROS 2 Talker–Listener"
-    doc.core_properties.subject = "Robótica Aplicada con ROS 2 Experimental"
+    doc.core_properties.subject = "ROBOT OPERATING SYSTEM - ROS"
     doc.core_properties.author = "Universidad Militar Nueva Granada"
     doc.core_properties.comments = "Documento reconstruido sobre el formato institucional GL-AA-F-1."
     doc.save(TARGET)

@@ -1,4 +1,4 @@
-# SYLLABUS — Robótica Aplicada con ROS 2
+# SYLLABUS — ROBOT OPERATING SYSTEM - ROS
 
 > **Formato:** ABET — Programa de Ingeniería Mecatrónica  
 > **Período:** 2026-I  
@@ -10,7 +10,7 @@
 
 | Campo | Detalle |
 |:---|:---|
-| **Nombre de la Asignatura** | Robótica Aplicada con ROS 2 |
+| **Nombre de la Asignatura** | ROBOT OPERATING SYSTEM - ROS |
 | **Código** | *[Asignar según malla curricular]* |
 | **Tipo de Curso** | Teórico-Práctico (Electiva de Profundización) |
 | **Semestre** | VIII – IX |
