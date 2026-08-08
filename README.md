@@ -148,7 +148,7 @@ burger_delivery/
 
 ### 🐙 7. Control de Versiones & Trabajo en Equipo (Git Fundamentals)
 - [⭐ **Portal de Fundamentos Git & GitHub**](git-fundamentals/index.html) *(Animaciones interactivas SVG)*
-- [🏢 **Guía GitHub Organizations, Trabajo en Equipo y Evidencia ABET**](git-fundamentals/equipos_organizaciones_abet.html) *(Flujo de repositorios privados de equipo desde template, ramas individuales `feat/...`, Rulesets y entrega inmutable SHA)*
+- [🏢 **Guía GitHub Organizations, Trabajo en Equipo y Evidencia ABET**](git-fundamentals/equipos_organizaciones_abet.html) *(Repositorios privados con historia compartida, ramas `feat/...`, pull requests y entrega identificada por SHA)*
 
 ---
 

@@ -1,173 +1,216 @@
-# Guía de Configuración de Repositorios por Equipo y Arquitectura Multi-Remoto (`origin` / `upstream`)
+# Configuración de repositorios por equipo (`origin` / `upstream`)
 
-> **Organización Oficial:** [`umng-mecatronica-ros`](https://github.com/umng-mecatronica-ros)  
-> **Repositorio Base Docente (Upstream):** [`roncanciovl/burger_delivery`](https://github.com/roncanciovl/burger_delivery)  
-> **Fecha de Configuración:** Agosto 2026  
-> **Estándar:** Acreditación ABET (SO1, SO2, SO5, SO6) — UMNG  
-> **Método de Aprovisionamiento:** GitHub REST API v3 / GitHub CLI (`gh`)  
-> **Módulo Interactivo:** [⭐ `git-fundamentals/equipos_organizaciones_abet.html`](../../git-fundamentals/equipos_organizaciones_abet.html)
+> **Asignatura:** ROBOT OPERATING SYSTEM - ROS<br>
+> **Periodo:** 2026-2<br>
+> **Organización:** [`umng-mecatronica-ros`](https://github.com/umng-mecatronica-ros)<br>
+> **Repositorio docente:** [`roncanciovl/burger_delivery`](https://github.com/roncanciovl/burger_delivery)<br>
+> **Módulo interactivo:** [`git-fundamentals/equipos_organizaciones_abet.html`](../../git-fundamentals/equipos_organizaciones_abet.html)
 
----
+## 1. Arquitectura adoptada
 
-## 1. Resumen Ejecutivo y Arquitectura
-
-Para garantizar la máxima integridad académica, gobernanza institucional y trazabilidad exigidas por **ABET**, la asignatura **ROBOT OPERATING SYSTEM - ROS** implementa un esquema **Nativo de GitHub basado en Organizaciones y Arquitectura Multi-Remoto**:
+La asignatura utiliza repositorios privados propiedad de la organización docente. Cada equipo trabaja en un repositorio independiente y el repositorio `roncanciovl/burger_delivery` conserva la base oficial del curso.
 
 ```mermaid
 graph TD
-    subgraph Docente ["Docente / Repositorio Base (Upstream)"]
-        BaseRepo["roncanciovl/burger_delivery<br/>(Plantilla Oficial / DOI Zenodo)"]
-    end
+    B["Repositorio docente<br/>roncanciovl/burger_delivery"]
+    T1["burger-kinova-equipo-01"]
+    T2["burger-kinova-equipo-02"]
+    TN["... equipo-10"]
+    L["Clon local del estudiante"]
 
-    subgraph Org ["Organización GitHub: umng-mecatronica-ros"]
-        R1["burger-kinova-equipo-01"]
-        R2["burger-kinova-equipo-02"]
-        R3["burger-kinova-equipo-03"]
-        RN["... hasta Equipo 10"]
-    end
-
-    subgraph Estacion ["Estación de Trabajo del Estudiante (Local)"]
-        LocalClone["~/ros2_ws/src/burger_delivery<br/>(Workspace ROS 2 Jazzy)"]
-    end
-
-    BaseRepo -- "1. Template Clone Inicial" --> R1
-    BaseRepo -- "1. Template Clone Inicial" --> R2
-    BaseRepo -- "1. Template Clone Inicial" --> R3
-    BaseRepo -- "1. Template Clone Inicial" --> RN
-
-    R1 <== "origin (Push/Pull de ramas feat/ y PRs)" ==> LocalClone
-    BaseRepo -. "upstream (git fetch / merge de actualizaciones docente)" .-> LocalClone
+    B -- "siembra inicial conservando historia Git" --> T1
+    B -- "siembra inicial conservando historia Git" --> T2
+    B -- "siembra inicial conservando historia Git" --> TN
+    T1 <== "origin: ramas y pull requests" ==> L
+    B -. "upstream: sólo lectura" .-> L
 ```
 
----
+Los repositorios de equipo **no se crean con `Use this template`** cuando se requiere sincronización posterior. Una plantilla copia los archivos, pero crea una historia Git independiente. Los repositorios se crean vacíos y reciben la rama `main` del repositorio docente, de modo que todos comparten ancestros.
 
-## 2. Repositorios Pre-Aprovisionados en la Organización
+### Repositorios preaprovisionados
 
-Se encuentran creados y configurados los 10 repositorios privados en la organización **`umng-mecatronica-ros`**:
+| Equipo | Repositorio privado |
+|---:|---|
+| 01 | [`burger-kinova-equipo-01`](https://github.com/umng-mecatronica-ros/burger-kinova-equipo-01) |
+| 02 | [`burger-kinova-equipo-02`](https://github.com/umng-mecatronica-ros/burger-kinova-equipo-02) |
+| 03 | [`burger-kinova-equipo-03`](https://github.com/umng-mecatronica-ros/burger-kinova-equipo-03) |
+| 04 | [`burger-kinova-equipo-04`](https://github.com/umng-mecatronica-ros/burger-kinova-equipo-04) |
+| 05 | [`burger-kinova-equipo-05`](https://github.com/umng-mecatronica-ros/burger-kinova-equipo-05) |
+| 06 | [`burger-kinova-equipo-06`](https://github.com/umng-mecatronica-ros/burger-kinova-equipo-06) |
+| 07 | [`burger-kinova-equipo-07`](https://github.com/umng-mecatronica-ros/burger-kinova-equipo-07) |
+| 08 | [`burger-kinova-equipo-08`](https://github.com/umng-mecatronica-ros/burger-kinova-equipo-08) |
+| 09 | [`burger-kinova-equipo-09`](https://github.com/umng-mecatronica-ros/burger-kinova-equipo-09) |
+| 10 | [`burger-kinova-equipo-10`](https://github.com/umng-mecatronica-ros/burger-kinova-equipo-10) |
 
-| N° | Repositorio Oficial | URL de Clonación (`origin`) |
-| :---: | :--- | :--- |
-| **01** | [`burger-kinova-equipo-01`](https://github.com/umng-mecatronica-ros/burger-kinova-equipo-01) | `https://github.com/umng-mecatronica-ros/burger-kinova-equipo-01.git` |
-| **02** | [`burger-kinova-equipo-02`](https://github.com/umng-mecatronica-ros/burger-kinova-equipo-02) | `https://github.com/umng-mecatronica-ros/burger-kinova-equipo-02.git` |
-| **03** | [`burger-kinova-equipo-03`](https://github.com/umng-mecatronica-ros/burger-kinova-equipo-03) | `https://github.com/umng-mecatronica-ros/burger-kinova-equipo-03.git` |
-| **04** | [`burger-kinova-equipo-04`](https://github.com/umng-mecatronica-ros/burger-kinova-equipo-04) | `https://github.com/umng-mecatronica-ros/burger-kinova-equipo-04.git` |
-| **05** | [`burger-kinova-equipo-05`](https://github.com/umng-mecatronica-ros/burger-kinova-equipo-05) | `https://github.com/umng-mecatronica-ros/burger-kinova-equipo-05.git` |
-| **06** | [`burger-kinova-equipo-06`](https://github.com/umng-mecatronica-ros/burger-kinova-equipo-06) | `https://github.com/umng-mecatronica-ros/burger-kinova-equipo-06.git` |
-| **07** | [`burger-kinova-equipo-07`](https://github.com/umng-mecatronica-ros/burger-kinova-equipo-07) | `https://github.com/umng-mecatronica-ros/burger-kinova-equipo-07.git` |
-| **08** | [`burger-kinova-equipo-08`](https://github.com/umng-mecatronica-ros/burger-kinova-equipo-08) | `https://github.com/umng-mecatronica-ros/burger-kinova-equipo-08.git` |
-| **09** | [`burger-kinova-equipo-09`](https://github.com/umng-mecatronica-ros/burger-kinova-equipo-09) | `https://github.com/umng-mecatronica-ros/burger-kinova-equipo-09.git` |
-| **10** | [`burger-kinova-equipo-10`](https://github.com/umng-mecatronica-ros/burger-kinova-equipo-10) | `https://github.com/umng-mecatronica-ros/burger-kinova-equipo-10.git` |
+## 2. Acceso e identidad del estudiante
 
----
+Cada estudiante debe utilizar una cuenta individual de GitHub. No se permiten cuentas ni credenciales compartidas. El correo institucional debe estar agregado y verificado en la cuenta de GitHub cuando la política institucional lo permita.
 
-## 3. Protocolo de Inicio para Estudiantes
-
-### 3.1. Configuración de Identidad y Clonación
 ```bash
-# 1. Posicionarse en el workspace de ROS 2
 cd ~/ros2_ws/src
-
-# 2. Clonar el repositorio asignado a su equipo (ejemplo Equipo 01)
-git clone https://github.com/umng-mecatronica-ros/burger-kinova-equipo-01.git burger_delivery
+git clone git@github.com:umng-mecatronica-ros/burger-kinova-equipo-01.git burger_delivery
 cd burger_delivery
 
-# 3. Configurar identidad formal (Obligatorio para auditoría ABET)
-git config --global user.name "Nombres y Apellidos"
-git config --global user.email "codigo.estudiante@unimilitar.edu.co"
+# Configuración local para este repositorio, no global para todo el computador.
+git config user.name "Nombres y Apellidos"
+git config user.email "codigo.estudiante@unimilitar.edu.co"
 ```
 
-### 3.2. Configuración Obligatoria del Remoto Upstream
-```bash
-# Configurar el repositorio del docente como upstream
-git remote add upstream https://github.com/roncanciovl/burger_delivery.git
+La identidad escrita en un commit puede configurarse manualmente; por sí sola no demuestra autoría. Para la trazabilidad se consideran en conjunto la cuenta de GitHub, commits, pull requests, revisiones, bitácoras técnicas y sustentación individual.
 
-# Verificar remotos configurados
+## 3. Configuración de remotos
+
+El repositorio del equipo es `origin`. El repositorio docente se agrega como `upstream` y se deshabilita explícitamente como destino de escritura.
+
+```bash
+git remote add upstream git@github.com:roncanciovl/burger_delivery.git
+git remote set-url --push upstream DISABLED
 git remote -v
 ```
-Salida esperada:
+
+Salida esperada para el equipo 01:
+
 ```text
-origin    https://github.com/umng-mecatronica-ros/burger-kinova-equipo-01.git (fetch)
-origin    https://github.com/umng-mecatronica-ros/burger-kinova-equipo-01.git (push)
-upstream  https://github.com/roncanciovl/burger_delivery.git (fetch)
-upstream  https://github.com/roncanciovl/burger_delivery.git (push)
+origin    git@github.com:umng-mecatronica-ros/burger-kinova-equipo-01.git (fetch)
+origin    git@github.com:umng-mecatronica-ros/burger-kinova-equipo-01.git (push)
+upstream  git@github.com:roncanciovl/burger_delivery.git (fetch)
+upstream  DISABLED (push)
 ```
 
----
+## 4. Trabajo colaborativo
 
-## 4. 🔄 Flujo de Sincronización Continua con el Docente (`upstream`)
-
-Durante el semestre, el docente actualizará el repositorio base con nuevas guías, correcciones de paquetes o ajustes en los drivers.
-
-Para incorporar estas actualizaciones al repositorio de equipo sin sobreescribir el trabajo propio:
+### 4.1. Rama individual
 
 ```bash
-# 1. Cambiarse a la rama principal
-git checkout main
+git switch main
+git pull --ff-only origin main
+git switch -c feat/apellido-kinova-monitor
 
-# 2. Descargar las actualizaciones del docente
-git fetch upstream
-
-# 3. Integrar los cambios en la rama main local
-git merge upstream/main --no-edit
-
-# 4. Publicar la versión actualizada en el repositorio del equipo en GitHub
-git push origin main
+# Desarrollar y probar.
+git add <archivos>
+git commit -m "feat(monitor): implement joint state diagnostics"
+git push -u origin feat/apellido-kinova-monitor
 ```
 
----
+No se realiza `push` directo a `main`. Cada cambio llega mediante un pull request que incluya:
 
-## 5. Flujo de Trabajo en Equipo y Calidad (ABET SO5)
+1. propósito del cambio;
+2. pruebas ejecutadas y resultados;
+3. interfaces o parámetros modificados;
+4. revisión de por lo menos otro integrante.
 
-1. **Ramas de Funcionalidad (`feature branches`):**
-   ```bash
-   git checkout -b feat/apellido-kinova-monitor
-   # Desarrollar código, probar en ROS 2 Jazzy y compilar
-   git add .
-   git commit -m "feat(monitor): implement joint state subscriber and diagnostics"
-   git push -u origin feat/apellido-kinova-monitor
-   ```
-2. **Pull Request (PR) y Revisión Cruzada:**
-   - Se abre un PR hacia `main`.
-   - Un compañero de equipo actúa como revisor (*Reviewer*) y debe aprobar el PR con comentarios técnicos constructivos.
-   - El *merge* solo procede tras la aprobación por pares.
+## 5. Actualizaciones publicadas por el docente
 
----
+El curso no integra continuamente cualquier estado de `upstream/main`. El docente publica bases identificadas por periodo y corte, por ejemplo:
 
-## 6. Procedimiento de Entrega y Congelamiento
+```text
+base-2026-2-corte1
+```
 
-En la fecha límite de entrega de cada corte evaluable:
+El integrante responsable incorpora una base mediante una rama de sincronización y un pull request:
 
 ```bash
-# 1. Situarse en main y asegurar que todo esté integrado
-git checkout main
-git pull origin main
+git fetch upstream --tags
+git switch -c sync/base-2026-2-corte1 origin/main
+git merge --no-ff refs/tags/base-2026-2-corte1
+git push -u origin sync/base-2026-2-corte1
+```
 
-# 2. Crear Tag inmutable de entrega
-git tag -a v1.0.0-corte1 -m "Entrega Oficial Primer Corte - Conexion Kinova"
-git push origin v1.0.0-corte1
+Después se abre un PR `sync/base-2026-2-corte1 -> main`, se revisan los conflictos y se ejecutan las pruebas. Este procedimiento conserva la prohibición de escribir directamente sobre `main`.
 
-# 3. Obtener el Commit SHA inmutable para el informe
+Las correcciones urgentes posteriores se publican con un identificador nuevo y una nota de cambios. No se reutiliza ni mueve una base ya publicada.
+
+## 6. Entrega y congelamiento
+
+Una vez integrado y probado el trabajo:
+
+```bash
+git switch main
+git pull --ff-only origin main
+git tag -a entrega-2026-2-corte1 -m "Entrega oficial 2026-2 - corte 1"
+git push origin entrega-2026-2-corte1
 git rev-parse HEAD
 ```
 
----
+El equipo registra en la plataforma:
 
-## 7. Gestión Docente: Asignación Masiva de Estudiantes vía API
+- URL del repositorio oficial;
+- nombre exacto del tag;
+- SHA completo del commit;
+- URL del pull request de cierre, cuando corresponda.
 
-Cuando los estudiantes se registren con sus nombres de usuario de GitHub (`@usuario`), el docente puede agregarlos como colaboradores a sus repositorios respectivos con un solo comando:
+El SHA es la referencia definitiva de evaluación. Un tag sólo se considera protegido cuando exista una regla que impida borrarlo o moverlo. El docente verifica el SHA al cierre y puede crear una referencia adicional bajo control docente.
 
-```powershell
-# Ejemplo: Agregar a los estudiantes user1 y user2 al Equipo 01
-gh api -X PUT repos/umng-mecatronica-ros/burger-kinova-equipo-01/collaborators/usuario1 -f permission=push
-gh api -X PUT repos/umng-mecatronica-ros/burger-kinova-equipo-01/collaborators/usuario2 -f permission=push
+## 7. Gestión mediante GitHub Teams
+
+Los permisos se asignan mediante equipos de la organización, no mediante una lista dispersa de colaboradores directos:
+
+- `docentes`: permiso `maintain` o `admin`;
+- `equipo-01` a `equipo-10`: permiso `push` únicamente en su repositorio.
+
+Ejemplo administrativo:
+
+```bash
+# Crear el equipo una sola vez.
+gh api -X POST orgs/umng-mecatronica-ros/teams \
+  -f name=equipo-01 -f privacy=closed
+
+# Dar acceso de escritura al repositorio asignado.
+gh api -X PUT \
+  orgs/umng-mecatronica-ros/teams/equipo-01/repos/umng-mecatronica-ros/burger-kinova-equipo-01 \
+  -f permission=push
+
+# Incorporar un estudiante.
+gh api -X PUT \
+  orgs/umng-mecatronica-ros/teams/equipo-01/memberships/USUARIO_GITHUB \
+  -f role=member
 ```
 
----
+Los estudiantes no reciben permisos `maintain` ni `admin`.
 
-## 8. Matriz de Trazabilidad ABET
+## 8. Protección requerida
 
-| Criterio ABET | Evidencia en GitHub |
-| :--- | :--- |
-| **SO5: Trabajo en Equipo** | - Historial de Pull Requests con revisiones y aprobaciones mutuas.<br>- Commits con autoría clara (`user.email` institucional). |
-| **SO1 & SO2: Diseño e Integración** | - Estructura modular del package `burger_kinova_connection`.<br>- Cumplimiento de las 10 Pruebas de Aceptación (PA-01 a PA-10). |
-| **SO6: Experimentación y Análisis** | - Informe técnico reproducible `docs/VALIDACION_CORTE_1.md`.<br>- Commit SHA inmutable registrado en el cierre. |
+Antes de incorporar estudiantes, la organización debe disponer de un plan que permita Rulesets o protección de ramas en repositorios privados. La rama `main` debe exigir:
+
+- pull request antes de integrar;
+- al menos una aprobación;
+- invalidación de aprobaciones cuando cambie el código;
+- resolución de conversaciones;
+- bloqueo de force-push y eliminación;
+- ausencia de bypass para estudiantes.
+
+También debe protegerse el patrón de tags `entrega-*`. En agosto de 2026 la organización se encontraba en GitHub Free, que no habilita estas protecciones para repositorios privados. Se debe activar el beneficio educativo o un plan GitHub Team antes de depender técnicamente de estas reglas.
+
+Mientras se completa esa activación, las reglas anteriores son política académica verificable, pero no están forzadas por GitHub.
+
+## 9. Evidencia y evaluación
+
+GitHub proporciona evidencia complementaria para documentar el proceso del equipo; no reemplaza el instrumento de evaluación ni constituye por sí solo medición de un Student Outcome.
+
+| Aspecto observado | Evidencia complementaria |
+|---|---|
+| Colaboración y responsabilidad individual | Ramas, commits, PR, revisiones, bitácora y sustentación |
+| Diseño e integración | Arquitectura del package, cambios revisados y pruebas de aceptación |
+| Experimentación y análisis | Informe reproducible, resultados, incidencias y decisiones técnicas |
+| Versión evaluada | Repositorio, tag de entrega y SHA verificado al cierre |
+
+La calificación académica y el nivel de logro ABET se determinan exclusivamente mediante el instrumento aprobado para la actividad.
+
+## 10. Seguridad, automatización y cierre del periodo
+
+- No versionar credenciales, direcciones sensibles, `build/`, `install/`, `log/`, rosbag pesados ni datos personales innecesarios.
+- Habilitar detección de secretos y protección de push cuando estén disponibles.
+- Ejecutar compilación y pruebas automáticas en cada PR cuando las dependencias lo permitan.
+- Mantener las pruebas con el Kinova real bajo supervisión y fuera de la automatización remota.
+- Al finalizar el semestre, verificar los SHA entregados, retirar escritura a estudiantes y archivar los repositorios conforme a la política institucional de retención.
+
+## 11. Verificación administrativa
+
+```bash
+gh auth status
+gh repo list umng-mecatronica-ros --limit 100
+gh api orgs/umng-mecatronica-ros/teams
+gh api repos/umng-mecatronica-ros/burger-kinova-equipo-01/rulesets
+```
+
+El docente debe repetir la última verificación en los diez repositorios y conservar un registro de la configuración vigente al inicio y cierre del periodo.

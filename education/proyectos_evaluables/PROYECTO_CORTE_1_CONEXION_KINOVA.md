@@ -22,42 +22,40 @@
 > ```bash
 > # 1. Ir a la carpeta src de tu workspace ROS 2
 > cd ~/ros2_ws/src
-> rm -rf burger_delivery   # Si tenías un clone previo sin cambios que conservar
 > 
 > # 2. Clonar el repositorio asignado a tu equipo (ejemplo con Equipo 01)
-> git clone https://github.com/umng-mecatronica-ros/burger-kinova-equipo-01.git burger_delivery
+> git clone git@github.com:umng-mecatronica-ros/burger-kinova-equipo-01.git burger_delivery
 > cd burger_delivery
 > 
-> # 3. Configurar tu identidad formal individual de Git (Obligatorio para ABET SO5)
-> git config --global user.name "Nombres Apellidos"
-> git config --global user.email "codigo.estudiante@unimilitar.edu.co"
+> # 3. Configurar tu identidad individual sólo para este repositorio
+> git config user.name "Nombres Apellidos"
+> git config user.email "codigo.estudiante@unimilitar.edu.co"
 > 
 > # 4. Configurar el repositorio base del docente como upstream (OBLIGATORIO)
-> git remote add upstream https://github.com/roncanciovl/burger_delivery.git
+> git remote add upstream git@github.com:roncanciovl/burger_delivery.git
+> git remote set-url --push upstream DISABLED
 > 
 > # 5. Verificar que ambos remotos estén configurados
 > git remote -v
 > # Debe mostrar:
-> # origin    https://github.com/umng-mecatronica-ros/burger-kinova-equipo-XX.git (fetch y push)
-> # upstream  https://github.com/roncanciovl/burger_delivery.git (fetch y push)
+> # origin    git@github.com:umng-mecatronica-ros/burger-kinova-equipo-XX.git (fetch y push)
+> # upstream  git@github.com:roncanciovl/burger_delivery.git (fetch)
+> # upstream  DISABLED (push)
 > ```
 > 
 > #### 3. 🔄 ¿Cómo descargar actualizaciones y correcciones del docente durante el semestre?
-> Cada vez que el docente publique mejoras, nuevas guías o correcciones en el repositorio base `burger_delivery`:
+> Cada vez que el docente publique una base identificada, por ejemplo `base-2026-2-corte1`:
 > ```bash
-> # 1. Asegurarse de estar en la rama main
-> git checkout main
-> 
-> # 2. Descargar e integrar las actualizaciones del docente
-> git fetch upstream
-> git merge upstream/main --no-edit
-> 
-> # 3. Subir las actualizaciones al repositorio de tu equipo
-> git push origin main
+> # Descargar tags y crear una rama de sincronización desde main
+> git fetch upstream --tags
+> git switch -c sync/base-2026-2-corte1 origin/main
+> git merge --no-ff refs/tags/base-2026-2-corte1
+> git push -u origin sync/base-2026-2-corte1
 > ```
+> La actualización se integra mediante un pull request hacia `main`.
 > 
 > #### 4. Regla de Oro de Desarrollo en Equipo:
-> Prohibido hacer `push` directo a `main`. Todo avance se desarrolla en ramas individuales `feat/<apellido>-...` y se integra a `main` mediante **Pull Requests con revisión y aprobación técnica de un compañero de equipo** (Evidencia evaluable ABET SO5). Consulta la [Sección 15](#15-control-de-versiones-trabajo-colaborativo-y-entrega-oficial-abet-so5).
+> Prohibido hacer `push` directo a `main`. Todo avance se desarrolla en ramas individuales `feat/<apellido>-...` y se integra mediante **pull requests con revisión técnica de un compañero**. El historial sirve como evidencia complementaria del trabajo en equipo. Consulta la [Sección 15](#15-control-de-versiones-trabajo-colaborativo-y-entrega-oficial).
 
 ## 1. Descripción
 
@@ -399,22 +397,23 @@ ros2 launch burger_kinova_connection kinova_connection.launch.py \
 | PA-09 | DDS distribuido | Driver en estación A y monitor en estación B | Descubrimiento, telemetría y diagnóstico funcionales entre estaciones |
 | PA-10 | Reproducibilidad | Seguir el README desde un workspace limpio | Otra persona puede compilar, lanzar y repetir las pruebas |
 
-## 15. Control de versiones, trabajo colaborativo y entrega oficial (ABET SO5)
+## 15. Control de versiones, trabajo colaborativo y entrega oficial
 
 ### 15.1. Política sobre repositorios y forks
 
-- **Prohibición de forks personales como repositorio de entrega:** Los forks creados en cuentas personales de estudiantes **no** serán evaluados. Un fork personal centraliza la administración en un único estudiante, genera asimetría en permisos, impide la protección institucional y compromete la trazabilidad de autoría exigida por los criterios de acreditación ABET.
+- **Prohibición de forks personales como repositorio de entrega:** Los forks creados en cuentas personales de estudiantes **no** serán evaluados. Un fork personal centraliza la administración en un único estudiante, genera asimetría en permisos y dificulta la preservación institucional de la evidencia.
 - **Repositorio oficial de equipo:** Todo el desarrollo se realiza en el **repositorio privado asignado al equipo en la organización oficial** (`https://github.com/umng-mecatronica-ros/burger-kinova-equipo-XX`).
-- **Gobernanza Institucional:** El repositorio del equipo es propiedad de la organización docente `umng-mecatronica-ros`, garantizando acceso a todos los integrantes en igualdad de condiciones y preservando el historial para auditorías académicas.
-- **Remoto upstream del docente:** Cada equipo debe mantener enlazado el repositorio del docente (`https://github.com/roncanciovl/burger_delivery.git`) bajo el nombre de remoto `upstream` para incorporar correcciones y mejoras durante el semestre.
+- **Gobernanza institucional:** El repositorio del equipo es propiedad de la organización docente `umng-mecatronica-ros`, lo que permite administrar permisos y preservar el historial conforme a la política académica.
+- **Remoto upstream del docente:** Cada equipo debe mantener enlazado, como remoto de sólo lectura, el repositorio del docente (`git@github.com:roncanciovl/burger_delivery.git`) bajo el nombre `upstream`.
 
 ### 15.2. Configuración individual y trazabilidad
 
 Cada integrante del equipo debe trabajar exclusivamente desde su propia cuenta de GitHub y configurar su identidad en el entorno local antes de realizar cualquier commit:
 
 ```bash
-git config --global user.name "Nombres Apellidos"
-git config --global user.email "codigo.estudiante@unimilitar.edu.co"
+git config user.name "Nombres Apellidos"
+git config user.email "codigo.estudiante@unimilitar.edu.co"
+git remote set-url --push upstream DISABLED
 ```
 
 No se permite el uso de credenciales compartidas ni commits anónimos.
@@ -431,30 +430,32 @@ No se permite el uso de credenciales compartidas ni commits anónimos.
    - Funcionalidad agregada o corregida.
    - Comandos de prueba ejecutados para verificar el cambio.
    - Interfaces o parámetros modificados.
-3. **Revisión cruzada por pares (Peer Code Review):** Cada PR debe ser revisado y aprobado por al menos otro integrante del equipo antes del *merge*. Los comentarios y sugerencias técnicas en el PR constituyen evidencia formal del resultado de aprendizaje **ABET SO5 (Trabajo en equipo)**.
-4. **Sincronización periódica con el docente (`upstream`):**
+3. **Revisión cruzada por pares (Peer Code Review):** Cada PR debe ser revisado y aprobado por al menos otro integrante del equipo antes del *merge*. Los comentarios y sugerencias técnicas del PR forman parte de la evidencia complementaria del proceso de trabajo en equipo; no sustituyen el instrumento ABET ni la sustentación individual.
+4. **Sincronización de una base publicada por el docente:** El docente identifica cada base mediante un tag, por ejemplo `base-2026-2-corte1`. La actualización se integra mediante una rama y un PR, nunca mediante `push` directo a `main`:
    ```bash
-   git checkout main
-   git fetch upstream
-   git merge upstream/main --no-edit
-   git push origin main
+   git fetch upstream --tags
+   git switch -c sync/base-2026-2-corte1 origin/main
+   git merge --no-ff refs/tags/base-2026-2-corte1
+   git push -u origin sync/base-2026-2-corte1
    ```
+
+La configuración completa de repositorios, permisos y sincronización se encuentra en [`CONFIGURACION_REPOSITORIOS_EQUIPOS.md`](CONFIGURACION_REPOSITORIOS_EQUIPOS.md).
 
 ### 15.4. Protocolo de entrega y congelamiento de versión
 
 En la fecha y hora límite de entrega, el equipo debe consolidar su trabajo en `main` y registrar formalmente:
 
 1. **URL del repositorio oficial del equipo en la organización `umng-mecatronica-ros`.**
-2. **Tag de versión de entrega:**
+2. **Tag de entrega:**
    ```bash
-   git tag -a v1.0.0-corte1 -m "Entrega oficial Proyecto Primer Corte - Conexion Kinova"
-   git push origin v1.0.0-corte1
+   git tag -a entrega-2026-2-corte1 -m "Entrega oficial 2026-2 - corte 1"
+   git push origin entrega-2026-2-corte1
    ```
 3. **Commit SHA inmutable:**
    ```bash
    git rev-parse HEAD
    ```
-4. **Registro de entrega:** En la plataforma de evaluación se reportará la URL, el Tag y el SHA exacto. Cualquier commit posterior al SHA registrado no formará parte de la evaluación.
+4. **Registro de entrega:** En la plataforma de evaluación se reportará la URL, el tag y el SHA exacto. El SHA verificado al cierre es la referencia definitiva; cualquier commit posterior no formará parte de la evaluación.
 
 ## 16. Entregables
 
@@ -464,7 +465,7 @@ En la fecha y hora límite de entrega, el equipo debe consolidar su trabajo en `
 4. `docs/VALIDACION_CORTE_1.md` con resultados de PA-01 a PA-10, comandos utilizados, fecha, entorno y observaciones.
 5. Diagrama del grafo ROS 2 y distribución entre estaciones.
 6. Registro breve de frecuencia, pérdida y recuperación de `/joint_states`.
-7. Historial de Pull Requests y revisiones de código en GitHub (Evidencia ABET SO5).
+7. Historial de pull requests y revisiones de código en GitHub como evidencia complementaria del trabajo en equipo.
 8. Demostración funcional en hardware simulado y en el Kinova real.
 
 Los resultados deben poder verificarse mediante texto, salidas de comandos y registros. Las capturas pueden complementar la evidencia, pero no reemplazan una descripción reproducible.
@@ -503,5 +504,3 @@ El proyecto se considera técnicamente completo cuando:
 - [Instalación y pruebas del stack Kortex](../../ros2_setup/INSTALACION_KORTEX.md).
 - [Diagnóstico de red ROS 2](../../network_setup/DIAGNOSTICO_RED.md).
 - [Configuración de red ROS 2](../../network_setup/ROS2_NETWORK_CONFIG.md).
-
-
