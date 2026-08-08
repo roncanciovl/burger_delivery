@@ -417,10 +417,10 @@
 
   <!-- HERO SECTION -->
   <header>
-    <div class="badge-header">🏢 GitHub Organizations • Template Repos • ABET SO5</div>
+    <div class="badge-header">🏢 GitHub Organizations • Historia Compartida • Trabajo en Equipo</div>
     <h1>GitHub Organizations & Trabajo en Equipo</h1>
     <p class="subtitle">
-      Arquitectura profesional y sostenible: <strong>un repositorio privado compartido por equipo</strong> alojado en una Organización de GitHub, ramas individuales <code>feat/...</code>, protección con <strong>Rulesets</strong> y congelamiento por <strong>Commit SHA</strong> para acreditación ABET.
+      Arquitectura profesional y sostenible: <strong>un repositorio privado compartido por equipo</strong>, ramas individuales <code>feat/...</code>, pull requests y una entrega identificada por <strong>commit SHA</strong>.
     </p>
   </header>
 
@@ -430,7 +430,7 @@
     <div class="sunset-notice-text">
       <h4 style="color:var(--green);">Arquitectura Nativa de GitHub Organizations & Gobernanza de Código</h4>
       <p>
-        La metodología de este curso utiliza el estándar profesional de la industria: <strong>GitHub Organizations + Repositorios Plantilla (Template Repos) + Equipos con permisos de desarrollo</strong>. Este modelo garantiza igualdad absoluta entre integrantes, administración institucional para el docente, protección centralizada de ramas y trazabilidad para evaluación ABET SO5.
+        La metodología utiliza <strong>GitHub Organizations + repositorios de equipo con historia Git compartida + GitHub Teams</strong>. Los repositorios se siembran desde la historia del repositorio docente y no mediante <em>Use this template</em>, porque deben aceptar actualizaciones posteriores desde <code>upstream</code>.
       </p>
     </div>
   </div>
@@ -463,7 +463,7 @@
         <div>
           <strong>El Principio de Igualdad y Gobernanza Institucional:</strong>
           <p style="margin-top:4px;">
-            Al crear los repositorios dentro de la <strong>Organización de GitHub del curso</strong> (ej. <code>umng-mecatronica-ros</code>) a partir del <strong>repositorio plantilla</strong> del docente, todos los integrantes quedan en <strong>absoluta igualdad de condiciones</strong> con permisos de escritura, mientras el docente y la institución conservan la administración, la trazabilidad y la propiedad del proyecto.
+            Los repositorios se crean dentro de la <strong>Organización de GitHub del curso</strong> y reciben la historia del repositorio docente. Los integrantes obtienen acceso mediante un GitHub Team, mientras el docente conserva la administración y la institución preserva el proyecto.
           </p>
         </div>
       </div>
@@ -501,7 +501,7 @@
             </tr>
             <tr>
               <td><strong>Auditoría & ABET SO5</strong></td>
-              <td>Trazabilidad inmutable conservada en la nube institucional para acreditación académica.</td>
+              <td>Historial preservado como evidencia complementaria del proceso académico.</td>
               <td>Se dificulta la conservación a largo plazo al depender de cuentas personales de alumnos.</td>
             </tr>
             <tr>
@@ -540,7 +540,7 @@
         <span>🔄 Flujo de Trabajo Paso a Paso</span>
       </div>
       <p style="font-size:14.5px; color:var(--muted); line-height:1.7; margin-bottom:16px;">
-        Secuencia completa desde la plantilla docente hasta la integración de las ramas individuales:
+        Secuencia completa desde la base docente con historia compartida hasta la integración de ramas individuales:
       </p>
 
       <!-- SVG PIPELINE DIAGRAM -->
@@ -565,18 +565,18 @@
           <!-- Canvas -->
           <rect width="920" height="380" fill="#0d1117" rx="10"/>
 
-          <!-- 1. DOCENTE / TEMPLATE -->
+          <!-- 1. DOCENTE / BASE -->
           <rect x="25" y="30" width="220" height="150" rx="10" fill="#161b22" stroke="#58a6ff" stroke-width="1.8"/>
           <text x="40" y="55" font-family="Inter" font-size="12" fill="#58a6ff" font-weight="700">👨‍🏫 REPO BASE DOCENTE</text>
           <text x="40" y="78" font-family="Fira Code" font-size="11" fill="#e6edf3">📦 burger_delivery</text>
           <rect x="40" y="90" width="185" height="24" rx="4" fill="rgba(88,166,255,0.12)" stroke="#58a6ff"/>
           <text x="50" y="106" font-family="Fira Code" font-size="9.5" fill="#58a6ff">tag: curso-2026-2-base</text>
-          <text x="40" y="135" font-family="Inter" font-size="10" fill="#8b949e">Template Repository</text>
-          <text x="40" y="152" font-family="Inter" font-size="10" fill="#8b949e">en Organización GitHub</text>
+          <text x="40" y="135" font-family="Inter" font-size="10" fill="#8b949e">Historia Git oficial</text>
+          <text x="40" y="152" font-family="Inter" font-size="10" fill="#8b949e">upstream de sólo lectura</text>
 
           <!-- Arrow Docente -> Org Engine -->
           <path d="M 245 105 L 295 105" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr-b)"/>
-          <text x="250" y="98" font-family="Inter" font-size="9" fill="#58a6ff">Template</text>
+          <text x="250" y="98" font-family="Inter" font-size="9" fill="#58a6ff">Git push</text>
 
           <!-- 2. GITHUB ORGANIZATION -->
           <rect x="305" y="30" width="230" height="150" rx="10" fill="#161b22" stroke="#3fb950" stroke-width="1.8"/>
@@ -595,9 +595,9 @@
           <!-- 3. TEAM REPO (EQUIPO 01) -->
           <rect x="605" y="25" width="290" height="160" rx="10" fill="#161b22" stroke="#3fb950" stroke-width="2" filter="url(#glow-flow)"/>
           <text x="625" y="50" font-family="Inter" font-size="12" fill="#3fb950" font-weight="700">👥 REPOSITORIO COMPARTIDO</text>
-          <text x="625" y="72" font-family="Fira Code" font-size="11" fill="#e6edf3">burger-delivery-equipo-01</text>
+          <text x="625" y="72" font-family="Fira Code" font-size="11" fill="#e6edf3">burger-kinova-equipo-01</text>
           <rect x="625" y="85" width="250" height="85" rx="6" fill="#0d1117" stroke="#30363d"/>
-          <text x="635" y="105" font-family="Inter" font-size="10" fill="#e6edf3">🛡️ Rama <tspan fill="#3fb950" font-family="Fira Code">main</tspan> protegida por Rulesets</text>
+          <text x="635" y="105" font-family="Inter" font-size="10" fill="#e6edf3">🛡️ Rama <tspan fill="#3fb950" font-family="Fira Code">main</tspan> mediante Pull Requests</text>
           <text x="635" y="125" font-family="Inter" font-size="10" fill="#8b949e">👥 Integrantes: Estudiantes con permiso Write</text>
           <text x="635" y="145" font-family="Inter" font-size="10" fill="#8b949e">👑 Docente conserva rol de Admin</text>
           <text x="635" y="160" font-family="Inter" font-size="9" fill="#58a6ff">URL: github.com/org/burger-...-01</text>
@@ -643,7 +643,7 @@
             git push origin curso-2026-2-base
           </div>
           <p style="font-size:12px; color:var(--muted);">
-            Se activa la casilla <strong>Template repository</strong> en los <em>Settings</em> del repositorio.
+            Este tag no se mueve ni se reutiliza. Cada corrección se publica con un identificador nuevo.
           </p>
         </div>
 
@@ -652,15 +652,15 @@
             Paso 2: Generación del Repo Privado de Equipo
           </h4>
           <p style="font-size:13px; color:var(--muted); line-height:1.6;">
-            Desde la organización, se crea el repositorio a partir de la plantilla:
+            Se crea un repositorio privado vacío y se envía la rama <code>main</code> desde la base docente, conservando la historia común:
           </p>
           <ul style="font-size:12.5px; color:var(--text); margin-left:18px; margin-top:6px; line-height:1.7;">
-            <li><code>burger-delivery-equipo-01</code></li>
-            <li><code>burger-delivery-equipo-02</code></li>
-            <li><code>burger-delivery-equipo-03</code></li>
+            <li><code>burger-kinova-equipo-01</code></li>
+            <li><code>burger-kinova-equipo-02</code></li>
+            <li><code>burger-kinova-equipo-03</code></li>
           </ul>
           <p style="font-size:12px; color:var(--muted); margin-top:6px;">
-            Visibilidad: <strong>Privado</strong>. Los estudiantes se añaden al equipo con rol de <strong>Write</strong>.
+            Visibilidad: <strong>Privado</strong>. Los estudiantes reciben <strong>Write</strong> mediante el GitHub Team correspondiente.
           </p>
         </div>
 
@@ -710,6 +710,14 @@
         Para garantizar la integridad del código y evitar que un estudiante sobrescriba accidentalmente la rama principal, se configuran <strong>Repository Rulesets</strong> en GitHub:
       </p>
 
+      <div class="callout callout-warn">
+        <div class="callout-icon">⚠️</div>
+        <div>
+          <strong>Requisito del plan:</strong>
+          <p style="margin-top:4px;">Los repositorios privados requieren GitHub Team o un beneficio educativo habilitado para aplicar Rulesets o protección de ramas. En GitHub Free estas reglas son política académica, pero GitHub no puede forzarlas.</p>
+        </div>
+      </div>
+
       <div class="grid-2">
         <div class="box">
           <h4 style="color:var(--purple); font-size:14px; margin-bottom:10px;">⚙️ Configuración Paso a Paso en GitHub</h4>
@@ -750,13 +758,13 @@
   <section id="eval-sec" class="content-section">
     <div class="card">
       <div class="card-title">
-        <span>📋 Protocolo de Entrega Inmutable y Evidencia ABET</span>
+        <span>📋 Protocolo de entrega y evidencia complementaria</span>
       </div>
 
       <div class="callout callout-warn">
         <div class="callout-icon">⚠️</div>
         <div>
-          <strong>El Principio del Commit SHA Inmutable:</strong>
+          <strong>El commit SHA como referencia de evaluación:</strong>
           <p style="margin-top:4px;">
             En ingeniería no se evalúa "el estado actual de la rama <code>main</code>", porque un estudiante podría seguir modificando código después de la fecha límite. Cada equipo entrega el <strong>Hash SHA exacto</strong> del commit final y un <strong>Tag de versión</strong>.
           </p>
@@ -771,8 +779,8 @@
           </p>
           <div class="code-block" style="font-size:12px;">
             # Crear tag de entrega del corte<br/>
-            git tag corte-1-entrega<br/>
-            git push origin corte-1-entrega<br/><br/>
+            git tag -a entrega-2026-2-corte1 -m "Entrega oficial 2026-2 - corte 1"<br/>
+            git push origin entrega-2026-2-corte1<br/><br/>
             # Obtener el SHA de 40 caracteres inmutable<br/>
             git rev-parse HEAD
           </div>
@@ -782,7 +790,7 @@
         </div>
 
         <div class="box">
-          <h4 style="color:var(--purple); font-size:14px; margin-bottom:8px;">🎯 2. Criterios de Evaluación ABET (SO5)</h4>
+          <h4 style="color:var(--purple); font-size:14px; margin-bottom:8px;">🎯 2. Evidencia complementaria de trabajo en equipo</h4>
           <ul style="font-size:12.5px; color:var(--text); margin-left:18px; line-height:1.8;">
             <li><strong>Distribución de Trabajo:</strong> Contribuciones técnicas visibles en ramas individuales y commits descriptivos.</li>
             <li><strong>Calidad de Revisiones:</strong> Comentarios técnicos y rigurosos en los Pull Requests (*Peer Review*).</li>
@@ -797,7 +805,7 @@
         <div>
           <strong>Por qué NO evaluar por "Conteo Bruto de Commits":</strong>
           <p style="margin-top:4px;">
-            El conteo de commits es una métrica perversa que fomenta micro-commits vacíos (ej. 50 commits de "fix typo"). La evaluación ABET califica la <strong>relevancia técnica de los PRs</strong>, la resolución de incidencias en equipo y la calidad del código ROS 2 integrado.
+            El conteo de commits fomenta micro-commits sin valor técnico. El instrumento aprobado evalúa la <strong>relevancia técnica de los PR</strong>, la resolución de incidencias, la calidad del código integrado y la evidencia individual. GitHub no sustituye la rúbrica.
           </p>
         </div>
       </div>
@@ -817,24 +825,25 @@
       </p>
 
       <div class="code-block" style="font-size:12.5px; line-height:1.7;">
-        <div class="code-header">Script Bash: Crear Repositorios de Equipos desde Plantilla</div>
+        <div class="code-header">Script Bash: Crear repositorios conservando la historia Git</div>
         # 1. Autenticarse en GitHub<br/>
         gh auth login<br/><br/>
-        # 2. Definir la organización y el repositorio plantilla<br/>
+        # 2. Definir organización y repositorio base<br/>
         ORG="umng-mecatronica-ros"<br/>
-        TEMPLATE="$ORG/burger_delivery"<br/><br/>
-        # 3. Crear repositorios privados para cada equipo<br/>
-        for i in $(seq -w 1 8); do<br/>
-        &nbsp;&nbsp;REPO_NAME="burger-delivery-equipo-$i"<br/>
+        BASE="git@github.com:roncanciovl/burger_delivery.git"<br/><br/>
+        # 3. Crear repositorios vacíos y sembrar main desde la base<br/>
+        for i in $(seq -w 1 10); do<br/>
+        &nbsp;&nbsp;REPO_NAME="burger-kinova-equipo-$i"<br/>
         &nbsp;&nbsp;echo "Creando $REPO_NAME en la organización $ORG..."<br/>
-        &nbsp;&nbsp;gh repo create "$ORG/$REPO_NAME" --template "$TEMPLATE" --private<br/>
+        &nbsp;&nbsp;gh repo create "$ORG/$REPO_NAME" --private<br/>
+        &nbsp;&nbsp;git push "git@github.com:$ORG/$REPO_NAME.git" main:main<br/>
         done
       </div>
 
       <div class="callout callout-info">
         <div class="callout-icon">ℹ️</div>
         <div>
-          <strong>Ventaja del script:</strong> En menos de 30 segundos se instancian 10 repositorios privados idénticos, con su historial base, ramas configuradas y listos para invitar a los estudiantes.
+          <strong>Resultado:</strong> Los diez repositorios comparten ancestros con la base docente y pueden integrar tags publicados desde <code>upstream</code>. Las ramas y protecciones se configuran después de la siembra.
         </div>
       </div>
     </div>
@@ -879,7 +888,7 @@
           </div>
           <div class="form-group">
             <label>Corte / Hito de Evaluación:</label>
-            <input type="text" id="inp-tag" class="form-control" value="corte-1-entrega" oninput="updateCmds()" />
+            <input type="text" id="inp-tag" class="form-control" value="entrega-2026-2-corte1" oninput="updateCmds()" />
           </div>
         </div>
       </div>
@@ -936,7 +945,7 @@
       <!-- Q2 -->
       <div class="quiz-card" id="q2">
         <div class="quiz-q">2. ¿Por qué la entrega oficial se realiza reportando el Commit SHA exacto?</div>
-        <button class="quiz-opt" onclick="checkQuiz(2, 0, true)">A) Porque el SHA es una firma inmutable que congela el estado exacto del código en la fecha límite de entrega.</button>
+        <button class="quiz-opt" onclick="checkQuiz(2, 0, true)">A) Porque el SHA identifica exactamente el commit evaluado, aunque la rama continúe avanzando.</button>
         <button class="quiz-opt" onclick="checkQuiz(2, 1, false)">B) Porque sin el SHA, GitHub borra automáticamente el repositorio.</button>
         <button class="quiz-opt" onclick="checkQuiz(2, 2, false)">C) Porque reemplaza la necesidad de compilar paquetes ROS 2.</button>
         <div class="quiz-feedback" id="fb2"></div>
@@ -983,19 +992,21 @@
       const name = document.getElementById('inp-name').value.trim() || 'estudiante';
       const mod = document.getElementById('inp-mod').value.trim() || 'modulo';
       const email = document.getElementById('inp-email').value.trim() || 'user@email.com';
-      const tag = document.getElementById('inp-tag').value.trim() || 'corte-1-entrega';
+      const tag = document.getElementById('inp-tag').value.trim() || 'entrega-2026-2-corte1';
 
-      const repoName = `burger-delivery-equipo-${team}`;
+      const repoName = `burger-kinova-equipo-${team}`;
       const branchName = `feat/${name}-${mod}`;
 
       document.getElementById('cmd-id').textContent = 
-`git config --global user.name "${name}"\n` +
-`git config --global user.email "${email}"`;
+`git config user.name "${name}"\n` +
+`git config user.email "${email}"`;
 
       document.getElementById('cmd-clone').textContent = 
 `cd ~/ros2_ws/src\n` +
-`git clone https://github.com/${org}/${repoName}.git burger_delivery\n` +
-`cd burger_delivery`;
+`git clone git@github.com:${org}/${repoName}.git burger_delivery\n` +
+`cd burger_delivery\n` +
+`git remote add upstream git@github.com:roncanciovl/burger_delivery.git\n` +
+`git remote set-url --push upstream DISABLED`;
 
       document.getElementById('cmd-branch').textContent = 
 `# Crear y cambiar a tu rama individual de trabajo\n` +
@@ -1011,9 +1022,9 @@
 `git checkout main\n` +
 `git pull origin main\n\n` +
 `# 2. Crear y subir el Tag de entrega\n` +
-`git tag ${tag}\n` +
+`git tag -a ${tag} -m "Entrega oficial del corte"\n` +
 `git push origin ${tag}\n\n` +
-`# 3. Obtener el Commit SHA inmutable para el informe ABET\n` +
+`# 3. Obtener el commit SHA que identifica la versión evaluada\n` +
 `git rev-parse HEAD`;
     }
 

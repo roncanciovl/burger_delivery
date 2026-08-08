@@ -56,7 +56,7 @@ Para evitar versiones incompatibles, cada responsabilidad debe tener una sola fu
 
 - [Proyecto del primer corte — Conexión segura con Kinova Gen3](proyectos_evaluables/PROYECTO_CORTE_1_CONEXION_KINOVA.md).
 - [Guía de configuración de repositorios por equipo y arquitectura multi-remoto](proyectos_evaluables/CONFIGURACION_REPOSITORIOS_EQUIPOS.md).
-- [⭐ Guía Interactiva GitHub Organizations, Trabajo en Equipo y ABET](../git-fundamentals/equipos_organizaciones_abet.html): repositorios privados de equipo desde template, ramas individuales `feat/...`, Rulesets y entrega por Commit SHA.
+- [⭐ Guía Interactiva GitHub Organizations, Trabajo en Equipo y ABET](../git-fundamentals/equipos_organizaciones_abet.html): repositorios privados con historia compartida, ramas individuales `feat/...`, pull requests y entrega identificada por commit SHA.
 
 
 ### Evidencias
