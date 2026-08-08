@@ -33,6 +33,8 @@ Para evitar versiones incompatibles, cada responsabilidad debe tener una sola fu
 | Taller URDF y TF2 | [`talleres/TALLER_URDF_TF.md`](talleres/TALLER_URDF_TF.md) | [`talleres/TALLER_URDF_TF.pdf`](talleres/TALLER_URDF_TF.pdf) |
 | Guía de laboratorio 01 | [`guias_laboratorio/GUIA_LAB_01_RED_ROS2_TALKER_LISTENER.docx`](guias_laboratorio/GUIA_LAB_01_RED_ROS2_TALKER_LISTENER.docx) | [`guias_laboratorio/rendered/GUIA_LAB_01_RED_ROS2_TALKER_LISTENER.pdf`](guias_laboratorio/rendered/GUIA_LAB_01_RED_ROS2_TALKER_LISTENER.pdf) |
 | Evidencia y nota del Taller 01 | [`evidencias_abet/PLANTILLA_EVIDENCIA_ABET_TALLER_01_ROS2_CLI.docx`](evidencias_abet/PLANTILLA_EVIDENCIA_ABET_TALLER_01_ROS2_CLI.docx) | [`evidencias_abet/PLANTILLA_EVIDENCIA_ABET_TALLER_01_ROS2_CLI.md`](evidencias_abet/PLANTILLA_EVIDENCIA_ABET_TALLER_01_ROS2_CLI.md), representación auxiliar no normativa |
+| Proyecto del primer corte | [`proyectos_evaluables/PROYECTO_CORTE_1_CONEXION_KINOVA.md`](proyectos_evaluables/PROYECTO_CORTE_1_CONEXION_KINOVA.md) | No tiene archivo derivado; esta especificación es la fuente oficial |
+| Evidencia y nota del Proyecto Corte 1 | [`evidencias_abet/INSTRUMENTO_ABET_PROYECTO_CORTE_1_CONEXION_KINOVA.docx`](evidencias_abet/INSTRUMENTO_ABET_PROYECTO_CORTE_1_CONEXION_KINOVA.docx) | [`evidencias_abet/INSTRUMENTO_ABET_PROYECTO_CORTE_1_CONEXION_KINOVA.md`](evidencias_abet/INSTRUMENTO_ABET_PROYECTO_CORTE_1_CONEXION_KINOVA.md), representación auxiliar |
 
 ## Recursos disponibles
 
@@ -50,10 +52,15 @@ Para evitar versiones incompatibles, cada responsabilidad debe tener una sola fu
 - [Guía 01 — Red ROS 2, DDS y comunicación talker/listener](guias_laboratorio/rendered/GUIA_LAB_01_RED_ROS2_TALKER_LISTENER.pdf).
 - [Plantilla institucional para nuevas guías](guias_laboratorio/templates/Formato_Guias_de_Laboratorio.docx).
 
-### Evaluación y evidencias
+### Proyectos
+
+- [Proyecto del primer corte — Conexión segura con Kinova Gen3](proyectos_evaluables/PROYECTO_CORTE_1_CONEXION_KINOVA.md).
+- [Proyecto intermedio MoveIt 2 Delivery](proyectos_evaluables/PROYECTO_INTERMEDIO_MOVEIT2_DELIVERY.md).
+
+### Evidencias
 
 - [Formato de evidencia y calificación del Taller 01](evidencias_abet/PLANTILLA_EVIDENCIA_ABET_TALLER_01_ROS2_CLI.docx).
-- [Proyecto intermedio MoveIt 2 Delivery](proyectos_evaluables/PROYECTO_INTERMEDIO_MOVEIT2_DELIVERY.md).
+- [Instrumento ABET del Proyecto Corte 1 — Conexión con Kinova](evidencias_abet/INSTRUMENTO_ABET_PROYECTO_CORTE_1_CONEXION_KINOVA.docx).
 
 ## Flujo de actualización
 

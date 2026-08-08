@@ -7,28 +7,32 @@
 | Campo | Registro |
 |---|---|
 | Asignatura | ROBOT OPERATING SYSTEM - ROS |
+| Periodo | 2026-2 |
 | Corte / instrumento | Primer corte / Talleres y tareas |
 | Actividad | Taller 01 — CLI de ROS 2 |
 | Nombre completo |  |
 | Código / grupo |  |
 | Fecha de entrega |  |
+| Evaluador |  |
+| Versión del instrumento | 1.0 |
 | Enlace o ubicación de la entrega |  |
 | Commit evaluado, si aplica |  |
 
 ## 2. Uso del formato
 
 1. La persona participante registra las evidencias E1–E9.
-2. Quien evalúa marca **una sola casilla por criterio**, correspondiente al nivel más alto demostrado. El nivel es acumulativo: para marcarlo también deben cumplirse los niveles anteriores.
-3. En el consolidado final se copia el aporte indicado en la tabla rápida y se suman los cinco aportes. No se asignan puntajes intermedios.
+2. Quien evalúa marca **una sola banda de desempeño por criterio** y registra un valor de 0 a 500 dentro del intervalo correspondiente.
+3. Los niveles N3, N4 y N5 representan una progresión de dominio; N1 y N2 son bandas alternativas para evidencia insuficiente o parcial.
+4. Si falta una evidencia obligatoria, se marca N1 y se registra 0. Una exclusión autorizada o retiro oficial no se convierte en nota.
+5. Zubatronic/SGDE calcula el aporte ponderado de cada criterio. En una copia manual se usa `aporte = valor × peso / 100`.
 
-| Nivel | Valor fijo | Interpretación |
+| Nivel | Intervalo Zubatronic / valor guía | Interpretación |
 |---|---:|---|
-| N5 | 500 | Excelente: desempeño completo, preciso y reproducible. |
-| N4 | 450 | Bueno: desempeño correcto con omisiones menores. |
-| N3 | 350 | Aceptable: logra lo esencial con explicación parcial. |
-| N2 | 250 | Parcial: evidencia incompleta o errores importantes. |
-| N1 | 100 | Inicial: evidencia mínima, fragmentaria o no funcional. |
-| N0 | 0 | Sin evidencia verificable. |
+| N5 | 475–500 / guía 500 | Excelente: desempeño completo, preciso y reproducible. |
+| N4 | 400–474 / guía 450 | Bueno: desempeño correcto con omisiones menores. |
+| N3 | 300–399 / guía 350 | Aceptable: logra lo esencial con explicación parcial. Este es el umbral de logro. |
+| N2 | 150–299 / guía 250 | Parcial: evidencia incompleta o errores importantes. |
+| N1 | 0–149 / guía 100 | No cumple: evidencia mínima, fragmentaria o no funcional. Sin evidencia obligatoria se registra 0. |
 
 ## 3. Registro mínimo de evidencias
 
@@ -75,90 +79,85 @@ ________________________________________________________________________________
 
 ## 5. Selección del nivel alcanzado
 
-Marque con una **X** una sola casilla en cada criterio. Si no existe evidencia verificable, marque N0.
+Marque con una **X** una sola banda en cada criterio y escriba el valor exacto que se capturará en Zubatronic. Si no existe evidencia obligatoria verificable, marque N1 y registre 0.
 
 ### C1. Ejecución e introspección del grafo ROS 2 — peso 25%
 
-| Marque | Nivel | Evidencia observable acumulativa |
+| Marque | Nivel | Evidencia observable del nivel |
 |:---:|---|---|
-| ☐ | N5 — 500 | Además de N4, explica con precisión productores, consumidores y cambios del grafo; la ejecución es reproducible. |
-| ☐ | N4 — 450 | Además de N3, identifica correctamente tipos, relaciones y cambios del grafo, con omisiones menores. |
-| ☐ | N3 — 350 | Ejecuta el entorno e identifica nodos e interfaces principales mediante comandos de introspección. |
-| ☐ | N2 — 250 | Logra una ejecución parcial; faltan salidas o confunde algunas responsabilidades del grafo. |
-| ☐ | N1 — 100 | Presenta evidencia fragmentaria, no funcional o sin interpretación. |
-| ☐ | N0 — 0 | No presenta evidencia verificable para el criterio. |
+| ☐ | N5 — 475–500 | Además de N4, explica con precisión productores, consumidores y cambios del grafo; la ejecución es reproducible. |
+| ☐ | N4 — 400–474 | Además de N3, identifica correctamente tipos, relaciones y cambios del grafo, con omisiones menores. |
+| ☐ | N3 — 300–399 | Ejecuta el entorno e identifica nodos e interfaces principales mediante comandos de introspección. |
+| ☐ | N2 — 150–299 | Logra una ejecución parcial; faltan salidas o confunde algunas responsabilidades del grafo. |
+| ☐ | N1 — 0–149 | Presenta evidencia fragmentaria, no funcional o sin interpretación; incluye ausencia de evidencia obligatoria. |
 
-**Nivel C1 marcado:** ________
+**Nivel C1 marcado:** ________ &nbsp;&nbsp; **Valor Zubatronic (0–500):** ________
 
 ### C2. Operación e interpretación de tópicos y mensajes — peso 20%
 
-| Marque | Nivel | Evidencia observable acumulativa |
+| Marque | Nivel | Evidencia observable del nivel |
 |:---:|---|---|
-| ☐ | N5 — 500 | Además de N4, interpreta campos, unidades y efecto de `linear.x` y `angular.z` con precisión. |
-| ☐ | N4 — 450 | Además de N3, inspecciona el tópico y explica correctamente el flujo publicador/suscriptor. |
-| ☐ | N3 — 350 | Publica un `Twist`, produce el trazo solicitado y obtiene `topic echo`. |
-| ☐ | N2 — 250 | Obtiene movimiento o datos parciales, pero mantiene errores de YAML o de interpretación. |
-| ☐ | N1 — 100 | Presenta intentos sin una publicación funcional verificable. |
-| ☐ | N0 — 0 | No presenta evidencia verificable para el criterio. |
+| ☐ | N5 — 475–500 | Además de N4, interpreta campos, unidades y efecto de `linear.x` y `angular.z` con precisión. |
+| ☐ | N4 — 400–474 | Además de N3, inspecciona el tópico y explica correctamente el flujo publicador/suscriptor. |
+| ☐ | N3 — 300–399 | Publica un `Twist`, produce el trazo solicitado y obtiene `topic echo`. |
+| ☐ | N2 — 150–299 | Obtiene movimiento o datos parciales, pero mantiene errores de YAML o de interpretación. |
+| ☐ | N1 — 0–149 | Presenta intentos sin una publicación funcional verificable o no presenta la evidencia obligatoria. |
 
-**Nivel C2 marcado:** ________
+**Nivel C2 marcado:** ________ &nbsp;&nbsp; **Valor Zubatronic (0–500):** ________
 
 ### C3. Servicios, parámetros y rqt — peso 20%
 
-| Marque | Nivel | Evidencia observable acumulativa |
+| Marque | Nivel | Evidencia observable del nivel |
 |:---:|---|---|
-| ☐ | N5 — 500 | Además de N4, distingue con precisión solicitud–respuesta, configuración y herramienta gráfica. |
-| ☐ | N4 — 450 | Además de N3, identifica tipos y campos y explica el efecto de cada operación. |
-| ☐ | N3 — 350 | Ejecuta correctamente `/clear`, cambia `background_r` y usa rqt con `/turtle1/set_pen`. |
-| ☐ | N2 — 250 | Completa solamente una o dos operaciones o conserva errores de sintaxis. |
-| ☐ | N1 — 100 | Presenta intentos sin operaciones funcionales verificables. |
-| ☐ | N0 — 0 | No presenta evidencia verificable para el criterio. |
+| ☐ | N5 — 475–500 | Además de N4, distingue con precisión solicitud–respuesta, configuración y herramienta gráfica. |
+| ☐ | N4 — 400–474 | Además de N3, identifica tipos y campos y explica el efecto de cada operación. |
+| ☐ | N3 — 300–399 | Ejecuta correctamente `/clear`, cambia `background_r` y usa rqt con `/turtle1/set_pen`. |
+| ☐ | N2 — 150–299 | Completa solamente una o dos operaciones o conserva errores de sintaxis. |
+| ☐ | N1 — 0–149 | Presenta intentos sin operaciones funcionales verificables o no presenta la evidencia obligatoria. |
 
-**Nivel C3 marcado:** ________
+**Nivel C3 marcado:** ________ &nbsp;&nbsp; **Valor Zubatronic (0–500):** ________
 
 ### C4. Decisión arquitectónica para `burger_delivery` — peso 20%
 
-| Marque | Nivel | Evidencia observable acumulativa |
+| Marque | Nivel | Evidencia observable del nivel |
 |:---:|---|---|
-| ☐ | N5 — 500 | Además de N4, analiza correctamente una consecuencia de escoger la interfaz contraria. |
-| ☐ | N4 — 450 | Además de N3, identifica datos o contratos y justifica cada elección. |
-| ☐ | N3 — 350 | Propone dos tópicos y dos servicios pertinentes con sus participantes. |
-| ☐ | N2 — 250 | Presenta menos de cuatro casos válidos o confunde tópico y servicio. |
-| ☐ | N1 — 100 | Las propuestas son genéricas o no corresponden a la comunicación requerida. |
-| ☐ | N0 — 0 | No presenta evidencia verificable para el criterio. |
+| ☐ | N5 — 475–500 | Además de N4, analiza correctamente una consecuencia de escoger la interfaz contraria. |
+| ☐ | N4 — 400–474 | Además de N3, identifica datos o contratos y justifica cada elección. |
+| ☐ | N3 — 300–399 | Propone dos tópicos y dos servicios pertinentes con sus participantes. |
+| ☐ | N2 — 150–299 | Presenta menos de cuatro casos válidos o confunde tópico y servicio. |
+| ☐ | N1 — 0–149 | Las propuestas son genéricas, no corresponden a la comunicación requerida o no se presenta la evidencia obligatoria. |
 
-**Nivel C4 marcado:** ________
+**Nivel C4 marcado:** ________ &nbsp;&nbsp; **Valor Zubatronic (0–500):** ________
 
 ### C5. Evidencia reproducible y diagnóstico — peso 15%
 
-| Marque | Nivel | Evidencia observable acumulativa |
+| Marque | Nivel | Evidencia observable del nivel |
 |:---:|---|---|
-| ☐ | N5 — 500 | Además de N4, el diagnóstico conecta síntoma, causa, corrección y prueba posterior de forma técnica. |
-| ☐ | N4 — 450 | Además de N3, la evidencia es ordenada, atribuible y permite reproducir casi todos los resultados. |
-| ☐ | N3 — 350 | Las evidencias permiten verificar el funcionamiento general y documentan una dificultad real. |
-| ☐ | N2 — 250 | Hay capturas aisladas, registros incompletos o no se verifica la corrección. |
-| ☐ | N1 — 100 | La evidencia es fragmentaria, ilegible o no atribuible a la ejecución solicitada. |
-| ☐ | N0 — 0 | No presenta evidencia verificable para el criterio. |
+| ☐ | N5 — 475–500 | Además de N4, el diagnóstico conecta síntoma, causa, corrección y prueba posterior de forma técnica. |
+| ☐ | N4 — 400–474 | Además de N3, la evidencia es ordenada, atribuible y permite reproducir casi todos los resultados. |
+| ☐ | N3 — 300–399 | Las evidencias permiten verificar el funcionamiento general y documentan una dificultad real. |
+| ☐ | N2 — 150–299 | Hay capturas aisladas, registros incompletos o no se verifica la corrección. |
+| ☐ | N1 — 0–149 | La evidencia es fragmentaria, ilegible, no atribuible o está ausente. |
 
-**Nivel C5 marcado:** ________
+**Nivel C5 marcado:** ________ &nbsp;&nbsp; **Valor Zubatronic (0–500):** ________
 
-## 6. Tabla rápida de aportes
+## 6. Captura y cálculo
 
-Después de marcar cada nivel, copie en el consolidado el aporte correspondiente. Los valores ya incluyen el peso del criterio.
+Capture en Zubatronic el valor exacto de cada criterio. La plataforma calcula:
 
-| Criterio | Peso | N0 | N1 | N2 | N3 | N4 | N5 |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| C1 | 25% | 0 | 25 | 62,5 | 87,5 | 112,5 | 125 |
-| C2 | 20% | 0 | 20 | 50 | 70 | 90 | 100 |
-| C3 | 20% | 0 | 20 | 50 | 70 | 90 | 100 |
-| C4 | 20% | 0 | 20 | 50 | 70 | 90 | 100 |
-| C5 | 15% | 0 | 15 | 37,5 | 52,5 | 67,5 | 75 |
+```text
+Aporte del criterio = valor del criterio × peso / 100
+Nota del taller sobre 500 = suma de los cinco aportes
+Nota del taller sobre 5,0 = nota sobre 500 / 100
+```
+
+Los valores guía 500, 450, 350, 250 y 100 agilizan una valoración discreta, pero puede usarse cualquier entero dentro del intervalo demostrado. La ausencia de evidencia obligatoria se registra con 0 dentro de N1.
 
 ## 7. Consolidado final de calificación
 
-Copie únicamente los cinco aportes de la tabla rápida. En Word, use **Ctrl+A y F9** para actualizar automáticamente el total y su equivalente sobre 5,0.
+Zubatronic calcula este consolidado automáticamente. La tabla permite verificar la captura o registrar un respaldo manual; no depende de campos de fórmula de Word.
 
-| Criterio | Peso | Nivel marcado | Valor del nivel | Aporte según tabla rápida |
+| Criterio | Peso | Nivel marcado | Valor 0–500 | Aporte ponderado |
 |---|---:|:---:|---:|---:|
 | C1. Grafo ROS 2 | 25% |  |  |  |
 | C2. Tópicos y mensajes | 20% |  |  |  |
@@ -171,7 +170,8 @@ Copie únicamente los cinco aportes de la tabla rápida. En Word, use **Ctrl+A y
 |---|---|
 | Nota Taller 01 sobre 500 | __________ |
 | Nota Taller 01 sobre 5,0 = total ÷ 100 | __________ |
-| Nivel global | __________ |
+| Criterios en N3 o superior | __________ |
+| Criterios por debajo de N3 | __________ |
 | Observaciones |  |
 
 ## 8. Uso posterior en la nota del corte
@@ -186,7 +186,7 @@ T₁ = Σ(Nota de cada taller o tarea × su peso) / 100
 Nota Corte 1 = 0,28 T₁ + 0,42 L₁ + 0,30 E₁
 ```
 
-Este documento entrega directamente la **Nota Taller 01**. Esa nota pasa al consolidado de talleres y tareas del primer corte.
+Este documento entrega la **Nota Taller 01** y los resultados desagregados por criterio para su captura. La nota pasa al consolidado de talleres y tareas del primer corte; Zubatronic genera por separado los reportes RAE/SO.
 
 ## 9. Cierre
 
