@@ -1,5 +1,64 @@
 # Proyecto del primer corte — Conexión segura con Kinova Gen3
 
+> [!IMPORTANT]
+> ### ⚠️ Guía de Inicio: Repositorio Oficial de Equipo y Sincronización Upstream
+> Si actualmente tienes un clone previo en tu entorno local (`~/ros2_ws/src/burger_delivery`), **no debes trabajar directamente sobre ese clone ni en forks personales**. Sigue este procedimiento para conectarte al repositorio oficial asignado a tu equipo y enlazar el repositorio base del docente:
+> 
+> #### 1. Repositorios Oficiales por Equipo (Organización `umng-mecatronica-ros`):
+> | Equipo | Repositorio Oficial en GitHub | URL de Clonación |
+> | :---: | :--- | :--- |
+> | **Equipo 01** | [`burger-kinova-equipo-01`](https://github.com/umng-mecatronica-ros/burger-kinova-equipo-01) | `git clone https://github.com/umng-mecatronica-ros/burger-kinova-equipo-01.git burger_delivery` |
+> | **Equipo 02** | [`burger-kinova-equipo-02`](https://github.com/umng-mecatronica-ros/burger-kinova-equipo-02) | `git clone https://github.com/umng-mecatronica-ros/burger-kinova-equipo-02.git burger_delivery` |
+> | **Equipo 03** | [`burger-kinova-equipo-03`](https://github.com/umng-mecatronica-ros/burger-kinova-equipo-03) | `git clone https://github.com/umng-mecatronica-ros/burger-kinova-equipo-03.git burger_delivery` |
+> | **Equipo 04** | [`burger-kinova-equipo-04`](https://github.com/umng-mecatronica-ros/burger-kinova-equipo-04) | `git clone https://github.com/umng-mecatronica-ros/burger-kinova-equipo-04.git burger_delivery` |
+> | **Equipo 05** | [`burger-kinova-equipo-05`](https://github.com/umng-mecatronica-ros/burger-kinova-equipo-05) | `git clone https://github.com/umng-mecatronica-ros/burger-kinova-equipo-05.git burger_delivery` |
+> | **Equipo 06** | [`burger-kinova-equipo-06`](https://github.com/umng-mecatronica-ros/burger-kinova-equipo-06) | `git clone https://github.com/umng-mecatronica-ros/burger-kinova-equipo-06.git burger_delivery` |
+> | **Equipo 07** | [`burger-kinova-equipo-07`](https://github.com/umng-mecatronica-ros/burger-kinova-equipo-07) | `git clone https://github.com/umng-mecatronica-ros/burger-kinova-equipo-07.git burger_delivery` |
+> | **Equipo 08** | [`burger-kinova-equipo-08`](https://github.com/umng-mecatronica-ros/burger-kinova-equipo-08) | `git clone https://github.com/umng-mecatronica-ros/burger-kinova-equipo-08.git burger_delivery` |
+> | **Equipo 09** | [`burger-kinova-equipo-09`](https://github.com/umng-mecatronica-ros/burger-kinova-equipo-09) | `git clone https://github.com/umng-mecatronica-ros/burger-kinova-equipo-09.git burger_delivery` |
+> | **Equipo 10** | [`burger-kinova-equipo-10`](https://github.com/umng-mecatronica-ros/burger-kinova-equipo-10) | `git clone https://github.com/umng-mecatronica-ros/burger-kinova-equipo-10.git burger_delivery` |
+> 
+> #### 2. Clonación Inicial y Configuración de Remotos (`origin` y `upstream`):
+> ```bash
+> # 1. Ir a la carpeta src de tu workspace ROS 2
+> cd ~/ros2_ws/src
+> rm -rf burger_delivery   # Si tenías un clone previo sin cambios que conservar
+> 
+> # 2. Clonar el repositorio asignado a tu equipo (ejemplo con Equipo 01)
+> git clone https://github.com/umng-mecatronica-ros/burger-kinova-equipo-01.git burger_delivery
+> cd burger_delivery
+> 
+> # 3. Configurar tu identidad formal individual de Git (Obligatorio para ABET SO5)
+> git config --global user.name "Nombres Apellidos"
+> git config --global user.email "codigo.estudiante@unimilitar.edu.co"
+> 
+> # 4. Configurar el repositorio base del docente como upstream (OBLIGATORIO)
+> git remote add upstream https://github.com/roncanciovl/burger_delivery.git
+> 
+> # 5. Verificar que ambos remotos estén configurados
+> git remote -v
+> # Debe mostrar:
+> # origin    https://github.com/umng-mecatronica-ros/burger-kinova-equipo-XX.git (fetch y push)
+> # upstream  https://github.com/roncanciovl/burger_delivery.git (fetch y push)
+> ```
+> 
+> #### 3. 🔄 ¿Cómo descargar actualizaciones y correcciones del docente durante el semestre?
+> Cada vez que el docente publique mejoras, nuevas guías o correcciones en el repositorio base `burger_delivery`:
+> ```bash
+> # 1. Asegurarse de estar en la rama main
+> git checkout main
+> 
+> # 2. Descargar e integrar las actualizaciones del docente
+> git fetch upstream
+> git merge upstream/main --no-edit
+> 
+> # 3. Subir las actualizaciones al repositorio de tu equipo
+> git push origin main
+> ```
+> 
+> #### 4. Regla de Oro de Desarrollo en Equipo:
+> Prohibido hacer `push` directo a `main`. Todo avance se desarrolla en ramas individuales `feat/<apellido>-...` y se integra a `main` mediante **Pull Requests con revisión y aprobación técnica de un compañero de equipo** (Evidencia evaluable ABET SO5). Consulta la [Sección 15](#15-control-de-versiones-trabajo-colaborativo-y-entrega-oficial-abet-so5).
+
 ## 1. Descripción
 
 La persona participante debe diseñar e implementar un package ROS 2 llamado `burger_kinova_connection` que permita verificar, monitorear y utilizar de forma controlada la comunicación entre el proyecto `burger_delivery` y un manipulador Kinova Gen3 de 7 grados de libertad.
@@ -340,19 +399,77 @@ ros2 launch burger_kinova_connection kinova_connection.launch.py \
 | PA-09 | DDS distribuido | Driver en estación A y monitor en estación B | Descubrimiento, telemetría y diagnóstico funcionales entre estaciones |
 | PA-10 | Reproducibilidad | Seguir el README desde un workspace limpio | Otra persona puede compilar, lanzar y repetir las pruebas |
 
-## 15. Entregables
+## 15. Control de versiones, trabajo colaborativo y entrega oficial (ABET SO5)
 
-1. Package completo `burger_kinova_connection` dentro del repositorio `burger_delivery`.
+### 15.1. Política sobre repositorios y forks
+
+- **Prohibición de forks personales como repositorio de entrega:** Los forks creados en cuentas personales de estudiantes **no** serán evaluados. Un fork personal centraliza la administración en un único estudiante, genera asimetría en permisos, impide la protección institucional y compromete la trazabilidad de autoría exigida por los criterios de acreditación ABET.
+- **Repositorio oficial de equipo:** Todo el desarrollo se realiza en el **repositorio privado asignado al equipo en la organización oficial** (`https://github.com/umng-mecatronica-ros/burger-kinova-equipo-XX`).
+- **Gobernanza Institucional:** El repositorio del equipo es propiedad de la organización docente `umng-mecatronica-ros`, garantizando acceso a todos los integrantes en igualdad de condiciones y preservando el historial para auditorías académicas.
+- **Remoto upstream del docente:** Cada equipo debe mantener enlazado el repositorio del docente (`https://github.com/roncanciovl/burger_delivery.git`) bajo el nombre de remoto `upstream` para incorporar correcciones y mejoras durante el semestre.
+
+### 15.2. Configuración individual y trazabilidad
+
+Cada integrante del equipo debe trabajar exclusivamente desde su propia cuenta de GitHub y configurar su identidad en el entorno local antes de realizar cualquier commit:
+
+```bash
+git config --global user.name "Nombres Apellidos"
+git config --global user.email "codigo.estudiante@unimilitar.edu.co"
+```
+
+No se permite el uso de credenciales compartidas ni commits anónimos.
+
+### 15.3. Flujo de trabajo en Git (Git Flow de equipo y sincronización Upstream)
+
+1. **Ramas de funcionalidad individuales (`feature branches`):** Queda estrictamente prohibido realizar `push` directo sobre la rama `main`. Cada integrante debe crear ramas específicas para sus tareas:
+   - `feat/<apellido>-kinova-monitor`
+   - `feat/<apellido>-safe-trajectory-client`
+   - `feat/<apellido>-launch-and-params`
+   - `fix/<apellido>-diagnostics-qos`
+   - `docs/<apellido>-validacion-report`
+2. **Pull Requests (PR) obligatorios:** La integración a `main` se realiza únicamente mediante Pull Requests descriptivos que expliquen:
+   - Funcionalidad agregada o corregida.
+   - Comandos de prueba ejecutados para verificar el cambio.
+   - Interfaces o parámetros modificados.
+3. **Revisión cruzada por pares (Peer Code Review):** Cada PR debe ser revisado y aprobado por al menos otro integrante del equipo antes del *merge*. Los comentarios y sugerencias técnicas en el PR constituyen evidencia formal del resultado de aprendizaje **ABET SO5 (Trabajo en equipo)**.
+4. **Sincronización periódica con el docente (`upstream`):**
+   ```bash
+   git checkout main
+   git fetch upstream
+   git merge upstream/main --no-edit
+   git push origin main
+   ```
+
+### 15.4. Protocolo de entrega y congelamiento de versión
+
+En la fecha y hora límite de entrega, el equipo debe consolidar su trabajo en `main` y registrar formalmente:
+
+1. **URL del repositorio oficial del equipo en la organización `umng-mecatronica-ros`.**
+2. **Tag de versión de entrega:**
+   ```bash
+   git tag -a v1.0.0-corte1 -m "Entrega oficial Proyecto Primer Corte - Conexion Kinova"
+   git push origin v1.0.0-corte1
+   ```
+3. **Commit SHA inmutable:**
+   ```bash
+   git rev-parse HEAD
+   ```
+4. **Registro de entrega:** En la plataforma de evaluación se reportará la URL, el Tag y el SHA exacto. Cualquier commit posterior al SHA registrado no formará parte de la evaluación.
+
+## 16. Entregables
+
+1. Package completo `burger_kinova_connection` dentro del repositorio `burger_delivery` del equipo.
 2. `README.md` del package con instalación, arquitectura, interfaces, parámetros y comandos de ejecución.
 3. `config/kinova_connection.yaml` sin credenciales y con movimiento deshabilitado por defecto.
 4. `docs/VALIDACION_CORTE_1.md` con resultados de PA-01 a PA-10, comandos utilizados, fecha, entorno y observaciones.
 5. Diagrama del grafo ROS 2 y distribución entre estaciones.
 6. Registro breve de frecuencia, pérdida y recuperación de `/joint_states`.
-7. Demostración funcional en hardware simulado y en el Kinova real.
+7. Historial de Pull Requests y revisiones de código en GitHub (Evidencia ABET SO5).
+8. Demostración funcional en hardware simulado y en el Kinova real.
 
 Los resultados deben poder verificarse mediante texto, salidas de comandos y registros. Las capturas pueden complementar la evidencia, pero no reemplazan una descripción reproducible.
 
-## 16. Contenido mínimo del README del package
+## 17. Contenido mínimo del README del package
 
 El README entregado debe permitir que una persona que no desarrolló el proyecto pueda:
 
@@ -365,11 +482,11 @@ El README entregado debe permitir que una persona que no desarrolló el proyecto
 7. Ejecutar de manera segura la prueba articular.
 8. Diagnosticar una falla de red, controlador o action server.
 
-## 17. Definición de terminado
+## 18. Definición de terminado
 
 El proyecto se considera técnicamente completo cuando:
 
-- Existe un package instalable y no una colección de scripts sueltos.
+- Existe un package instalable y no una colección de scripts sueltos en el repositorio del equipo.
 - El monitor distingue correctamente conexión saludable, degradada y perdida.
 - La información de las siete articulaciones es verificable.
 - El estado de los controladores se consulta mediante ROS 2.
@@ -377,10 +494,14 @@ El proyecto se considera técnicamente completo cuando:
 - La trayectoria aprobada se ejecuta y reporta su resultado.
 - El cliente funciona desde una segunda estación mediante DDS.
 - Las diez pruebas de aceptación están documentadas y son reproducibles.
+- Se cuenta con trazabilidad completa de ramas, PRs aprobados y commit SHA de entrega.
 
-## 18. Referencias del repositorio
+## 19. Referencias del repositorio
 
+- [Guía de configuración de repositorios y arquitectura multi-remoto](./CONFIGURACION_REPOSITORIOS_EQUIPOS.md).
 - [Syllabus oficial de la asignatura](../syllabus/Syllabus_Robotica_ROS2_Experimental.docx).
 - [Instalación y pruebas del stack Kortex](../../ros2_setup/INSTALACION_KORTEX.md).
 - [Diagnóstico de red ROS 2](../../network_setup/DIAGNOSTICO_RED.md).
 - [Configuración de red ROS 2](../../network_setup/ROS2_NETWORK_CONFIG.md).
+
+

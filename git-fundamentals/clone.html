@@ -89,7 +89,7 @@
   <!-- GitHub Repo Contents -->
   <g id="remote-repo">
     <rect x="580" y="100" width="250" height="240" rx="8" fill="#0d1117" stroke="#58a6ff" stroke-width="1.5"/>
-    <text x="705" y="130" text-anchor="middle" font-family="Inter" font-size="13" fill="#58a6ff" font-weight="600">Repo: "mi-proyecto"</text>
+    <text x="705" y="130" text-anchor="middle" font-family="Inter" font-size="12" fill="#58a6ff" font-weight="600">Repo: "burger-delivery-equipo-01"</text>
     
     <!-- Commits in Remote -->
     <circle cx="650" cy="190" r="15" fill="#161b22" stroke="#58a6ff" stroke-width="1.5"/>
@@ -109,8 +109,8 @@
 
   <!-- Terminal / Command -->
   <g id="command-clone" opacity="0">
-    <rect x="70" y="100" width="390" height="40" rx="6" fill="#0d1117" stroke="#30363d"/>
-    <text x="90" y="125" font-family="Fira Code" font-size="12" fill="#58a6ff">$ git clone https://github.com/user/repo.git</text>
+    <rect x="70" y="100" width="410" height="40" rx="6" fill="#0d1117" stroke="#30363d"/>
+    <text x="85" y="125" font-family="Fira Code" font-size="11" fill="#58a6ff">$ git clone https://github.com/org/burger-delivery-equipo-01.git</text>
   </g>
 
   <!-- Downloading Animation -->
@@ -118,13 +118,13 @@
     <path d="M 580 250 L 150 250" stroke="#58a6ff" stroke-width="2" stroke-dasharray="10 5" marker-end="url(#arr-clone)">
         <animate attributeName="stroke-dashoffset" from="100" to="0" dur="2s" repeatCount="indefinite" />
     </path>
-    <text x="365" y="240" text-anchor="middle" font-family="Inter" font-size="11" fill="#58a6ff">Copiando .git/ y archivos...</text>
+    <text x="365" y="240" text-anchor="middle" font-family="Inter" font-size="11" fill="#58a6ff">Copiando .git/ y paquetes ROS 2...</text>
   </g>
 
   <!-- Local Repo Created -->
   <g id="local-repo" opacity="0">
     <rect x="70" y="160" width="390" height="180" rx="8" fill="#0d1117" stroke="#3fb950" stroke-width="1.5"/>
-    <text x="265" y="185" text-anchor="middle" font-family="Inter" font-size="13" fill="#3fb950" font-weight="600">Carpeta: "mi-proyecto"</text>
+    <text x="265" y="185" text-anchor="middle" font-family="Inter" font-size="12.5" fill="#3fb950" font-weight="600">~/ros2_ws/src/burger_delivery</text>
     
     <!-- Commits in Local (Same as remote) -->
     <circle cx="150" cy="240" r="15" fill="#161b22" stroke="#3fb950" stroke-width="1.5"/>
@@ -150,32 +150,45 @@
 
 <div class="info-panel" id="info-box">
   <h3 id="info-title">1. Repositorio en GitHub</h3>
-  <p id="info-body">Todo comienza con un repositorio existente en la nube (Remote). Este repositorio contiene todos los archivos, pero lo más importante: todo el <b>historial de cambios</b> (commits).</p>
+  <p id="info-body">Todo comienza con el repositorio compartido de tu equipo en GitHub. Este repositorio contiene todo el historial de cambios (commits) y la base del proyecto.</p>
+</div>
+
+<!-- CALLOUT ORGANIZATIONS -->
+<div class="info-panel" style="border-left: 4px solid var(--clone-color); background: rgba(88,166,255,0.05); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+  <div>
+    <h4 style="color:var(--clone-color); font-size:14px; margin-bottom:4px;">📥 Clonación del Repositorio de Equipo</h4>
+    <p style="font-size:13px; color:var(--muted); margin:0;">
+      Clona siempre dentro de <code class="cmd">~/ros2_ws/src/</code> y configura tu <code class="cmd">user.name</code> y <code class="cmd">user.email</code> antes del primer commit.
+    </p>
+  </div>
+  <a href="equipos_organizaciones_abet.html#generator-sec" style="color:var(--clone-color); font-size:13px; font-weight:600; text-decoration:none; white-space:nowrap;">
+    Generador de Comandos ➔
+  </a>
 </div>
 
 <script>
 const steps = [
   {
-    title: "1. Repositorio en GitHub",
-    body: "Todo comienza con un repositorio existente en la nube (Remote). Este repositorio contiene todos los archivos y todo el <b>historial de cambios</b> (commits). Para trabajar en él, necesitas traerlo a tu máquina.",
+    title: "1. Repositorio de Equipo en GitHub",
+    body: "El repositorio de tu equipo (<span class='cmd'>burger-delivery-equipo-XX</span>) vive en la organización de GitHub. Contiene todos los paquetes ROS 2 y todo el <b>historial de commits</b>.",
     show: ["remote-repo"],
     hide: ["command-clone", "download-flow", "local-repo"]
   },
   {
     title: "2. Ejecutar git clone",
-    body: "En tu terminal local, ejecutas <span class='cmd'>git clone &lt;url&gt;</span>. Este comando le dice a Git: 'Conéctate a esta dirección y descarga todo lo que haya allí'.",
+    body: "En tu terminal dentro de <span class='cmd'>~/ros2_ws/src/</span>, ejecutas <span class='cmd'>git clone &lt;url-del-equipo&gt;</span> para enlazar tu entorno con el repositorio oficial.",
     show: ["remote-repo", "command-clone"],
     hide: ["download-flow", "local-repo"]
   },
   {
-    title: "3. Descarga de datos",
-    body: "Git no solo descarga la última versión de los archivos. Descarga <b>toda la base de datos</b> del proyecto (la carpeta <span class='cmd'>.git</span>), incluyendo cada rama y cada commit hecho en el pasado.",
+    title: "3. Descarga de datos e historial",
+    body: "Git descarga todos los archivos y la base de datos completa (<span class='cmd'>.git</span>), incluyendo tags base y ramas compartidas.",
     show: ["remote-repo", "command-clone", "download-flow"],
     hide: ["local-repo"]
   },
   {
-    title: "4. Copia Local completa",
-    body: "Al finalizar, tienes una carpeta local idéntica al remoto. Git configura automáticamente un enlace llamado <span class='cmd'>origin</span> que apunta a GitHub, para que puedas hacer <span class='cmd'>push</span> y <span class='cmd'>pull</span> fácilmente.",
+    title: "4. Copia Local en tu Workspace ROS 2",
+    body: "Al finalizar, tienes tu carpeta local configurada con el remoto <span class='cmd'>origin</span> apuntando a tu equipo. ¡Listo para crear tu rama individual con <span class='cmd'>git checkout -b feat/...</span>!",
     show: ["remote-repo", "command-clone", "local-repo"],
     hide: ["download-flow"]
   }

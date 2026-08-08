@@ -52,10 +52,12 @@ Para evitar versiones incompatibles, cada responsabilidad debe tener una sola fu
 - [Guía 01 — Red ROS 2, DDS y comunicación talker/listener](guias_laboratorio/rendered/GUIA_LAB_01_RED_ROS2_TALKER_LISTENER.pdf).
 - [Plantilla institucional para nuevas guías](guias_laboratorio/templates/Formato_Guias_de_Laboratorio.docx).
 
-### Proyectos
+### Proyectos y Control de Versiones
 
 - [Proyecto del primer corte — Conexión segura con Kinova Gen3](proyectos_evaluables/PROYECTO_CORTE_1_CONEXION_KINOVA.md).
-- [Proyecto intermedio MoveIt 2 Delivery](proyectos_evaluables/PROYECTO_INTERMEDIO_MOVEIT2_DELIVERY.md).
+- [Guía de configuración de repositorios por equipo y arquitectura multi-remoto](proyectos_evaluables/CONFIGURACION_REPOSITORIOS_EQUIPOS.md).
+- [⭐ Guía Interactiva GitHub Organizations, Trabajo en Equipo y ABET](../git-fundamentals/equipos_organizaciones_abet.html): repositorios privados de equipo desde template, ramas individuales `feat/...`, Rulesets y entrega por Commit SHA.
+
 
 ### Evidencias
 

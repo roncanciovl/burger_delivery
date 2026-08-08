@@ -178,11 +178,46 @@
   <header>
     <div class="logo">$ git init fundamentos</div>
     <h1>Git & GitHub<br/>Fundamentos Visuales</h1>
-    <p class="subtitle">Animaciones interactivas para entender los conceptos clave de control de versiones y colaboración en GitHub.</p>
+    <p class="subtitle">Animaciones interactivas y guías prácticas para dominar el control de versiones, trabajo colaborativo en equipo y acreditación ABET.</p>
   </header>
 
-  <div class="grid">
+  <!-- SECCIÓN 1: FLUJO ACADÉMICO RECOMENDADO -->
+  <div style="max-width:1100px; margin:40px auto 0; padding:0 40px;">
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+      <span style="font-size:20px;">🎓</span>
+      <h2 style="font-size:18px; font-weight:800; color:var(--green); text-transform:uppercase; letter-spacing:1px;">1. Arquitectura Recomendada del Curso & ABET</h2>
+    </div>
+    <p style="font-size:14px; color:var(--muted);">El flujo oficial para desarrollo en equipo con repositorios privados, ramas individuales y entrega inmutable.</p>
+  </div>
 
+  <div class="grid" style="padding-top:20px; padding-bottom:30px;">
+    <a class="card" href="equipos_organizaciones_abet.html" data-color="green" style="grid-column: 1 / -1; border: 2px solid rgba(63,185,80,0.4); background: linear-gradient(180deg, rgba(63,185,80,0.06) 0%, var(--surface) 100%);">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+        <div style="display:flex; align-items:center; gap:16px;">
+          <div class="card-icon" style="background:rgba(63,185,80,0.2);">🏢</div>
+          <div>
+            <div class="card-title" style="font-size:24px;">GitHub Organizations, Trabajo en Equipo & Evidencia ABET</div>
+            <div style="font-size:13px; color:var(--green); font-weight:600; margin-top:2px;">⭐ GUÍA NORMATIVA DEL CURSO (FLUX NATIVO & SOSTENIBLE)</div>
+          </div>
+        </div>
+        <span class="card-tag">Organizations → Template Repos → Rulesets → SHA</span>
+      </div>
+      <p class="card-desc" style="font-size:14.5px; margin-top:4px;">
+        Aprende por qué usamos un <strong>repositorio privado compartido por equipo</strong> en una Organización de GitHub en lugar de forks personales. Incluye la convención de ramas individuales (<code style="color:var(--green)">feat/estudiante-apellido-modulo</code>), reglas de protección de rama (<strong>Rulesets</strong>), congelamiento de entrega con <strong>Commit SHA</strong> (<code style="color:var(--green)">git rev-parse HEAD</code>) y generador interactivo de comandos.
+      </p>
+    </a>
+  </div>
+
+  <!-- SECCIÓN 2: FUNDAMENTOS INDIVIDUALES -->
+  <div style="max-width:1100px; margin:20px auto 0; padding:0 40px;">
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+      <span style="font-size:20px;">💻</span>
+      <h2 style="font-size:18px; font-weight:800; color:var(--accent); text-transform:uppercase; letter-spacing:1px;">2. Fundamentos de Trabajo Individual</h2>
+    </div>
+    <p style="font-size:14px; color:var(--muted);">Conceptos clave sobre el flujo de trabajo en tu máquina local y ramas de desarrollo.</p>
+  </div>
+
+  <div class="grid" style="padding-top:20px; padding-bottom:30px;">
     <a class="card" href="local_remoto.html" data-color="red">
       <div class="card-icon">🔄</div>
       <div class="card-title">Local vs Remoto</div>
@@ -193,63 +228,77 @@
     <a class="card" href="clone.html" data-color="blue">
       <div class="card-icon">📥</div>
       <div class="card-title">Git Clone</div>
-      <p class="card-desc">Crea una copia local exacta de un repositorio remoto, incluyendo todo su historial y configuración.</p>
+      <p class="card-desc">Crea una copia local exacta del repositorio de tu equipo en <code style="color:var(--accent)">~/ros2_ws/src/</code> con todo su historial.</p>
       <span class="card-tag">git clone &lt;url&gt;</span>
-    </a>
-
-    <a class="card" href="usuarios.html" data-color="blue">
-      <div class="card-icon">👥</div>
-      <div class="card-title">Usuarios & Roles</div>
-      <p class="card-desc">Descubre los diferentes roles en un repositorio: owner, collaborator, contributor y cómo interactúan.</p>
-      <span class="card-tag">owner / collaborator / contributor</span>
     </a>
 
     <a class="card" href="branches.html" data-color="green">
       <div class="card-icon">🌿</div>
-      <div class="card-title">Branches</div>
-      <p class="card-desc">Aprende cómo las ramas permiten desarrollar funcionalidades de forma paralela sin afectar la rama principal.</p>
-      <span class="card-tag">git branch / checkout</span>
+      <div class="card-title">Branches (Ramas)</div>
+      <p class="card-desc">Desarrolla módulos en paralelo usando ramas individuales (<code style="color:var(--green)">feat/...</code>) sin alterar la rama <code style="color:var(--green)">main</code>.</p>
+      <span class="card-tag">git checkout -b feat/...</span>
+    </a>
+  </div>
+
+  <!-- SECCIÓN 3: COLABORACIÓN & PULL REQUESTS -->
+  <div style="max-width:1100px; margin:20px auto 0; padding:0 40px;">
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+      <span style="font-size:20px;">👥</span>
+      <h2 style="font-size:18px; font-weight:800; color:var(--purple); text-transform:uppercase; letter-spacing:1px;">3. Colaboración, Permisos & Pull Requests</h2>
+    </div>
+    <p style="font-size:14px; color:var(--muted);">Gobernanza de repositorios, revisión de código por pares y tipos de contribución.</p>
+  </div>
+
+  <div class="grid" style="padding-top:20px; padding-bottom:30px;">
+    <a class="card" href="usuarios.html" data-color="blue">
+      <div class="card-icon">👥</div>
+      <div class="card-title">Usuarios & Roles</div>
+      <p class="card-desc">Descubre los roles en Git: Owner (Organización), Collaborator (Equipo) y Contributor externo.</p>
+      <span class="card-tag">owner / collaborator / contributor</span>
     </a>
 
     <a class="card" href="forks.html" data-color="orange">
       <div class="card-icon">🍴</div>
-      <div class="card-title">Forks</div>
-      <p class="card-desc">Entiende qué es un fork: una copia independiente de un repositorio que te permite experimentar libremente.</p>
-      <span class="card-tag">fork → clone → push</span>
+      <div class="card-title">Forks vs Repos de Equipo</div>
+      <p class="card-desc">Aprende cuándo usar un Fork (contribución Open Source) y por qué en equipos se usa un repo compartido.</p>
+      <span class="card-tag">fork vs shared repo</span>
     </a>
 
     <a class="card" href="pull_requests.html" data-color="purple">
       <div class="card-icon">🔀</div>
-      <div class="card-title">Pull Requests</div>
-      <p class="card-desc">Visualiza el ciclo completo de un PR: desde abrir la solicitud hasta el merge final en la rama principal.</p>
-      <span class="card-tag">PR → review → merge</span>
+      <div class="card-title">Pull Requests & Reviews</div>
+      <p class="card-desc">Visualiza el ciclo completo de un PR: revisión por pares (Peer Review), validación de CI y merge a <code style="color:var(--purple)">main</code>.</p>
+      <span class="card-tag">PR → peer review → merge</span>
     </a>
+  </div>
 
-    <a class="card" href="github_classroom.html" data-color="green">
-      <div class="card-icon">🎓</div>
-      <div class="card-title">GitHub Classroom & ABET</div>
-      <p class="card-desc">Flujo de trabajo en equipo: repositorios privados compartidos, ramas por estudiante, Rulesets de protección y SHA de entrega.</p>
-      <span class="card-tag">Classroom → Branches → Rulesets → SHA</span>
-    </a>
+  <!-- SECCIÓN 4: ECOSISTEMAS & WORKSPACES -->
+  <div style="max-width:1100px; margin:20px auto 0; padding:0 40px;">
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+      <span style="font-size:20px;">🏢</span>
+      <h2 style="font-size:18px; font-weight:800; color:var(--orange); text-transform:uppercase; letter-spacing:1px;">4. Ecosistemas & Conceptos de Workspace</h2>
+    </div>
+    <p style="font-size:14px; color:var(--muted);">Diferencias estructurales entre plataformas empresariales y entornos de desarrollo en robótica.</p>
+  </div>
 
+  <div class="grid" style="padding-top:20px; padding-bottom:50px;">
     <a class="card" href="bitbucket_atlassian.html" data-color="cyan">
       <div class="card-icon">🏢</div>
-      <div class="card-title">GitHub, Bitbucket & Atlassian</div>
-      <p class="card-desc">Explora el ecosistema Atlassian (Jira, Confluence), la estructura jerárquica de Workspaces y repositorios en Bitbucket.</p>
+      <div class="card-title">Bitbucket & Atlassian</div>
+      <p class="card-desc">Explora el ecosistema Atlassian (Jira, Confluence) y la jerarquía Workspace ➔ Project ➔ Repo.</p>
       <span class="card-tag">Workspace → Project → Repo</span>
     </a>
 
     <a class="card" href="workspaces_conceptos.html" data-color="purple">
       <div class="card-icon">🪟</div>
       <div class="card-title">¿Qué es un Workspace?</div>
-      <p class="card-desc">Desmitifica el término: descubre la diferencia entre Folder vs Multi-root en VS Code, Workspaces en Bitbucket y ros2_ws en ROS 2.</p>
+      <p class="card-desc">Desmitifica el término: compara VS Code (Folder vs Multi-root), Bitbucket y el <code style="color:var(--purple)">ros2_ws</code> en ROS 2.</p>
       <span class="card-tag">VS Code vs Bitbucket vs ROS 2</span>
     </a>
-
   </div>
 
   <footer>
-    Animaciones SVG educativas — <code>git-fundamentals/</code>
+    Git & GitHub Fundamentos Visuales — Proyecto <code>burger_delivery</code> • ROS 2 Jazzy
   </footer>
 
 </body>

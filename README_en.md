@@ -146,6 +146,10 @@ burger_delivery/
 - [**MoveIt 2 & Delivery Project Spec**](education/proyectos_evaluables/PROYECTO_INTERMEDIO_MOVEIT2_DELIVERY.md)
 - [**SuperStudent Engineering Methodology**](education/metodologias/SKILL_SUPERSTUDENT.md)
 
+### 🐙 7. Version Control & Teamwork (Git Fundamentals)
+- [⭐ **Git & GitHub Fundamentals Portal**](git-fundamentals/index.html) *(Interactive SVG animations)*
+- [🏢 **GitHub Organizations, Teamwork & ABET Evidence Guide**](git-fundamentals/equipos_organizaciones_abet.html) *(Template-based private team repositories, individual `feat/...` branches, Rulesets, and immutable SHA submissions)*
+
 ---
 
 ## ⚙️ Launch Modes (Dynamic TF)

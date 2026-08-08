@@ -56,14 +56,14 @@
 
 <div class="hero">
   <h1>🌿 Git Branches</h1>
-  <p>Las ramas permiten trabajar en paralelo sin afectar el código principal. Haz clic en los pasos para ver la animación.</p>
+  <p>Las ramas permiten que cada integrante del equipo desarrolle módulos en paralelo sin alterar la rama principal <code style="color:var(--green)">main</code>.</p>
 </div>
 
 <div class="controls">
-  <button class="btn active" id="btn-0" onclick="goStep(0)">1. main inicial</button>
-  <button class="btn" id="btn-1" onclick="goStep(1)">2. git branch feature</button>
-  <button class="btn" id="btn-2" onclick="goStep(2)">3. commits en feature</button>
-  <button class="btn" id="btn-3" onclick="goStep(3)">4. git merge</button>
+  <button class="btn active" id="btn-0" onclick="goStep(0)">1. main base</button>
+  <button class="btn" id="btn-1" onclick="goStep(1)">2. git checkout -b feat/...</button>
+  <button class="btn" id="btn-2" onclick="goStep(2)">3. commits en la rama</button>
+  <button class="btn" id="btn-3" onclick="goStep(3)">4. PR & Merge a main</button>
 </div>
 
 <div class="stage">
@@ -94,7 +94,7 @@
 
     <!-- ── BRANCH LABEL ── -->
     <text id="lbl-main" x="30" y="175" font-family="Fira Code" font-size="13" fill="#3fb950">main</text>
-    <text id="lbl-feat" x="30" y="265" font-family="Fira Code" font-size="13" fill="#58a6ff" opacity="0">feature/login</text>
+    <text id="lbl-feat" x="30" y="265" font-family="Fira Code" font-size="12" fill="#58a6ff" opacity="0">feat/carlos-monitor</text>
 
     <!-- MAIN LINE -->
     <line id="main-line" x1="100" y1="170" x2="760" y2="170" stroke="#3fb950" stroke-width="2" stroke-dasharray="4 3" opacity="0.3"/>
@@ -148,8 +148,8 @@
 
     <!-- Step labels -->
     <g id="step-label">
-      <rect x="300" y="10" width="260" height="36" rx="8" fill="rgba(63,185,80,0.1)" stroke="#3fb950" stroke-width="1"/>
-      <text id="step-text" x="430" y="33" text-anchor="middle" font-family="Inter" font-size="13" fill="#3fb950">main: 3 commits, sin branches aún</text>
+      <rect x="270" y="10" width="320" height="36" rx="8" fill="rgba(63,185,80,0.1)" stroke="#3fb950" stroke-width="1"/>
+      <text id="step-text" x="430" y="33" text-anchor="middle" font-family="Inter" font-size="13" fill="#3fb950">main: 3 commits base del proyecto</text>
     </g>
 
     <!-- Legend -->
@@ -157,45 +157,58 @@
       <circle cx="8" cy="8" r="7" fill="#161b22" stroke="#3fb950" stroke-width="2"/>
       <text x="22" y="13" font-family="Inter" font-size="12" fill="#8b949e">commit main</text>
       <circle cx="118" cy="8" r="7" fill="#161b22" stroke="#58a6ff" stroke-width="2"/>
-      <text x="132" y="13" font-family="Inter" font-size="12" fill="#8b949e">commit feature</text>
-      <circle cx="248" cy="8" r="7" fill="#1c1025" stroke="#bc8cff" stroke-width="2"/>
-      <text x="262" y="13" font-family="Inter" font-size="12" fill="#8b949e">merge commit</text>
+      <text x="132" y="13" font-family="Inter" font-size="12" fill="#8b949e">commit individual</text>
+      <circle cx="258" cy="8" r="7" fill="#1c1025" stroke="#bc8cff" stroke-width="2"/>
+      <text x="272" y="13" font-family="Inter" font-size="12" fill="#8b949e">merge / PR integrado</text>
     </g>
   </svg>
 </div>
 
 <div class="info-panel" id="info-box">
   <h3 id="info-title">📌 Estado inicial — rama main</h3>
-  <p id="info-body">La rama <span class="cmd">main</span> tiene 3 commits (C1 → C2 → C3). El puntero <span class="cmd">HEAD</span> apunta al último commit. Todos los cambios son lineales y directos.</p>
+  <p id="info-body">La rama <span class="cmd">main</span> contiene la versión base del proyecto. En la metodología del curso, <strong>main está protegida por Rulesets</strong>: nadie hace push directo a ella.</p>
+</div>
+
+<!-- CALLOUT ORGANIZATIONS / ABET -->
+<div class="info-panel" style="border-left: 4px solid var(--green); background: rgba(63,185,80,0.05); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+  <div>
+    <h4 style="color:var(--green); font-size:14px; margin-bottom:4px;">🏢 Convención de Ramas para Trabajo en Equipo</h4>
+    <p style="font-size:13px; color:var(--muted); margin:0;">
+      Usa la estructura estándar: <code class="cmd">feat/estudiante-apellido-modulo</code> (ej. <code class="cmd">feat/carlos-gomez-monitor</code>).
+    </p>
+  </div>
+  <a href="equipos_organizaciones_abet.html#flow-sec" style="color:var(--green); font-size:13px; font-weight:600; text-decoration:none; white-space:nowrap;">
+    Ver Guía GitHub Organizations & Rulesets ➔
+  </a>
 </div>
 
 <script>
 const steps = [
   {
-    label: "main: 3 commits, sin branches aún",
-    title: "📌 Estado inicial — rama main",
-    body: `La rama <span class="cmd">main</span> tiene 3 commits (C1 → C2 → C3). El puntero <span class="cmd">HEAD</span> apunta al último commit. Todos los cambios son lineales.`,
+    label: "main: 3 commits base del proyecto",
+    title: "📌 Estado inicial — rama main protegida",
+    body: `La rama <span class="cmd">main</span> contiene el código base integrado. El puntero <span class="cmd">HEAD</span> apunta al último commit. <strong>Regla del curso:</strong> Queda prohibido hacer push directo a main.`,
     show: [], hide: ["branch-curve","c-f1","c-f2","a-f1f2","merge-curve","c-merge","lbl-feat","tag-head","head-line"],
     headX: 370, headY: 130, headStroke: "#3fb950"
   },
   {
-    label: "git checkout -b feature/login",
-    title: "🌿 Crear rama — git checkout -b feature/login",
-    body: `<span class="cmd">git checkout -b feature/login</span> crea una nueva rama a partir del commit actual y mueve <span class="cmd">HEAD</span> a ella. La rama <span class="cmd">main</span> queda congelada en C3.`,
+    label: "git checkout -b feat/carlos-monitor",
+    title: "🌿 Crear rama individual — git checkout -b feat/estudiante-modulo",
+    body: `<span class="cmd">git checkout -b feat/carlos-monitor</span> crea la rama de trabajo individual a partir de <span class="cmd">main</span>. Cada estudiante desarrolla su módulo de forma aislada sin riesgo de romper el trabajo de sus compañeros.`,
     show: ["branch-curve","lbl-feat"], hide: ["c-f1","c-f2","a-f1f2","merge-curve","c-merge"],
     headX: 450, headY: 295, headStroke: "#58a6ff"
   },
   {
-    label: "commits F1, F2 en feature/login",
-    title: "💾 Commits en la rama feature",
-    body: `Los commits <span class="cmd">F1</span> y <span class="cmd">F2</span> solo existen en la rama <span class="cmd">feature/login</span>. La rama <span class="cmd">main</span> no los ve. Puedes hacer todos los experimentos que quieras sin riesgo.`,
+    label: "commits F1, F2 en la rama individual",
+    title: "💾 Commits en la rama del estudiante",
+    body: `Los commits <span class="cmd">F1</span> y <span class="cmd">F2</span> solo existen en <span class="cmd">feat/carlos-monitor</span>. Puedes compilar con colcon, probar y ajustar tus nodos ROS 2 con total libertad.`,
     show: ["branch-curve","lbl-feat","c-f1","c-f2","a-f1f2"], hide: ["merge-curve","c-merge"],
     headX: 610, headY: 295, headStroke: "#58a6ff"
   },
   {
-    label: "git merge feature/login → main",
-    title: "🔀 Merge — unir ramas",
-    body: `<span class="cmd">git checkout main && git merge feature/login</span> crea un commit de merge <span class="cmd">M</span> que une ambas historias. Ahora <span class="cmd">main</span> contiene todos los cambios de la feature.`,
+    label: "Pull Request con Peer Review → main",
+    title: "🔀 Integración mediante Pull Request aprobado",
+    body: `El estudiante sube su rama (<span class="cmd">git push origin feat/carlos-monitor</span>) y abre un <strong>Pull Request</strong>. Tras la revisión cruzada de un compañero y pasar el CI, se realiza el <strong>merge a main</strong>.`,
     show: ["branch-curve","lbl-feat","c-f1","c-f2","a-f1f2","merge-curve","c-merge"], hide: [],
     headX: 700, headY: 130, headStroke: "#bc8cff"
   }

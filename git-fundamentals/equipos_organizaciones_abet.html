@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GitHub Organizations & Trabajo en Equipo — Guía Visual y Flujo ABET</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface-hover: #1f242c;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --purple: #bc8cff;
+      --orange: #f0883e;
+      --yellow: #d29922;
+      --red: #f85149;
+      --cyan: #39c5bb;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --org-blue: #0969da;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      padding-bottom: 60px;
+    }
+
+    /* Navigation */
+    nav {
+      padding: 16px 32px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(13, 17, 23, 0.95);
+      backdrop-filter: blur(8px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    nav a { color: var(--muted); text-decoration: none; font-size: 14px; transition: color 0.2s; }
+    nav a:hover { color: var(--text); }
+    .nav-sep { color: var(--border); }
+    .nav-current { color: var(--green); font-weight: 600; }
+
+    /* Header / Hero */
+    header {
+      text-align: center;
+      padding: 50px 20px 30px;
+      background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(63, 185, 80, 0.15), transparent);
+      border-bottom: 1px solid var(--border);
+    }
+    .badge-header {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(63, 185, 80, 0.15);
+      color: var(--green);
+      border: 1px solid rgba(63, 185, 80, 0.3);
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-family: 'Fira Code', monospace;
+      font-weight: 500;
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-size: clamp(26px, 4.5vw, 44px);
+      font-weight: 900;
+      background: linear-gradient(135deg, #e6edf3 0%, var(--green) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.2;
+    }
+    .subtitle {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 15.5px;
+      max-width: 760px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Sunset Notice Banner */
+    .sunset-notice {
+      max-width: 1060px;
+      margin: 24px auto 0;
+      padding: 16px 22px;
+      background: rgba(240, 136, 62, 0.08);
+      border: 1px solid rgba(240, 136, 62, 0.35);
+      border-radius: 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .sunset-notice-icon {
+      font-size: 26px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .sunset-notice-text h4 {
+      font-size: 14.5px;
+      color: var(--orange);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .sunset-notice-text p {
+      font-size: 13.5px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* Tab Navigation */
+    .tab-bar {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 24px 20px 0;
+      max-width: 1060px;
+      margin: 0 auto;
+    }
+    .tab-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 9px 18px;
+      border-radius: 10px;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tab-btn:hover {
+      color: var(--text);
+      border-color: var(--green);
+      background: var(--surface-hover);
+    }
+    .tab-btn.active {
+      color: var(--green);
+      border-color: var(--green);
+      background: rgba(63, 185, 80, 0.12);
+    }
+
+    /* Content Area */
+    .content-section {
+      max-width: 1060px;
+      margin: 24px auto 0;
+      padding: 0 20px;
+      display: none;
+    }
+    .content-section.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Cards & Containers */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px;
+      margin-bottom: 24px;
+    }
+    .card-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--green);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .card-title.purple { color: var(--purple); }
+    .card-title.blue { color: var(--accent); }
+    .card-title.orange { color: var(--orange); }
+
+    /* Comparison Table */
+    .table-container {
+      overflow-x: auto;
+      margin: 20px 0;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+      text-align: left;
+    }
+    th, td {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      background: rgba(22, 27, 34, 0.9);
+      color: var(--text);
+      font-weight: 700;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+    /* Callouts */
+    .callout {
+      padding: 16px 20px;
+      border-radius: 10px;
+      margin: 16px 0;
+      display: flex;
+      gap: 14px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .callout-tip {
+      background: rgba(63, 185, 80, 0.08);
+      border: 1px solid rgba(63, 185, 80, 0.3);
+      color: var(--text);
+    }
+    .callout-warn {
+      background: rgba(240, 136, 62, 0.08);
+      border: 1px solid rgba(240, 136, 62, 0.3);
+      color: var(--text);
+    }
+    .callout-info {
+      background: rgba(88, 166, 255, 0.08);
+      border: 1px solid rgba(88, 166, 255, 0.3);
+      color: var(--text);
+    }
+    .callout-danger {
+      background: rgba(248, 81, 73, 0.08);
+      border: 1px solid rgba(248, 81, 73, 0.3);
+      color: var(--text);
+    }
+    .callout-icon { font-size: 20px; flex-shrink: 0; }
+
+    /* Code & Terminal Blocks */
+    .code-block {
+      background: #090d13;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'Fira Code', monospace;
+      font-size: 12.5px;
+      color: #7ee787;
+      overflow-x: auto;
+      margin: 14px 0;
+      position: relative;
+    }
+    .code-header {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    code {
+      font-family: 'Fira Code', monospace;
+      background: rgba(110, 118, 129, 0.15);
+      color: var(--text);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12.5px;
+    }
+
+    /* Grid Layouts */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .box {
+      background: rgba(22, 27, 34, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+    }
+
+    /* Interactive Command Generator */
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .form-control {
+      width: 100%;
+      padding: 10px 14px;
+      background: #090d13;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+    }
+    .form-control:focus {
+      outline: none;
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(63, 185, 80, 0.15);
+    }
+    .copy-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      float: right;
+      transition: all 0.2s;
+    }
+    .copy-btn:hover {
+      background: rgba(88, 166, 255, 0.15);
+      border-color: var(--accent);
+    }
+
+    /* Quiz Widget */
+    .quiz-card {
+      background: #090d13;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .quiz-q {
+      font-size: 14.5px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--text);
+    }
+    .quiz-opt {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .quiz-opt:hover {
+      border-color: var(--accent);
+      background: rgba(88, 166, 255, 0.08);
+    }
+    .quiz-opt.correct {
+      border-color: var(--green);
+      background: rgba(63, 185, 80, 0.15);
+      color: #7ee787;
+      font-weight: 600;
+    }
+    .quiz-opt.incorrect {
+      border-color: var(--red);
+      background: rgba(248, 81, 73, 0.15);
+      color: #ff7b72;
+    }
+    .quiz-feedback {
+      font-size: 12.5px;
+      margin-top: 8px;
+      display: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 40px 20px 10px;
+      color: var(--muted);
+      font-size: 13px;
+      border-top: 1px solid var(--border);
+      margin-top: 50px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP NAV -->
+  <nav>
+    <a href="index.html">🏠 Inicio</a>
+    <span class="nav-sep">/</span>
+    <a href="usuarios.html">👥 Usuarios</a>
+    <span class="nav-sep">/</span>
+    <a href="forks.html">🍴 Forks</a>
+    <span class="nav-sep">/</span>
+    <a href="pull_requests.html">🔀 Pull Requests</a>
+    <span class="nav-sep">/</span>
+    <span class="nav-current">🎓 GitHub Organizations & Trabajo en Equipo</span>
+  </nav>
+
+  <!-- HERO SECTION -->
+  <header>
+    <div class="badge-header">🏢 GitHub Organizations • Template Repos • ABET SO5</div>
+    <h1>GitHub Organizations & Trabajo en Equipo</h1>
+    <p class="subtitle">
+      Arquitectura profesional y sostenible: <strong>un repositorio privado compartido por equipo</strong> alojado en una Organización de GitHub, ramas individuales <code>feat/...</code>, protección con <strong>Rulesets</strong> y congelamiento por <strong>Commit SHA</strong> para acreditación ABET.
+    </p>
+  </header>
+
+  <!-- ARCHITECTURE HIGHLIGHT BANNER -->
+  <div class="sunset-notice" style="background: rgba(63, 185, 80, 0.08); border: 1px solid rgba(63, 185, 80, 0.35);">
+    <div class="sunset-notice-icon">🏢</div>
+    <div class="sunset-notice-text">
+      <h4 style="color:var(--green);">Arquitectura Nativa de GitHub Organizations & Gobernanza de Código</h4>
+      <p>
+        La metodología de este curso utiliza el estándar profesional de la industria: <strong>GitHub Organizations + Repositorios Plantilla (Template Repos) + Equipos con permisos de desarrollo</strong>. Este modelo garantiza igualdad absoluta entre integrantes, administración institucional para el docente, protección centralizada de ramas y trazabilidad para evaluación ABET SO5.
+      </p>
+    </div>
+  </div>
+
+  <!-- TAB NAVIGATION -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="showTab('rec-sec')">🏆 1. Repo de Equipo vs Fork Personal</button>
+    <button class="tab-btn" onclick="showTab('flow-sec')">🔄 2. Flujo Paso a Paso</button>
+    <button class="tab-btn" onclick="showTab('rules-sec')">🛡️ 3. Protección de Ramas (Rulesets)</button>
+    <button class="tab-btn" onclick="showTab('eval-sec')">📋 4. Entrega, SHA & Evidencia ABET</button>
+    <button class="tab-btn" onclick="showTab('cli-sec')">⚡ 5. Automatización con GitHub CLI (gh)</button>
+    <button class="tab-btn" onclick="showTab('generator-sec')">💻 6. Generador de Comandos</button>
+    <button class="tab-btn" onclick="showTab('quiz-sec')">🧠 7. Quiz de Autoevaluación</button>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- TAB 1: RECOMENDACIÓN: REPO COMPARTIDO VS FORK -->
+  <!-- ========================================================= -->
+  <section id="rec-sec" class="content-section active">
+    <div class="card">
+      <div class="card-title">
+        <span>🏆 La Recomendación Principal de Arquitectura</span>
+      </div>
+      <p style="font-size:15px; color:var(--text); line-height:1.7; margin-bottom:16px;">
+        En proyectos colaborativos de ingeniería y robótica con ROS 2, <strong>un repositorio privado compartido por equipo dentro de una Organización de GitHub</strong> es la estrategia oficial y recomendada.
+      </p>
+
+      <div class="callout callout-tip">
+        <div class="callout-icon">💡</div>
+        <div>
+          <strong>El Principio de Igualdad y Gobernanza Institucional:</strong>
+          <p style="margin-top:4px;">
+            Al crear los repositorios dentro de la <strong>Organización de GitHub del curso</strong> (ej. <code>umng-mecatronica-ros</code>) a partir del <strong>repositorio plantilla</strong> del docente, todos los integrantes quedan en <strong>absoluta igualdad de condiciones</strong> con permisos de escritura, mientras el docente y la institución conservan la administración, la trazabilidad y la propiedad del proyecto.
+          </p>
+        </div>
+      </div>
+
+      <!-- COMPARISON TABLE -->
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Criterio</th>
+              <th style="color:var(--green);">✅ Repositorio de Equipo en Organización</th>
+              <th style="color:var(--red);">❌ Fork Propiedad de un Estudiante</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Propiedad & Administración</strong></td>
+              <td>Pertenece a la <strong>Organización institucional</strong> administrada por el docente.</td>
+              <td>Pertenece a la <strong>cuenta personal de un solo estudiante</strong>.</td>
+            </tr>
+            <tr>
+              <td><strong>Igualdad del Equipo</strong></td>
+              <td>Todos los estudiantes tienen el mismo rol y permisos como colaboradores del equipo.</td>
+              <td>Un estudiante es <em>Owner</em> con privilegios absolutos; los demás son invitados secundarios.</td>
+            </tr>
+            <tr>
+              <td><strong>Retiros o Cambios de Grupo</strong></td>
+              <td>Si un integrante cancela la materia o cambia de grupo, el repositorio <strong>no se pierde</strong>.</td>
+              <td>Si el dueño del fork cancela la materia o borra su cuenta, el equipo <strong>pierde todo el proyecto</strong>.</td>
+            </tr>
+            <tr>
+              <td><strong>Reglas de Protección (Rulesets)</strong></td>
+              <td>El docente aplica y fuerza reglas de protección sobre <code>main</code> de forma centralizada.</td>
+              <td>El estudiante dueño puede desactivar o eludir las protecciones cuando lo desee.</td>
+            </tr>
+            <tr>
+              <td><strong>Auditoría & ABET SO5</strong></td>
+              <td>Trazabilidad inmutable conservada en la nube institucional para acreditación académica.</td>
+              <td>Se dificulta la conservación a largo plazo al depender de cuentas personales de alumnos.</td>
+            </tr>
+            <tr>
+              <td><strong>Sincronización Git</strong></td>
+              <td>Estructura limpia con un solo remoto <code>origin</code> compartido para todo el equipo.</td>
+              <td>Requiere configurar y sincronizar remotos cruzados (<code>upstream</code>), aumentando la fricción.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="grid-2" style="margin-top:20px;">
+        <div class="box" style="border-left:4px solid var(--green);">
+          <h3 style="color:var(--green); font-size:16px; margin-bottom:8px;">🤝 Trabajo en Equipo Industrial</h3>
+          <p style="font-size:13px; color:var(--muted); line-height:1.6;">
+            Emula con total fidelidad el entorno empresarial: desarrolladores colaborando en repositorios corporativos comunes mediante ramas de features, Pull Requests y revisiones cruzadas de código (*Peer Reviews*).
+          </p>
+        </div>
+
+        <div class="box" style="border-left:4px solid var(--purple);">
+          <h3 style="color:var(--purple); font-size:16px; margin-bottom:8px;">🎯 Evidencia ABET Verificable</h3>
+          <p style="font-size:13px; color:var(--muted); line-height:1.6;">
+            Facilita la evaluación de competencias de trabajo en equipo (*ABET SO5: Teamwork*), acuerdos de ingeniería y rigor técnico mediante commits individuales verificables.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================= -->
+  <!-- TAB 2: FLUJO DE TRABAJO PASO A PASO -->
+  <!-- ========================================================= -->
+  <section id="flow-sec" class="content-section">
+    <div class="card">
+      <div class="card-title">
+        <span>🔄 Flujo de Trabajo Paso a Paso</span>
+      </div>
+      <p style="font-size:14.5px; color:var(--muted); line-height:1.7; margin-bottom:16px;">
+        Secuencia completa desde la plantilla docente hasta la integración de las ramas individuales:
+      </p>
+
+      <!-- SVG PIPELINE DIAGRAM -->
+      <div style="background:#090d13; border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:24px;">
+        <svg viewBox="0 0 920 380" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:auto; display:block;">
+          <defs>
+            <filter id="glow-flow">
+              <feGaussianBlur stdDeviation="3" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <marker id="arr-g" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#3fb950"/>
+            </marker>
+            <marker id="arr-b" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#58a6ff"/>
+            </marker>
+            <marker id="arr-p" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#bc8cff"/>
+            </marker>
+          </defs>
+
+          <!-- Canvas -->
+          <rect width="920" height="380" fill="#0d1117" rx="10"/>
+
+          <!-- 1. DOCENTE / TEMPLATE -->
+          <rect x="25" y="30" width="220" height="150" rx="10" fill="#161b22" stroke="#58a6ff" stroke-width="1.8"/>
+          <text x="40" y="55" font-family="Inter" font-size="12" fill="#58a6ff" font-weight="700">👨‍🏫 REPO BASE DOCENTE</text>
+          <text x="40" y="78" font-family="Fira Code" font-size="11" fill="#e6edf3">📦 burger_delivery</text>
+          <rect x="40" y="90" width="185" height="24" rx="4" fill="rgba(88,166,255,0.12)" stroke="#58a6ff"/>
+          <text x="50" y="106" font-family="Fira Code" font-size="9.5" fill="#58a6ff">tag: curso-2026-2-base</text>
+          <text x="40" y="135" font-family="Inter" font-size="10" fill="#8b949e">Template Repository</text>
+          <text x="40" y="152" font-family="Inter" font-size="10" fill="#8b949e">en Organización GitHub</text>
+
+          <!-- Arrow Docente -> Org Engine -->
+          <path d="M 245 105 L 295 105" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr-b)"/>
+          <text x="250" y="98" font-family="Inter" font-size="9" fill="#58a6ff">Template</text>
+
+          <!-- 2. GITHUB ORGANIZATION -->
+          <rect x="305" y="30" width="230" height="150" rx="10" fill="#161b22" stroke="#3fb950" stroke-width="1.8"/>
+          <text x="320" y="55" font-family="Inter" font-size="12" fill="#3fb950" font-weight="700">🏢 GITHUB ORGANIZATION</text>
+          <text x="320" y="78" font-family="Inter" font-size="11" fill="#e6edf3">Repositorios de Equipo</text>
+          
+          <rect x="320" y="92" width="200" height="72" rx="6" fill="#0d1117" stroke="#30363d"/>
+          <text x="330" y="110" font-family="Fira Code" font-size="9.5" fill="#3fb950">🔒 burger-delivery-eq-01</text>
+          <text x="330" y="128" font-family="Fira Code" font-size="9.5" fill="#3fb950">🔒 burger-delivery-eq-02</text>
+          <text x="330" y="146" font-family="Fira Code" font-size="9.5" fill="#3fb950">🔒 burger-delivery-eq-03</text>
+
+          <!-- Arrow Org -> Team Repos -->
+          <path d="M 535 105 L 595 105" stroke="#3fb950" stroke-width="2" marker-end="url(#arr-g)"/>
+          <text x="545" y="98" font-family="Inter" font-size="9" fill="#3fb950">Instancia</text>
+
+          <!-- 3. TEAM REPO (EQUIPO 01) -->
+          <rect x="605" y="25" width="290" height="160" rx="10" fill="#161b22" stroke="#3fb950" stroke-width="2" filter="url(#glow-flow)"/>
+          <text x="625" y="50" font-family="Inter" font-size="12" fill="#3fb950" font-weight="700">👥 REPOSITORIO COMPARTIDO</text>
+          <text x="625" y="72" font-family="Fira Code" font-size="11" fill="#e6edf3">burger-delivery-equipo-01</text>
+          <rect x="625" y="85" width="250" height="85" rx="6" fill="#0d1117" stroke="#30363d"/>
+          <text x="635" y="105" font-family="Inter" font-size="10" fill="#e6edf3">🛡️ Rama <tspan fill="#3fb950" font-family="Fira Code">main</tspan> protegida por Rulesets</text>
+          <text x="635" y="125" font-family="Inter" font-size="10" fill="#8b949e">👥 Integrantes: Estudiantes con permiso Write</text>
+          <text x="635" y="145" font-family="Inter" font-size="10" fill="#8b949e">👑 Docente conserva rol de Admin</text>
+          <text x="635" y="160" font-family="Inter" font-size="9" fill="#58a6ff">URL: github.com/org/burger-...-01</text>
+
+          <!-- 4. STUDENT BRANCHES & WORKFLOW (BOTTOM ROW) -->
+          <rect x="25" y="210" width="870" height="150" rx="10" fill="#161b22" stroke="#bc8cff" stroke-width="1.5"/>
+          <text x="45" y="235" font-family="Inter" font-size="12" fill="#bc8cff" font-weight="700">🌿 RAMAS INDIVIDUALES & PULL REQUESTS EN EL MISMO REPOSITORIO</text>
+
+          <!-- Student 1 -->
+          <rect x="45" y="250" width="250" height="90" rx="8" fill="#0d1117" stroke="#58a6ff"/>
+          <text x="55" y="270" font-family="Fira Code" font-size="10" fill="#58a6ff">feat/estudiante-a-monitor</text>
+          <text x="55" y="290" font-family="Inter" font-size="10" fill="#8b949e">1. Clona repo de equipo</text>
+          <text x="55" y="305" font-family="Inter" font-size="10" fill="#8b949e">2. Crea rama propia</text>
+          <text x="55" y="322" font-family="Inter" font-size="10" fill="#3fb950">3. Abre PR con Peer Review</text>
+
+          <!-- Student 2 -->
+          <rect x="335" y="250" width="250" height="90" rx="8" fill="#0d1117" stroke="#58a6ff"/>
+          <text x="345" y="270" font-family="Fira Code" font-size="10" fill="#58a6ff">feat/estudiante-b-camera</text>
+          <text x="345" y="290" font-family="Inter" font-size="10" fill="#8b949e">1. Clona repo de equipo</text>
+          <text x="345" y="305" font-family="Inter" font-size="10" fill="#8b949e">2. Desarrolla nodo RTSP</text>
+          <text x="345" y="322" font-family="Inter" font-size="10" fill="#3fb950">3. Revisa PR del Estudiante A</text>
+
+          <!-- Merge into main -->
+          <rect x="625" y="250" width="250" height="90" rx="8" fill="#0d1117" stroke="#bc8cff"/>
+          <text x="635" y="270" font-family="Inter" font-size="11" fill="#bc8cff" font-weight="700">🔀 MERGE A MAIN CON REVIEWS</text>
+          <text x="635" y="292" font-family="Inter" font-size="10" fill="#8b949e">✓ CI tests pasan</text>
+          <text x="635" y="308" font-family="Inter" font-size="10" fill="#8b949e">✓ Aprobación cruzada (Peer Review)</text>
+          <text x="635" y="325" font-family="Fira Code" font-size="10" fill="#3fb950">🏷️ Tag de Entrega + Commit SHA</text>
+        </svg>
+      </div>
+
+      <!-- DETAILED 4-PHASE CARDS -->
+      <div class="grid-2">
+        <div class="box">
+          <h4 style="color:var(--accent); font-size:14.5px; margin-bottom:8px;">
+            Paso 1: Repositorio Base & Tag de Versión
+          </h4>
+          <p style="font-size:13px; color:var(--muted); line-height:1.6;">
+            El docente mantiene <code>burger_delivery</code> como repositorio base dentro de la organización y marca el punto de partida:
+          </p>
+          <div class="code-block" style="font-size:11.5px; padding:10px 12px; margin:8px 0;">
+            git tag curso-2026-2-base<br/>
+            git push origin curso-2026-2-base
+          </div>
+          <p style="font-size:12px; color:var(--muted);">
+            Se activa la casilla <strong>Template repository</strong> en los <em>Settings</em> del repositorio.
+          </p>
+        </div>
+
+        <div class="box">
+          <h4 style="color:var(--green); font-size:14.5px; margin-bottom:8px;">
+            Paso 2: Generación del Repo Privado de Equipo
+          </h4>
+          <p style="font-size:13px; color:var(--muted); line-height:1.6;">
+            Desde la organización, se crea el repositorio a partir de la plantilla:
+          </p>
+          <ul style="font-size:12.5px; color:var(--text); margin-left:18px; margin-top:6px; line-height:1.7;">
+            <li><code>burger-delivery-equipo-01</code></li>
+            <li><code>burger-delivery-equipo-02</code></li>
+            <li><code>burger-delivery-equipo-03</code></li>
+          </ul>
+          <p style="font-size:12px; color:var(--muted); margin-top:6px;">
+            Visibilidad: <strong>Privado</strong>. Los estudiantes se añaden al equipo con rol de <strong>Write</strong>.
+          </p>
+        </div>
+
+        <div class="box">
+          <h4 style="color:var(--purple); font-size:14.5px; margin-bottom:8px;">
+            Paso 3: Ramas Individuales por Estudiante
+          </h4>
+          <p style="font-size:13px; color:var(--muted); line-height:1.6;">
+            Cada estudiante clona el repositorio del equipo y crea de inmediato su rama individual de trabajo:
+          </p>
+          <div class="code-block" style="font-size:11.5px; padding:10px 12px; margin:8px 0;">
+            git clone &lt;URL-REPO-EQUIPO&gt;<br/>
+            git checkout -b feat/estudiante-apellido-monitor
+          </div>
+          <p style="font-size:12px; color:var(--red);">
+            ⛔ <strong>Regla:</strong> Queda estrictamente prohibido realizar commits directos en <code>main</code>.
+          </p>
+        </div>
+
+        <div class="box">
+          <h4 style="color:var(--orange); font-size:14.5px; margin-bottom:8px;">
+            Paso 4: Pull Request, Peer Review y Merge
+          </h4>
+          <p style="font-size:13px; color:var(--muted); line-height:1.6;">
+            Al terminar un módulo o hito:
+          </p>
+          <ol style="font-size:12.5px; color:var(--text); margin-left:18px; line-height:1.7;">
+            <li>Hacer push de la rama individual: <code>git push origin feat/...</code></li>
+            <li>Abrir Pull Request hacia <code>main</code>.</li>
+            <li>Revisión obligatoria por al menos 1 compañero de equipo.</li>
+            <li>Merge a <code>main</code> tras aprobación.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================= -->
+  <!-- TAB 3: PROTECCIÓN DE RAMAS (RULESETS) -->
+  <!-- ========================================================= -->
+  <section id="rules-sec" class="content-section">
+    <div class="card">
+      <div class="card-title purple">
+        <span>🛡️ Reglas de Protección de Ramas (GitHub Rulesets)</span>
+      </div>
+      <p style="font-size:14.5px; color:var(--text); line-height:1.7; margin-bottom:16px;">
+        Para garantizar la integridad del código y evitar que un estudiante sobrescriba accidentalmente la rama principal, se configuran <strong>Repository Rulesets</strong> en GitHub:
+      </p>
+
+      <div class="grid-2">
+        <div class="box">
+          <h4 style="color:var(--purple); font-size:14px; margin-bottom:10px;">⚙️ Configuración Paso a Paso en GitHub</h4>
+          <ol style="font-size:13px; color:var(--text); margin-left:18px; line-height:1.8;">
+            <li>Entra a <strong>Settings</strong> del repositorio o de la Organización.</li>
+            <li>En el menú lateral, selecciona <strong>Rules</strong> ➔ <strong>Rulesets</strong>.</li>
+            <li>Haz clic en <strong>New ruleset</strong> ➔ <strong>New branch ruleset</strong>.</li>
+            <li>Nombre: <code>Proteccion-Main-Estudiantes</code>.</li>
+            <li>Enforcement status: <strong>Active</strong>.</li>
+            <li>Target branches: Incluir <strong>Default branch (main)</strong>.</li>
+          </ol>
+        </div>
+
+        <div class="box">
+          <h4 style="color:var(--purple); font-size:14px; margin-bottom:10px;">📋 Reglas Obligatorias a Activar</h4>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <div style="background:#090d13; border:1px solid var(--border); padding:10px 14px; border-radius:6px;">
+              <span style="color:var(--green); font-weight:700; font-size:13px;">☑ Restrict deletions</span>
+              <p style="font-size:11.5px; color:var(--muted); margin-top:2px;">Impide que cualquier integrante borre la rama <code>main</code>.</p>
+            </div>
+            <div style="background:#090d13; border:1px solid var(--border); padding:10px 14px; border-radius:6px;">
+              <span style="color:var(--green); font-weight:700; font-size:13px;">☑ Block force pushes</span>
+              <p style="font-size:11.5px; color:var(--muted); margin-top:2px;">Evita <code>git push --force</code> que destruya el historial del equipo.</p>
+            </div>
+            <div style="background:#090d13; border:1px solid var(--border); padding:10px 14px; border-radius:6px;">
+              <span style="color:var(--green); font-weight:700; font-size:13px;">☑ Require a pull request before merging</span>
+              <p style="font-size:11.5px; color:var(--muted); margin-top:2px;">Exige al menos <strong>1 aprobación</strong> de un compañero antes de fusionar.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================= -->
+  <!-- TAB 4: ENTREGA, COMMIT SHA & EVIDENCIA ABET -->
+  <!-- ========================================================= -->
+  <section id="eval-sec" class="content-section">
+    <div class="card">
+      <div class="card-title">
+        <span>📋 Protocolo de Entrega Inmutable y Evidencia ABET</span>
+      </div>
+
+      <div class="callout callout-warn">
+        <div class="callout-icon">⚠️</div>
+        <div>
+          <strong>El Principio del Commit SHA Inmutable:</strong>
+          <p style="margin-top:4px;">
+            En ingeniería no se evalúa "el estado actual de la rama <code>main</code>", porque un estudiante podría seguir modificando código después de la fecha límite. Cada equipo entrega el <strong>Hash SHA exacto</strong> del commit final y un <strong>Tag de versión</strong>.
+          </p>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:20px;">
+        <div class="box">
+          <h4 style="color:var(--accent); font-size:14px; margin-bottom:8px;">🏷️ 1. Crear Tag y Obtener SHA</h4>
+          <p style="font-size:13px; color:var(--muted); line-height:1.6;">
+            Al momento de la entrega en la rama <code>main</code>:
+          </p>
+          <div class="code-block" style="font-size:12px;">
+            # Crear tag de entrega del corte<br/>
+            git tag corte-1-entrega<br/>
+            git push origin corte-1-entrega<br/><br/>
+            # Obtener el SHA de 40 caracteres inmutable<br/>
+            git rev-parse HEAD
+          </div>
+          <p style="font-size:12px; color:var(--green);">
+            Salida: <code>4f8b2d1c9a0e3f5b7c8d9e0f1a2b3c4d5e6f7a8b</code>
+          </p>
+        </div>
+
+        <div class="box">
+          <h4 style="color:var(--purple); font-size:14px; margin-bottom:8px;">🎯 2. Criterios de Evaluación ABET (SO5)</h4>
+          <ul style="font-size:12.5px; color:var(--text); margin-left:18px; line-height:1.8;">
+            <li><strong>Distribución de Trabajo:</strong> Contribuciones técnicas visibles en ramas individuales y commits descriptivos.</li>
+            <li><strong>Calidad de Revisiones:</strong> Comentarios técnicos y rigurosos en los Pull Requests (*Peer Review*).</li>
+            <li><strong>Reproducibilidad:</strong> El código en el SHA de entrega compila limpiamente con <code>colcon build</code> sin errores.</li>
+            <li><strong>Gobernanza:</strong> Respeto a las políticas de no push directo a <code>main</code>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout callout-danger" style="margin-top:20px;">
+        <div class="callout-icon">❌</div>
+        <div>
+          <strong>Por qué NO evaluar por "Conteo Bruto de Commits":</strong>
+          <p style="margin-top:4px;">
+            El conteo de commits es una métrica perversa que fomenta micro-commits vacíos (ej. 50 commits de "fix typo"). La evaluación ABET califica la <strong>relevancia técnica de los PRs</strong>, la resolución de incidencias en equipo y la calidad del código ROS 2 integrado.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================= -->
+  <!-- TAB 5: AUTOMATIZACIÓN CON GITHUB CLI (gh) -->
+  <!-- ========================================================= -->
+  <section id="cli-sec" class="content-section">
+    <div class="card">
+      <div class="card-title blue">
+        <span>⚡ Automatización para Docentes con GitHub CLI (gh)</span>
+      </div>
+      <p style="font-size:14.5px; color:var(--text); line-height:1.7; margin-bottom:16px;">
+        Los docentes pueden crear todos los repositorios de equipo en segundos utilizando el CLI oficial de GitHub (<code>gh</code>):
+      </p>
+
+      <div class="code-block" style="font-size:12.5px; line-height:1.7;">
+        <div class="code-header">Script Bash: Crear Repositorios de Equipos desde Plantilla</div>
+        # 1. Autenticarse en GitHub<br/>
+        gh auth login<br/><br/>
+        # 2. Definir la organización y el repositorio plantilla<br/>
+        ORG="umng-mecatronica-ros"<br/>
+        TEMPLATE="$ORG/burger_delivery"<br/><br/>
+        # 3. Crear repositorios privados para cada equipo<br/>
+        for i in $(seq -w 1 8); do<br/>
+        &nbsp;&nbsp;REPO_NAME="burger-delivery-equipo-$i"<br/>
+        &nbsp;&nbsp;echo "Creando $REPO_NAME en la organización $ORG..."<br/>
+        &nbsp;&nbsp;gh repo create "$ORG/$REPO_NAME" --template "$TEMPLATE" --private<br/>
+        done
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-icon">ℹ️</div>
+        <div>
+          <strong>Ventaja del script:</strong> En menos de 30 segundos se instancian 10 repositorios privados idénticos, con su historial base, ramas configuradas y listos para invitar a los estudiantes.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================= -->
+  <!-- TAB 6: GENERADOR INTERACTIVO DE COMANDOS -->
+  <!-- ========================================================= -->
+  <section id="generator-sec" class="content-section">
+    <div class="card">
+      <div class="card-title">
+        <span>💻 Generador Interactivo de Comandos para Estudiantes</span>
+      </div>
+      <p style="font-size:14px; color:var(--muted); margin-bottom:20px;">
+        Ingresa tus datos para generar los comandos exactos listos para copiar y pegar en tu terminal:
+      </p>
+
+      <div class="grid-2">
+        <div>
+          <div class="form-group">
+            <label>Organización de GitHub:</label>
+            <input type="text" id="inp-org" class="form-control" value="umng-mecatronica-ros" oninput="updateCmds()" />
+          </div>
+          <div class="form-group">
+            <label>Número de Equipo (ej. 01, 02):</label>
+            <input type="text" id="inp-team" class="form-control" value="01" oninput="updateCmds()" />
+          </div>
+          <div class="form-group">
+            <label>Tu Nombre y Apellido:</label>
+            <input type="text" id="inp-name" class="form-control" value="carlos-gomez" oninput="updateCmds()" />
+          </div>
+          <div class="form-group">
+            <label>Módulo / Funcionalidad:</label>
+            <input type="text" id="inp-mod" class="form-control" value="monitor" oninput="updateCmds()" />
+          </div>
+        </div>
+
+        <div>
+          <div class="form-group">
+            <label>Tu Correo Institucional:</label>
+            <input type="email" id="inp-email" class="form-control" value="estudiante@unimilitar.edu.co" oninput="updateCmds()" />
+          </div>
+          <div class="form-group">
+            <label>Corte / Hito de Evaluación:</label>
+            <input type="text" id="inp-tag" class="form-control" value="corte-1-entrega" oninput="updateCmds()" />
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:24px;">
+        <h4 style="font-size:14px; color:var(--green); margin-bottom:8px;">1. Configurar Identidad Local de Git</h4>
+        <div class="code-block">
+          <button class="copy-btn" onclick="copyCode('cmd-id')">Copiar</button>
+          <pre id="cmd-id"></pre>
+        </div>
+
+        <h4 style="font-size:14px; color:var(--accent); margin-bottom:8px; margin-top:16px;">2. Clonar Repo de Equipo en Workspace ROS 2</h4>
+        <div class="code-block">
+          <button class="copy-btn" onclick="copyCode('cmd-clone')">Copiar</button>
+          <pre id="cmd-clone"></pre>
+        </div>
+
+        <h4 style="font-size:14px; color:var(--purple); margin-bottom:8px; margin-top:16px;">3. Crear Rama Individual de Trabajo</h4>
+        <div class="code-block">
+          <button class="copy-btn" onclick="copyCode('cmd-branch')">Copiar</button>
+          <pre id="cmd-branch"></pre>
+        </div>
+
+        <h4 style="font-size:14px; color:var(--orange); margin-bottom:8px; margin-top:16px;">4. Subir Cambios y Congelar Entrega (Tag & SHA)</h4>
+        <div class="code-block">
+          <button class="copy-btn" onclick="copyCode('cmd-delivery')">Copiar</button>
+          <pre id="cmd-delivery"></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================= -->
+  <!-- TAB 7: QUIZ DE AUTOEVALUACIÓN -->
+  <!-- ========================================================= -->
+  <section id="quiz-sec" class="content-section">
+    <div class="card">
+      <div class="card-title">
+        <span>🧠 Quiz de Autoevaluación de Conceptos</span>
+      </div>
+      <p style="font-size:14px; color:var(--muted); margin-bottom:20px;">
+        Verifica tu comprensión sobre la metodología de trabajo en equipo y evaluación ABET:
+      </p>
+
+      <!-- Q1 -->
+      <div class="quiz-card" id="q1">
+        <div class="quiz-q">1. ¿Cuál es la principal ventaja de trabajar en un repositorio de equipo dentro de una Organización en lugar del fork de un estudiante?</div>
+        <button class="quiz-opt" onclick="checkQuiz(1, 0, true)">A) Garantiza igualdad de condiciones, preservación institucional si un estudiante se retira y reglas centralizadas de protección.</button>
+        <button class="quiz-opt" onclick="checkQuiz(1, 1, false)">B) Permite hacer push directo a main sin revisiones.</button>
+        <button class="quiz-opt" onclick="checkQuiz(1, 2, false)">C) Hace que el código compile más rápido con colcon build.</button>
+        <div class="quiz-feedback" id="fb1"></div>
+      </div>
+
+      <!-- Q2 -->
+      <div class="quiz-card" id="q2">
+        <div class="quiz-q">2. ¿Por qué la entrega oficial se realiza reportando el Commit SHA exacto?</div>
+        <button class="quiz-opt" onclick="checkQuiz(2, 0, true)">A) Porque el SHA es una firma inmutable que congela el estado exacto del código en la fecha límite de entrega.</button>
+        <button class="quiz-opt" onclick="checkQuiz(2, 1, false)">B) Porque sin el SHA, GitHub borra automáticamente el repositorio.</button>
+        <button class="quiz-opt" onclick="checkQuiz(2, 2, false)">C) Porque reemplaza la necesidad de compilar paquetes ROS 2.</button>
+        <div class="quiz-feedback" id="fb2"></div>
+      </div>
+
+      <!-- Q3 -->
+      <div class="quiz-card" id="q3">
+        <div class="quiz-q">3. ¿Qué acción está prohibida para los estudiantes en este flujo de trabajo?</div>
+        <button class="quiz-opt" onclick="checkQuiz(3, 0, false)">A) Abrir un Pull Request hacia main.</button>
+        <button class="quiz-opt" onclick="checkQuiz(3, 1, true)">B) Hacer commits o push directos sobre la rama main sin pasar por un PR con revisión.</button>
+        <button class="quiz-opt" onclick="checkQuiz(3, 2, false)">C) Crear una rama individual con formato feat/...</button>
+        <div class="quiz-feedback" id="fb3"></div>
+      </div>
+
+      <!-- Q4 -->
+      <div class="quiz-card" id="q4">
+        <div class="quiz-q">4. ¿Por qué la evaluación ABET NO debe basarse únicamente en el número bruto de commits?</div>
+        <button class="quiz-opt" onclick="checkQuiz(4, 0, true)">A) Porque fomenta micro-commits artificiales en lugar de evaluar la relevancia técnica, calidad de los PRs y trabajo en equipo real.</button>
+        <button class="quiz-opt" onclick="checkQuiz(4, 1, false)">B) Porque Git no registra la hora de los commits.</button>
+        <button class="quiz-opt" onclick="checkQuiz(4, 2, false)">C) Porque solo el docente puede hacer commits.</button>
+        <div class="quiz-feedback" id="fb4"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Git & GitHub Fundamentos Visuales — Módulo Educativo: <code>git-fundamentals/equipos_organizaciones_abet.html</code>
+  </footer>
+
+  <script>
+    function showTab(id) {
+      document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      
+      const targetSec = document.getElementById(id);
+      if (targetSec) targetSec.classList.add('active');
+      
+      event.currentTarget.classList.add('active');
+    }
+
+    function updateCmds() {
+      const org = document.getElementById('inp-org').value.trim() || 'org-curso';
+      const team = document.getElementById('inp-team').value.trim() || '01';
+      const name = document.getElementById('inp-name').value.trim() || 'estudiante';
+      const mod = document.getElementById('inp-mod').value.trim() || 'modulo';
+      const email = document.getElementById('inp-email').value.trim() || 'user@email.com';
+      const tag = document.getElementById('inp-tag').value.trim() || 'corte-1-entrega';
+
+      const repoName = `burger-delivery-equipo-${team}`;
+      const branchName = `feat/${name}-${mod}`;
+
+      document.getElementById('cmd-id').textContent = 
+`git config --global user.name "${name}"\n` +
+`git config --global user.email "${email}"`;
+
+      document.getElementById('cmd-clone').textContent = 
+`cd ~/ros2_ws/src\n` +
+`git clone https://github.com/${org}/${repoName}.git burger_delivery\n` +
+`cd burger_delivery`;
+
+      document.getElementById('cmd-branch').textContent = 
+`# Crear y cambiar a tu rama individual de trabajo\n` +
+`git checkout -b ${branchName}\n\n` +
+`# Realizar cambios en tus nodos ROS 2 y confirmar\n` +
+`git add .\n` +
+`git commit -m "feat(${mod}): implementar funcionalidad de entrega"\n\n` +
+`# Subir tu rama individual al repositorio compartido\n` +
+`git push -u origin ${branchName}`;
+
+      document.getElementById('cmd-delivery').textContent = 
+`# 1. Tras hacer merge del PR a main, cambiar a main y sincronizar\n` +
+`git checkout main\n` +
+`git pull origin main\n\n` +
+`# 2. Crear y subir el Tag de entrega\n` +
+`git tag ${tag}\n` +
+`git push origin ${tag}\n\n` +
+`# 3. Obtener el Commit SHA inmutable para el informe ABET\n` +
+`git rev-parse HEAD`;
+    }
+
+    function copyCode(id) {
+      const text = document.getElementById(id).textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        alert('¡Comandos copiados al portapapeles!');
+      });
+    }
+
+    function checkQuiz(qNum, optIdx, isCorrect) {
+      const qCard = document.getElementById(`q${qNum}`);
+      const opts = qCard.querySelectorAll('.quiz-opt');
+      const fb = document.getElementById(`fb${qNum}`);
+
+      opts.forEach((btn, idx) => {
+        btn.disabled = true;
+        if (idx === optIdx) {
+          btn.classList.add(isCorrect ? 'correct' : 'incorrect');
+        }
+      });
+
+      fb.style.display = 'block';
+      if (isCorrect) {
+        fb.style.background = 'rgba(63, 185, 80, 0.15)';
+        fb.style.color = '#7ee787';
+        fb.textContent = '¡Correcto! Cumple exactamente con los principios de gobernanza y acreditación ABET.';
+      } else {
+        fb.style.background = 'rgba(248, 81, 73, 0.15)';
+        fb.style.color = '#ff7b72';
+        fb.textContent = 'Incorrecto. Revisa las secciones de recomendación de arquitectura y reglas de protección.';
+      }
+    }
+
+    // Initialize commands on load
+    updateCmds();
+  </script>
+</body>
+</html>
