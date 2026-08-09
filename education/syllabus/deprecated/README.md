@@ -4,7 +4,7 @@ Esta carpeta conserva referencias históricas que **no deben utilizarse como syl
 
 El único documento curricular oficial es:
 
-- [`../Syllabus_Robotica_ROS2_Experimental.docx`](../Syllabus_Robotica_ROS2_Experimental.docx)
+- [`../Syllabus_Electiva_ROS.docx`](../Syllabus_Electiva_ROS.docx)
 
 Contenido archivado:
 

@@ -1,6 +1,6 @@
-# Education — ROBOT OPERATING SYSTEM - ROS
+# Education — ELECTIVA ELECTRONICA ( ROBOT OPERATING SYSTEM
 
-Esta carpeta reúne el material docente asociado al proyecto `burger_delivery` para la asignatura **ROBOT OPERATING SYSTEM - ROS**. Su propósito es mantener en el mismo repositorio el diseño curricular, las actividades que realizan los estudiantes, las guías experimentales y los instrumentos utilizados para producir las calificaciones y evidencias ABET.
+Esta carpeta reúne el material docente asociado al proyecto `burger_delivery` para la asignatura **ELECTIVA ELECTRONICA ( ROBOT OPERATING SYSTEM**. Su propósito es mantener en el mismo repositorio el diseño curricular, las actividades que realizan los estudiantes, las guías experimentales y los instrumentos utilizados para producir las calificaciones y evidencias ABET.
 
 `education` contiene documentación; el código ejecutable de los paquetes ROS 2 continúa en las demás carpetas del repositorio. Los talleres y laboratorios deben apuntar a archivos, comandos e interfaces reales del proyecto.
 
@@ -19,6 +19,7 @@ education/
 ├── guias_laboratorio/     # Guías editables, plantillas y PDF publicados
 ├── evidencias_abet/       # Formatos para evidencia y calificación
 ├── proyectos_evaluables/  # Entregas integradoras y criterios de aceptación
+├── administracion/        # Automatizaciones docentes; nunca contiene credenciales
 └── metodologias/          # Orientaciones de aprendizaje y documentación
 ```
 
@@ -28,11 +29,12 @@ Para evitar versiones incompatibles, cada responsabilidad debe tener una sola fu
 
 | Responsabilidad | Fuente oficial | Archivo derivado o de consulta |
 |---|---|---|
-| Syllabus institucional | [`syllabus/Syllabus_Robotica_ROS2_Experimental.docx`](syllabus/Syllabus_Robotica_ROS2_Experimental.docx) | Las versiones anteriores están identificadas en [`syllabus/deprecated/`](syllabus/deprecated/README.md) y no deben usarse para docencia |
+| Syllabus institucional | [`syllabus/Syllabus_Electiva_ROS.docx`](syllabus/Syllabus_Electiva_ROS.docx) | Las versiones anteriores están identificadas en [`syllabus/deprecated/`](syllabus/deprecated/README.md) y no deben usarse para docencia |
 | Taller CLI de ROS 2 | [`talleres/TALLER_ROS2_CLI.md`](talleres/TALLER_ROS2_CLI.md) | Instrumento ABET separado en `evidencias_abet/` |
 | Taller URDF y TF2 | [`talleres/TALLER_URDF_TF.md`](talleres/TALLER_URDF_TF.md) | [`talleres/TALLER_URDF_TF.pdf`](talleres/TALLER_URDF_TF.pdf) |
 | Guía de laboratorio 01 | [`guias_laboratorio/GUIA_LAB_01_RED_ROS2_TALKER_LISTENER.docx`](guias_laboratorio/GUIA_LAB_01_RED_ROS2_TALKER_LISTENER.docx) | [`guias_laboratorio/rendered/GUIA_LAB_01_RED_ROS2_TALKER_LISTENER.pdf`](guias_laboratorio/rendered/GUIA_LAB_01_RED_ROS2_TALKER_LISTENER.pdf) |
 | Evidencia y nota del Taller 01 | [`evidencias_abet/PLANTILLA_EVIDENCIA_ABET_TALLER_01_ROS2_CLI.docx`](evidencias_abet/PLANTILLA_EVIDENCIA_ABET_TALLER_01_ROS2_CLI.docx) | [`evidencias_abet/PLANTILLA_EVIDENCIA_ABET_TALLER_01_ROS2_CLI.md`](evidencias_abet/PLANTILLA_EVIDENCIA_ABET_TALLER_01_ROS2_CLI.md), representación auxiliar no normativa |
+| Evidencia y nota del Laboratorio 01 | [`evidencias_abet/INSTRUMENTO_ABET_LAB_01_RED_ROS2_DISTRIBUIDA.docx`](evidencias_abet/INSTRUMENTO_ABET_LAB_01_RED_ROS2_DISTRIBUIDA.docx) | [`evidencias_abet/INSTRUMENTO_ABET_LAB_01_RED_ROS2_DISTRIBUIDA.md`](evidencias_abet/INSTRUMENTO_ABET_LAB_01_RED_ROS2_DISTRIBUIDA.md), representación auxiliar no normativa |
 | Proyecto del primer corte | [`proyectos_evaluables/PROYECTO_CORTE_1_CONEXION_KINOVA.md`](proyectos_evaluables/PROYECTO_CORTE_1_CONEXION_KINOVA.md) | No tiene archivo derivado; esta especificación es la fuente oficial |
 | Evidencia y nota del Proyecto Corte 1 | [`evidencias_abet/INSTRUMENTO_ABET_PROYECTO_CORTE_1_CONEXION_KINOVA.docx`](evidencias_abet/INSTRUMENTO_ABET_PROYECTO_CORTE_1_CONEXION_KINOVA.docx) | [`evidencias_abet/INSTRUMENTO_ABET_PROYECTO_CORTE_1_CONEXION_KINOVA.md`](evidencias_abet/INSTRUMENTO_ABET_PROYECTO_CORTE_1_CONEXION_KINOVA.md), representación auxiliar |
 
@@ -40,7 +42,7 @@ Para evitar versiones incompatibles, cada responsabilidad debe tener una sola fu
 
 ### Syllabus
 
-- [Syllabus oficial de ROBOT OPERATING SYSTEM - ROS](syllabus/Syllabus_Robotica_ROS2_Experimental.docx).
+- [Syllabus oficial de ELECTIVA ELECTRONICA ( ROBOT OPERATING SYSTEM](syllabus/Syllabus_Electiva_ROS.docx).
 
 ### Talleres
 
@@ -62,7 +64,14 @@ Para evitar versiones incompatibles, cada responsabilidad debe tener una sola fu
 ### Evidencias
 
 - [Formato de evidencia y calificación del Taller 01](evidencias_abet/PLANTILLA_EVIDENCIA_ABET_TALLER_01_ROS2_CLI.docx).
+- [Instrumento ABET del Laboratorio 01 — red ROS 2 distribuida](evidencias_abet/INSTRUMENTO_ABET_LAB_01_RED_ROS2_DISTRIBUIDA.docx).
 - [Instrumento ABET del Proyecto Corte 1 — Conexión con Kinova](evidencias_abet/INSTRUMENTO_ABET_PROYECTO_CORTE_1_CONEXION_KINOVA.docx).
+- [Guía de recolección y procesamiento de entregas Word](evidencias_abet/GUIA_RECOLECCION_Y_PROCESAMIENTO_ENTREGAS.md).
+
+### Administración docente
+
+- [Controlador de Google Classroom mediante Apps Script](administracion/classroom/README.md).
+- [Preparación verificable de la carga ROS para Zubatronic/SGDE](administracion/zubatronic/README.md).
 
 ## Flujo de actualización
 

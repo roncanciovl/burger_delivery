@@ -22,3 +22,13 @@ __pycache__/
 Thumbs.db
 
 desktop.ini
+
+# Google Apps Script / clasp credentials and project bindings
+.clasprc.json
+.clasp.json
+**/.clasprc.json
+**/.clasp.json
+
+# Datos privados exportados desde el panel docente
+education/administracion/github/datos_privados/
+education/administracion/github/*.csv

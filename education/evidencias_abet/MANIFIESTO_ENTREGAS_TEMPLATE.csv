@@ -1,0 +1,4 @@
+periodo,corte,actividad,unidad_analisis,id_equipo,codigo_estudiante,correo_institucional,apellidos_nombres,nombre_archivo,version,fecha_recepcion,sha256,estado_validacion,archivo_valido_para_calificar,observaciones
+2026-2,1,T01,individual,,<codigo>,<correo>,<apellidos y nombres>,C1_T01_<codigo>_<apellido>_v1.docx,1,<AAAA-MM-DD HH:MM>,<sha256>,pendiente,si,
+2026-2,1,L01,equipo,G<grupo>,<codigo>,<correo>,<apellidos y nombres>,C1_L01_G<grupo>_<codigo1>_<codigo2>_v1.docx,1,<AAAA-MM-DD HH:MM>,<sha256>,pendiente,si,
+2026-2,1,L01,individual,G<grupo>,<codigo>,<correo>,<apellidos y nombres>,C1_L01_ANEXO_<codigo>_<apellido>_v1.docx,1,<AAAA-MM-DD HH:MM>,<sha256>,pendiente,si,

@@ -14,17 +14,19 @@
 | Código / grupo |  |
 | Fecha de entrega |  |
 | Evaluador |  |
-| Versión del instrumento | 1.0 |
+| Versión del instrumento | 1.1 |
 | Enlace o ubicación de la entrega |  |
 | Commit evaluado, si aplica |  |
+| Unidad de análisis | Individual |
 
 ## 2. Uso del formato
 
 1. La persona participante registra las evidencias E1–E9.
 2. Quien evalúa marca **una sola banda de desempeño por criterio** y registra un valor de 0 a 500 dentro del intervalo correspondiente.
 3. Los niveles N3, N4 y N5 representan una progresión de dominio; N1 y N2 son bandas alternativas para evidencia insuficiente o parcial.
-4. Si falta una evidencia obligatoria, se marca N1 y se registra 0. Una exclusión autorizada o retiro oficial no se convierte en nota.
+4. Si falta una evidencia obligatoria en una entrega exigible, se marca N1 y se registra 0 para la nota académica. Un retiro oficial o una exclusión autorizada se registra como `NA / no evaluado`, se excluye del denominador ABET y no se convierte en cero.
 5. Zubatronic/SGDE calcula el aporte ponderado de cada criterio. En una copia manual se usa `aporte = valor × peso / 100`.
+6. La entrega es individual y debe nombrarse `C1_T01_<codigo>_<apellido>_v1.docx`. El código del archivo, el código registrado en el documento y la identidad de la entrega deben coincidir.
 
 | Nivel | Intervalo Zubatronic / valor guía | Interpretación |
 |---|---:|---|
@@ -33,6 +35,30 @@
 | N3 | 300–399 / guía 350 | Aceptable: logra lo esencial con explicación parcial. Este es el umbral de logro. |
 | N2 | 150–299 / guía 250 | Parcial: evidencia incompleta o errores importantes. |
 | N1 | 0–149 / guía 100 | No cumple: evidencia mínima, fragmentaria o no funcional. Sin evidencia obligatoria se registra 0. |
+
+### 2.1. Parámetros de assessment
+
+| Parámetro | Regla adoptada |
+|---|---|
+| Población | Censo de estudiantes matriculados que deben presentar el Taller 01 en 2026-2. |
+| Momento de medición | Primer corte, después de la práctica guiada de CLI de ROS 2. |
+| Evaluador | Docente responsable de ROBOT OPERATING SYSTEM - ROS. |
+| Umbral individual | N3 o superior en cada indicador evaluado. |
+| Meta de cohorte | Al menos 70% de estudiantes evaluables alcanza N3 o superior en cada indicador. |
+| Muestreo | No se usa muestra: se evalúa el censo de entregas exigibles. |
+| Evidencia faltante | Entrega exigible sin evidencia: N1 con 0. Retiro oficial o exclusión autorizada: `NA / no evaluado`. |
+
+### 2.2. Alineación de criterios para Zubatronic/SGDE
+
+Cada criterio tiene un único indicador principal. Los demás aprendizajes que aparezcan en la evidencia son complementarios y no producen una segunda medición indistinguible.
+
+| Criterio | Peso | SO principal | Indicador de desempeño literal | Evidencia directa |
+|---|---:|---|---|---|
+| C1. Ejecución e introspección del grafo ROS 2 | 25% | SO2 | **2.1.** Diseña soluciones de software para control y monitoreo de robots, integrando contratos de comunicación (QoS, interfaces customizadas) y redes DDS robustas. | E1 y explicación individual del grafo. |
+| C2. Operación e interpretación de tópicos y mensajes | 20% | SO2 | **2.1.** Diseña soluciones de software para control y monitoreo de robots, integrando contratos de comunicación (QoS, interfaces customizadas) y redes DDS robustas. | E2 y explicación del flujo publicador/suscriptor. |
+| C3. Servicios, parámetros y rqt | 20% | SO2 | **2.1.** Diseña soluciones de software para control y monitoreo de robots, integrando contratos de comunicación (QoS, interfaces customizadas) y redes DDS robustas. | E3–E7 y resultados observables. |
+| C4. Decisión arquitectónica para `burger_delivery` | 20% | SO2 | **2.1.** Diseña soluciones de software para control y monitoreo de robots, integrando contratos de comunicación (QoS, interfaces customizadas) y redes DDS robustas. | E8: selección justificada de interfaces. |
+| C5. Evidencia reproducible y diagnóstico | 15% | SO3 | **3.1.** Elabora documentación técnica reproducible del sistema ROS 2, incluyendo diagramas de nodos, tópicos, servicios, acciones, frames TF y contratos de comunicación DDS. | E9, registro reproducible y trazabilidad de la entrega. |
 
 ## 3. Registro mínimo de evidencias
 
@@ -178,17 +204,35 @@ Zubatronic calcula este consolidado automáticamente. La tabla permite verificar
 
 | Variable | Registro |
 |---|---:|
-| Peso del Taller 01 dentro del acumulado `T₁` | ______ % |
+| Peso del Taller 01 dentro del acumulado `T₁` | 100% para el primer corte 2026-2 |
 | Aporte del Taller 01 a `T₁` | Nota Taller 01 × peso ÷ 100 |
 
 ```text
-T₁ = Σ(Nota de cada taller o tarea × su peso) / 100
+T₁ = Nota Taller 01
 Nota Corte 1 = 0,28 T₁ + 0,42 L₁ + 0,30 E₁
 ```
 
-Este documento entrega la **Nota Taller 01** y los resultados desagregados por criterio para su captura. La nota pasa al consolidado de talleres y tareas del primer corte; Zubatronic genera por separado los reportes RAE/SO.
+Este documento entrega la **Nota Taller 01** y los resultados desagregados por criterio para su captura. En 2026-2, Taller 01 constituye el 100% de `T₁`; cualquier cambio exige publicar una nueva versión antes de recibir entregas. Zubatronic genera por separado los reportes RAE/SO.
 
-## 9. Cierre
+## 9. Consolidación ABET y mejora continua
+
+La nota académica anterior no se interpreta como un único nivel ABET. Para cada indicador se consolidan por separado los estudiantes evaluables.
+
+| Indicador | N evaluable | N en N3 o superior | Porcentaje de logro | Meta | Hallazgo |
+|---|---:|---:|---:|---:|---|
+| 2.1 / SO2 |  |  |  | 70% |  |
+| 3.1 / SO3 |  |  |  | 70% |  |
+
+| Campo de cierre de ciclo | Registro |
+|---|---|
+| Decisión derivada del hallazgo |  |
+| Acción de mejora |  |
+| Responsable |  |
+| Fecha prevista de seguimiento |  |
+| Evidencia de seguimiento |  |
+| Resultado observado en el siguiente ciclo |  |
+
+## 10. Cierre
 
 Nombre de quien evalúa: ____________________________________  Fecha: __________________
 

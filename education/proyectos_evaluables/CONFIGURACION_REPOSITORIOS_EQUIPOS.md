@@ -143,6 +143,11 @@ El SHA es la referencia definitiva de evaluación. Un tag sólo se considera pro
 
 ## 7. Gestión mediante GitHub Teams
 
+La hoja privada `Equipos` del panel docente es la fuente única de conformación.
+Para la matrícula inicial de 19 estudiantes se usan nueve equipos —ocho parejas
+y un trío— y `equipo-10` queda como reserva. No se mantienen listas manuales
+independientes en Classroom, GitHub ni dentro de este repositorio público.
+
 Los permisos se asignan mediante equipos de la organización, no mediante una lista dispersa de colaboradores directos:
 
 - `docentes`: permiso `maintain` o `admin`;
@@ -167,6 +172,11 @@ gh api -X PUT \
 ```
 
 Los estudiantes no reciben permisos `maintain` ni `admin`.
+
+La réplica idempotente del CSV privado se ejecuta con
+[`education/administracion/github/sincronizar_equipos.py`](../administracion/github/sincronizar_equipos.py).
+Su modo predeterminado es `VISTA_PREVIA`; `APLICAR` requiere confirmación
+explícita, agrega las membresías previstas y no elimina accesos automáticamente.
 
 ## 8. Protección requerida
 
