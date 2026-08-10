@@ -1,3 +1,14 @@
+---
+name: superstudent-robotics-methodology
+description: A troubleshooting and methodology skill for collaborative robotics education, encapsulating lessons learned from the Burger Delivery experiment (Kinova + TurtleBots).
+version: 1.0.0
+keywords:
+  - robotics
+  - ros2
+  - troubleshooting
+  - methodology
+  - education
+---
 # 🎓 SuperStudent: A Troubleshooting and Methodology Skill for Collaborative Robotics Education
 
 > **Experimento:** Burger Delivery (UMNG) — Kinova Gen3 + TurtleBots + AprilTag + MoveIt 2  

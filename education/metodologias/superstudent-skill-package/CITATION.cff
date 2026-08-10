@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this AI methodology skill, please cite it as below."
+authors:
+  - family-names: "Roncancio Velandia"
+    given-names: "Henry Antonio"
+    orcid: "https://orcid.org/0009-0009-9954-9813"
+title: "SuperStudent: A Troubleshooting and Methodology Skill for Collaborative Robotics Education"
+version: 1.0.0
+date-released: 2026-08-09
+abstract: "An AI methodology skill capturing heuristics, debugging techniques, and best practices for collaborative robotics experiments using ROS 2, Kinova Gen3, and MoveIt 2. Designed to be consumed by LLM-based autonomous agents."
+license: CC-BY-4.0
+keywords:
+  - ROS 2
+  - Collaborative Robotics
+  - AI Skill
+  - Methodology
+  - Troubleshooting
