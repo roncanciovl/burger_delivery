@@ -60,10 +60,10 @@
 </div>
 
 <div class="controls">
-  <button class="btn active" id="btn-0" onclick="goStep(0)">1. main base</button>
-  <button class="btn" id="btn-1" onclick="goStep(1)">2. git checkout -b feat/...</button>
-  <button class="btn" id="btn-2" onclick="goStep(2)">3. commits en la rama</button>
-  <button class="btn" id="btn-3" onclick="goStep(3)">4. PR & Merge a main</button>
+    <button class="btn active" id="btn-0" onclick="goStep(0)">1. Estado inicial (main)</button>
+    <button class="btn" id="btn-1" onclick="goStep(1)">2. git switch -c feat/...</button>
+    <button class="btn" id="btn-2" onclick="goStep(2)">3. Commits en la rama</button>
+    <button class="btn" id="btn-3" onclick="goStep(3)">4. PR & Merge a main</button>
 </div>
 
 <div class="stage">
@@ -169,7 +169,6 @@
   <p id="info-body">La rama <span class="cmd">main</span> contiene la versión base del proyecto. En la metodología del curso, <strong>main está protegida por Rulesets</strong>: nadie hace push directo a ella.</p>
 </div>
 
-<!-- CALLOUT ORGANIZATIONS / ABET -->
 <div class="info-panel" style="border-left: 4px solid var(--green); background: rgba(63,185,80,0.05); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
   <div>
     <h4 style="color:var(--green); font-size:14px; margin-bottom:4px;">🏢 Convención de Ramas para Trabajo en Equipo</h4>
@@ -192,9 +191,9 @@ const steps = [
     headX: 370, headY: 130, headStroke: "#3fb950"
   },
   {
-    label: "git checkout -b feat/carlos-monitor",
-    title: "🌿 Crear rama individual — git checkout -b feat/estudiante-modulo",
-    body: `<span class="cmd">git checkout -b feat/carlos-monitor</span> crea la rama de trabajo individual a partir de <span class="cmd">main</span>. Cada estudiante desarrolla su módulo de forma aislada sin riesgo de romper el trabajo de sus compañeros.`,
+    label: "git switch -c feat/carlos-monitor",
+    title: "🌿 Crear rama individual — git switch -c feat/estudiante-modulo",
+    body: `<span class="cmd">git switch -c feat/carlos-monitor</span> crea la rama de trabajo individual a partir de <span class="cmd">main</span>. Cada estudiante desarrolla su módulo de forma aislada sin riesgo de romper el trabajo de sus compañeros.`,
     show: ["branch-curve","lbl-feat"], hide: ["c-f1","c-f2","a-f1f2","merge-curve","c-merge"],
     headX: 450, headY: 295, headStroke: "#58a6ff"
   },

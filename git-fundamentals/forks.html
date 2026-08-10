@@ -228,15 +228,15 @@ const steps = [
     show: ["fork-repo","fork-arrow"], hide: ["local-zone","local-label","local-box","clone-arrow","clone-label","push-arrow","push-label","pr-arrow","pr-label","new-commit","local-f1"]
   },
   {
-    step: "Paso 3 — git clone para trabajar localmente",
-    title: "📥 git clone — descargar a tu PC",
-    body: `<span class="cmd">git clone https://github.com/you/repo.git</span> descarga tu fork a tu máquina. El remoto <span class="cmd-g">origin</span> apunta a <em>tu</em> fork, no al original.`,
+    step: "Paso 3 — Clonar a tu máquina local",
+    title: "💻 Copia Local",
+    body: `<span class="cmd">git clone git@github.com:you/repo.git</span> descarga tu fork a tu máquina. El remoto <span class="cmd-g">origin</span> apunta a <em>tu</em> fork, no al original.`,
     show: ["fork-repo","fork-arrow","local-zone","local-label","local-box","clone-arrow","clone-label"], hide: ["push-arrow","push-label","pr-arrow","pr-label","new-commit","local-f1"]
   },
   {
-    step: "Paso 4 — Haces cambios locales (commits)",
-    title: "✏️ Cambios locales — nuevos commits",
-    body: `Creas una rama, haces tus cambios y los commiteas: <span class="cmd">git checkout -b feature</span> → editas archivos → <span class="cmd">git commit -m "mi cambio"</span>. Todo sucede en tu máquina.`,
+    step: "Paso 4 — Trabajo Local (Branches y Commits)",
+    title: "🌿 Trabajo en Ramas",
+    body: `Creas una rama, haces tus cambios y los commiteas: <span class="cmd">git switch -c feature</span> → editas archivos → <span class="cmd">git commit -m "mi cambio"</span>. Todo sucede en tu máquina.`,
     show: ["fork-repo","fork-arrow","local-zone","local-label","local-box","clone-arrow","clone-label","local-f1"], hide: ["push-arrow","push-label","pr-arrow","pr-label","new-commit"]
   },
   {

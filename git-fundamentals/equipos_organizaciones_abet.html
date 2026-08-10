@@ -669,11 +669,13 @@
             Paso 3: Ramas Individuales por Estudiante
           </h4>
           <p style="font-size:13px; color:var(--muted); line-height:1.6;">
-            Cada estudiante clona el repositorio del equipo y crea de inmediato su rama individual de trabajo:
+            Cada estudiante clona el repositorio del equipo por SSH, desactiva escrituras a upstream y crea su rama individual:
           </p>
           <div class="code-block" style="font-size:11.5px; padding:10px 12px; margin:8px 0;">
-            git clone &lt;URL-REPO-EQUIPO&gt;<br/>
-            git checkout -b feat/estudiante-apellido-monitor
+            git clone git@github.com:umng-mecatronica-ros/burger-kinova-equipo-01.git<br/>
+            git remote add upstream git@github.com:roncanciovl/burger_delivery.git<br/>
+            git remote set-url --push upstream DISABLED<br/>
+            git switch -c feat/estudiante-apellido-monitor
           </div>
           <p style="font-size:12px; color:var(--red);">
             ⛔ <strong>Regla:</strong> Queda estrictamente prohibido realizar commits directos en <code>main</code>.
@@ -1010,7 +1012,7 @@
 
       document.getElementById('cmd-branch').textContent = 
 `# Crear y cambiar a tu rama individual de trabajo\n` +
-`git checkout -b ${branchName}\n\n` +
+`git switch -c ${branchName}\n\n` +
 `# Realizar cambios en tus nodos ROS 2 y confirmar\n` +
 `git add .\n` +
 `git commit -m "feat(${mod}): implementar funcionalidad de entrega"\n\n` +
@@ -1019,8 +1021,8 @@
 
       document.getElementById('cmd-delivery').textContent = 
 `# 1. Tras hacer merge del PR a main, cambiar a main y sincronizar\n` +
-`git checkout main\n` +
-`git pull origin main\n\n` +
+`git switch main\n` +
+`git pull --ff-only origin main\n\n` +
 `# 2. Crear y subir el Tag de entrega\n` +
 `git tag -a ${tag} -m "Entrega oficial del corte"\n` +
 `git push origin ${tag}\n\n` +

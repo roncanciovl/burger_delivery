@@ -1062,7 +1062,7 @@
         <text x="285" y="105" font-family="Fira Code" font-size="10" fill="#bc8cff">feat/BGR-102</text>
         <text x="285" y="122" font-family="Inter" font-size="9" fill="#8b949e">Rama creada en repo</text>
         <text x="275" y="160" font-family="Inter" font-size="11" fill="#8b949e">Local:</text>
-        <text x="275" y="178" font-family="Fira Code" font-size="9" fill="#58a6ff">git checkout -b ...</text>
+        <text x="275" y="178" font-family="Fira Code" font-size="9" fill="#58a6ff">git switch -c ...</text>
         <text x="275" y="196" font-family="Fira Code" font-size="9" fill="#58a6ff">git commit ...</text>
 
         <!-- Arrow 2->3 -->
@@ -1364,7 +1364,7 @@ const hierarchyData = {
     func: 'Rama base de código probado y listo para producción. Protegida contra push directo.',
     perm: 'Solo admite código mediante Pull Requests aprobados con pipelines exitosos.',
     inherit: 'Regla heredada desde el Proyecto AUTONOMY.',
-    cmd: 'git checkout main && git pull origin main',
+    cmd: 'git switch main && git pull origin main',
     activeNodes: ['node-ws', 'node-proj-aut', 'node-repo-burger', 'node-branch-main'],
     activeConns: ['conn-ws-p1', 'conn-p1-r1', 'conn-r1-bm']
   },

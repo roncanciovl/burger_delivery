@@ -110,7 +110,7 @@
   <!-- Terminal / Command -->
   <g id="command-clone" opacity="0">
     <rect x="70" y="100" width="410" height="40" rx="6" fill="#0d1117" stroke="#30363d"/>
-    <text x="85" y="125" font-family="Fira Code" font-size="11" fill="#58a6ff">$ git clone https://github.com/org/burger-delivery-equipo-01.git</text>
+    <text x="85" y="125" font-family="Fira Code" font-size="11" fill="#58a6ff">$ git clone git@github.com:org/burger-delivery-eq-01.git</text>
   </g>
 
   <!-- Downloading Animation -->
@@ -188,7 +188,7 @@ const steps = [
   },
   {
     title: "4. Copia Local en tu Workspace ROS 2",
-    body: "Al finalizar, tienes tu carpeta local configurada con el remoto <span class='cmd'>origin</span> apuntando a tu equipo. ¡Listo para crear tu rama individual con <span class='cmd'>git checkout -b feat/...</span>!",
+    body: "Al finalizar, tienes tu carpeta local configurada con el remoto <span class='cmd'>origin</span> apuntando a tu equipo. ¡Listo para crear tu rama individual con <span class='cmd'>git switch -c feat/...</span>!",
     show: ["remote-repo", "command-clone", "local-repo"],
     hide: ["download-flow"]
   }
