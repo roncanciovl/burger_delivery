@@ -1,6 +1,6 @@
-# Instrumento ABET — Proyecto del primer corte: conexión con Kinova Gen3
+# Plantilla de captura de evidencia y calificación grupal — Proyecto del primer corte: conexión con Kinova Gen3
 
-> Instrumento de evidencia y calificación asociado a `education/proyectos_evaluables/PROYECTO_CORTE_1_CONEXION_KINOVA.md`. La especificación técnica define el proyecto; este documento registra exclusivamente las evidencias, el nivel alcanzado y la nota de la entrega final del primer corte.
+> Plantilla asociada a `education/proyectos_evaluables/PROYECTO_CORTE_1_CONEXION_KINOVA.md`. La especificación técnica define el proyecto; este documento registra exclusivamente las evidencias, las puntuaciones grupales por criterio y la nota de la entrega final del primer corte. No consolida ni interpreta datos de cohorte.
 
 ## 1. Identificación
 
@@ -9,39 +9,39 @@
 | Asignatura | ROBOT OPERATING SYSTEM - ROS |
 | Periodo | 2026-2 |
 | Corte / instrumento | Primer corte / Entrega final y sustentación técnica |
-| Proyecto | Package `burger_kinova_connection` |
-| Estudiante evaluado / código |  |
+| Proyecto / package | `burger_kinova_connection` |
 | Equipo / integrantes |  |
-| Grupo |  |
+| Códigos / grupo |  |
 | Repositorio |  |
 | Rama y commit evaluados |  |
 | Fecha de demostración |  |
 | Evaluador |  |
-| Versión del instrumento | 1.0 |
+| Versión del instrumento | 1.1 |
+| Unidad de calificación | Equipo; una misma puntuación para todos sus integrantes |
 | Estación conectada al Kinova |  |
 | Estación cliente DDS |  |
 | ROS_DOMAIN_ID |  |
 
 ## 2. Resultado de este instrumento
 
-Este instrumento produce la **Nota Proyecto Corte 1**, denominada `E₁` en el syllabus, y el resultado desagregado de cada criterio para su captura en Zubatronic/SGDE. `E₁` representa el 30% de la nota del primer corte; los niveles por criterio alimentan por separado los reportes RAE/SO.
+Esta plantilla produce la **Nota Proyecto Corte 1**, denominada `E₁` en el syllabus, y las puntuaciones grupales desagregadas por criterio para su captura en Zubatronic/SGDE. `E₁` representa el 30% de la nota del primer corte. Los códigos RAE/SO clasifican los criterios, pero estos datos grupales no se interpretan como logro individual de cada estudiante ni constituyen por sí solos un análisis ABET.
 
 | Criterio | RAE / indicador | Student Outcome | Peso | Máximo sobre 5,0 |
 |---|---|---|---:|---:|
-| C1. Arquitectura e integración funcional con Kortex | 2.1 | SO2 — Diseño de soluciones | 35% | 1,75 |
-| C2. Validación experimental y diagnóstico de comunicación | 6.4 transversal | SO6 — Experimentación y análisis | 25% | 1,25 |
+| C1. Arquitectura e integración funcional con Kortex | 2.1 | SO2 — Diseño de soluciones | 40% | 2,00 |
+| C2. Validación experimental y diagnóstico de comunicación | 6.4 transversal | SO6 — Experimentación y análisis | 30% | 1,50 |
 | C3. Seguridad física, de software y de red | 4.1 | SO4 — Responsabilidad profesional | 15% | 0,75 |
 | C4. Documentación reproducible y sustentación técnica | 3.1 | SO3 — Comunicación efectiva | 15% | 0,75 |
-| C5. Trabajo en equipo y contrato de integración | 5.1 | SO5 — Trabajo en equipo | 10% | 0,50 |
 | **Total** |  |  | **100%** | **5,00** |
 
 ## 3. Forma de uso
 
-1. El equipo registra las evidencias E1–E10 antes de la sustentación y se diligencia un registro por estudiante.
+1. El equipo registra las evidencias E1–E10 antes de la sustentación y se diligencia un solo registro por equipo.
 2. Quien evalúa marca **una sola banda de desempeño por criterio** y registra un valor de 0 a 500 dentro del intervalo correspondiente.
 3. Los descriptores muestran progresión de desempeño. N3, N4 y N5 pueden incorporar capacidades de niveles anteriores, mientras N1 y N2 describen bandas alternativas de desempeño insuficiente o parcial.
-4. Si falta una evidencia obligatoria, se marca N1 y se registra 0. Una exclusión autorizada o retiro oficial no se convierte en nota: se gestiona según la regla institucional de población.
+4. Si falta una evidencia obligatoria, se marca N1 y se registra 0. Una exclusión autorizada o retiro oficial se registra como `NA / no evaluado` y no se convierte en nota.
 5. Zubatronic/SGDE calcula automáticamente el aporte ponderado. En una copia manual se usa `aporte = valor × peso / 100` y la nota sobre 5,0 es el total sobre 500 dividido entre 100.
+6. La puntuación obtenida se asigna a todos los integrantes registrados del equipo. Esta plantilla no realiza agregación, análisis de cohorte, interpretación de logro ni mejora continua; esas tareas corresponden a un consolidado posterior.
 
 | Nivel | Intervalo Zubatronic / valor guía | Interpretación |
 |---|---:|---|
@@ -64,7 +64,7 @@ Este instrumento produce la **Nota Proyecto Corte 1**, denominada `E₁` en el s
 | E7 | Validación de tres metas bloqueadas: movimiento deshabilitado, articulación faltante y límite excedido. |  |
 | E8 | Trayectoria segura autorizada: meta, feedback, resultado y verificación del estado final. |  |
 | E9 | Despliegue distribuido: estación A con Kortex, estación B con el cliente y contrato de red/DDS. |  |
-| E10 | README, diagrama del grafo, protocolo de seguridad, roles, commits y sustentación reproducible. |  |
+| E10 | README, diagrama del grafo, protocolo de seguridad, registro de integración del equipo y sustentación reproducible. |  |
 
 ### Registro mínimo de la sesión evaluada
 
@@ -85,7 +85,7 @@ Este instrumento produce la **Nota Proyecto Corte 1**, denominada `E₁` en el s
 
 Marque con una **X** una sola banda en cada criterio y escriba el valor exacto que se capturará en Zubatronic. Si no existe evidencia obligatoria verificable, marque N1 y registre 0.
 
-### C1. Arquitectura e integración funcional con Kortex — 35% — RAE 2.1 / SO2
+### C1. Arquitectura e integración funcional con Kortex — 40% — RAE 2.1 / SO2
 
 | Marque | Nivel | Evidencia observable del nivel |
 |:---:|---|---|
@@ -97,7 +97,7 @@ Marque con una **X** una sola banda en cada criterio y escriba el valor exacto q
 
 **Nivel C1 marcado:** ________ &nbsp;&nbsp; **Valor Zubatronic (0–500):** ________
 
-### C2. Validación experimental y diagnóstico de comunicación — 25% — RAE 6.4 / SO6
+### C2. Validación experimental y diagnóstico de comunicación — 30% — RAE 6.4 / SO6
 
 | Marque | Nivel | Evidencia observable del nivel |
 |:---:|---|---|
@@ -133,25 +133,13 @@ Marque con una **X** una sola banda en cada criterio y escriba el valor exacto q
 
 **Nivel C4 marcado:** ________ &nbsp;&nbsp; **Valor Zubatronic (0–500):** ________
 
-### C5. Trabajo en equipo y contrato de integración — 10% — RAE 5.1 / SO5
-
-| Marque | Nivel | Evidencia observable del nivel |
-|:---:|---|---|
-| ☐ | N5 — 475–500 | Además de N4, el equipo demuestra revisión cruzada, decisiones técnicas compartidas y resolución documentada de conflictos o fallas de integración. |
-| ☐ | N4 — 400–474 | Además de N3, los commits y revisiones muestran contribuciones equilibradas; las interfaces se acordaron antes de integrar y se respetaron durante las pruebas. |
-| ☐ | N3 — 300–399 | Define roles, contrato de interfaces y responsabilidades; integra monitor, launch, action client y documentación en una demostración común. |
-| ☐ | N2 — 150–299 | La distribución de tareas existe, pero la integración es tardía, las interfaces cambian sin control o las contribuciones son difíciles de verificar. |
-| ☐ | N1 — 0–149 | El trabajo se concentra en una persona, no existe evidencia de coordinación técnica o falta la comprobación individual obligatoria. |
-
-**Nivel C5 marcado:** ________ &nbsp;&nbsp; **Valor Zubatronic (0–500):** ________
-
 ## 6. Captura y cálculo
 
 Capture en Zubatronic el valor exacto de cada criterio. La plataforma calcula el aporte ponderado con la fórmula:
 
 ```text
 Aporte del criterio = valor del criterio × peso / 100
-Nota del instrumento sobre 500 = suma de los cinco aportes
+Nota del instrumento sobre 500 = suma de los cuatro aportes
 Nota del instrumento sobre 5,0 = nota sobre 500 / 100
 ```
 
@@ -163,21 +151,12 @@ Zubatronic calcula este consolidado automáticamente. La tabla permite verificar
 
 | Criterio | Peso | Nivel marcado | Valor del nivel | Aporte ponderado |
 |---|---:|:---:|---:|---:|
-| C1. Arquitectura e integración | 35% |  |  |  |
-| C2. Validación y diagnóstico | 25% |  |  |  |
+| C1. Arquitectura e integración | 40% |  |  |  |
+| C2. Validación y diagnóstico | 30% |  |  |  |
 | C3. Seguridad | 15% |  |  |  |
 | C4. Documentación y sustentación | 15% |  |  |  |
-| C5. Trabajo en equipo | 10% |  |  |  |
 | **Nota Proyecto Corte 1 — escala 0–500** | **100%** |  |  | **________ / 500** |
 | **Nota Proyecto Corte 1 — escala 0,0–5,0** |  |  |  | **________ / 5,0** |
-
-| Resultado complementario | Registro |
-|---|---|
-| Criterios en N3 o superior |  |
-| Criterios por debajo de N3 |  |
-| Fortalezas observadas |  |
-| Mejora prioritaria |  |
-| Evidencia individual verificada | Sí ☐ / No ☐ |
 
 ## 8. Integración con la nota del primer corte
 
@@ -186,7 +165,7 @@ E₁ = Nota Proyecto Corte 1
 Nota Corte 1 = 0,28 T₁ + 0,42 L₁ + 0,30 E₁
 ```
 
-Este instrumento genera `E₁` y los resultados desagregados por criterio. Los promedios `T₁` y `L₁` provienen de sus instrumentos respectivos; Zubatronic consolida los reportes RAE/SO a partir de la captura por estudiante.
+Esta plantilla genera `E₁` y las puntuaciones grupales desagregadas por criterio. Los promedios `T₁` y `L₁` provienen de sus instrumentos respectivos. La organización por RAE/SO facilita una consolidación posterior, pero esta plantilla no calcula porcentajes de logro, no interpreta resultados y no documenta acciones de mejora.
 
 ## 9. Cierre
 

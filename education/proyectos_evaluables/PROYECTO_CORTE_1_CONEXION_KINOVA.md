@@ -430,7 +430,7 @@ No se permite el uso de credenciales compartidas ni commits anónimos.
    - Funcionalidad agregada o corregida.
    - Comandos de prueba ejecutados para verificar el cambio.
    - Interfaces o parámetros modificados.
-3. **Revisión cruzada por pares (Peer Code Review):** Cada PR debe ser revisado y aprobado por al menos otro integrante del equipo antes del *merge*. Los comentarios y sugerencias técnicas del PR forman parte de la evidencia complementaria del proceso de trabajo en equipo; no sustituyen el instrumento ABET ni la sustentación individual.
+3. **Revisión cruzada por pares (Peer Code Review):** Cada PR debe ser revisado y aprobado por al menos otro integrante del equipo antes del *merge*. Los comentarios y sugerencias técnicas del PR forman parte de la trazabilidad del proceso de trabajo en equipo; no sustituyen la valoración del producto ni la sustentación del equipo.
 4. **Sincronización de una base publicada por el docente:** El docente identifica cada base mediante un tag, por ejemplo `base-2026-2-corte1`. La actualización se integra mediante una rama y un PR, nunca mediante `push` directo a `main`:
    ```bash
    git fetch upstream --tags
