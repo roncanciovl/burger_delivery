@@ -1,10 +1,10 @@
-# GUÍA DE LABORATORIO 02: PRUEBAS, COMPRESIÓN DE VIDEO Y DIAGNÓSTICO DISTRIBUIDO DEL MÓDULO DE VISIÓN KINOVA GEN3 CON CYCLONEDDS
+# GUÍA DE LABORATORIO 02: PRUEBAS, COMPRESIÓN DE VIDEO Y DIAGNÓSTICO DISTRIBUIDO DEL MÓDULO DE VISIÓN KINOVA GEN3 CON CYCLONEDDS Y MONITOR DE RED
 
 ---
 
 | FACULTAD | PROGRAMA | ASIGNATURA | SEMESTRE | CÓDIGO GUÍA | REVISIÓN |
 |:---|:---|:---|:---:|:---:|:---:|
-| Facultad de Ingeniería | Ingeniería Mecatrónica | ROBOT OPERATING SYSTEM - ROS | VIII – IX | GL-AA-F-1 / LAB-02 | 1.2 (2026-2) |
+| Facultad de Ingeniería | Ingeniería Mecatrónica | ROBOT OPERATING SYSTEM - ROS | VIII – IX | GL-AA-F-1 / LAB-02 | 1.3 (2026-2) |
 
 ---
 
@@ -12,19 +12,14 @@
 
 | Descripción del Cambio | Justificación | Fecha |
 |---|---|:---:|
-| Creación e integración de compresión de video, CycloneDDS y justificación arquitectónica de RTSP | Diseño de la práctica experimental para pruebas de red, streaming RTSP directo en Gateway local, compresión con `image_transport`, transporte distribuido con CycloneDDS sobre Wi-Fi y diagnóstico por capas. | 17/08/2026 |
+| Integración de Monitor de Red Híbrido y Grabación del Experimento | Incorporación del panel web de telemetría en tiempo real (`monitor_red`), exportación de logs CSV de QoS y protocolo de grabación audiovisual obligatoria del experimento distribuido. | 17/08/2026 |
 
 ---
 
 ## 2. INTRODUCCIÓN
 
 ### 2.1. Contexto Teórico y Arquitectura de Flujo de Datos
-En celdas robóticas colaborativas, la arquitectura de procesamiento visual suele distribuirse entre múltiples nodos de cómputo: una estación fija conectada físicamente al brazo robótico actúa como pasarela (*Gateway*) de sensores y actuadores, mientras que una estación remota (por ejemplo, una laptop o unidad móvil de cómputo conectada por Wi-Fi) procesa los algoritmos pesados de percepción visual (detección de *AprilTags*, segmentación semántica o estimación de pose 3D).
-
-#### ¿Por qué el Kinova utiliza RTSP y cómo se integra con ROS 2?
-El módulo de visión integrado en la muñeca del robot **Kinova Gen3 no es un nodo de ROS 2 nativo**. Internamente, el brazo opera un servidor multimedia embebido que transmite los fotogramas ópticos en formato H.264 mediante el protocolo estándar de la industria de video: **RTSP (Real-Time Streaming Protocol, puerto 554)** sobre las URLs `rtsp://192.168.1.10/color` y `rtsp://192.168.1.10/depth`.
-
-Para que el sistema de percepción robótica opere de forma coordinada, la arquitectura divide el flujo en dos enlaces con propósitos y protocolos diferenciados:
+En celdas robóticas colaborativas, la arquitectura de procesamiento visual se distribuye entre dos nodos: una estación fija conectada físicamente al brazo robótico que actúa como pasarela (**Dispositivo A: Gateway**) para adquisición de hardware, y una estación remota (**Dispositivo B: Procesamiento Wi-Fi**) que ejecuta algoritmos de visión por computador (detección de *AprilTags*, segmentación semántica o estimación de pose 3D).
 
 ```
 +---------------------------------------------------------------------------------------------------+
@@ -46,61 +41,51 @@ Para que el sistema de percepción robótica opere de forma coordinada, la arqui
           |                                  ↓ (Comprime dinámico JPEG ~1.5 MB/s)   |
           |                       [ CycloneDDS Publisher ]                          |
           |                                  |                                      |
+          |                       [ Monitor de Red :8080 ]                          |
+          |                       (Sniffer RTPS / Telemetría)                       |
+          |                                  |                                      |
           |                                  |  === 2. CycloneDDS / Wi-Fi ===>      |
           |                                  |     (/camera/.../compressed)         |
           |                                  |     (/camera/camera_info)            |
           |                                  |     (/tf, /joint_states)             |
+          |                                  |     Dashboard Web: http://IP:8080    |
           |                                  |                                      |
           |                                  |                          [ CycloneDDS Subscriber ]
           |                                  |                                      ↓
           |                                  |                          [ Detección AprilTags / IA ]
 ```
 
-#### Comparativa de Roles en la Arquitectura
+#### ¿Por qué el Kinova utiliza RTSP y cómo se integra con ROS 2?
+El sensor óptico en la muñeca del Kinova Gen3 opera como un servidor RTSP nativo (puerto 554) transmitiendo video H.264. En el Gateway local (Dispositivo A), el driver decodifica este flujo, le estampa el reloj del sistema (`header.stamp`) y lo asocia al árbol cinemático (`TF2`). Luego, `image_transport` comprime dinámicamente el video a JPEG ($< 1.5\text{ MB/s}$, reduciendo $>90\%$ del ancho de banda) y lo distribuye mediante CycloneDDS sobre Wi-Fi.
 
-| Componente / Mecanismo | Dónde Opera | Protocolo / Transporte | Función Técnica en la Celda |
-|---|---|---|---|
-| **RTSP directo (`test_kinova_camera.py`)** | Kinova $\rightarrow$ Dispositivo A | TCP en puerto 554 (H.264 nativo) | **Diagnóstico de Base:** Valida que el sensor físico y el enlace Ethernet local están 100% operativos sin depender de ROS 2, RViz2 ni Wi-Fi. |
-| **Driver ROS 2 (`ros2_kortex_vision`)** | En Dispositivo A (Gateway) | Puente RTSP $\rightarrow$ ROS 2 | **Ingesta y Sincronización:** Decodifica H.264, añade estampas de tiempo (`header.stamp`) y vincula el marco de coordenadas al árbol cinemático (`TF2`). |
-| **Adaptador `image_transport`** | En Dispositivo A (Gateway) | Compresión JPEG dinámica | **Optimización:** Reduce el consumo de ancho de banda de $\sim 25\text{ MB/s}$ a $< 1.5\text{ MB/s}$ ($>90\%$ de ahorro). |
-| **CycloneDDS (`rmw_cyclonedds_cpp`)** | Dispositivo A $\rightarrow$ Dispositivo B | DDS RTPS sobre Wi-Fi (`cyclonedds.xml`) | **Distribución Robótica:** Transporta el video comprimido, la calibración (`CameraInfo`) y transformaciones (`TF2`) hacia la estación remota de forma tolerante a caídas de paquetes. |
-
----
-
-### 2.2. ¿Por qué NO se envía RTSP directo por Wi-Fi al Dispositivo B?
-En una celda de manufactura real, enviar el flujo RTSP directamente por Wi-Fi a la estación de procesamiento sería un error arquitectónico por tres razones críticas:
-1. **Pérdida de Sincronización Temporal (`header.stamp`):** Un stream RTSP plano no contiene la estampa de tiempo del reloj del sistema de control del robot. Sin esto, el Dispositivo B no puede sincronizar el instante exacto de captura con la posición de las articulaciones (`/joint_states`) para planificar movimientos con MoveIt 2.
-2. **Pérdida del Árbol de Transformaciones (TF2) y Calibración:** Los algoritmos de localización (*AprilTags*, estimación 3D) requieren la matriz de calibración intrínseca (`sensor_msgs/msg/CameraInfo`) y la transformación extrínseca respecto a la base del robot (`base_link -> bracelet_link -> camera_color_frame`). El transporte ROS 2 sobre CycloneDDS garantiza que la imagen viaje vinculada a su contexto espacial.
-3. **Seguridad y Aislamiento de Red:** El Kinova debe residir en una subred industrial cableada y protegida (`192.168.1.0/24`). Exponer el puerto RTSP del robot directamente a la red Wi-Fi general (`192.168.50.0/24`) introduce vulnerabilidades de seguridad y congestión innecesaria en el procesador embebido del brazo.
-
-### 2.3. Importancia del Diagnóstico por Capas
-Cuando la estación remota en Wi-Fi experimenta congelamiento o descarte de fotogramas, existen múltiples causas posibles (hardware del sensor, cable Ethernet, decodificador de ROS 2, compresión de imagen, multidifusión de DDS o sobrecarga en el algoritmo de visión). **El visor RTSP directo (`test_kinova_camera.py`) es la herramienta metodológica para aislar las capas 1 y 2 en 5 segundos**, permitiendo comprobar el hardware y la red física antes de investigar capas superiores de middleware o procesamiento.
+#### Medición y Telemetría Científica con el Monitor de Red (`monitor_red`)
+El proyecto incorpora un **Monitor de Red Híbrido** (`network_setup/iniciar_monitor.sh`) que levanta un servidor web en `http://localhost:8080`. Este monitor escucha pasivamente los anuncios SPDP de descubrimiento multicast, audita el tráfico RTPS de puertos DDS (7400–8000), grafica la latencia RTT y el jitter en tiempo real, y registra la telemetría experimental en archivos `.csv` para análisis cuantitativo riguroso.
 
 ---
 
 ## 3. OBJETIVOS
 
 ### 3.1. Objetivo General
-Validar, optimizar y diagnosticar experimentalmente el flujo óptico del robot Kinova Gen3, integrando pruebas de streaming RTSP directo en la pasarela local, compresión de video mediante `image_transport`, configuración robusta de CycloneDDS para transmisión inalámbrica multi-dispositivo y aplicación de un protocolo de depuración por capas ante fallas inducidas.
+Validar, optimizar y diagnosticar experimentalmente el flujo óptico del robot Kinova Gen3, integrando compresión de video (`image_transport`), configuración robusta de CycloneDDS para transmisión inalámbrica multi-dispositivo, auditoría de telemetría de red con el Monitor Web (`monitor_red`), grabación audiovisual del experimento y aplicación de un protocolo de depuración por capas.
 
 ### 3.2. Objetivos Específicos
-1. **Caracterizar la capa de red cableada e inalámbrica:** Medir cuantitativamente RTT, jitter y pérdida de paquetes en el enlace local (Dispositivo A $\rightarrow$ Kinova) y en el canal Wi-Fi (Dispositivo B $\rightarrow$ Dispositivo A).
-2. **Validar streaming RTSP directo con OpenCV:** Ejecutar el visor directo sin ROS (`test_kinova_camera.py`) en color y profundidad, evaluando transporte FFMPEG TCP vs UDP y capturando imágenes para calibración.
-3. **Implementar y evaluar compresión de video en ROS 2:** Configurar `image_transport` para publicar `/camera/color/image_raw/compressed`, comparando cuantitativamente el consumo de ancho de banda (`ros2 topic bw`) y la tasa de cuadros (`ros2 topic hz`) frente al flujo crudo.
-4. **Desplegar y verificar CycloneDDS en entorno multi-PC sobre Wi-Fi:** Configurar `rmw_cyclonedds_cpp` y `cyclonedds.xml` en ambos dispositivos, verificando la recepción remota, descompresión y sincronización del video en el nodo de procesamiento.
-5. **Diagnosticar fallas inducidas por capas:** Aislar y resolver fallas en red física, streaming RTSP, middleware CycloneDDS, compresión de imagen y configuración del sensor en la interfaz web de Kinova.
+1. **Auditar la calidad de red con el Monitor Web:** Lanzar `iniciar_monitor.sh` y evaluar en tiempo real métricas de tráfico RTPS, paquetes perdidos, latencia y dominios DDS activos, exportando los logs de telemetría en `.csv`.
+2. **Validar streaming RTSP directo con OpenCV:** Ejecutar `test_kinova_camera.py` en color y profundidad para certificar que el hardware óptico y el enlace cableado están sanos antes de cargar el middleware.
+3. **Implementar y evaluar compresión de video:** Configurar `image_transport` para publicar `/camera/color/image_raw/compressed`, cuantificando con `ros2 topic bw` el ahorro de ancho de banda frente al flujo crudo.
+4. **Desplegar CycloneDDS sobre Wi-Fi:** Configurar `rmw_cyclonedds_cpp` y `cyclonedds.xml` en ambos dispositivos, verificando recepción remota fluida y visualización en tiempo real.
+5. **Grabar y documentar el experimento:** Registrar un video continuo que demuestre la operación distribuida, las métricas del monitor web y la resolución de una falla inducida.
 
 ---
 
 ## 4. DESCRIPCIÓN DE LA PRÁCTICA
 
-La práctica se organiza en cinco fases de experimentación y validación técnica:
+La práctica se estructura en seis fases:
 
 ```
   +---------------------------------------------------------------------------------------+
   |                                FASES DE LA PRÁCTICA                                   |
   +---------------------------------------------------------------------------------------+
-  |  FASE 1: DIAGNÓSTICO EN CAPA DE RED (ICMP Ping, RTT, Subred y Enlace Wi-Fi)          |
+  |  FASE 1: DIAGNÓSTICO DE RED Y PUESTA EN MARCHA DEL MONITOR DE RED (Dashboard :8080)   |
   |                                        ↓                                              |
   |  FASE 2: PASSTHROUGH VISUAL DIRECTO (RTSP Color/Depth, FFMPEG TCP vs UDP, Capturas)   |
   |                                        ↓                                              |
@@ -108,7 +93,9 @@ La práctica se organiza en cinco fases de experimentación y validación técni
   |                                        ↓                                              |
   |  FASE 4: PROCESAMIENTO DISTRIBUIDO SOBRE WI-FI CON CYCLONEDDS (Multi-Dispositivo)     |
   |                                        ↓                                              |
-  |  FASE 5: DIAGNÓSTICO METÓDICO POR CAPAS ANTE FALLAS INDUCIDAS Y RECUPERACIÓN          |
+  |  FASE 5: PROTOCOLO DE DIAGNÓSTICO METÓDICO ANTE FALLAS INDUCIDAS POR CAPAS           |
+  |                                        ↓                                              |
+  |  FASE 6: GRABACIÓN DEL EXPERIMENTO Y EXPORTACIÓN DE TELEMETRÍA CSV                    |
   +---------------------------------------------------------------------------------------+
 ```
 
@@ -116,65 +103,61 @@ La práctica se organiza en cinco fases de experimentación y validación técni
 
 | Criterio | RAE / Indicador Oficial | SO | Ponderación |
 |---|---|:---:|:---:|
-| **C1. Conectividad, compresión de video y ancho de banda** | **2.2.** Incorpora restricciones de red, latencia, ancho de banda y seguridad en la integración de hardware heterogéneo (brazos robóticos, sensores, micro-ROS). | SO2 | 25% |
-| **C2. Diagnóstico experimental de visión y protocolos por capas** | **6.4.** Interpreta fallas y diagnósticos experimentales aplicando protocolos de diagnóstico por capas (Sintaxis -> TF -> Red -> Lógica) para aislar errores en hardware y software.<br>*(Apoyo en **6.2** variables de red y parámetros de cámara)* | SO6 | 30% |
-| **C3. Arquitectura distribuida con CycloneDDS y QoS** | **2.1.** Diseña soluciones de software para control y monitoreo de robots, integrando contratos de comunicación (QoS, interfaces customizadas) y redes DDS robustas. | SO2 | 20% |
-| **C4. Documentación técnica, reproducibilidad y capturas** | **3.1.** Elabora documentación técnica reproducible del sistema ROS 2...<br>**3.3.** Comunica resultados experimentales de percepción, calibración y planificación... | SO3 | 15% |
-| **C5. Seguridad, ética en captura visual y trabajo en equipo** | **4.3.** Aplica buenas prácticas de responsabilidad profesional en el uso de datos de cámara, licencias de software, operación segura del robot y documentación de limitaciones.<br>**5.1.** Reconoce habilidades técnicas y define roles... | SO4 / SO5 | 10% |
+| **C1. Conectividad, compresión de video y ancho de banda** | **2.2.** Incorpora restricciones de red, latencia, ancho de banda y seguridad en hardware heterogéneo. | SO2 | 25% |
+| **C2. Diagnóstico experimental de visión y protocolos por capas** | **6.4.** Interpreta fallas y diagnósticos experimentales aplicando protocolos de diagnóstico por capas. | SO6 | 30% |
+| **C3. Arquitectura distribuida con CycloneDDS y QoS** | **2.1.** Diseña soluciones de software integrando contratos QoS y redes DDS robustas. | SO2 | 20% |
+| **C4. Documentación técnica, telemetría y grabación de video** | **3.1.** Elabora documentación técnica reproducible...<br>**3.3.** Comunica resultados experimentales con métricas y demostraciones... | SO3 | 15% |
+| **C5. Seguridad, ética en captura visual y trabajo en equipo** | **4.3.** Aplica buenas prácticas en el uso de datos de cámara, operación segura y roles de equipo.<br>**5.1.** Reconoce habilidades técnicas y define roles... | SO4 / SO5 | 10% |
 | **Total** | | | **100%** |
 
 ---
 
 ## 5. MATERIALES Y EQUIPOS
 
-### 5.1. Equipos del Laboratorio (por puesto de trabajo / grupo)
-
-| DESCRIPCIÓN (Material, reactivo, instrumento, software, hardware, equipo) | CANTIDAD | UNIDAD DE MEDIDA |
+### 5.1. Equipos del Laboratorio (por grupo)
+| DESCRIPCIÓN | CANTIDAD | UNIDAD DE MEDIDA |
 |---|:---:|:---:|
 | Brazo manipulador Kinova Gen3 (7-DOF) con módulo de visión integrado en la muñeca | 1 | Unidad |
-| Switch Gigabit Ethernet + Access Point Router Wi-Fi 6 con soporte multicast | 1 | Unidad |
-| Estación fija (Dispositivo A: Gateway Kinova) con Ubuntu 24.04 LTS y ROS 2 Jazzy | 1 | Unidad |
+| Switch Gigabit Ethernet + Router Wi-Fi 6 | 1 | Unidad |
+| Estación fija (Dispositivo A: Gateway Kinova) con Ubuntu 24.04 y ROS 2 Jazzy | 1 | Unidad |
 | Pulsador de parada de emergencia física y cableado de alimentación | 1 | Unidad |
 
 ### 5.2. Equipos del Estudiante (por grupo)
-
 | DESCRIPCIÓN | CANTIDAD | UNIDAD DE MEDIDA |
 |---|:---:|:---:|
-| Laptop (Dispositivo B: Estación de Procesamiento Wi-Fi) con Ubuntu 24.04 LTS y ROS 2 | 1 | Unidad |
+| Laptop (Dispositivo B: Procesamiento Wi-Fi) con Ubuntu 24.04 LTS y ROS 2 Jazzy | 1 | Unidad |
 | Cable de red UTP Categoría 6 (mínimo 2 metros) | 1 | Unidad |
-| Repositorio `burger_delivery` con paquetes `image_transport`, `image_transport_plugins` y `rmw_cyclonedds_cpp` | 1 | Repositorio |
+| Repositorio `burger_delivery` con `image_transport`, `rmw_cyclonedds_cpp` y `monitor_red` | 1 | Repositorio |
+| Software de captura de video de pantalla (OBS Studio, SimpleScreenRecorder o grabador de sistema) | 1 | Herramienta |
 
 ---
 
 ## 6. SEGURIDAD EN EL LABORATORIO
 
 > [!WARNING]
-> **Normas de Seguridad Física y Operacional:**
-> 1. **Área de Barrido:** Asegure un radio de seguridad de 1.2 m libre de obstáculos alrededor del brazo robótico.
-> 2. **Parada de Emergencia:** Verifique el funcionamiento del botón de parada de emergencia antes de energizar los actuadores.
-> 3. **Gestión de Cables:** Compruebe que los cables de alimentación y Ethernet no se enrollen ni tensionen con las articulaciones de la muñeca.
-> 4. **Tratamiento Ético de Imágenes:** Las capturas ópticas deben limitarse estrictamente a los objetos de prueba del laboratorio.
+> 1. **Área de Barrido:** Asegure un radio libre de 1.2 m alrededor del robot antes de energizarlo.
+> 2. **Parada de Emergencia:** Compruebe la parada de emergencia antes de iniciar pruebas cinemáticas.
+> 3. **Gestión de Cables:** Evite tensiones o torsiones en el cableado durante el movimiento del efector.
+> 4. **Tratamiento Ético de Imágenes:** Las capturas de video deben restringirse a los objetos de calibración del laboratorio.
 
 ---
 
 ## 7. PROCEDIMIENTO EXPERIMENTAL
 
-### Fase 1: Diagnóstico en Capa de Red e Interfaces (ICMP & Enlace Wi-Fi)
+### Fase 1: Diagnóstico de Red y Puesta en Marcha del Monitor de Red
 
-1. **Configuración del Dispositivo A (Gateway):**
-   - Interfaz cableada (`eth0`): IP estática `192.168.1.100/24` (comunicación directa con Kinova en `192.168.1.10`).
-   - Interfaz inalámbrica (`wlan0`): Conectada a la red Wi-Fi del laboratorio (ej. `192.168.50.10/24`).
-2. **Configuración del Dispositivo B (Procesamiento Wi-Fi):**
-   - Interfaz inalámbrica (`wlan0`): Conectada a la misma red Wi-Fi (ej. `192.168.50.20/24`).
-3. **Prueba de Latencia ICMP:**
+1. **Configuración de Enlaces:**
+   - Dispositivo A (Gateway): Ethernet `192.168.1.100/24` (Kinova `192.168.1.10`) y Wi-Fi `192.168.50.10/24`.
+   - Dispositivo B (Wi-Fi): Wi-Fi `192.168.50.20/24`.
+2. **Lanzamiento del Monitor de Red Híbrido:**
+   En el Dispositivo A, ejecute:
    ```bash
-   # En Dispositivo A -> Hacia el Kinova:
-   ping 192.168.1.10 -c 10
-
-   # En Dispositivo B -> Hacia Dispositivo A (Wi-Fi):
-   ping 192.168.50.10 -c 10
+   bash ~/ros2_ws/src/burger_delivery/network_setup/iniciar_monitor.sh
    ```
-   *Criterios cuantitativos:* RTT Ethernet $< 5\text{ ms}$; RTT Wi-Fi $< 15\text{ ms}$ con jitter $< 3\text{ ms}$.
+3. **Acceso al Dashboard Web:**
+   Abra el navegador en `http://localhost:8080` (en PC A) o `http://192.168.50.10:8080` (desde PC B).
+   - Verifique el estado de la topología DDS, las interfaces detectadas y el tráfico RTPS en tiempo real.
+   - En el panel de **Benchmark / Data Logger**, inicie una sesión de registro para capturar la telemetría de la práctica.
 
 ---
 
@@ -194,69 +177,33 @@ La práctica se organiza en cinco fases de experimentación y validación técni
 ### Fase 3: Compresión de Video en ROS 2 (`image_transport`) y Ahorro de Ancho de Banda
 
 1. **Lanzamiento del Nodo Publicador de Visión con Compresión:**
-   En el Dispositivo A, inicie el driver de visión asegurando la carga de los plugins de transporte de imagen:
+   En el Dispositivo A, inicie el driver de visión:
    ```bash
    ros2 launch burger_delivery robot.launch.py
    ```
-2. **Inspección de Tópicos Crudos vs. Comprimidos:**
-   Verifique la disponibilidad del flujo crudo y del flujo comprimido:
+2. **Inspección y Comparativa de Ancho de Banda (`ros2 topic bw`):**
    ```bash
-   ros2 topic list | grep camera
-   # Debe mostrar:
-   # /camera/color/image_raw
-   # /camera/color/image_raw/compressed
-   ```
-3. **Comparativa Cuantitativa de Ancho de Banda (`ros2 topic bw`):**
-   ```bash
-   # Medición del flujo crudo sin comprimir:
+   # Flujo crudo:
    ros2 topic bw /camera/color/image_raw
 
-   # Medición del flujo comprimido en JPEG:
+   # Flujo comprimido JPEG:
    ros2 topic bw /camera/color/image_raw/compressed
    ```
-   - Anote los valores en la **Tabla 3**. Calcule el porcentaje exacto de ahorro de ancho de banda:
-     $$\text{Ahorro (\%)} = \left( 1 - \frac{\text{BW}_{\text{comprimido}}}{\text{BW}_{\text{crudo}}} \right) \times 100\%$$
-4. **Ajuste Dinámico de Parámetros de Compresión JPEG:**
-   Ajuste la calidad JPEG dinámicamente y evalúe el impacto en el ancho de banda y la calidad visual:
-   ```bash
-   ros2 param set /camera/camera_node_driver format "jpeg"
-   ros2 param set /camera/camera_node_driver jpeg_quality 80
-   ros2 param set /camera/camera_node_driver jpeg_quality 30
-   ```
+   - Calcule el ahorro porcentual ($> 90\%$) y anótelo en la **Tabla 3**.
+   - Ajuste la calidad dinámicamente con `ros2 param set /camera/camera_node_driver jpeg_quality 80`.
 
 ---
 
 ### Fase 4: Despliegue y Verificación Distribuida sobre Wi-Fi con CycloneDDS
 
-1. **Configuración de CycloneDDS en Ambos Dispositivos:**
-   En **Dispositivo A** y **Dispositivo B**, exporte las variables de entorno para usar CycloneDDS en el mismo dominio:
+1. **Configuración de CycloneDDS en Ambos Equipos:**
    ```bash
    export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
-   export ROS_DOMAIN_ID=15  # Utilice el ID asignado a su equipo
-   ```
-2. **Configuración de `cyclonedds.xml` para Enlace Wi-Fi:**
-   Cree un archivo de configuración `cyclonedds.xml` para forzar la interfaz Wi-Fi y optimizar los búferes de red:
-   ```xml
-   <?xml version="1.0" encoding="UTF-8" ?>
-   <CycloneDDS xmlns="https://cdds.io/config">
-       <Domain id="any">
-           <General>
-               <NetworkInterfaceAddress>wlan0</NetworkInterfaceAddress>
-               <AllowMulticast>true</AllowMulticast>
-               <MaxMessageSize>65500B</MaxMessageSize>
-           </General>
-           <Discovery>
-               <ParticipantIndex>auto</ParticipantIndex>
-           </Discovery>
-       </Domain>
-   </CycloneDDS>
-   ```
-   Exporte la configuración en ambos equipos:
-   ```bash
+   export ROS_DOMAIN_ID=15
    export CYCLONEDDS_URI=file://$PWD/cyclonedds.xml
    ```
-3. **Recepción, Descompresión y Visualización en Dispositivo B:**
-   Desde el Dispositivo B (conectado por Wi-Fi), verifique la recepción del video comprimido:
+2. **Recepción, Descompresión y Visualización en Dispositivo B:**
+   Desde el Dispositivo B (conectado por Wi-Fi):
    ```bash
    # Medición de frecuencia remota:
    ros2 topic hz /camera/color/image_raw/compressed
@@ -264,37 +211,38 @@ La práctica se organiza en cinco fases de experimentación y validación técni
    # Descompresión y visualización remota con image_view:
    ros2 run image_view image_view --ros-args --remap image:=/camera/color/image_raw _image_transport:=compressed
    ```
-   - Verifique que la tasa de cuadros en el Dispositivo B se mantenga estable ($\ge 20\text{ Hz}$) sin congelamiento.
+   - Observe en el **Monitor de Red** cómo se comporta la tasa de paquetes y el jitter durante el streaming.
 
 ---
 
 ### Fase 5: Protocolo de Diagnóstico Metódico por Capas ante Fallas Inducidas
 
-Cada equipo debe inducir y resolver las siguientes fallas sistemáticas, registrando el diagnóstico en la **Tabla 5**:
+Induzca y resuelva las siguientes fallas sistemáticas registrando el aislamiento en la **Tabla 5**:
+1. **Falla 1 (Capa 1 - Red):** Desconexión o subred incorrecta en Wi-Fi.
+2. **Falla 2 (Capa 2 - RTSP):** Credenciales erróneas en `test_kinova_camera.py`.
+3. **Falla 3 (Capa 3 - CycloneDDS):** Conflicto de `ROS_DOMAIN_ID` o RMW diferente entre PC A y B.
+4. **Falla 4 (Capa 4 - Compresión):** Suscripción al tópico crudo en Wi-Fi y saturación del canal.
+5. **Falla 5 (Capa 5 - Web App):** Desactivación de la cámara en `http://192.168.1.10`.
 
-```
-+-----------------------------------------------------------------------------------------+
-|                      PROTOCOLO DE DIAGNÓSTICO METÓDICO POR CAPAS                        |
-+-----------------------------------------------------------------------------------------+
-| [CAPA 1: RED / ENLACE]     -> ¿Hay enlace Ethernet/Wi-Fi? ¿Responde ping ICMP?          |
-| [CAPA 2: RTSP STREAMING]   -> ¿Responde el puerto 554? ¿Las credenciales son válidas?   |
-| [CAPA 3: CYCLONEDDS / RMW] -> ¿Mismo ROS_DOMAIN_ID? ¿RMW_IMPLEMENTATION coincide?       |
-| [CAPA 4: COMPRESIÓN / QoS] -> ¿El tópico comprimido existe? ¿QoS SensorData compatible? |
-| [CAPA 5: LÓGICA / SENSOR]  -> ¿El sensor está habilitado en la Web App del Kinova?      |
-+-----------------------------------------------------------------------------------------+
-```
+---
 
-1. **Falla 1 (Capa 1 - Red):** Desconecte el enlace Wi-Fi o asigne una IP fuera de subred en Dispositivo B.
-2. **Falla 2 (Capa 2 - RTSP):** Ingrese credenciales erróneas en el script de prueba.
-3. **Falla 3 (Capa 3 - CycloneDDS):** Configure un `ROS_DOMAIN_ID` distinto o RMW diferente (`rmw_fastrtps_cpp` vs `rmw_cyclonedds_cpp`) entre Dispositivo A y B. Observe el bloqueo de descubrimiento de tópicos.
-4. **Falla 4 (Capa 4 - Compresión):** Suscríbase al flujo crudo `/camera/color/image_raw` sobre Wi-Fi y observe la caída drástica de FPS y saturación de ancho de banda frente al flujo comprimido.
-5. **Falla 5 (Capa 5 - Web App):** Desactive la cámara desde `http://192.168.1.10` y verifique los logs de error del driver.
+### Fase 6: Grabación del Experimento y Exportación de Telemetría CSV
+
+1. **Exportación del Log CSV del Monitor de Red:**
+   - Desde el panel web (`http://localhost:8080`), detenga la sesión de grabación de telemetría y descargue el archivo `.csv` generado (`telemetria_red_lab02.csv`).
+2. **Grabación Audiovisual del Experimento:**
+   - Grabe un video continuo (duración sugerida: **2 a 4 minutos**) donde se muestre:
+     - **Pantalla Dispositivo A:** Terminales del driver ROS 2, `image_transport` y el servidor del monitor de red.
+     - **Pantalla Dispositivo B:** `ros2 topic hz`, ventana de `image_view` recibiendo el video por Wi-Fi y el dashboard web del monitor abierto.
+     - **Demostración de Falla:** Inyección en vivo de una falla (ej. caída de frecuencia al suscribir video crudo o desconexión de dominio) y su posterior recuperación.
+     - **Sustentación:** Breve explicación oral de los resultados obtenidos por los integrantes.
+   - Aloje el video en OneDrive institucional o YouTube (enlace no listado) e incluya la URL en el informe y en el Instrumento ABET.
 
 ---
 
 ## 8. RESULTADOS DE LA PRÁCTICA
 
-### Tabla 1: Caracterización de Enlaces de Red (ICMP Ping)
+### Tabla 1: Caracterización de Enlaces de Red (ICMP Ping & Monitor de Red)
 | Enlace Evaluado | IP Origen / Destino | Paquetes (Tx/Rx) | RTT Mínimo (ms) | RTT Promedio (ms) | RTT Máximo (ms) | Jitter (mdev) | Estado |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | **Cableado (Disp. A -> Kinova)** | `192.168.1.100` -> `192.168.1.10` | 10 / ___ | | | | | |
@@ -315,17 +263,19 @@ Cada equipo debe inducir y resolver las siguientes fallas sistemáticas, registr
 | **Comprimido JPEG ($q=80$)** | `/camera/color/image_raw/compressed` | | | |
 | **Comprimido JPEG ($q=30$)** | `/camera/color/image_raw/compressed` | | | |
 
-### Tabla 4: Despliegue Distribuido con CycloneDDS sobre Wi-Fi (Dispositivo B)
-| Parámetro en Dispositivo B | Valor Configurado / Medido | Comportamiento Observado |
+### Tabla 4: Despliegue Distribuido con CycloneDDS y Monitor de Red (Dispositivo B)
+| Parámetro / Métrica | Valor Configurado / Medido en Dispositivo B | Comportamiento Observado en Dashboard Web |
 |---|:---:|---|
-| RMW Seleccionado | `rmw_cyclonedds_cpp` | |
-| `ROS_DOMAIN_ID` | | |
-| Tópico Remoto Suscrito | `/camera/color/image_raw/compressed` | |
+| RMW Seleccionado | `rmw_cyclonedds_cpp` | Confirmado en `/api/status` |
+| `ROS_DOMAIN_ID` | | Dominio único activo en sniffer |
+| Tópico Remoto Suscrito | `/camera/color/image_raw/compressed` | Flujo estable detectado |
 | Frecuencia Remota Recibida (`ros2 topic hz`) | | |
-| Fluidez de Video Descomprimido | | |
+| Jitter Promedio Reportado en Monitor | | Gráfica de canvas estable |
+| Archivo CSV de Telemetría Exportado | `telemetria_red_lab02.csv` | Registros totales: _____ |
+| Enlace del Video del Experimento | URL: ____________________________ | Duración: _____ min |
 
 ### Tabla 5: Registro del Protocolo de Diagnóstico ante Fallas Inducidas
-| Falla Inducida | Capa Afectada | Síntoma en Consola / GUI | Método de Aislamiento | Acción Correctiva y Verificación |
+| Falla Inducida | Capa Afectada | Síntoma en Consola / Monitor Web | Método de Aislamiento | Acción Correctiva y Verificación |
 |---|:---:|---|---|---|
 | **Falla 1: Falla de red / IP** | Capa 1 (Red) | | | |
 | **Falla 2: Credenciales RTSP** | Capa 2 (RTSP) | | | |
@@ -337,10 +287,10 @@ Cada equipo debe inducir y resolver las siguientes fallas sistemáticas, registr
 
 ## 9. ANÁLISIS DE RESULTADOS
 
-1. **Análisis 1 (Impacto de la Compresión):** Explique con base en los datos de la Tabla 3 por qué transmitir video crudo en Wi-Fi colapsa el canal y cómo la compresión JPEG permite una tasa de cuadros estable sin degradar significativamente la detección de marcadores.
-2. **Análisis 2 (Ventajas de CycloneDDS en Wi-Fi):** Compare el comportamiento de CycloneDDS frente a FastDDS en redes con descarte de paquetes inalámbricos. ¿Por qué es crítico configurar `NetworkInterfaceAddress` en `cyclonedds.xml`?
+1. **Análisis 1 (Compresión y Telemetría):** Con base en la Tabla 3 y las gráficas del Monitor de Red, analice cómo la compresión JPEG reduce el tráfico RTPS y mitiga el jitter en la red Wi-Fi.
+2. **Análisis 2 (CycloneDDS en Wi-Fi):** Compare el comportamiento de CycloneDDS frente a FastDDS en redes inalámbricas utilizando los datos de retransmisiones y pérdida de paquetes registrados en el monitor.
 3. **Análisis 3 (Latencia de Pipeline Distribuido):** Analice la cadena de retardos: Captura Kinova $\rightarrow$ Codificación H.264 $\rightarrow$ RTSP $\rightarrow$ ROS 2 Gateway $\rightarrow$ Compresión JPEG $\rightarrow$ Transmisión Wi-Fi $\rightarrow$ Descompresión en Dispositivo B.
-4. **Análisis 4 (Metodología de Diagnóstico):** Demuestre cómo el protocolo por capas y el uso de RTSP directo en la pasarela permitieron aislar fallas de middleware (DDS) de fallas de streaming y del sensor físico.
+4. **Análisis 4 (Diagnóstico Metódico):** Demuestre cómo el protocolo por capas y el uso de RTSP directo en la pasarela permitieron aislar fallas de middleware (DDS) de fallas de streaming y del sensor físico.
 
 ---
 
@@ -348,7 +298,7 @@ Cada equipo debe inducir y resolver las siguientes fallas sistemáticas, registr
 
 1. Conclusión técnica sobre la reducción de ancho de banda y viabilidad de streaming visual sobre Wi-Fi mediante `image_transport`.
 2. Conclusión sobre la estabilidad y configuración de CycloneDDS en arquitecturas robóticas distribuidas multi-dispositivo.
-3. Conclusión metodológica sobre el papel del diagnóstico directo por RTSP en el aislamiento de fallas físicas antes de la integración en ROS 2.
+3. Conclusión metodológica sobre la utilidad del Monitor de Red y la grabación audiovisual en la validación experimental reproducible.
 
 ---
 

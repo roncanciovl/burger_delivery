@@ -2,8 +2,8 @@
 """
 Constructor para GUIA_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.docx
 Genera el documento Word basado en la plantilla institucional Formato_Guias_de_Laboratorio.docx (GL-AA-F-1),
-incorporando la justificación arquitectónica de RTSP directo en Gateway, compresión (image_transport)
-y verificación multi-PC con CycloneDDS sobre Wi-Fi.
+incorporando la justificación arquitectónica de RTSP directo en Gateway, compresión (image_transport),
+verificación multi-PC con CycloneDDS sobre Wi-Fi, Monitor de Red y grabación audiovisual del experimento.
 """
 
 from __future__ import annotations
@@ -300,7 +300,7 @@ def build():
     body.insert(body.index(sect_pr), cover_header)
     cover = doc.tables[-1]
     replace_text_preserving_cell(cover.cell(0, 1), "Fecha Emisión:\n2026/08/17", bold=True, size=8, align=WD_ALIGN_PARAGRAPH.CENTER)
-    replace_text_preserving_cell(cover.cell(1, 1), "Revisión No.:\n2", bold=True, size=8, align=WD_ALIGN_PARAGRAPH.CENTER)
+    replace_text_preserving_cell(cover.cell(1, 1), "Revisión No.:\n3", bold=True, size=8, align=WD_ALIGN_PARAGRAPH.CENTER)
     page_cell = cover.cell(1, 2)
     page_cell.text = ""
     page_p = page_cell.paragraphs[0]
@@ -327,8 +327,8 @@ def build():
     )
     replace_text_preserving_cell(
         identification.cell(1, 0),
-        "Título de Laboratorio: Práctica 2. Pruebas de conectividad, streaming RTSP directo en Gateway, "
-        "compresión de video (image_transport) y diagnóstico distribuido con CycloneDDS sobre Wi-Fi",
+        "Título de Laboratorio: Práctica 2. Pruebas de conectividad, streaming RTSP, compresión de video, "
+        "diagnóstico distribuido con CycloneDDS y Monitor de Red sobre Wi-Fi",
         bold=True, size=9,
     )
     add_body(doc, "", size=6)
@@ -347,8 +347,8 @@ def build():
         for cell in row.cells:
             replace_text_preserving_cell(cell, "", size=8)
     values = [
-        "Integración de justificación arquitectónica de RTSP directo y CycloneDDS",
-        "Diseño de práctica experimental para pruebas de red, streaming RTSP directo en Gateway, compresión con image_transport, transporte distribuido con CycloneDDS sobre Wi-Fi y diagnóstico por capas.",
+        "Integración de Monitor de Red Híbrido y Grabación del Experimento",
+        "Diseño de práctica experimental con streaming RTSP, compresión image_transport, transporte distribuido con CycloneDDS en Wi-Fi, auditoría con Monitor de Red web (:8080) y grabación de video.",
         "17/08/2026",
     ]
     for j, value in enumerate(values):
@@ -382,52 +382,51 @@ def build():
     )
     add_body(
         doc,
-        "¿Por qué el Kinova utiliza RTSP y cómo se integra con ROS 2? El módulo óptico en la muñeca del Kinova Gen3 "
-        "no es un nodo nativo de ROS 2: opera como un servidor multimedia H.264 que transmite mediante el protocolo "
-        "RTSP (puerto 554) en rtsp://192.168.1.10/color. En el Gateway local (Dispositivo A), el driver ros2_kortex_vision "
-        "consume este flujo RTSP, lo decodifica, le estampa el tiempo de reloj del sistema (header.stamp) y lo asocia al "
-        "árbol cinemático (TF2). Luego, image_transport comprime el flujo a JPEG (~1.5 MB/s, reduciendo >90% del ancho "
-        "de banda) y lo transmite hacia el Dispositivo B mediante CycloneDDS sobre Wi-Fi.",
+        "El módulo óptico del Kinova Gen3 opera como un servidor RTSP nativo (puerto 554) transmitiendo video H.264. "
+        "En el Gateway local (Dispositivo A), el driver ros2_kortex_vision consume este flujo RTSP, lo decodifica, le "
+        "estampa el tiempo del sistema (header.stamp) y lo asocia al árbol cinemático (TF2). Luego, image_transport "
+        "comprime el flujo a JPEG (~1.5 MB/s, reduciendo >90% del ancho de banda) y lo distribuye mediante CycloneDDS "
+        "sobre Wi-Fi.",
+    )
+    add_subheading(doc, "Medición y Telemetría Científica con el Monitor de Red (monitor_red)")
+    add_body(
+        doc,
+        "El proyecto incorpora un Monitor de Red Híbrido (network_setup/iniciar_monitor.sh) que levanta un servidor "
+        "web en http://localhost:8080. Este monitor escucha pasivamente los anuncios SPDP de descubrimiento multicast, "
+        "audita el tráfico RTPS de puertos DDS (7400-8000), grafica la latencia RTT y el jitter en tiempo real, y registra "
+        "la telemetría experimental en archivos .csv para análisis cuantitativo riguroso.",
     )
     add_subheading(doc, "¿Por qué NO se envía RTSP directo por Wi-Fi al Dispositivo B?")
     add_body(
         doc,
-        "Enviar RTSP directamente por Wi-Fi a la estación remota sería un error arquitectónico por tres razones críticas: "
+        "Enviar RTSP directamente por Wi-Fi a la estación remota sería un error arquitectónico por tres razones: "
         "(1) Pérdida de sincronización temporal (header.stamp), impidiendo acoplar fotogramas con /joint_states; "
         "(2) Pérdida del árbol de transformaciones (TF2) y de calibración intrínseca (sensor_msgs/CameraInfo), impidiendo "
-        "calcular poses 3D exactas en el espacio de trabajo; y (3) Exposición innecesaria del puerto de control del robot "
-        "a la red inalámbrica general en lugar de mantenerlo aislado en la subred industrial cableada 192.168.1.0/24.",
-    )
-    add_subheading(doc, "Importancia del Diagnóstico por Capas con RTSP Directo")
-    add_body(
-        doc,
-        "Cuando la estación remota en Wi-Fi experimenta congelamiento o descarte de cuadros, el visor RTSP directo "
-        "(test_kinova_camera.py) permite al estudiante aislar en 5 segundos las capas 1 y 2 (hardware óptico y enlace "
-        "cableado local) directamente en el Gateway, sin depender de ROS 2, RViz2 ni Wi-Fi, garantizando que el robot "
-        "esté sano antes de auditar el middleware o los algoritmos de visión.",
+        "calcular poses 3D exactas; y (3) Exposición innecesaria del puerto de control del robot a la red inalámbrica general.",
     )
 
     add_section_heading(doc, "OBJETIVOS")
     add_subheading(doc, "Objetivo General")
     add_body(
         doc,
-        "Validar, optimizar y diagnosticar experimentalmente el flujo óptico del robot Kinova Gen3, integrando pruebas "
-        "de streaming RTSP directo en la pasarela local, compresión de video mediante image_transport, configuración "
-        "robusta de CycloneDDS para transmisión inalámbrica multi-dispositivo y aplicación de depuración por capas.",
+        "Validar, optimizar y diagnosticar experimentalmente el flujo óptico del robot Kinova Gen3, integrando compresión "
+        "de video (image_transport), configuración de CycloneDDS en Wi-Fi, auditoría de telemetría de red con el Monitor Web, "
+        "grabación audiovisual del experimento y depuración metódica por capas.",
     )
     add_subheading(doc, "Objetivos Específicos")
-    add_list_item(doc, "Caracterizar la capa de red cableada e inalámbrica (ICMP, RTT < 5 ms en Ethernet y < 15 ms en Wi-Fi).", 1)
+    add_list_item(doc, "Auditar la calidad de red con el Monitor Web (iniciar_monitor.sh), evaluando tráfico RTPS, paquetes perdidos, latencia y exportando telemetría CSV.", 1)
     add_list_item(doc, "Validar streaming RTSP directo con OpenCV (test_kinova_camera.py) en color y profundidad, capturando frames para calibración.", 2)
     add_list_item(doc, "Implementar y evaluar compresión de video en ROS 2 con image_transport (/camera/color/image_raw/compressed), midiendo reducción de ancho de banda.", 3)
     add_list_item(doc, "Desplegar y verificar CycloneDDS en entorno multi-PC sobre Wi-Fi con cyclonedds.xml, asegurando recepción y descompresión remota.", 4)
-    add_list_item(doc, "Aplicar diagnóstico metódico por capas ante 5 fallas inducidas (Red, RTSP, CycloneDDS, Compresión y Sensor).", 5)
+    add_list_item(doc, "Grabar un video continuo que demuestre la operación distribuida, las métricas del monitor web y la resolución de fallas inducidas.", 5)
 
     add_section_heading(doc, "DESCRIPCIÓN DE LA PRÁCTICA")
     add_body(
         doc,
-        "La práctica se realiza en parejas y consta de cinco fases: (1) Diagnóstico de enlaces de red, (2) Passthrough RTSP "
-        "directo en Gateway local, (3) Compresión de video en ROS 2 y ahorro de ancho de banda, (4) Procesamiento distribuido "
-        "sobre Wi-Fi con CycloneDDS, y (5) Protocolo de diagnóstico metódico ante fallas inducidas por capas.",
+        "La práctica se realiza en parejas y consta de seis fases: (1) Diagnóstico de red y puesta en marcha del Monitor "
+        "de Red, (2) Passthrough RTSP directo en Gateway local, (3) Compresión de video en ROS 2 y ahorro de ancho de banda, "
+        "(4) Procesamiento distribuido sobre Wi-Fi con CycloneDDS, (5) Diagnóstico metódico por capas ante fallas inducidas, "
+        "y (6) Grabación del experimento y exportación de telemetría CSV.",
     )
 
     add_subheading(doc, "Resultados de aprendizaje evaluables (RAE) y ponderación")
@@ -438,7 +437,7 @@ def build():
             ["C1. Conectividad, compresión y ancho de banda", "2.2. Incorpora restricciones de red, latencia, ancho de banda y seguridad en hardware heterogéneo.", "SO2", "25%"],
             ["C2. Diagnóstico experimental por capas", "6.4. Interpreta fallas y diagnósticos experimentales aplicando protocolos por capas.", "SO6", "30%"],
             ["C3. Arquitectura distribuida con CycloneDDS y QoS", "2.1. Diseña soluciones de software integrando contratos QoS y redes DDS robustas.", "SO2", "20%"],
-            ["C4. Documentación técnica y capturas", "3.1. Elabora documentación técnica reproducible... / 3.3. Comunica resultados experimentales...", "SO3", "15%"],
+            ["C4. Documentación técnica, telemetría y video", "3.1. Elabora documentación técnica... / 3.3. Comunica resultados con telemetría y demostraciones...", "SO3", "15%"],
             ["C5. Seguridad, ética y trabajo en equipo", "4.3. Aplica buenas prácticas en el uso de datos de cámara, operación segura y roles de equipo.", "SO4 / SO5", "10%"],
             ["Total", "Aporte consolidado a la nota experimental de la asignatura", "", "100%"],
         ],
@@ -473,7 +472,8 @@ def build():
             ["DESCRIPCIÓN (Material, instrumento, software, hardware o equipo)", "CANTIDAD", "UNIDAD DE MEDIDA"],
             ["Laptop Dispositivo B (Procesamiento Wi-Fi) con Ubuntu 24.04 LTS y ROS 2 Jazzy", "1", "Unidad por grupo"],
             ["Cable de red Ethernet UTP Cat 6 (mínimo 2 metros)", "1", "Unidad por grupo"],
-            ["Repositorio burger_delivery con image_transport y rmw_cyclonedds_cpp instalados", "1", "Repositorio por grupo"],
+            ["Repositorio burger_delivery con image_transport, rmw_cyclonedds_cpp y monitor_red", "1", "Repositorio por grupo"],
+            ["Software de grabación de pantalla (OBS Studio, SimpleScreenRecorder o grabador de OS)", "1", "Herramienta por grupo"],
         ],
         material_model,
         font_size=8,
@@ -492,26 +492,24 @@ def build():
 
     add_section_heading(doc, "PROCEDIMIENTO, MÉTODO O ACTIVIDADES A DESARROLLAR EN LA PRÁCTICA", page_break=True)
     
-    add_subheading(doc, "Fase 1: Diagnóstico en Capa de Red e Interfaces (ICMP & Enlace Wi-Fi)")
-    add_list_item(doc, "Configure en Dispositivo A (Gateway): Interfaz cableada en 192.168.1.100/24 (Kinova en 192.168.1.10) e interfaz Wi-Fi conectada a la red del laboratorio.", 1)
-    add_list_item(doc, "Configure en Dispositivo B (Procesamiento Wi-Fi): Interfaz Wi-Fi conectada a la misma red.", 2)
-    add_list_item(doc, "Verifique latencias con: ping 192.168.1.10 -c 10 (Ethernet) y ping hacia Dispositivo A (Wi-Fi). Registre RTT en Tabla 1.", 3)
+    add_subheading(doc, "Fase 1: Diagnóstico de Red y Puesta en Marcha del Monitor de Red")
+    add_list_item(doc, "Configure en Dispositivo A (Gateway): Ethernet 192.168.1.100/24 y Wi-Fi 192.168.50.10/24. En Dispositivo B: Wi-Fi 192.168.50.20/24.", 1)
+    add_list_item(doc, "Lance el Monitor de Red en Dispositivo A: bash ~/ros2_ws/src/burger_delivery/network_setup/iniciar_monitor.sh", 2)
+    add_list_item(doc, "Abra el navegador en http://localhost:8080 (o http://192.168.50.10:8080 desde Dispositivo B). Inicie la sesión de grabación de telemetría.", 3)
 
     add_subheading(doc, "Fase 2: Passthrough Óptico Directo por RTSP (Sin ROS 2)")
-    add_list_item(doc, "En Dispositivo A, ejecute el script de validación directa: python3 ~/ros2_ws/src/burger_delivery/scripts/test_kinova_camera.py --ip 192.168.1.10 --stream color", 1)
+    add_list_item(doc, "En Dispositivo A, ejecute: python3 ~/ros2_ws/src/burger_delivery/scripts/test_kinova_camera.py --ip 192.168.1.10 --stream color", 1)
     add_list_item(doc, "Compruebe tasa de cuadros (>= 25 FPS), flujo Depth (--stream depth) y capture 3 imágenes de calibración con tecla 's'.", 2)
 
     add_subheading(doc, "Fase 3: Compresión de Video en ROS 2 (image_transport) y Ahorro de Ancho de Banda")
-    add_list_item(doc, "En Dispositivo A, lance el publicador de visión con soporte de compresión: ros2 launch burger_delivery robot.launch.py", 1)
-    add_list_item(doc, "Inspeccione los tópicos /camera/color/image_raw (crudo) y /camera/color/image_raw/compressed (JPEG).", 2)
-    add_list_item(doc, "Mida con ros2 topic bw el ancho de banda crudo vs comprimido y calcule el porcentaje de ahorro en la Tabla 3.", 3)
-    add_list_item(doc, "Ajuste dinámicamente jpeg_quality (80 vs 30) mediante: ros2 param set /camera/camera_node_driver jpeg_quality 80", 4)
+    add_list_item(doc, "En Dispositivo A, lance el publicador de visión: ros2 launch burger_delivery robot.launch.py", 1)
+    add_list_item(doc, "Mida con ros2 topic bw el ancho de banda crudo vs comprimido (/camera/color/image_raw/compressed) y calcule el ahorro en la Tabla 3.", 2)
+    add_list_item(doc, "Ajuste dinámicamente jpeg_quality (80 vs 30) mediante: ros2 param set /camera/camera_node_driver jpeg_quality 80", 3)
 
     add_subheading(doc, "Fase 4: Despliegue Distribuido sobre Wi-Fi con CycloneDDS")
     add_list_item(doc, "En ambos dispositivos exporte: export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp y el mismo ROS_DOMAIN_ID.", 1)
     add_list_item(doc, "Cree el archivo cyclonedds.xml definiendo NetworkInterfaceAddress (wlan0) y MaxMessageSize (65500B).", 2)
-    add_list_item(doc, "Desde Dispositivo B (conectado por Wi-Fi), mida la frecuencia remota: ros2 topic hz /camera/color/image_raw/compressed", 3)
-    add_list_item(doc, "Visualice el flujo remoto descomprimiendo en tiempo real con image_view y verifique estabilidad sin caídas.", 4)
+    add_list_item(doc, "Desde Dispositivo B (Wi-Fi), mida la frecuencia remota y visualice el flujo con image_view, observando el tráfico en el Monitor de Red.", 3)
 
     add_subheading(doc, "Fase 5: Protocolo de Diagnóstico Metódico ante Fallas Inducidas")
     add_body(doc, "Induzca y resuelva sistemáticamente las cinco fallas registrando el aislamiento en la Tabla 5:")
@@ -521,9 +519,13 @@ def build():
     add_list_item(doc, "Falla 4 (Capa 4 - Compresión): Suscripción al tópico crudo en Wi-Fi y saturación de ancho de banda.", 4)
     add_list_item(doc, "Falla 5 (Capa 5 - Web App): Cámara desactivada en la interfaz web http://192.168.1.10.", 5)
 
+    add_subheading(doc, "Fase 6: Grabación del Experimento y Exportación de Telemetría CSV")
+    add_list_item(doc, "Detenga la sesión de telemetría en el Monitor de Red y exporte el archivo telemetria_red_lab02.csv.", 1)
+    add_list_item(doc, "Grabe un video continuo (2–4 min) que muestre en pantalla: PC A (Gateway + Monitor web), PC B (image_view + ros2 topic hz), demostración de una falla inducida y breve sustentación oral. Adjunte la URL en el informe.", 2)
+
     add_section_heading(doc, "RESULTADOS DE LA PRÁCTICA", page_break=True)
     
-    add_subheading(doc, "Tabla 1: Caracterización de Enlaces de Red (ICMP Ping)")
+    add_subheading(doc, "Tabla 1: Caracterización de Enlaces de Red (ICMP Ping & Monitor de Red)")
     add_data_table(
         doc,
         [
@@ -565,16 +567,18 @@ def build():
         widths=[5, 5, 3.5, 2.5, 2.5],
     )
 
-    add_subheading(doc, "Tabla 4: Despliegue Distribuido con CycloneDDS sobre Wi-Fi (Dispositivo B)")
+    add_subheading(doc, "Tabla 4: Despliegue Distribuido con CycloneDDS y Monitor de Red (Dispositivo B)")
     add_data_table(
         doc,
         [
-            ["Parámetro en Dispositivo B", "Valor Configurado / Medido", "Comportamiento Observado"],
-            ["RMW Seleccionado", "rmw_cyclonedds_cpp", ""],
-            ["ROS_DOMAIN_ID", "", ""],
-            ["Tópico Remoto Suscrito", "/camera/color/image_raw/compressed", ""],
+            ["Parámetro / Métrica", "Valor Configurado / Medido en Dispositivo B", "Comportamiento Observado"],
+            ["RMW Seleccionado", "rmw_cyclonedds_cpp", "Confirmado en /api/status"],
+            ["ROS_DOMAIN_ID", "", "Dominio único activo en sniffer"],
+            ["Tópico Remoto Suscrito", "/camera/color/image_raw/compressed", "Flujo estable detectado"],
             ["Frecuencia Remota Recibida (hz)", "", ""],
-            ["Fluidez de Video Descomprimido", "", ""],
+            ["Jitter Promedio en Monitor", "", "Gráfica canvas estable"],
+            ["Archivo CSV de Telemetría", "telemetria_red_lab02.csv", "Registros: ______"],
+            ["Video del Experimento", "URL: __________________________________", "Duración: _____ min"],
         ],
         material_model,
         font_size=7.5,
@@ -598,15 +602,15 @@ def build():
     )
 
     add_section_heading(doc, "ANÁLISIS DE RESULTADOS")
-    add_list_item(doc, "Análisis 1 (Compresión de Video): Explique por qué transmitir video crudo en Wi-Fi colapsa el canal y cómo la compresión JPEG permite una tasa de cuadros estable sin degradar la percepción.", 1)
-    add_list_item(doc, "Análisis 2 (CycloneDDS en Wi-Fi): Compare el desempeño de CycloneDDS frente a FastDDS en redes inalámbricas y justifique la configuración de NetworkInterfaceAddress.", 2)
+    add_list_item(doc, "Análisis 1 (Compresión y Telemetría): Con base en la Tabla 3 y las gráficas del Monitor de Red, analice cómo la compresión JPEG reduce el tráfico RTPS y mitiga el jitter en la red Wi-Fi.", 1)
+    add_list_item(doc, "Análisis 2 (CycloneDDS en Wi-Fi): Compare el comportamiento de CycloneDDS frente a FastDDS en redes inalámbricas utilizando los datos de retransmisiones y pérdida de paquetes registrados en el monitor.", 2)
     add_list_item(doc, "Análisis 3 (Latencia de Pipeline Distribuido): Analice la cadena de retardos desde la captura física en Kinova hasta la descompresión y procesamiento en Dispositivo B.", 3)
     add_list_item(doc, "Análisis 4 (Diagnóstico Metódico): Demuestre cómo el protocolo por capas y el uso de RTSP directo en el Gateway permitieron aislar fallas de middleware de fallas de streaming y sensor.", 4)
 
     add_section_heading(doc, "CONCLUSIONES")
     add_list_item(doc, "Conclusión sobre la reducción de ancho de banda y viabilidad de streaming visual sobre Wi-Fi mediante image_transport.", 1)
     add_list_item(doc, "Conclusión sobre la estabilidad y configuración de CycloneDDS en arquitecturas robóticas distribuidas multi-dispositivo.", 2)
-    add_list_item(doc, "Conclusión metodológica sobre el papel del diagnóstico directo por RTSP en el aislamiento de fallas físicas antes de la integración en ROS 2.", 3)
+    add_list_item(doc, "Conclusión metodológica sobre la utilidad del Monitor de Red y la grabación audiovisual en la validación experimental reproducible.", 3)
 
     add_section_heading(doc, "PREGUNTAS PARA LA DISCUSIÓN")
     add_list_item(doc, "Pregunta 1: Si se incrementa la resolución a 1080p, ¿qué compromiso existe entre la carga de CPU de compresión en el Gateway y el ancho de banda consumido en Wi-Fi?", 1)
@@ -627,10 +631,10 @@ def build():
     replace_text_preserving_cell(approval.cell(2, 2), "Decano(a)\nFacultad de Ingeniería", size=8, align=WD_ALIGN_PARAGRAPH.CENTER)
 
     configure_footer(doc)
-    doc.core_properties.title = "Guía de Laboratorio 02 – Pruebas de Cámara, Compresión y CycloneDDS"
+    doc.core_properties.title = "Guía de Laboratorio 02 – Pruebas de Cámara, Compresión, CycloneDDS y Monitor de Red"
     doc.core_properties.subject = "ROBOT OPERATING SYSTEM - ROS"
     doc.core_properties.author = "Universidad Militar Nueva Granada"
-    doc.core_properties.comments = "Documento construido sobre el formato institucional GL-AA-F-1 con soporte de CycloneDDS, image_transport y justificación arquitectónica de RTSP."
+    doc.core_properties.comments = "Documento construido sobre el formato institucional GL-AA-F-1 con soporte de CycloneDDS, image_transport, monitor_red y grabación de video."
     doc.save(TARGET)
     print(f"Guía Word actualizada exitosamente en: {TARGET}")
 

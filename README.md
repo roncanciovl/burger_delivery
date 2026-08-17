@@ -112,6 +112,8 @@ burger_delivery/
 ## 📚 Índice de Documentación (Categorizado)
 
 ### 🔬 1. Investigación y Razonamiento Espacial IA
+- [⭐ **Plan Estratégico de Publicaciones y Releases Zenodo**](docs/research/PLAN_PUBLICACIONES_Y_RELEASES_ZENODO.md) *(Cronograma editorial 2026-2027, gestión de datasets y reproducibilidad)*
+- [**Propuesta de Vinculación Científica — Grupo VOLTA (A1)**](docs/research/PROPUESTA_VINCULACION_GRUPO_VOLTA.md) *(Plan de trabajo, productos MinCiencias y compromisos Q1)*
 - [**Estudio de Razonamiento Espacial 3D con Gemini Robotics**](docs/research/EXPERIMENTO_IA_LOCALIZACION_GEMINI.md) *(Localización zero-shot y affordances)*
 - [**Propuesta de Integración Gemini ER**](ros2_setup/PROPUESTA_GEMINI_ER.md)
 

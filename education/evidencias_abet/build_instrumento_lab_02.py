@@ -2,7 +2,7 @@
 """
 Constructor para INSTRUMENTO_ABET_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.docx
 Genera el instrumento Word de captura de evidencia, evaluación y consolidación ABET para el Laboratorio 02,
-incorporando compresión de video (image_transport) y verificación multi-PC con CycloneDDS sobre Wi-Fi.
+incorporando compresión de video (image_transport), CycloneDDS sobre Wi-Fi, Monitor de Red y grabación de video.
 """
 
 from __future__ import annotations
@@ -75,7 +75,7 @@ LAB_CRITERIA = [
         "so": "Student Outcome SO6",
         "indicator": INDICATOR_64,
         "descriptors": [
-            "Además de N4, cuantifica y compara el impacto de cada falla inducida sobre la tasa de cuadros y el jitter, relaciona síntomas con logs detallados de DDS y FFMPEG, y formula un árbol de decisión para diagnóstico rápido transferible a producción.",
+            "Además de N4, cuantifica y compara el impacto de cada falla inducida sobre la tasa de cuadros y el jitter, relaciona síntomas con logs detallados del Monitor de Red y FFMPEG, y formula un árbol de decisión para diagnóstico rápido transferible a producción.",
             "Aísla con precisión las cinco fallas inducidas siguiendo estrictamente el protocolo por capas (Red -> RTSP -> CycloneDDS -> Compresión -> Web App), documentando el síntoma, método de detección y recuperación verificada.",
             "Aplica el protocolo de diagnóstico por capas ante las fallas inducidas, documenta los síntomas observados y demuestra la recuperación del flujo de video.",
             "Resuelve las fallas por método de ensayo y error sin seguir el protocolo por capas, o la documentación del aislamiento y recuperación es incompleta.",
@@ -84,30 +84,30 @@ LAB_CRITERIA = [
     },
     {
         "code": "C3",
-        "name": "Arquitectura distribuida con CycloneDDS y QoS",
+        "name": "Arquitectura distribuida con CycloneDDS y Monitor de Red",
         "weight": 20,
         "so": "Student Outcome SO2",
         "indicator": INDICATOR_21,
         "descriptors": [
-            "Además de N4, analiza la estructura de paquetes RTPS en Wi-Fi, optimiza parámetros avanzados en cyclonedds.xml (MaxMessageSize, fragmentación UDP) y justifica las políticas QoS SensorData frente a escenarios de alta interferencia inalámbrica.",
-            "Configura rmw_cyclonedds_cpp en ambos equipos, define cyclonedds.xml con interfaz wlan0, y verifica recepción remota fluida (>= 20 Hz) en Dispositivo B sin pérdida de paquetes.",
-            "Establece comunicación distribuida con CycloneDDS en el mismo ROS_DOMAIN_ID y recibe el tópico de video comprimido en el Dispositivo B.",
-            "La comunicación distribuida es intermitente debido a conflictos de RMW o falta de configuración de interfaz en cyclonedds.xml.",
-            "No logra comunicación distribuida entre Dispositivo A y B o carece de evidencia sobre el middleware.",
+            "Además de N4, analiza la estructura de paquetes RTPS en Wi-Fi, optimiza parámetros avanzados en cyclonedds.xml (MaxMessageSize, fragmentación UDP), exporta telemetría CSV completa desde el Monitor de Red y justifica las políticas QoS SensorData.",
+            "Configura rmw_cyclonedds_cpp en ambos equipos, define cyclonedds.xml con interfaz wlan0, lanza el Monitor de Red (:8080) y verifica recepción remota fluida (>= 20 Hz) en Dispositivo B.",
+            "Establece comunicación distribuida con CycloneDDS en el mismo ROS_DOMAIN_ID, lanza el monitor de red y recibe el tópico de video comprimido en el Dispositivo B.",
+            "La comunicación distribuida es intermitente debido a conflictos de RMW o no se registran métricas del monitor de red.",
+            "No logra comunicación distribuida entre Dispositivo A y B o carece de evidencia sobre el middleware y telemetría.",
         ],
     },
     {
         "code": "C4",
-        "name": "Documentación técnica, reproducibilidad y capturas",
+        "name": "Documentación técnica, telemetría y grabación de video",
         "weight": 15,
         "so": "Student Outcome SO3",
         "indicator": INDICATOR_31_33,
         "descriptors": [
-            "Además de N4, el informe incluye diagramas de arquitectura distribuida multi-PC impecables, tablas completas de caracterización, capturas PNG de dataset etiquetadas y un README que permite reproducir todo el laboratorio de forma autónoma.",
-            "Informe técnico ordenado y trazable con comandos reproducibles, tablas diligenciadas, capturas de video/profundidad y análisis técnico coherente.",
-            "Entrega el informe con los comandos esenciales, tablas de datos diligenciadas, capturas fotográficas y conclusiones básicas.",
-            "Documento incompleto con capturas aisladas, tablas vacías o explicaciones vagas sin trazabilidad a comandos reales.",
-            "Informe fragmentario, no atribuible o sin evidencia funcional verificable.",
+            "Además de N4, el informe incluye diagramas de arquitectura impecables, telemetría CSV estructurada con análisis estadístico de jitter/latencia, y un video continuo de demostración (2–4 min) con excelente edición y sustentación técnica fluida de ambos estudiantes.",
+            "Informe técnico ordenado y trazable con comandos reproducibles, tablas diligenciadas, capturas PNG, log CSV del monitor de red y video continuo demostrando la operación distribuida y recuperación ante fallas.",
+            "Entrega el informe con comandos esenciales, tablas de datos diligenciadas, capturas fotográficas, log CSV y enlace al video del experimento.",
+            "Documento incompleto sin telemetría CSV o video inaccesible/incompleto sin demostración de la operación distribuida.",
+            "Informe fragmentario, sin video del experimento o sin evidencia funcional verificable.",
         ],
     },
     {
@@ -117,7 +117,7 @@ LAB_CRITERIA = [
         "so": "Student Outcome SO4 / SO5",
         "indicator": INDICATOR_43_51,
         "descriptors": [
-            "Además de N4, propone protocolos de seguridad física y ciberseguridad para cámaras en celdas industriales (VLANs, gestión de credenciales) y el Anexo A demuestra una coordinación y dominio técnico individual sobresaliente entre Gateway y estación remota.",
+            "Además de N4, propone protocolos de seguridad física y ciberseguridad para cámaras en celdas industriales (VLANs, gestión de credenciales) y el Anexo A junto con el video demuestran una coordinación y dominio técnico individual sobresaliente entre Gateway y estación remota.",
             "Cumple rigurosamente las normas de seguridad del robot, respeta las directrices éticas de captura óptica (sin datos personales) y el Anexo A evidencia tareas complementarias y dominio individual.",
             "Aplica las normas básicas de seguridad en el laboratorio, toma capturas exclusivas de calibración y demuestra contribución individual mediante el Anexo A.",
             "Omite precauciones de seguridad o el Anexo A muestra una distribución desequilibrada de tareas y comprensión parcial.",
@@ -223,7 +223,7 @@ def build_instrument():
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
     run = title.add_run(
         "INSTRUMENTO DE EVIDENCIA Y CALIFICACIÓN ACADÉMICA\n"
-        "LABORATORIO 02 — PRUEBAS DE CÁMARA, COMPRESIÓN Y CYCLONEDDS"
+        "LABORATORIO 02 — PRUEBAS DE CÁMARA, COMPRESIÓN, CYCLONEDDS Y MONITOR DE RED"
     )
     run.bold = True
     run.font.name = FONT
@@ -232,10 +232,10 @@ def build_instrument():
 
     add_note(
         doc,
-        "Versión 1.1 — Instrumento de captura y entrega consolidada asociado a la Guía de Laboratorio 02. "
-        "El informe común reúne las evidencias técnicas del equipo (Dispositivo A: Gateway y Dispositivo B: Wi-Fi); "
-        "el Anexo A verifica la autoría, comprensión y contribución técnica individual de cada estudiante para "
-        "sustentar el logro individual ABET. La nota académica no se interpreta como un nivel ABET global.",
+        "Versión 1.2 — Instrumento de captura y entrega consolidada asociado a la Guía de Laboratorio 02. "
+        "El informe común reúne las evidencias técnicas del equipo, telemetría CSV del Monitor de Red y enlace "
+        "al video del experimento; el Anexo A verifica la autoría, comprensión y contribución técnica individual "
+        "de cada estudiante para sustentar el logro individual ABET. La nota académica no se interpreta como un nivel ABET global.",
     )
 
     add_heading(doc, "1. Identificación")
@@ -247,13 +247,13 @@ def build_instrument():
             ("Asignatura", "ROBOT OPERATING SYSTEM - ROS"),
             ("Periodo", "2026-2"),
             ("Corte / instrumento", "Laboratorios y evidencias experimentales"),
-            ("Actividad", "Laboratorio 02 — Pruebas de cámara, compresión de video y CycloneDDS en Wi-Fi"),
+            ("Actividad", "Laboratorio 02 — Pruebas de cámara, compresión de video, CycloneDDS y Monitor de Red"),
             ("Estudiante evaluado / código", ""),
             ("Pareja / grupo", ""),
             ("Archivo de entrega", ""),
             ("Fecha de realización de la práctica", ""),
             ("Fecha de evaluación / evaluador", "Ing. Henry Roncancio"),
-            ("Versión del instrumento", "Versión 1.1"),
+            ("Versión del instrumento", "Versión 1.2"),
             ("Unidad de análisis / Unidad de captura", "Pareja con comprobación individual"),
         ]],
         [5, 12],
@@ -284,19 +284,21 @@ def build_instrument():
         ("E3", "Captura y registro de respuesta del visor directo de profundidad (test_kinova_camera.py --stream depth)."),
         ("E4", "Archivos PNG de autocaptura (tecla 's') guardados para calibración/dataset con metadatos."),
         ("E5", "Medición comparativa de ancho de banda (ros2 topic bw) entre flujo crudo y comprimido (image_transport)."),
-        ("E6", "Archivo cyclonedds.xml y captura de verificación de recepción remota en Dispositivo B sobre Wi-Fi."),
-        ("E7", "Matriz diligenciada del diagnóstico por capas ante las 5 fallas inducidas y su recuperación."),
-        ("E8", "Informe técnico estructurado con comandos exactos, diagramas multi-PC, análisis y discusión técnica."),
+        ("E6", "Captura del Dashboard del Monitor de Red (:8080) y archivo de telemetría exportado (telemetria_red_lab02.csv)."),
+        ("E7", "Archivo cyclonedds.xml y captura de verificación de recepción remota en Dispositivo B sobre Wi-Fi."),
+        ("E8", "Matriz diligenciada del diagnóstico por capas ante las 5 fallas inducidas y su recuperación."),
+        ("E9", "Video continuo del experimento (2–4 min) que muestra terminales en PC A, visor en PC B, monitor y sustentación."),
+        ("E10", "Informe técnico estructurado con comandos exactos, diagramas multi-PC, análisis y discusión técnica."),
     ]
     add_table(doc, ["Código", "Evidencia directa", "Ubicación en informe / repositorio"], [[a, b, ""] for a, b in evidence], [2, 10, 5])
 
     add_heading(doc, "6. Anexo A — comprobación individual")
     add_table(doc, ["Pregunta individual de verificación", "Respuesta / evidencia directa del estudiante"], [[q, ""] for q in [
-        "1. Rol desempeñado y tareas técnicas concretas realizadas (Gateway en PC A vs Procesamiento en PC B).",
+        "1. Rol desempeñado y tareas técnicas concretas realizadas (Gateway en PC A vs Procesamiento en PC B vs Monitor de Red).",
         "2. Justificación técnica de por qué se requiere compresión JPEG (image_transport) sobre Wi-Fi.",
-        "3. Explicación de la configuración de rmw_cyclonedds_cpp y NetworkInterfaceAddress en cyclonedds.xml.",
+        "3. Explicación de la configuración de CycloneDDS y métricas de telemetría observadas en el Monitor de Red.",
         "4. Explicación detallada de cómo aisló y resolvió una de las cinco fallas inducidas por capas.",
-        "5. Identificación de los comandos, tablas, capturas o secciones del informe de su autoría directa.",
+        "5. Identificación de los comandos, tablas, capturas, log CSV o secciones del video de su autoría y sustentación directa.",
     ]], [9, 8])
     p = doc.add_paragraph("Estado de comprobación individual: Verificada ☐   Insuficiente ☐   NA autorizado ☐     Localizador: ______________________________")
     p.paragraph_format.space_after = Pt(4)
@@ -328,8 +330,8 @@ def build_instrument():
     add_table(doc, ["Student Outcome / Indicador de desempeño", "N evaluable", "N ≥ N3", "% logro", "Meta de cohorte", "Hallazgo docente"], [
         ["SO2 / Indicador 2.2 (Red, Hardware y Compresión)", "", "", "", "70%", ""],
         ["SO6 / Indicador 6.4 (Diagnóstico por Capas)", "", "", "", "70%", ""],
-        ["SO2 / Indicador 2.1 (CycloneDDS y QoS)", "", "", "", "70%", ""],
-        ["SO3 / Indicador 3.1 - 3.3 (Comunicación)", "", "", "", "70%", ""],
+        ["SO2 / Indicador 2.1 (CycloneDDS y Telemetría QoS)", "", "", "", "70%", ""],
+        ["SO3 / Indicador 3.1 - 3.3 (Comunicación y Video)", "", "", "", "70%", ""],
         ["SO4 / SO5 / Indicador 4.3 - 5.1 (Ética / Equipo)", "", "", "", "70%", ""],
     ], [4.5, 2, 2, 2, 2, 4.5])
     add_table(doc, ["Campo de cierre de ciclo de mejora continua", "Registro"], [[x, ""] for x in [
@@ -346,10 +348,10 @@ def build_instrument():
     doc.add_paragraph("Observaciones finales: __________________________________________________________________________")
     
     add_page_number_footer(doc)
-    doc.core_properties.title = "Instrumento ABET Laboratorio 02 — Pruebas de Cámara, Compresión y CycloneDDS"
+    doc.core_properties.title = "Instrumento ABET Laboratorio 02 — Pruebas de Cámara, Compresión, CycloneDDS y Monitor de Red"
     doc.core_properties.subject = "ROBOT OPERATING SYSTEM - ROS · 2026-2"
     doc.core_properties.author = "Ing. Henry Roncancio"
-    doc.core_properties.comments = "Versión 1.1. Instrumento oficial de evidencia y evaluación ABET con soporte de CycloneDDS e image_transport."
+    doc.core_properties.comments = "Versión 1.2. Instrumento oficial de evidencia y evaluación ABET con soporte de CycloneDDS, image_transport, monitor_red y video."
     doc.save(TARGET)
     print(f"Instrumento ABET Word generado exitosamente en: {TARGET}")
 

@@ -111,8 +111,10 @@ burger_delivery/
 
 ## 📚 Categorized Documentation Index
 
-### 🔬 1. Research & AI Spatial Reasoning
-- [**3D Spatial Reasoning Study with Gemini Robotics**](docs/research/EXPERIMENTO_IA_LOCALIZACION_GEMINI.md) *(Zero-shot localization and affordances)*
+### 🔬 1. AI Research and Spatial Reasoning
+- [⭐ **Strategic Publication & Zenodo Release Plan**](docs/research/PLAN_PUBLICACIONES_Y_RELEASES_ZENODO.md) *(2026-2027 editorial roadmap, open datasets & reproducibility)*
+- [**Scientific Workplan — VOLTA Research Group (A1)**](docs/research/PROPUESTA_VINCULACION_GRUPO_VOLTA.md) *(MinCiencias products, Q1 commitments and TRL roadmap)*
+- [**3D Spatial Reasoning Study with Gemini Robotics**](docs/research/EXPERIMENTO_IA_LOCALIZACION_GEMINI.md) *(Zero-shot localization & affordances)*
 - [**Gemini ER Integration Proposal**](ros2_setup/PROPUESTA_GEMINI_ER.md)
 
 ### 📐 2. System Architecture & Kinematics
