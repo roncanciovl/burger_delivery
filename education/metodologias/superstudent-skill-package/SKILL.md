@@ -1,13 +1,6 @@
 ---
 name: superstudent-robotics-methodology
-description: A troubleshooting and methodology skill for collaborative robotics education, encapsulating lessons learned from the Burger Delivery experiment (Kinova + TurtleBots).
-version: 1.0.0
-keywords:
-  - robotics
-  - ros2
-  - troubleshooting
-  - methodology
-  - education
+description: Diagnose and document collaborative-robotics integration problems using lessons from the Burger Delivery experiment with ROS 2, Kinova Gen3, TurtleBots, AprilTag, TF trees, URDF, MoveIt 2, perception, networking, and laboratory troubleshooting. Use when an agent must inspect a robotics repository, isolate a failure by layer, distinguish model, runtime and calibration faults, or turn a resolved laboratory problem into reusable technical guidance.
 ---
 # 🎓 SuperStudent: A Troubleshooting and Methodology Skill for Collaborative Robotics Education
 

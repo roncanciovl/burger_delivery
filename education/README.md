@@ -33,8 +33,10 @@ Para evitar versiones incompatibles, cada responsabilidad debe tener una sola fu
 | Taller CLI de ROS 2 | [`talleres/TALLER_ROS2_CLI.md`](talleres/TALLER_ROS2_CLI.md) | Instrumento ABET separado en `evidencias_abet/` |
 | Taller URDF y TF2 | [`talleres/TALLER_URDF_TF.md`](talleres/TALLER_URDF_TF.md) | [`talleres/TALLER_URDF_TF.pdf`](talleres/TALLER_URDF_TF.pdf) |
 | Guía de laboratorio 01 | [`guias_laboratorio/GUIA_LAB_01_RED_ROS2_TALKER_LISTENER.docx`](guias_laboratorio/GUIA_LAB_01_RED_ROS2_TALKER_LISTENER.docx) | [`guias_laboratorio/rendered/GUIA_LAB_01_RED_ROS2_TALKER_LISTENER.pdf`](guias_laboratorio/rendered/GUIA_LAB_01_RED_ROS2_TALKER_LISTENER.pdf) |
+| Guía de laboratorio 02 | [`guias_laboratorio/GUIA_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.docx`](guias_laboratorio/GUIA_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.docx) | [`guias_laboratorio/GUIA_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.md`](guias_laboratorio/GUIA_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.md) |
 | Evidencia y nota del Taller 01 | [`evidencias_abet/PLANTILLA_EVIDENCIA_ABET_TALLER_01_ROS2_CLI.docx`](evidencias_abet/PLANTILLA_EVIDENCIA_ABET_TALLER_01_ROS2_CLI.docx) | [`evidencias_abet/PLANTILLA_EVIDENCIA_ABET_TALLER_01_ROS2_CLI.md`](evidencias_abet/PLANTILLA_EVIDENCIA_ABET_TALLER_01_ROS2_CLI.md), representación auxiliar no normativa |
 | Evidencia y nota del Laboratorio 01 | [`evidencias_abet/INSTRUMENTO_ABET_LAB_01_RED_ROS2_DISTRIBUIDA.docx`](evidencias_abet/INSTRUMENTO_ABET_LAB_01_RED_ROS2_DISTRIBUIDA.docx) | [`evidencias_abet/INSTRUMENTO_ABET_LAB_01_RED_ROS2_DISTRIBUIDA.md`](evidencias_abet/INSTRUMENTO_ABET_LAB_01_RED_ROS2_DISTRIBUIDA.md), representación auxiliar no normativa |
+| Evidencia y nota del Laboratorio 02 | [`evidencias_abet/INSTRUMENTO_ABET_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.docx`](evidencias_abet/INSTRUMENTO_ABET_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.docx) | [`evidencias_abet/INSTRUMENTO_ABET_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.md`](evidencias_abet/INSTRUMENTO_ABET_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.md), representación auxiliar no normativa |
 | Proyecto del primer corte | [`proyectos_evaluables/PROYECTO_CORTE_1_CONEXION_KINOVA.md`](proyectos_evaluables/PROYECTO_CORTE_1_CONEXION_KINOVA.md) | No tiene archivo derivado; esta especificación es la fuente oficial |
 | Evidencia y nota del Proyecto Corte 1 | [`evidencias_abet/INSTRUMENTO_ABET_PROYECTO_CORTE_1_CONEXION_KINOVA.docx`](evidencias_abet/INSTRUMENTO_ABET_PROYECTO_CORTE_1_CONEXION_KINOVA.docx) | [`evidencias_abet/INSTRUMENTO_ABET_PROYECTO_CORTE_1_CONEXION_KINOVA.md`](evidencias_abet/INSTRUMENTO_ABET_PROYECTO_CORTE_1_CONEXION_KINOVA.md), representación auxiliar |
 
@@ -52,6 +54,7 @@ Para evitar versiones incompatibles, cada responsabilidad debe tener una sola fu
 ### Laboratorios
 
 - [Guía 01 — Red ROS 2, DDS y comunicación talker/listener](guias_laboratorio/rendered/GUIA_LAB_01_RED_ROS2_TALKER_LISTENER.pdf).
+- [Guía 02 — Pruebas de conectividad, streaming RTSP y diagnóstico de la cámara Kinova](guias_laboratorio/GUIA_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.md).
 - [Plantilla institucional para nuevas guías](guias_laboratorio/templates/Formato_Guias_de_Laboratorio.docx).
 
 ### Proyectos y Control de Versiones
@@ -65,6 +68,7 @@ Para evitar versiones incompatibles, cada responsabilidad debe tener una sola fu
 
 - [Formato de evidencia y calificación del Taller 01](evidencias_abet/PLANTILLA_EVIDENCIA_ABET_TALLER_01_ROS2_CLI.docx).
 - [Instrumento ABET del Laboratorio 01 — red ROS 2 distribuida](evidencias_abet/INSTRUMENTO_ABET_LAB_01_RED_ROS2_DISTRIBUIDA.docx).
+- [Instrumento ABET del Laboratorio 02 — pruebas de cámara Kinova](evidencias_abet/INSTRUMENTO_ABET_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.docx).
 - [Instrumento ABET del Proyecto Corte 1 — Conexión con Kinova](evidencias_abet/INSTRUMENTO_ABET_PROYECTO_CORTE_1_CONEXION_KINOVA.docx).
 - [Guía de recolección y procesamiento de entregas Word](evidencias_abet/GUIA_RECOLECCION_Y_PROCESAMIENTO_ENTREGAS.md).
 

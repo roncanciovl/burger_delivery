@@ -325,6 +325,165 @@ function auditarControladorROS() {
 }
 
 /**
+ * Publica únicamente el Laboratorio 01 como entrega grupal.
+ *
+ * Reutiliza el borrador registrado en el panel, lo dirige al entregante
+ * designado de cada equipo y conserva la guía ya adjunta. La operación es
+ * idempotente: volver a ejecutarla actualiza el mismo courseWork.
+ */
+function publicarLaboratorio01ROS() {
+  var panel = obtenerPanel_();
+  try {
+    var config = leerConfiguracion_(panel);
+    var courseId = obtenerCourseId_(config);
+    var estudiantes = leerEstudiantes_(panel, config);
+    var equipos = leerEquipos_(panel);
+    var validacion = validarEquiposClassroom_(equipos, estudiantes);
+    if (!validacion.ok) {
+      throw new Error(
+        "No se puede publicar L01: " + validacion.incidencias.join(" | ")
+      );
+    }
+
+    var actividades = leerActividades_(panel);
+    var actividad = actividades.filter(function(item) {
+      return item.codigo === "L01";
+    })[0];
+    if (!actividad) {
+      throw new Error("No existe la actividad L01 en el panel.");
+    }
+
+    var trabajo = null;
+    if (actividad.idClassroom) {
+      trabajo = Classroom.Courses.CourseWork.get(
+        courseId,
+        actividad.idClassroom
+      );
+    }
+    if (!trabajo) {
+      trabajo = listarCourseWork_(courseId).filter(function(item) {
+        return normalizar_(item.title) === normalizar_(actividad.titulo);
+      })[0];
+    }
+    if (!trabajo) {
+      throw new Error(
+        "No se encontró el borrador de L01; se cancela para evitar duplicados."
+      );
+    }
+
+    var descripcion = [
+      "Este laboratorio ya fue enviado previamente por correo electrónico. Para centralizar la evidencia y conservar la trazabilidad de la calificación, cada equipo debe volver a entregar en esta actividad de Google Classroom el informe final que remitió por correo.",
+      "",
+      "Entrega grupal: se recibe un único archivo por equipo. Classroom muestra la actividad únicamente al integrante designado como ENTREGANTE; esa persona debe adjuntar el informe e incluir en el documento los nombres y códigos de todos los integrantes. Los demás integrantes no deben crear entregas duplicadas.",
+      "",
+      "No se solicitan experimentos nuevos ni cambios retroactivos al trabajo ya realizado. Si el equipo preparó una corrección posterior al envío por correo, debe cargar aquí su versión final.",
+      "",
+      "Fecha límite: viernes 21 de agosto de 2026, 11:59 p. m. (hora de Bogotá)."
+    ].join("\n");
+
+    var destinatarios = {};
+    configurarDestinatarios_(destinatarios, panel, courseId, {
+      codigo: "L01",
+      asignacion: "ENTREGANTES",
+      equiposObjetivo: ""
+    });
+    var deseados = destinatarios.individualStudentsOptions.studentIds.map(String);
+    var actuales = ((trabajo.individualStudentsOptions || {}).studentIds || [])
+      .map(String);
+    var agregar = deseados.filter(function(id) {
+      return actuales.indexOf(id) === -1;
+    });
+    var retirar = actuales.filter(function(id) {
+      return deseados.indexOf(id) === -1;
+    });
+    if (
+      trabajo.assigneeMode !== "INDIVIDUAL_STUDENTS" ||
+      agregar.length ||
+      retirar.length
+    ) {
+      Classroom.Courses.CourseWork.modifyAssignees(
+        {
+          assigneeMode: "INDIVIDUAL_STUDENTS",
+          modifyIndividualStudentsOptions: {
+            addStudentIds: agregar,
+            removeStudentIds: retirar
+          }
+        },
+        courseId,
+        String(trabajo.id)
+      );
+    }
+
+    var titulo = "Laboratorio 01 — Red ROS 2 distribuida (entrega grupal)";
+    var body = {
+      title: titulo,
+      description: descripcion,
+      maxPoints: 500,
+      state: "PUBLISHED"
+    };
+    agregarFechaLimite_(body, "2026-08-21", "23:59");
+
+    var actualizado = Classroom.Courses.CourseWork.patch(
+      body,
+      courseId,
+      String(trabajo.id),
+      {
+        updateMask: [
+          "title",
+          "description",
+          "maxPoints",
+          "dueDate",
+          "dueTime",
+          "state"
+        ].join(",")
+      }
+    );
+    actualizado = Classroom.Courses.CourseWork.get(
+      courseId,
+      String(actualizado.id)
+    );
+
+    var hoja = panel.getSheetByName(ROS_CTRL.sheets.activities);
+    hoja.getRange(actividad.row, 3).setValue(titulo);
+    hoja.getRange(actividad.row, 6, 1, 3).setValues([[
+      "2026-08-21",
+      "23:59",
+      descripcion
+    ]]);
+    hoja.getRange(actividad.row, 10, 1, 3).setValues([[
+      String(actualizado.id),
+      "PUBLICADO",
+      "ENTREGANTES"
+    ]]);
+
+    var resultado = {
+      ok: true,
+      codigo: "L01",
+      courseWorkId: String(actualizado.id),
+      estado: actualizado.state,
+      titulo: actualizado.title,
+      fechaLimiteBogota: "2026-08-21 23:59",
+      equipos: validacion.equiposConfigurados,
+      entregantes: (actualizado.individualStudentsOptions || {}).studentIds
+        ? actualizado.individualStudentsOptions.studentIds.length
+        : 0,
+      enlace: actualizado.alternateLink || ""
+    };
+    registrarAuditoria_(panel, "PUBLICAR_L01_GRUPAL", resultado);
+    console.log(JSON.stringify(resultado, null, 2));
+    return resultado;
+  } catch (error) {
+    var resultadoError = resultadoError_(
+      "No fue posible publicar el Laboratorio 01.",
+      error
+    );
+    registrarAuditoria_(panel, "ERROR_PUBLICAR_L01_GRUPAL", resultadoError);
+    console.error(JSON.stringify(resultadoError, null, 2));
+    return resultadoError;
+  }
+}
+
+/**
  * Incorpora en Equipos a los estudiantes faltantes sin sobrescribir la
  * conformación, el usuario de GitHub, los roles ni los estados existentes.
  */
@@ -459,7 +618,7 @@ function inicializarPanel_(panel) {
         repo + "guias_laboratorio/rendered/GUIA_LAB_01_RED_ROS2_TALKER_LISTENER.pdf",
         "",
         "PENDIENTE",
-        "TODOS",
+        "ENTREGANTES",
         ""
       ],
       [
@@ -1232,11 +1391,19 @@ function validarEquiposClassroom_(equipos, estudiantes) {
     }
   });
 
+  // Excepción 2026-2 aceptada por el docente: equipo-03 y equipo-05 quedan
+  // con 4 integrantes en vez de 2-3 porque así resultó la distribución del
+  // Excel de matrícula y no se redistribuirán estudiantes.
+  var EQUIPOS_CON_EXCEPCION_TAMANO = { "equipo-03": 4, "equipo-05": 4 };
   Object.keys(porEquipo).forEach(function(equipoId) {
     var miembros = porEquipo[equipoId];
     var entregantes = miembros.filter(function(item) { return item.entregante; });
-    if (miembros.length < 2 || miembros.length > 3) {
-      incidencias.push(equipoId + ": debe tener 2 o 3 integrantes");
+    var maximoPermitido = EQUIPOS_CON_EXCEPCION_TAMANO[equipoId] || 3;
+    if (miembros.length < 2 || miembros.length > maximoPermitido) {
+      incidencias.push(equipoId + ": debe tener 2 o 3 integrantes" +
+        (EQUIPOS_CON_EXCEPCION_TAMANO[equipoId]
+          ? " (excepción vigente: hasta " + maximoPermitido + ")"
+          : ""));
     }
     if (entregantes.length !== 1) {
       incidencias.push(equipoId + ": debe tener exactamente un ENTREGANTE=SI");

@@ -1,0 +1,4 @@
+interface:
+  display_name: "SuperStudent Robotics Methodology"
+  short_description: "Diagnóstico guiado para integración robótica"
+  default_prompt: "Use $superstudent-robotics-methodology to diagnose this ROS 2 integration problem from repository evidence and propose a reversible validation path."
