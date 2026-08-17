@@ -3,7 +3,9 @@
 **Título Formal del Proyecto:**  
 > *Burger-Cell: Framework Abierto de Robótica Colaborativa en ROS 2 con Manipulación Kinova Gen3, Percepción AprilTag e Integración de Modelos VLM*
 
-[🇪🇸 Español](README.md) | [🇬🇧 English](README_en.md)
+[🇪🇸 Español](README.md) | [🇬🇧 English](README_en.md)  
+[![DOI Concept](https://zenodo.org/badge/DOI/10.5281/zenodo.21809949.svg)](https://doi.org/10.5281/zenodo.21809949)
+[![DOI v1.0.0](https://zenodo.org/badge/DOI/10.5281/zenodo.21809950.svg)](https://doi.org/10.5281/zenodo.21809950)
 
 ![Pipeline Pick and Place](pick_and_place_pipeline.svg)
 
@@ -183,6 +185,13 @@ En `scripts/`:
 
 ## 📄 Citación y DOI
 
+Este proyecto cuenta con registros DOI persistentes asignados en **Zenodo / DataCite**:
+
+| Tipo de DOI | Identificador | Badge | Propósito |
+|---|---|---|---|
+| 🌐 **Concept DOI** | `10.5281/zenodo.21809949` | [![DOI Concept](https://zenodo.org/badge/DOI/10.5281/zenodo.21809949.svg)](https://doi.org/10.5281/zenodo.21809949) | Apunta a **todas las versiones** del repositorio (siempre la más reciente). |
+| 🏷️ **Release DOI (v1.0.0)** | `10.5281/zenodo.21809950` | [![DOI v1.0.0](https://zenodo.org/badge/DOI/10.5281/zenodo.21809950.svg)](https://doi.org/10.5281/zenodo.21809950) | Snapshot inmutable de la versión **v1.0.0** (Software Científico Registrado). |
+
 Si utilizas este entorno en tu investigación o cursos académicos, por favor cítalo como:
 
 ```bibtex
@@ -191,8 +200,9 @@ Si utilizas este entorno en tu investigación o cursos académicos, por favor c�
   title = {Burger-Cell: An Open-Source Heterogeneous ROS 2 Framework for Kinova Gen3 Manipulation, AprilTag Perception, and VLM-Guided Spatial Reasoning},
   year = {2026},
   publisher = {Zenodo},
-  doi = {10.5281/zenodo.21809949},
-  url = {https://doi.org/10.5281/zenodo.21809949}
+  version = {1.0.0},
+  doi = {10.5281/zenodo.21809950},
+  url = {https://doi.org/10.5281/zenodo.21809950}
 }
 ```
 *(Consulta también [CITATION.cff](CITATION.cff) y [.zenodo.json](.zenodo.json)).*
