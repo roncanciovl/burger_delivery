@@ -31,6 +31,8 @@ Para evitar versiones incompatibles, cada responsabilidad debe tener una sola fu
 |---|---|---|
 | Syllabus institucional | [`syllabus/Syllabus_Electiva_ROS.docx`](syllabus/Syllabus_Electiva_ROS.docx) | Las versiones anteriores están identificadas en [`syllabus/deprecated/`](syllabus/deprecated/README.md) y no deben usarse para docencia |
 | Taller CLI de ROS 2 | [`talleres/TALLER_ROS2_CLI.md`](talleres/TALLER_ROS2_CLI.md) | Instrumento ABET separado en `evidencias_abet/` |
+| Taller micro-ROS en ESP32 (Móviles / Drones) | [`talleres/TALLER_MICROROS_ESP32_ROBOTICA_MOVIL.md`](talleres/TALLER_MICROROS_ESP32_ROBOTICA_MOVIL.md) | Guía práctica para nodos embebidos y control de movimiento |
+| Taller Localización Visual 2D (Cámara Fija + micro-ROS) | [`talleres/TALLER_LOCALIZACION_APRILTAG_KINOVA_MICROROS.md`](talleres/TALLER_LOCALIZACION_APRILTAG_KINOVA_MICROROS.md) | Localización 2D directa con cámara en posición fija y consumo en ESP32 (sin TF2) |
 | Taller URDF y TF2 | [`talleres/TALLER_URDF_TF.md`](talleres/TALLER_URDF_TF.md) | [`talleres/TALLER_URDF_TF.pdf`](talleres/TALLER_URDF_TF.pdf) |
 | Guía de laboratorio 01 | [`guias_laboratorio/GUIA_LAB_01_RED_ROS2_TALKER_LISTENER.docx`](guias_laboratorio/GUIA_LAB_01_RED_ROS2_TALKER_LISTENER.docx) | [`guias_laboratorio/rendered/GUIA_LAB_01_RED_ROS2_TALKER_LISTENER.pdf`](guias_laboratorio/rendered/GUIA_LAB_01_RED_ROS2_TALKER_LISTENER.pdf) |
 | Guía de laboratorio 02 | [`guias_laboratorio/GUIA_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.docx`](guias_laboratorio/GUIA_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.docx) | [`guias_laboratorio/GUIA_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.md`](guias_laboratorio/GUIA_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.md) |
@@ -49,6 +51,8 @@ Para evitar versiones incompatibles, cada responsabilidad debe tener una sola fu
 ### Talleres
 
 - [Taller 01 — CLI de ROS 2](talleres/TALLER_ROS2_CLI.md): nodos, tópicos, servicios, parámetros, acciones e introspección del grafo.
+- [Taller — micro-ROS en ESP32 para Plataformas Móviles y Drones](talleres/TALLER_MICROROS_ESP32_ROBOTICA_MOVIL.md): arquitectura XRCE-DDS, transporte Serial/WiFi, recepción de `cmd_vel`, publicación de telemetría y diagnóstico QoS.
+- [Taller — Localización Visual 2D con Cámara Fija y micro-ROS](talleres/TALLER_LOCALIZACION_APRILTAG_KINOVA_MICROROS.md): detección visual directa 2D, publicación de `geometry_msgs/msg/Pose2D` y navegación en ESP32 (sin requerir TF2).
 - [Taller — URDF y TF2](talleres/TALLER_URDF_TF.md): descripción del robot, frames, transformaciones y validación en tiempo de ejecución.
 
 ### Laboratorios
