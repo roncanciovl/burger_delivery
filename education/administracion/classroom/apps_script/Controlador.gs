@@ -10,7 +10,7 @@
  */
 
 var ROS_CTRL = {
-  version: "1.1.0",
+  version: "1.2.0",
   panelProperty: "ROS_CLASSROOM_PANEL_ID",
   courseProperty: "ROS_2026_2_COURSE_ID",
   timeZone: "America/Bogota",
@@ -20,6 +20,8 @@ var ROS_CTRL = {
     students: "Estudiantes",
     teams: "Equipos",
     activities: "Actividades",
+    activityGrades: "NotasActividad",
+    gradeSources: "FuentesNota",
     submissions: "Entregas",
     audit: "Auditoria"
   }
@@ -35,6 +37,7 @@ function onOpen() {
     .addItem("Vista previa de equipos", "vistaPreviaEquiposROS")
     .addItem("Aplicar configuración de Classroom", "configurarTodoROS")
     .addSeparator()
+    .addItem("Publicar y calificar taller GitHub", "publicarTallerGitHubROS")
     .addItem("Sincronizar entregas", "sincronizarEntregasROS")
     .addItem("Auditar curso", "auditarControladorROS")
     .addToUi();
@@ -484,6 +487,285 @@ function publicarLaboratorio01ROS() {
 }
 
 /**
+ * Publica y califica el taller individual de pruebas básicas con GitHub.
+ *
+ * Es un registro retrospectivo de la actividad realizada el 22/07/2026. Las
+ * notas se leen exclusivamente de la hoja privada NotasActividad, identifican
+ * al estudiante por código institucional y se verifican contra el roster de
+ * Classroom antes de escribir. La operación es idempotente.
+ */
+function publicarTallerGitHubROS() {
+  var panel = obtenerPanel_();
+  try {
+    var config = leerConfiguracion_(panel);
+    var courseId = obtenerCourseId_(config);
+    var estudiantes = leerEstudiantes_(panel, config);
+    var validacionEstudiantes = validarEstudiantes_(estudiantes, config);
+    if (!validacionEstudiantes.ok) {
+      throw new Error(
+        "La lista de estudiantes tiene incidencias: " +
+          validacionEstudiantes.incidencias.join(" | ")
+      );
+    }
+
+    var actividad = leerActividades_(panel).filter(function(item) {
+      return item.codigo === "GIT01";
+    })[0];
+    if (!actividad) {
+      throw new Error("No existe la actividad GIT01 en el panel.");
+    }
+
+    var notas = leerNotasActividad_(panel, "GIT01");
+    var notasPorCodigo = {};
+    notas.forEach(function(nota) {
+      if (notasPorCodigo[nota.codigo]) {
+        throw new Error("Código duplicado en NotasActividad: " + nota.codigo);
+      }
+      if (nota.escalaMaxima !== 5 || nota.nota < 0 || nota.nota > 5) {
+        throw new Error("Nota o escala inválida para el código " + nota.codigo);
+      }
+      if (["GRADED", "ABSENT"].indexOf(nota.estado) === -1) {
+        throw new Error("Estado de nota inválido para el código " + nota.codigo);
+      }
+      if (nota.estado === "ABSENT" && nota.nota !== 0) {
+        throw new Error("Una ausencia debe tener nota 0: " + nota.codigo);
+      }
+      notasPorCodigo[nota.codigo] = nota;
+    });
+
+    var estudiantesPorCodigo = {};
+    estudiantes.forEach(function(estudiante) {
+      estudiantesPorCodigo[estudiante.codigo] = estudiante;
+      if (!notasPorCodigo[estudiante.codigo]) {
+        throw new Error("Falta la nota del código " + estudiante.codigo);
+      }
+    });
+    notas.forEach(function(nota) {
+      if (!estudiantesPorCodigo[nota.codigo]) {
+        throw new Error("La nota no corresponde al roster: " + nota.codigo);
+      }
+    });
+    if (notas.length !== estudiantes.length) {
+      throw new Error(
+        "El número de notas (" + notas.length +
+          ") no coincide con el roster (" + estudiantes.length + ")."
+      );
+    }
+
+    var idsPorCorreo = obtenerMapaIdsPorCorreo_(courseId);
+    var codigoPorUserId = {};
+    estudiantes.forEach(function(estudiante) {
+      var userId = idsPorCorreo[estudiante.correo];
+      if (!userId) {
+        throw new Error(
+          "El código " + estudiante.codigo +
+            " no corresponde a un estudiante inscrito en Classroom."
+        );
+      }
+      codigoPorUserId[String(userId)] = estudiante.codigo;
+    });
+    if (Object.keys(codigoPorUserId).length !== estudiantes.length) {
+      throw new Error("El mapeo entre roster y Classroom no es uno a uno.");
+    }
+
+    var titulo = "Taller — Pruebas básicas con GitHub (22 de julio)";
+    var descripcion = [
+      "Registro retrospectivo de la actividad realizada y evaluada el 22 de julio de 2026.",
+      "",
+      "Actividad individual: pruebas básicas con GitHub.",
+      "",
+      "No se requiere una nueva entrega en Classroom. La calificación publicada corresponde al registro oficial conservado en la lista de estudiantes de ROS. La actividad no completada se registra con nota 0,0."
+    ].join("\n");
+
+    var trabajo = null;
+    if (actividad.idClassroom) {
+      try {
+        trabajo = Classroom.Courses.CourseWork.get(
+          courseId,
+          actividad.idClassroom
+        );
+      } catch (ignorado) {
+        trabajo = null;
+      }
+    }
+    if (!trabajo) {
+      trabajo = listarCourseWork_(courseId).filter(function(item) {
+        return normalizar_(item.title) === normalizar_(titulo);
+      })[0] || null;
+    }
+
+    var temas = listarTemas_(courseId);
+    var tema = temas.filter(function(item) {
+      return normalizar_(item.name) === normalizar_(actividad.topico);
+    })[0];
+    if (!tema) {
+      tema = Classroom.Courses.Topics.create(
+        { name: actividad.topico },
+        courseId
+      );
+    }
+
+    if (!trabajo) {
+      var nuevo = {
+        title: titulo,
+        description: descripcion,
+        workType: "ASSIGNMENT",
+        state: "DRAFT",
+        maxPoints: 5,
+        assigneeMode: "ALL_STUDENTS",
+        topicId: String(tema.topicId)
+      };
+      agregarFechaLimite_(nuevo, "2026-07-22", "23:59");
+      trabajo = Classroom.Courses.CourseWork.create(nuevo, courseId);
+      panel.getSheetByName(ROS_CTRL.sheets.activities)
+        .getRange(actividad.row, 10, 1, 2)
+        .setValues([[String(trabajo.id), "BORRADOR_CREADO"]]);
+    }
+
+    if (trabajo.associatedWithDeveloper === false) {
+      throw new Error(
+        "La actividad existente no fue creada por este controlador y no puede calificarse por API."
+      );
+    }
+    if (trabajo.assigneeMode !== "ALL_STUDENTS") {
+      Classroom.Courses.CourseWork.modifyAssignees(
+        { assigneeMode: "ALL_STUDENTS" },
+        courseId,
+        String(trabajo.id)
+      );
+    }
+
+    var actualizacion = {
+      title: titulo,
+      description: descripcion,
+      maxPoints: 5,
+      topicId: String(tema.topicId),
+      state: "PUBLISHED"
+    };
+    agregarFechaLimite_(actualizacion, "2026-07-22", "23:59");
+    trabajo = Classroom.Courses.CourseWork.patch(
+      actualizacion,
+      courseId,
+      String(trabajo.id),
+      {
+        updateMask: [
+          "title",
+          "description",
+          "maxPoints",
+          "topicId",
+          "dueDate",
+          "dueTime",
+          "state"
+        ].join(",")
+      }
+    );
+
+    var entregas = listarEntregas_(courseId, String(trabajo.id));
+    var entregasPorUserId = {};
+    entregas.forEach(function(entrega) {
+      entregasPorUserId[String(entrega.userId)] = entrega;
+    });
+    if (entregas.length !== estudiantes.length) {
+      throw new Error(
+        "Classroom generó " + entregas.length + " entregas, pero se esperaban " +
+          estudiantes.length + ". Se cancela la calificación."
+      );
+    }
+
+    Object.keys(codigoPorUserId).forEach(function(userId) {
+      var codigo = codigoPorUserId[userId];
+      var entrega = entregasPorUserId[userId];
+      if (!entrega) {
+        throw new Error("No existe entrega de Classroom para el código " + codigo);
+      }
+      var nota = notasPorCodigo[codigo].nota;
+      Classroom.Courses.CourseWork.StudentSubmissions.patch(
+        { draftGrade: nota, assignedGrade: nota },
+        courseId,
+        String(trabajo.id),
+        String(entrega.id),
+        { updateMask: "draftGrade,assignedGrade" }
+      );
+    });
+
+    var verificacion = listarEntregas_(courseId, String(trabajo.id));
+    var notasCinco = 0;
+    var notasCero = 0;
+    verificacion.forEach(function(entrega) {
+      var codigo = codigoPorUserId[String(entrega.userId)];
+      if (!codigo) {
+        throw new Error("Classroom devolvió una entrega fuera del roster validado.");
+      }
+      var esperada = notasPorCodigo[codigo].nota;
+      var asignada = Number(entrega.assignedGrade);
+      var borrador = Number(entrega.draftGrade);
+      if (asignada !== esperada || borrador !== esperada) {
+        throw new Error("La lectura posterior no coincide para el código " + codigo);
+      }
+      if (asignada === 5) {
+        notasCinco += 1;
+      }
+      if (asignada === 0) {
+        notasCero += 1;
+      }
+    });
+    if (notasCinco !== 18 || notasCero !== 1) {
+      throw new Error("La distribución final de calificaciones no coincide con la fuente.");
+    }
+
+    var hoja = panel.getSheetByName(ROS_CTRL.sheets.activities);
+    hoja.getRange(actividad.row, 3, 1, 11).setValues([[
+      titulo,
+      actividad.topico,
+      5,
+      "2026-07-22",
+      "23:59",
+      descripcion,
+      "",
+      String(trabajo.id),
+      "PUBLICADO_Y_CALIFICADO",
+      "TODOS",
+      ""
+    ]]);
+    actualizarFuenteNota_(panel, {
+      sourceId: "ROS_XLSX_2026_2",
+      platform: "CLASSROOM",
+      section: config.SECCION,
+      courseId: courseId,
+      activityCode: "GIT01",
+      courseWorkId: String(trabajo.id),
+      cutId: "C1",
+      status: "VERIFICADO"
+    });
+
+    var resultado = {
+      ok: true,
+      codigo: "GIT01",
+      courseWorkId: String(trabajo.id),
+      estado: trabajo.state,
+      titulo: titulo,
+      fechaActividad: "2026-07-22",
+      escalaMaxima: 5,
+      estudiantesCalificados: verificacion.length,
+      notasCinco: notasCinco,
+      notasCero: notasCero,
+      enlace: trabajo.alternateLink || ""
+    };
+    registrarAuditoria_(panel, "PUBLICAR_Y_CALIFICAR_GIT01", resultado);
+    console.log(JSON.stringify(resultado, null, 2));
+    return resultado;
+  } catch (error) {
+    var resultadoError = resultadoError_(
+      "No fue posible publicar y calificar el taller de GitHub.",
+      error
+    );
+    registrarAuditoria_(panel, "ERROR_PUBLICAR_Y_CALIFICAR_GIT01", resultadoError);
+    console.error(JSON.stringify(resultadoError, null, 2));
+    return resultadoError;
+  }
+}
+
+/**
  * Incorpora en Equipos a los estudiantes faltantes sin sobrescribir la
  * conformación, el usuario de GitHub, los roles ni los estados existentes.
  */
@@ -536,6 +818,8 @@ function inicializarPanel_(panel) {
   var students = asegurarHoja_(panel, ROS_CTRL.sheets.students);
   var teams = asegurarHoja_(panel, ROS_CTRL.sheets.teams);
   var activities = asegurarHoja_(panel, ROS_CTRL.sheets.activities);
+  var activityGrades = asegurarHoja_(panel, ROS_CTRL.sheets.activityGrades);
+  var gradeSources = asegurarHoja_(panel, ROS_CTRL.sheets.gradeSources);
   var submissions = asegurarHoja_(panel, ROS_CTRL.sheets.submissions);
   var audit = asegurarHoja_(panel, ROS_CTRL.sheets.audit);
 
@@ -661,6 +945,33 @@ function inicializarPanel_(panel) {
 
 
   asegurarColumnasActividades_(activities);
+
+  if (activityGrades.getLastRow() === 0) {
+    activityGrades.getRange(1, 1, 1, 7).setValues([[
+      "STUDENT_ID",
+      "ACTIVITY_CODE",
+      "SOURCE_ID",
+      "SCORE",
+      "SCALE_MAX",
+      "STATUS",
+      "OBSERVATION"
+    ]]);
+    formatearHoja_(activityGrades, 7);
+  }
+
+  if (gradeSources.getLastRow() === 0) {
+    gradeSources.getRange(1, 1, 1, 8).setValues([[
+      "SOURCE_ID",
+      "PLATFORM",
+      "SECTION",
+      "COURSE_ID",
+      "ACTIVITY_CODE",
+      "COURSEWORK_ID",
+      "CUT_ID",
+      "STATUS"
+    ]]);
+    formatearHoja_(gradeSources, 8);
+  }
 
   if (submissions.getLastRow() === 0) {
     submissions.getRange(1, 1).setValue("Ejecute sincronizarEntregasROS() después de recibir entregas.");
@@ -1116,6 +1427,78 @@ function leerActividades_(panel) {
     });
   }
   return result;
+}
+
+function leerNotasActividad_(panel, activityCode) {
+  var sheet = panel.getSheetByName(ROS_CTRL.sheets.activityGrades);
+  if (!sheet) {
+    throw new Error("No existe la hoja privada NotasActividad.");
+  }
+  var values = sheet.getDataRange().getDisplayValues();
+  var result = [];
+  for (var i = 1; i < values.length; i += 1) {
+    var codigo = String(values[i][0] || "").trim();
+    var actividad = String(values[i][1] || "").trim();
+    if (!codigo || actividad !== activityCode) {
+      continue;
+    }
+    result.push({
+      row: i + 1,
+      codigo: codigo,
+      actividad: actividad,
+      fuente: String(values[i][2] || "").trim(),
+      nota: Number(values[i][3]),
+      escalaMaxima: Number(values[i][4]),
+      estado: String(values[i][5] || "").trim().toUpperCase(),
+      observacion: String(values[i][6] || "").trim()
+    });
+  }
+  if (!result.length) {
+    throw new Error("No hay notas para " + activityCode + " en NotasActividad.");
+  }
+  return result;
+}
+
+function actualizarFuenteNota_(panel, source) {
+  var sheet = panel.getSheetByName(ROS_CTRL.sheets.gradeSources);
+  if (!sheet) {
+    sheet = panel.insertSheet(ROS_CTRL.sheets.gradeSources);
+    sheet.getRange(1, 1, 1, 8).setValues([[
+      "SOURCE_ID",
+      "PLATFORM",
+      "SECTION",
+      "COURSE_ID",
+      "ACTIVITY_CODE",
+      "COURSEWORK_ID",
+      "CUT_ID",
+      "STATUS"
+    ]]);
+    formatearHoja_(sheet, 8);
+  }
+  var values = sheet.getDataRange().getDisplayValues();
+  var row = 0;
+  for (var i = 1; i < values.length; i += 1) {
+    if (
+      String(values[i][0] || "").trim() === source.sourceId &&
+      String(values[i][4] || "").trim() === source.activityCode
+    ) {
+      row = i + 1;
+      break;
+    }
+  }
+  if (!row) {
+    row = Math.max(2, sheet.getLastRow() + 1);
+  }
+  sheet.getRange(row, 1, 1, 8).setValues([[
+    source.sourceId,
+    source.platform,
+    source.section,
+    source.courseId,
+    source.activityCode,
+    source.courseWorkId,
+    source.cutId,
+    source.status
+  ]]);
 }
 
 function validarEstudiantes_(students, config) {
