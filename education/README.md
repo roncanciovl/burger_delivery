@@ -30,6 +30,7 @@ Para evitar versiones incompatibles, cada responsabilidad debe tener una sola fu
 | Responsabilidad | Fuente oficial | Archivo derivado o de consulta |
 |---|---|---|
 | Syllabus institucional | [`syllabus/Syllabus_Electiva_ROS.docx`](syllabus/Syllabus_Electiva_ROS.docx) | Las versiones anteriores están identificadas en [`syllabus/deprecated/`](syllabus/deprecated/README.md) y no deben usarse para docencia |
+| Taller Fundamentos de GitHub | [`talleres/TALLER_GITHUB_INICIO_PERFIL_REPOSITORIOS.md`](talleres/TALLER_GITHUB_INICIO_PERFIL_REPOSITORIOS.md) | Cuenta institucional, 2FA, perfil profesional README y exploración de repositorios |
 | Taller CLI de ROS 2 | [`talleres/TALLER_ROS2_CLI.md`](talleres/TALLER_ROS2_CLI.md) | Instrumento ABET separado en `evidencias_abet/` |
 | Taller micro-ROS en ESP32 (Móviles / Drones) | [`talleres/TALLER_MICROROS_ESP32_ROBOTICA_MOVIL.md`](talleres/TALLER_MICROROS_ESP32_ROBOTICA_MOVIL.md) | Guía práctica para nodos embebidos y control de movimiento |
 | Taller Localización Visual 2D (Cámara Fija + micro-ROS) | [`talleres/TALLER_LOCALIZACION_APRILTAG_KINOVA_MICROROS.md`](talleres/TALLER_LOCALIZACION_APRILTAG_KINOVA_MICROROS.md) | Localización 2D directa con cámara en posición fija y consumo en ESP32 (sin TF2) |
@@ -50,6 +51,7 @@ Para evitar versiones incompatibles, cada responsabilidad debe tener una sola fu
 
 ### Talleres
 
+- [Taller — Fundamentos de GitHub](talleres/TALLER_GITHUB_INICIO_PERFIL_REPOSITORIOS.md): creación y blindaje de cuenta con 2FA, perfil profesional `username/username`, badges de ingeniería y exploración interactiva de repositorios.
 - [Taller 01 — CLI de ROS 2](talleres/TALLER_ROS2_CLI.md): nodos, tópicos, servicios, parámetros, acciones e introspección del grafo.
 - [Taller — micro-ROS en ESP32 para Plataformas Móviles y Drones](talleres/TALLER_MICROROS_ESP32_ROBOTICA_MOVIL.md): arquitectura XRCE-DDS, transporte Serial/WiFi, recepción de `cmd_vel`, publicación de telemetría y diagnóstico QoS.
 - [Taller — Localización Visual 2D con Cámara Fija y micro-ROS](talleres/TALLER_LOCALIZACION_APRILTAG_KINOVA_MICROROS.md): detección visual directa 2D, publicación de `geometry_msgs/msg/Pose2D` y navegación en ESP32 (sin requerir TF2).
