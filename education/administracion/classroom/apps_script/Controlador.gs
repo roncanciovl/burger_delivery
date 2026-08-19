@@ -10,7 +10,7 @@
  */
 
 var ROS_CTRL = {
-  version: "1.2.0",
+  version: "1.2.1",
   panelProperty: "ROS_CLASSROOM_PANEL_ID",
   courseProperty: "ROS_2026_2_COURSE_ID",
   timeZone: "America/Bogota",
@@ -615,7 +615,6 @@ function publicarTallerGitHubROS() {
         assigneeMode: "ALL_STUDENTS",
         topicId: String(tema.topicId)
       };
-      agregarFechaLimite_(nuevo, "2026-07-22", "23:59");
       trabajo = Classroom.Courses.CourseWork.create(nuevo, courseId);
       panel.getSheetByName(ROS_CTRL.sheets.activities)
         .getRange(actividad.row, 10, 1, 2)
@@ -642,7 +641,6 @@ function publicarTallerGitHubROS() {
       topicId: String(tema.topicId),
       state: "PUBLISHED"
     };
-    agregarFechaLimite_(actualizacion, "2026-07-22", "23:59");
     trabajo = Classroom.Courses.CourseWork.patch(
       actualizacion,
       courseId,
@@ -653,8 +651,6 @@ function publicarTallerGitHubROS() {
           "description",
           "maxPoints",
           "topicId",
-          "dueDate",
-          "dueTime",
           "state"
         ].join(",")
       }
