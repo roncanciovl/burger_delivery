@@ -179,33 +179,58 @@ En despliegue distribuido, el driver se ejecuta en la estación conectada físic
 > - **Estación B (y demás computadores de estudiantes):** Ejecutan el launch con `start_driver:=false`. Sus nodos (`kinova_monitor`, `safe_trajectory_client`, RViz2) descubren y consumen la telemetría y el action server a través del middleware DDS en la red local.
 > - **Simulación local (Modo Fake):** Si cada estudiante prueba en modo simulado (`use_fake_hardware:=true`), pueden usar `start_driver:=true` **únicamente si cada equipo utiliza un `ROS_DOMAIN_ID` diferente y aislado** (ej. `export ROS_DOMAIN_ID=11`, `12`, etc.).
 
-## 6. Estructura obligatoria
+## 6. Estructura obligatoria y Ubicación en el Workspace
 
-El package debe ubicarse en:
+### 6.1. ¿Dónde se crea el package?
+El package debe crearse **dentro del repositorio del equipo (`burger_delivery`)**, en la siguiente ruta:
 
 ```text
 ~/ros2_ws/src/burger_delivery/burger_kinova_connection/
 ```
 
-Estructura mínima:
+Comando sugerido para crearlo con `ros2 pkg create`:
+```bash
+cd ~/ros2_ws/src/burger_delivery
+ros2 pkg create --build-type ament_python burger_kinova_connection \
+  --dependencies rclpy sensor_msgs diagnostic_msgs control_msgs trajectory_msgs controller_manager_msgs launch launch_ros
+```
+
+### 6.2. ¿Dónde se ejecuta `colcon build`?
+**Siempre en la raíz del workspace ROS 2 (`~/ros2_ws`)**, nunca dentro de carpetas internas:
+```bash
+cd ~/ros2_ws
+colcon build --packages-select burger_kinova_connection --symlink-install
+source install/setup.bash
+```
+
+### 6.3. Árbol de directorios del Workspace y Package
 
 ```text
-burger_kinova_connection/
-├── package.xml
-├── setup.py
-├── setup.cfg
-├── resource/
-│   └── burger_kinova_connection
-├── burger_kinova_connection/
-│   ├── __init__.py
-│   ├── kinova_monitor.py
-│   └── safe_trajectory_client.py
-├── launch/
-│   └── kinova_connection.launch.py
-├── config/
-│   └── kinova_connection.yaml
-├── test/
-└── README.md
+~/ros2_ws/                               <-- 🔨 RAÍZ: Aquí se ejecuta 'colcon build' y 'source install/setup.bash'
+├── build/
+├── install/
+├── log/
+└── src/
+    ├── ros2_kortex/                     <-- Stack del driver oficial de Kinova
+    └── burger_delivery/                 <-- Repositorio oficial del equipo (burger-kinova-equipo-XX)
+        ├── burger_kinova_connection/    <-- 📦 PACKAGE: Aquí se desarrolla el código del proyecto
+        │   ├── package.xml
+        │   ├── setup.py
+        │   ├── setup.cfg
+        │   ├── resource/
+        │   │   └── burger_kinova_connection
+        │   ├── burger_kinova_connection/
+        │   │   ├── __init__.py
+        │   │   ├── kinova_monitor.py
+        │   │   └── safe_trajectory_client.py
+        │   ├── launch/
+        │   │   └── kinova_connection.launch.py
+        │   ├── config/
+        │   │   └── kinova_connection.yaml
+        │   ├── test/
+        │   └── README.md
+        ├── education/
+        └── ...
 ```
 
 Se recomienda `ament_python` para concentrar el proyecto en los conceptos de comunicación ROS 2. Los tipos de mensaje, servicio y acción deben provenir de interfaces estándar existentes.
