@@ -917,15 +917,15 @@ function inicializarPanel_(panel) {
         ""
       ],
       [
-        "NO",
+        "SI",
         "E01",
         "Proyecto Corte 1 — Conexión segura con Kinova Gen3",
         "Corte 1 — Fundamentos y red ROS 2",
         500,
-        "",
-        "",
-        "Proyecto integrador del primer corte. Active esta fila cuando la fecha y las instrucciones estén confirmadas.",
-        repo + "proyectos_evaluables/PROYECTO_CORTE_1_CONEXION_KINOVA.md",
+        "2026-08-26",
+        "16:00",
+        "Entrega grupal del Proyecto de Corte 1 (Conexión segura con Kinova Gen3). Un solo integrante por equipo (ENTREGANTE) sube la evidencia técnica y el instrumento ABET diligenciado.",
+        repo + "proyectos_evaluables/PROYECTO_CORTE_1_CONEXION_KINOVA.md\n" + repo + "evidencias_abet/INSTRUMENTO_ABET_PROYECTO_CORTE_1_CONEXION_KINOVA.docx",
         "",
         "PENDIENTE",
         "ENTREGANTES",
@@ -1149,7 +1149,13 @@ function crearBorradores_(panel, courseId, actividades, temas) {
         }
       }
       if (actividad.materialUrl) {
-        body.materials = [{ link: { url: actividad.materialUrl } }];
+        var urls = String(actividad.materialUrl)
+          .split(/[\n,;]+/)
+          .map(function(u) { return u.trim(); })
+          .filter(Boolean);
+        if (urls.length > 0) {
+          body.materials = urls.map(function(u) { return { link: { url: u } }; });
+        }
       }
       agregarFechaLimite_(body, actividad.fecha, actividad.hora);
 
