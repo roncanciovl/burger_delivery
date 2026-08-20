@@ -143,6 +143,27 @@ flowchart LR
 
 En despliegue distribuido, el driver se ejecuta en la estación conectada físicamente al Kinova y los nodos del proyecto pueden ejecutarse en una segunda estación. DDS comunica las estaciones; DDS no sustituye la conexión TCP/UDP entre el driver y el robot.
 
+> [!WARNING]
+> ### ⚠️ Regla Crítica de Arquitectura: Unicidad del Driver y Prevención de Conflictos
+> **Está estrictamente prohibido que más de un computador ejecute el nodo del driver (`kortex_driver` / `kortex_bringup`) simultáneamente para el mismo robot físico o dentro del mismo `ROS_DOMAIN_ID`.**
+>
+> Ejecutar múltiples instancias del driver produce conflictos destructivos en dos capas independientes:
+>
+> 1. **Capa de Hardware y Protocolo Kortex (TCP/UDP con el Kinova Gen3):**
+>    - La controladora del Kinova solo admite **una única sesión de control en tiempo real (1 kHz)** en su API Kortex.
+>    - Si dos computadores intentan comunicarse por TCP/UDP con la IP del robot (`192.168.1.10`), compiten por la sesión, provocando desconexiones por timeout de heartbeat, error de *Session already in use* y activación inmediata de paradas de seguridad (*Safety Faults*) en el robot.
+>
+> 2. **Capa de Grafo ROS 2 y Middleware DDS:**
+>    - **`/joint_states` duplicado:** Múltiples nodos publican en el mismo tópico con marcas de tiempo (*timestamps*) desfasadas, causando telemetría corrupta y saltos temporales en los suscriptores.
+>    - **Colisión en `/controller_manager`:** Habrá múltiples servidores respondiendo a los mismos servicios (`/controller_manager/list_controllers`), generando respuestas inconsistentes o aleatorias a las peticiones del cliente.
+>    - **Servidores de acción duplicados:** Múltiples nodos atenderán `/joint_trajectory_controller/follow_joint_trajectory`, provocando que una meta sea aceptada por un nodo y abortada por otro.
+>    - **Corrupción de `/tf` y `/tf_static`:** Dos instancias de `robot_state_publisher` colisionan en el árbol de transformaciones cinemáticas en TF2 y RViz.
+>
+> **Solución arquitectónica:**
+> - **Estación A (Conexión física al robot):** Es la **ÚNICA** que ejecuta el launch con `start_driver:=true` y `robot_ip:=192.168.1.10`.
+> - **Estación B (y demás computadores de estudiantes):** Ejecutan el launch con `start_driver:=false`. Sus nodos (`kinova_monitor`, `safe_trajectory_client`, RViz2) descubren y consumen la telemetría y el action server a través del middleware DDS en la red local.
+> - **Simulación local (Modo Fake):** Si cada estudiante prueba en modo simulado (`use_fake_hardware:=true`), pueden usar `start_driver:=true` **únicamente si cada equipo utiliza un `ROS_DOMAIN_ID` diferente y aislado** (ej. `export ROS_DOMAIN_ID=11`, `12`, etc.).
+
 ## 6. Estructura obligatoria
 
 El package debe ubicarse en:

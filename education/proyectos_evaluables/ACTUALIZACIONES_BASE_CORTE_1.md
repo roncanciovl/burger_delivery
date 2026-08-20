@@ -124,6 +124,16 @@ git pull --ff-only origin main
 
 ## ❓ 4. Preguntas Frecuentes y Buenas Prácticas
 
+### ¿Varios computadores pueden ejecutar el driver del robot (`kortex_driver`) al mismo tiempo?
+**No. Está estrictamente prohibido.** Ejecutar el driver en múltiples computadores para el mismo robot físico o en el mismo dominio ROS 2 produce colisiones críticas:
+1. **Bloqueo del robot:** La controladora del Kinova Gen3 sólo admite una sesión cíclica TCP/UDP en tiempo real. Múltiples conexiones disparan paradas de seguridad (*Safety Faults*).
+2. **Colisión de interfaces ROS 2:** Se duplican `/joint_states`, `/tf`, `/controller_manager` y el Action Server `/joint_trajectory_controller/follow_joint_trajectory`.
+
+**Arquitectura correcta:**
+* **Estación A (físicamente conectada al robot):** `start_driver:=true robot_ip:=192.168.1.10`
+* **Estación B (estudiantes/clientes):** `start_driver:=false` (consume telemetría y envía metas a través de DDS).
+* **Simulación individual (modo Fake):** Si prueban con `use_fake_hardware:=true`, cada equipo debe usar un `ROS_DOMAIN_ID` distinto para no interferir en la red.
+
 ### ¿Por qué no debemos hacer `git pull upstream main` directamente sobre `main`?
 Porque hacer pull directo a `main` viola la regla de gobernanza del curso (*no push directo a main*), no deja evidencia de revisión por pares en GitHub y puede provocar mezclas accidentales de ramas difíciles de auditar en la evaluación ABET.
 
