@@ -570,7 +570,7 @@
           <text x="40" y="55" font-family="Inter" font-size="12" fill="#58a6ff" font-weight="700">👨‍🏫 REPO BASE DOCENTE</text>
           <text x="40" y="78" font-family="Fira Code" font-size="11" fill="#e6edf3">📦 burger_delivery</text>
           <rect x="40" y="90" width="185" height="24" rx="4" fill="rgba(88,166,255,0.12)" stroke="#58a6ff"/>
-          <text x="50" y="106" font-family="Fira Code" font-size="9.5" fill="#58a6ff">tag: curso-2026-2-base</text>
+          <text x="50" y="106" font-family="Fira Code" font-size="9.5" fill="#58a6ff">tag: base-2026-2-corte1</text>
           <text x="40" y="135" font-family="Inter" font-size="10" fill="#8b949e">Historia Git oficial</text>
           <text x="40" y="152" font-family="Inter" font-size="10" fill="#8b949e">upstream de sólo lectura</text>
 
@@ -584,9 +584,9 @@
           <text x="320" y="78" font-family="Inter" font-size="11" fill="#e6edf3">Repositorios de Equipo</text>
           
           <rect x="320" y="92" width="200" height="72" rx="6" fill="#0d1117" stroke="#30363d"/>
-          <text x="330" y="110" font-family="Fira Code" font-size="9.5" fill="#3fb950">🔒 burger-delivery-eq-01</text>
-          <text x="330" y="128" font-family="Fira Code" font-size="9.5" fill="#3fb950">🔒 burger-delivery-eq-02</text>
-          <text x="330" y="146" font-family="Fira Code" font-size="9.5" fill="#3fb950">🔒 burger-delivery-eq-03</text>
+          <text x="330" y="110" font-family="Fira Code" font-size="9.5" fill="#3fb950">🔒 burger-kinova-equipo-01</text>
+          <text x="330" y="128" font-family="Fira Code" font-size="9.5" fill="#3fb950">🔒 burger-kinova-equipo-02</text>
+          <text x="330" y="146" font-family="Fira Code" font-size="9.5" fill="#3fb950">🔒 burger-kinova-equipo-03</text>
 
           <!-- Arrow Org -> Team Repos -->
           <path d="M 535 105 L 595 105" stroke="#3fb950" stroke-width="2" marker-end="url(#arr-g)"/>
@@ -639,8 +639,8 @@
             El docente mantiene <code>burger_delivery</code> como repositorio base dentro de la organización y marca el punto de partida:
           </p>
           <div class="code-block" style="font-size:11.5px; padding:10px 12px; margin:8px 0;">
-            git tag curso-2026-2-base<br/>
-            git push origin curso-2026-2-base
+            git tag base-2026-2-corte1<br/>
+            git push origin base-2026-2-corte1
           </div>
           <p style="font-size:12px; color:var(--muted);">
             Este tag no se mueve ni se reutiliza. Cada corrección se publica con un identificador nuevo.
@@ -672,7 +672,8 @@
             Cada estudiante clona el repositorio del equipo por SSH, desactiva escrituras a upstream y crea su rama individual:
           </p>
           <div class="code-block" style="font-size:11.5px; padding:10px 12px; margin:8px 0;">
-            git clone git@github.com:umng-mecatronica-ros/burger-kinova-equipo-01.git<br/>
+            git clone git@github.com:umng-mecatronica-ros/burger-kinova-equipo-01.git burger_delivery<br/>
+            cd burger_delivery<br/>
             git remote add upstream git@github.com:roncanciovl/burger_delivery.git<br/>
             git remote set-url --push upstream DISABLED<br/>
             git switch -c feat/estudiante-apellido-monitor
