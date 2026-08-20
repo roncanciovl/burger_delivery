@@ -42,6 +42,7 @@ Para evitar versiones incompatibles, cada responsabilidad debe tener una sola fu
 | Evidencia y nota del Laboratorio 02 | [`evidencias_abet/INSTRUMENTO_ABET_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.docx`](evidencias_abet/INSTRUMENTO_ABET_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.docx) | [`evidencias_abet/INSTRUMENTO_ABET_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.md`](evidencias_abet/INSTRUMENTO_ABET_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.md), representación auxiliar no normativa |
 | Proyecto del primer corte | [`proyectos_evaluables/PROYECTO_CORTE_1_CONEXION_KINOVA.md`](proyectos_evaluables/PROYECTO_CORTE_1_CONEXION_KINOVA.md) | No tiene archivo derivado; esta especificación es la fuente oficial |
 | Evidencia y nota del Proyecto Corte 1 | [`evidencias_abet/INSTRUMENTO_ABET_PROYECTO_CORTE_1_CONEXION_KINOVA.docx`](evidencias_abet/INSTRUMENTO_ABET_PROYECTO_CORTE_1_CONEXION_KINOVA.docx) | [`evidencias_abet/INSTRUMENTO_ABET_PROYECTO_CORTE_1_CONEXION_KINOVA.md`](evidencias_abet/INSTRUMENTO_ABET_PROYECTO_CORTE_1_CONEXION_KINOVA.md), representación auxiliar |
+| Actualizaciones y sincronización de base (Corte 1) | [`proyectos_evaluables/ACTUALIZACIONES_BASE_CORTE_1.md`](proyectos_evaluables/ACTUALIZACIONES_BASE_CORTE_1.md) | Guía de sincronización upstream del tag `base-2026-2-corte1` mediante ramas y PR |
 
 ## Recursos disponibles
 
@@ -66,6 +67,7 @@ Para evitar versiones incompatibles, cada responsabilidad debe tener una sola fu
 ### Proyectos y Control de Versiones
 
 - [Proyecto del primer corte — Conexión segura con Kinova Gen3](proyectos_evaluables/PROYECTO_CORTE_1_CONEXION_KINOVA.md).
+- [Guía de sincronización y actualizaciones de la base oficial (Corte 1)](proyectos_evaluables/ACTUALIZACIONES_BASE_CORTE_1.md).
 - [Guía de configuración de repositorios por equipo y arquitectura multi-remoto](proyectos_evaluables/CONFIGURACION_REPOSITORIOS_EQUIPOS.md).
 - [⭐ Guía Interactiva GitHub Organizations, Trabajo en Equipo y ABET](../git-fundamentals/equipos_organizaciones_abet.html): repositorios privados con historia compartida, ramas individuales `feat/...`, pull requests y entrega identificada por commit SHA.
 

@@ -499,6 +499,7 @@ El proyecto se considera técnicamente completo cuando:
 
 ## 19. Referencias del repositorio
 
+- [Guía de sincronización y actualizaciones de la base oficial (Corte 1)](./ACTUALIZACIONES_BASE_CORTE_1.md).
 - [Guía de configuración de repositorios y arquitectura multi-remoto](./CONFIGURACION_REPOSITORIOS_EQUIPOS.md).
 - [Syllabus oficial de la asignatura](../syllabus/Syllabus_Electiva_ROS.docx).
 - [Instalación y pruebas del stack Kortex](../../ros2_setup/INSTALACION_KORTEX.md).
