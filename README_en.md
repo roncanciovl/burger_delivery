@@ -175,13 +175,25 @@ In `scripts/`:
 
 ---
 
-## 🖼️ System Diagrams
+## 🖼️ System & Architecture Diagrams
 
-- **AprilTag Localization:** `vision_localizacion_whiteboard.svg`
-- **Turtlebot Nav2 Architecture:** `turtlebot_nav_service.svg`
-- **Transformation Tree (TF):** `tf_tree_diagram.svg`
-- **ROS 2 Network Diagram:** `network_setup/ros_network_diagram.svg`
-- **Software & AI Dependency Maps:** `ros2_setup/MAPA_DEPENDENCIAS.svg` and `ros2_setup/MAPA_DEPENDENCIAS_AI.svg`
+### 📐 AprilTag Fiduciary Localization & TF2
+Relative positional mapping between the Kinova Gen3 manipulator, workstation table, and mobile robot fiduciary reference frames:
+
+![AprilTag Localization Scheme](vision_localizacion_whiteboard.svg)
+
+### 🤖 Mobile Navigation & Delivery Service (Turtlebot)
+Control loop and action architecture for delivery mobile robots:
+
+![Turtlebot Nav2 Architecture](turtlebot_nav_service.svg)
+
+### 🌳 Coordinate Transformation Tree (TF2)
+![Project TF Tree](tf_tree_diagram.svg)
+
+### 🌐 Network & Dependency Maps
+- [ROS 2 Network & QoS Diagram](network_setup/ros_network_diagram.svg)
+- [Software Dependency Map](ros2_setup/MAPA_DEPENDENCIAS.svg)
+- [VLM AI Module Dependency Map](ros2_setup/MAPA_DEPENDENCIAS_AI.svg)
 
 ---
 
