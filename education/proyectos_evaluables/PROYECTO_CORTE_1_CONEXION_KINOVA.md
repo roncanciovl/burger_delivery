@@ -56,6 +56,21 @@
 > 
 > #### 4. Regla de Oro de Desarrollo en Equipo:
 > Prohibido hacer `push` directo a `main`. Todo avance se desarrolla en ramas individuales `feat/<apellido>-...` y se integra mediante **pull requests con revisión técnica de un compañero**. El historial sirve como evidencia complementaria del trabajo en equipo. Consulta la [Sección 15](#15-control-de-versiones-trabajo-colaborativo-y-entrega-oficial).
+> 
+> #### 5. 🦾 Requisito del Workspace: Stack `ros2_kortex` (Driver del Kinova):
+> Tu workspace ROS 2 debe contener el driver oficial de Kinova (`ros2_kortex`) al mismo nivel que `burger_delivery`:
+> ```bash
+> cd ~/ros2_ws/src
+> # Si aún no tienes clonado el driver de Kinova:
+> git clone https://github.com/Kinovarobotics/ros2_kortex.git
+> 
+> # Instalar dependencias del sistema y compilar:
+> cd ~/ros2_ws
+> rosdep install --from-paths src --ignore-src -y
+> colcon build --symlink-install
+> source install/setup.bash
+> ```
+> Consulta la [Guía Completa de Instalación y Parches de Kortex](../../ros2_setup/INSTALACION_KORTEX.md).
 
 ## 1. Descripción
 
@@ -207,7 +222,10 @@ El `package.xml` debe declarar solamente las dependencias utilizadas. Como míni
 - `controller_manager_msgs`
 - `launch`
 - `launch_ros`
-- `kortex_bringup`
+- `kortex_bringup` (proporcionado por el stack [`ros2_kortex`](https://github.com/Kinovarobotics/ros2_kortex) clonado en `~/ros2_ws/src/ros2_kortex`)
+
+> [!NOTE]
+> `kortex_bringup` es el paquete oficial de Kinova que contiene el launch principal (`kortex_bringup/gen3.launch.py`) y los controladores `ros2_control` necesarios para comunicarse con el brazo. Si no está compilado en el workspace, ROS 2 no podrá resolver el launch cuando `start_driver:=true`.
 
 No se debe declarar MoveIt 2 como dependencia de este package.
 
