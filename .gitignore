@@ -17,11 +17,15 @@ __pycache__/
 *.swo
 *~
 
-# OS
+# OS & Office Temporary Files
 .DS_Store
 Thumbs.db
-
 desktop.ini
+~$*.doc*
+~$*.xls*
+~$*.ppt*
+*.tmp
+*.temp
 
 # Google Apps Script / clasp credentials and project bindings
 .clasprc.json
@@ -29,6 +33,14 @@ desktop.ini
 **/.clasprc.json
 **/.clasp.json
 
-# Datos privados exportados desde el panel docente
-education/administracion/github/datos_privados/
+# Datos privados, listados estudiantiles y exportaciones docentes
+education/**/datos_privados/
+education/**/private/
+education/**/entregas_estudiantes/
+education/**/submissions/
+education/**/*.xlsx
+education/**/*.xls
 education/administracion/github/*.csv
+education/administracion/zubatronic/*.csv
+education/administracion/classroom/*.csv
+

@@ -37,6 +37,9 @@ function onOpen() {
     .addItem("Vista previa de equipos", "vistaPreviaEquiposROS")
     .addItem("Aplicar configuración de Classroom", "configurarTodoROS")
     .addSeparator()
+    .addItem("Publicar Proyecto 01 (Corte 1)", "publicarProyecto01ROS")
+    .addItem("Publicar Laboratorio 01", "publicarLaboratorio01ROS")
+    .addItem("Publicar Laboratorio 02 (Corte 2)", "publicarLaboratorio02ROS")
     .addItem("Publicar y calificar taller GitHub", "publicarTallerGitHubROS")
     .addItem("Sincronizar entregas", "sincronizarEntregasROS")
     .addItem("Auditar curso", "auditarControladorROS")
@@ -328,6 +331,204 @@ function auditarControladorROS() {
 }
 
 /**
+ * Publica el Proyecto Corte 1 como entrega grupal.
+ *
+ * Reutiliza el borrador registrado en el panel o crea la actividad,
+ * la dirige al entregante designado de cada equipo y adjunta la guía técnica
+ * y el instrumento ABET. La operación es idempotente.
+ */
+function publicarProyecto01ROS() {
+  var panel = obtenerPanel_();
+  try {
+    var config = leerConfiguracion_(panel);
+    var courseId = obtenerCourseId_(config);
+    var estudiantes = leerEstudiantes_(panel, config);
+    var equipos = leerEquipos_(panel);
+    var validacion = validarEquiposClassroom_(equipos, estudiantes);
+    if (!validacion.ok) {
+      throw new Error(
+        "No se puede publicar E01: " + validacion.incidencias.join(" | ")
+      );
+    }
+
+    var actividades = leerActividades_(panel);
+    var actividad = actividades.filter(function(item) {
+      return item.codigo === "E01";
+    })[0];
+    if (!actividad) {
+      throw new Error("No existe la actividad E01 en el panel.");
+    }
+
+    var titulo = "Proyecto Corte 1 — Conexión segura con Kinova Gen3 (entrega grupal)";
+    var repo = (config.REPOSITORIO_URL || "https://github.com/roncanciovl/burger_delivery") + "/blob/main/education/";
+    var materialUrls = [
+      repo + "proyectos_evaluables/PROYECTO_CORTE_1_CONEXION_KINOVA.md",
+      repo + "evidencias_abet/INSTRUMENTO_ABET_PROYECTO_CORTE_1_CONEXION_KINOVA.docx"
+    ];
+
+    var descripcion = [
+      "Entrega grupal del Proyecto de Corte 1 (Conexión segura con Kinova Gen3).",
+      "",
+      "Modalidad de entrega:",
+      "• Un solo integrante por equipo (ENTREGANTE designado) realiza la entrega en Google Classroom en representación de todo el grupo.",
+      "• El entregante debe adjuntar en esta tarea:",
+      "  1. El informe / evidencia técnica con el enlace al repositorio GitHub de su equipo y el tag de entrega verificado.",
+      "  2. El formato INSTRUMENTO_ABET_PROYECTO_CORTE_1_CONEXION_KINOVA debidamente diligenciado.",
+      "",
+      "Documentos y guías de referencia adjuntos:",
+      "• Guía técnica: PROYECTO_CORTE_1_CONEXION_KINOVA.md",
+      "• Instrumento ABET: INSTRUMENTO_ABET_PROYECTO_CORTE_1_CONEXION_KINOVA.docx",
+      "",
+      "Fecha límite: miércoles 26 de agosto de 2026, 4:00 p. m. (16:00, hora de Bogotá)."
+    ].join("\n");
+
+    var trabajo = null;
+    if (actividad.idClassroom) {
+      try {
+        trabajo = Classroom.Courses.CourseWork.get(
+          courseId,
+          actividad.idClassroom
+        );
+      } catch (ignorado) {
+        trabajo = null;
+      }
+    }
+    if (!trabajo) {
+      trabajo = listarCourseWork_(courseId).filter(function(item) {
+        return normalizar_(item.title) === normalizar_(actividad.titulo) ||
+               normalizar_(item.title) === normalizar_(titulo);
+      })[0];
+    }
+
+    var temas = listarTemas_(courseId);
+    var tema = temas.filter(function(item) {
+      return normalizar_(item.name) === normalizar_(actividad.topico);
+    })[0];
+    if (!tema) {
+      tema = Classroom.Courses.Topics.create(
+        { name: actividad.topico },
+        courseId
+      );
+    }
+
+    var destinatarios = {};
+    configurarDestinatarios_(destinatarios, panel, courseId, {
+      codigo: "E01",
+      asignacion: "ENTREGANTES",
+      equiposObjetivo: ""
+    });
+    var deseados = destinatarios.individualStudentsOptions.studentIds.map(String);
+
+    if (!trabajo) {
+      var nuevo = {
+        title: titulo,
+        description: descripcion,
+        workType: "ASSIGNMENT",
+        state: "DRAFT",
+        maxPoints: 500,
+        topicId: String(tema.topicId),
+        materials: materialUrls.map(function(u) { return { link: { url: u } }; })
+      };
+      if (deseados.length > 0) {
+        nuevo.assigneeMode = "INDIVIDUAL_STUDENTS";
+        nuevo.individualStudentsOptions = { studentIds: deseados };
+      } else {
+        nuevo.assigneeMode = "ALL_STUDENTS";
+      }
+      agregarFechaLimite_(nuevo, "2026-08-26", "16:00");
+      trabajo = Classroom.Courses.CourseWork.create(nuevo, courseId);
+    } else {
+      var actuales = ((trabajo.individualStudentsOptions || {}).studentIds || []).map(String);
+      var agregar = deseados.filter(function(id) { return actuales.indexOf(id) === -1; });
+      var retirar = actuales.filter(function(id) { return deseados.indexOf(id) === -1; });
+      if (trabajo.assigneeMode !== "INDIVIDUAL_STUDENTS" || agregar.length || retirar.length) {
+        Classroom.Courses.CourseWork.modifyAssignees(
+          {
+            assigneeMode: "INDIVIDUAL_STUDENTS",
+            modifyIndividualStudentsOptions: {
+              addStudentIds: agregar,
+              removeStudentIds: retirar
+            }
+          },
+          courseId,
+          String(trabajo.id)
+        );
+      }
+    }
+
+    var body = {
+      title: titulo,
+      description: descripcion,
+      maxPoints: 500,
+      topicId: String(tema.topicId),
+      state: "PUBLISHED"
+    };
+    agregarFechaLimite_(body, "2026-08-26", "16:00");
+
+    var actualizado = Classroom.Courses.CourseWork.patch(
+      body,
+      courseId,
+      String(trabajo.id),
+      {
+        updateMask: [
+          "title",
+          "description",
+          "maxPoints",
+          "topicId",
+          "dueDate",
+          "dueTime",
+          "state"
+        ].join(",")
+      }
+    );
+    actualizado = Classroom.Courses.CourseWork.get(
+      courseId,
+      String(actualizado.id)
+    );
+
+    var hoja = panel.getSheetByName(ROS_CTRL.sheets.activities);
+    hoja.getRange(actividad.row, 3).setValue(titulo);
+    hoja.getRange(actividad.row, 5, 1, 4).setValues([[
+      500,
+      "2026-08-26",
+      "16:00",
+      descripcion
+    ]]);
+    hoja.getRange(actividad.row, 9, 1, 4).setValues([[
+      materialUrls.join("\n"),
+      String(actualizado.id),
+      "PUBLICADO",
+      "ENTREGANTES"
+    ]]);
+
+    var resultado = {
+      ok: true,
+      codigo: "E01",
+      courseWorkId: String(actualizado.id),
+      estado: actualizado.state,
+      titulo: actualizado.title,
+      fechaLimiteBogota: "2026-08-26 16:00",
+      equipos: validacion.equiposConfigurados,
+      entregantes: (actualizado.individualStudentsOptions || {}).studentIds
+        ? actualizado.individualStudentsOptions.studentIds.length
+        : 0,
+      enlace: actualizado.alternateLink || ""
+    };
+    registrarAuditoria_(panel, "PUBLICAR_E01_GRUPAL", resultado);
+    console.log(JSON.stringify(resultado, null, 2));
+    return resultado;
+  } catch (error) {
+    var resultadoError = resultadoError_(
+      "No fue posible publicar el Proyecto Corte 1.",
+      error
+    );
+    registrarAuditoria_(panel, "ERROR_PUBLICAR_E01_GRUPAL", resultadoError);
+    console.error(JSON.stringify(resultadoError, null, 2));
+    return resultadoError;
+  }
+}
+
+/**
  * Publica únicamente el Laboratorio 01 como entrega grupal.
  *
  * Reutiliza el borrador registrado en el panel, lo dirige al entregante
@@ -481,6 +682,206 @@ function publicarLaboratorio01ROS() {
       error
     );
     registrarAuditoria_(panel, "ERROR_PUBLICAR_L01_GRUPAL", resultadoError);
+    console.error(JSON.stringify(resultadoError, null, 2));
+    return resultadoError;
+  }
+}
+
+/**
+ * Publica el Laboratorio 02 como entrega grupal (Corte 2).
+ *
+ * Reutiliza el borrador registrado en el panel o crea la actividad,
+ * la dirige al entregante designado de cada equipo y adjunta la guía técnica
+ * y el instrumento ABET. La operación es idempotente.
+ */
+function publicarLaboratorio02ROS() {
+  var panel = obtenerPanel_();
+  try {
+    var config = leerConfiguracion_(panel);
+    var courseId = obtenerCourseId_(config);
+    var estudiantes = leerEstudiantes_(panel, config);
+    var equipos = leerEquipos_(panel);
+    var validacion = validarEquiposClassroom_(equipos, estudiantes);
+    if (!validacion.ok) {
+      throw new Error(
+        "No se puede publicar L02: " + validacion.incidencias.join(" | ")
+      );
+    }
+
+    var actividades = leerActividades_(panel);
+    var actividad = actividades.filter(function(item) {
+      return item.codigo === "L02";
+    })[0];
+
+    var titulo = "Laboratorio 02 — Pruebas de cámara Kinova Vision, compresión y diagnóstico distribuido (entrega grupal)";
+    var topico = "Corte 2 — Percepción y Visión con ROS 2";
+    var repo = (config.REPOSITORIO_URL || "https://github.com/roncanciovl/burger_delivery") + "/blob/main/education/";
+    var materialUrls = [
+      repo + "guias_laboratorio/GUIA_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.md",
+      repo + "evidencias_abet/INSTRUMENTO_ABET_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.docx"
+    ];
+
+    var descripcion = [
+      "Entrega grupal del Laboratorio 02 (Pruebas de cámara Kinova Vision, compresión con image_transport, CycloneDDS y Monitor de Red).",
+      "",
+      "Modalidad de entrega:",
+      "• Un solo integrante por equipo (ENTREGANTE designado) realiza la entrega en Google Classroom en representación de todo su equipo.",
+      "• El entregante debe adjuntar en esta tarea:",
+      "  1. El informe técnico de laboratorio con las evidencias experimentales, métricas de ancho de banda, tabla de diagnóstico ante fallas inducidas, archivo CSV del Monitor de Red y enlace a la grabación audiovisual.",
+      "  2. El formato INSTRUMENTO_ABET_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION debidamente diligenciado (con el Anexo A individual por integrante).",
+      "",
+      "Documentos oficiales de referencia adjuntos:",
+      "• Guía de laboratorio: GUIA_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.md",
+      "• Instrumento ABET: INSTRUMENTO_ABET_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.docx",
+      "",
+      "Fecha límite: miércoles 2 de septiembre de 2026, 11:59 p. m. (23:59, hora de Bogotá)."
+    ].join("\n");
+
+    var trabajo = null;
+    if (actividad && actividad.idClassroom) {
+      try {
+        trabajo = Classroom.Courses.CourseWork.get(
+          courseId,
+          actividad.idClassroom
+        );
+      } catch (ignorado) {
+        trabajo = null;
+      }
+    }
+    if (!trabajo) {
+      trabajo = listarCourseWork_(courseId).filter(function(item) {
+        return normalizar_(item.title) === normalizar_(actividad ? actividad.titulo : "") ||
+               normalizar_(item.title) === normalizar_(titulo);
+      })[0];
+    }
+
+    var temas = listarTemas_(courseId);
+    var tema = temas.filter(function(item) {
+      return normalizar_(item.name) === normalizar_(actividad && actividad.topico ? actividad.topico : topico);
+    })[0];
+    if (!tema) {
+      tema = Classroom.Courses.Topics.create(
+        { name: actividad && actividad.topico ? actividad.topico : topico },
+        courseId
+      );
+    }
+
+    var destinatarios = {};
+    configurarDestinatarios_(destinatarios, panel, courseId, {
+      codigo: "L02",
+      asignacion: "ENTREGANTES",
+      equiposObjetivo: ""
+    });
+    var deseados = destinatarios.individualStudentsOptions.studentIds.map(String);
+
+    if (!trabajo) {
+      var nuevo = {
+        title: titulo,
+        description: descripcion,
+        workType: "ASSIGNMENT",
+        state: "DRAFT",
+        maxPoints: 500,
+        topicId: String(tema.topicId),
+        materials: materialUrls.map(function(u) { return { link: { url: u } }; })
+      };
+      if (deseados.length > 0) {
+        nuevo.assigneeMode = "INDIVIDUAL_STUDENTS";
+        nuevo.individualStudentsOptions = { studentIds: deseados };
+      } else {
+        nuevo.assigneeMode = "ALL_STUDENTS";
+      }
+      agregarFechaLimite_(nuevo, "2026-09-02", "23:59");
+      trabajo = Classroom.Courses.CourseWork.create(nuevo, courseId);
+    } else {
+      var actuales = ((trabajo.individualStudentsOptions || {}).studentIds || []).map(String);
+      var agregar = deseados.filter(function(id) { return actuales.indexOf(id) === -1; });
+      var retirar = actuales.filter(function(id) { return deseados.indexOf(id) === -1; });
+      if (trabajo.assigneeMode !== "INDIVIDUAL_STUDENTS" || agregar.length || retirar.length) {
+        Classroom.Courses.CourseWork.modifyAssignees(
+          {
+            assigneeMode: "INDIVIDUAL_STUDENTS",
+            modifyIndividualStudentsOptions: {
+              addStudentIds: agregar,
+              removeStudentIds: retirar
+            }
+          },
+          courseId,
+          String(trabajo.id)
+        );
+      }
+    }
+
+    var body = {
+      title: titulo,
+      description: descripcion,
+      maxPoints: 500,
+      topicId: String(tema.topicId),
+      state: "PUBLISHED"
+    };
+    agregarFechaLimite_(body, "2026-09-02", "23:59");
+
+    var actualizado = Classroom.Courses.CourseWork.patch(
+      body,
+      courseId,
+      String(trabajo.id),
+      {
+        updateMask: [
+          "title",
+          "description",
+          "maxPoints",
+          "topicId",
+          "dueDate",
+          "dueTime",
+          "state"
+        ].join(",")
+      }
+    );
+    actualizado = Classroom.Courses.CourseWork.get(
+      courseId,
+      String(actualizado.id)
+    );
+
+    if (actividad) {
+      var hoja = panel.getSheetByName(ROS_CTRL.sheets.activities);
+      hoja.getRange(actividad.row, 3).setValue(titulo);
+      hoja.getRange(actividad.row, 4).setValue(topico);
+      hoja.getRange(actividad.row, 5, 1, 4).setValues([[
+        500,
+        "2026-09-02",
+        "23:59",
+        descripcion
+      ]]);
+      hoja.getRange(actividad.row, 9, 1, 4).setValues([[
+        materialUrls.join("\n"),
+        String(actualizado.id),
+        "PUBLICADO",
+        "ENTREGANTES"
+      ]]);
+    }
+
+    var resultado = {
+      ok: true,
+      codigo: "L02",
+      courseWorkId: String(actualizado.id),
+      estado: actualizado.state,
+      titulo: actualizado.title,
+      topico: topico,
+      fechaLimiteBogota: "2026-09-02 23:59",
+      equipos: validacion.equiposConfigurados,
+      entregantes: (actualizado.individualStudentsOptions || {}).studentIds
+        ? actualizado.individualStudentsOptions.studentIds.length
+        : 0,
+      enlace: actualizado.alternateLink || ""
+    };
+    registrarAuditoria_(panel, "PUBLICAR_L02_GRUPAL", resultado);
+    console.log(JSON.stringify(resultado, null, 2));
+    return resultado;
+  } catch (error) {
+    var resultadoError = resultadoError_(
+      "No fue posible publicar el Laboratorio 02.",
+      error
+    );
+    registrarAuditoria_(panel, "ERROR_PUBLICAR_L02_GRUPAL", resultadoError);
     console.error(JSON.stringify(resultadoError, null, 2));
     return resultadoError;
   }
