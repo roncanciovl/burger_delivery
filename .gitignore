@@ -40,7 +40,10 @@ education/**/entregas_estudiantes/
 education/**/submissions/
 education/**/*.xlsx
 education/**/*.xls
-education/administracion/github/*.csv
-education/administracion/zubatronic/*.csv
-education/administracion/classroom/*.csv
-
+# Excluir toda la carpeta de administración (privado del docente)
+education/administracion/
+**/entregas_ros/
+**/notas_actividades.csv
+**/roster.csv
+**/capture.json
+**/source_map.csv
