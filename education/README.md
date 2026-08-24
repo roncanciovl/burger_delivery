@@ -75,6 +75,7 @@ Para evitar versiones incompatibles, cada responsabilidad debe tener una sola fu
 ### Evidencias
 
 - [Formato de evidencia y calificación del Taller 01](evidencias_abet/PLANTILLA_EVIDENCIA_ABET_TALLER_01_ROS2_CLI.docx).
+- [Formato de evidencia y calificación del Taller rosbag2, logging y depuración](evidencias_abet/PLANTILLA_EVIDENCIA_ABET_TALLER_ROSBAG_LOGGING_DEBUGGING.docx).
 - [Instrumento ABET del Laboratorio 01 — red ROS 2 distribuida](evidencias_abet/INSTRUMENTO_ABET_LAB_01_RED_ROS2_DISTRIBUIDA.docx).
 - [Instrumento ABET del Laboratorio 02 — pruebas de cámara Kinova](evidencias_abet/INSTRUMENTO_ABET_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.docx).
 - [Instrumento ABET del Proyecto Corte 1 — Conexión con Kinova](evidencias_abet/INSTRUMENTO_ABET_PROYECTO_CORTE_1_CONEXION_KINOVA.docx).

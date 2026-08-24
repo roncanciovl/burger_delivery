@@ -1,0 +1,201 @@
+{
+  "template_profile": "delivery_evidence_consolidated",
+  "document_scope": "integrated",
+  "document_id": "PLANTILLA_EVIDENCIA_ABET_TALLER_ROSBAG_LOGGING_DEBUGGING",
+  "version": "1.0",
+  "title": "Formato de evidencias y calificación — Taller de rosbag2, Logging y Depuración Avanzada en ROS 2",
+  "program": "Ingeniería Mecatrónica",
+  "course": "ROBOT OPERATING SYSTEM - ROS",
+  "term": "2026-2",
+  "activity": "Taller de rosbag2, logging y depuración avanzada (MCAP, Flight Recorder, rosbag2_py)",
+  "population": "Censo de estudiantes matriculados que deben presentar el taller en 2026-2",
+  "assessment_moment": "Primer corte, tras la práctica de logging estructurado, rosbag2 y depuración determinista",
+  "assessor_role": "Docente responsable de la asignatura ROBOT OPERATING SYSTEM - ROS",
+  "individual_threshold_level": "N3",
+  "cohort_target_percent": 70,
+  "sampling_rule": "No se usa muestra: se evalúa el censo completo de entregas exigibles",
+  "missing_evidence_rule": "Entrega exigible sin evidencia obligatoria = N1 con valor 0 académico; retiro oficial o exclusión autorizada = NA / no evaluado para ABET",
+  "submission_filename_pattern": "C1_T_ROSBAG_<codigo>_<apellido>_v1.docx",
+  "grading": {
+    "capture_scale_max": 500,
+    "scale_max": 5.0,
+    "activity_weight_percent": 100,
+    "context": "Acumulado de talleres del primer corte (T₁)",
+    "formula": "T₁ = Nota Taller rosbag2 ; Nota Corte 1 = 0,28 T₁ + 0,42 L₁ + 0,30 E₁",
+    "component_code": "T_ROSBAG"
+  },
+  "levels": [
+    {
+      "code": "N1",
+      "score": 100,
+      "min_score": 0,
+      "max_score": 149,
+      "label": "No cumple: evidencia mínima, fragmentaria o no funcional"
+    },
+    {
+      "code": "N2",
+      "score": 250,
+      "min_score": 150,
+      "max_score": 299,
+      "label": "Cumplimiento parcial: evidencia incompleta o errores conceptuales"
+    },
+    {
+      "code": "N3",
+      "score": 350,
+      "min_score": 300,
+      "max_score": 399,
+      "label": "Aceptable / umbral individual de logro"
+    },
+    {
+      "code": "N4",
+      "score": 450,
+      "min_score": 400,
+      "max_score": 474,
+      "label": "Bueno: desempeño correcto con omisiones menores"
+    },
+    {
+      "code": "N5",
+      "score": 500,
+      "min_score": 475,
+      "max_score": 500,
+      "label": "Excelente: completo, riguroso, reproducible y optimizado"
+    }
+  ],
+  "criteria": [
+    {
+      "code": "C1",
+      "name": "Control dinámico de logging, verbosidad y trazas en caliente",
+      "weight_percent": 20,
+      "student_outcome": "SO1",
+      "performance_indicator": "1.1. Diagnostica anomalías de sincronización, jittering y fallos lógicos en sistemas robóticos mediante el análisis estructurado de trazas de logging y datos registrados.",
+      "method": "Rúbrica analítica, verificación de comandos y respuestas conceptuales",
+      "evidence": "E1, E2 y respuestas de análisis de severidad de logs",
+      "unit": "individual",
+      "descriptors": {
+        "N5": "Además de N4, personaliza variables de entorno (RCUTILS_CONSOLE_OUTPUT_FORMAT, colorización), aísla logs por función y línea, y explica el impacto del throttling de logs en la estabilidad en tiempo real.",
+        "N4": "Inspecciona /rosout, modifica dinámicamente el nivel de registro a DEBUG/INFO en tiempo de ejecución con ros2 param set y explica la jerarquía de severidad (DEBUG a FATAL).",
+        "N3": "Lanza el nodo con diferentes niveles de log (--log-level), observa mensajes en consola y cambia la verbosidad mediante la CLI.",
+        "N2": "Modifica parámetros de log pero requiere reiniciar el nodo o confunde la jerarquía de severidad en /rosout.",
+        "N1": "No demuestra control dinámico de logs o no presenta la evidencia obligatoria verificable."
+      }
+    },
+    {
+      "code": "C2",
+      "name": "Grabación quirúrgica, almacenamiento MCAP y compresión Zstd",
+      "weight_percent": 25,
+      "student_outcome": "SO6",
+      "performance_indicator": "6.1. Diseña esquemas de grabación selectiva (filtros, compresión y QoS) y ejecuta reproducción determinista para validar hipótesis experimentales sin degradar el rendimiento del robot.",
+      "method": "Rúbrica analítica, verificación de comandos y respuestas conceptuales",
+      "evidence": "E3, E4 (dataset MCAP, inspección con ros2 bag info y compresión)",
+      "unit": "individual",
+      "descriptors": {
+        "N5": "Además de N4, justifica las ventajas arquitectónicas del formato MCAP (cero corrupción, esquemas embebidos, streaming zero-copy) frente a SQLite3 y diseña esquemas de compresión óptimos para datos heterogéneos.",
+        "N4": "Graba quirúrgicamente utilizando el plugin mcap, compresión zstd, división por tiempo/tamaño y filtros por expresiones regulares (-e), verificando metadatos con ros2 bag info.",
+        "N3": "Graba datasets en formato MCAP seleccionando tópicos específicos (/joint_states, /diagnostics, /joint_jitter, /system_health) y genera metadatos válidos.",
+        "N2": "Graba tópicos pero utiliza configuraciones por defecto (sqlite3), sin compresión o saturando el almacenamiento con grabaciones indiscriminadas (-a).",
+        "N1": "No genera archivos de grabación válidos o carece de evidencia verificable obligatoria."
+      }
+    },
+    {
+      "code": "C3",
+      "name": "Reproducción determinista, control interactivo y reloj de simulación",
+      "weight_percent": 20,
+      "student_outcome": "SO6",
+      "performance_indicator": "6.1. Diseña esquemas de grabación selectiva (filtros, compresión y QoS) y ejecuta reproducción determinista para validar hipótesis experimentales sin degradar el rendimiento del robot.",
+      "method": "Rúbrica analítica, verificación de comandos y respuestas conceptuales",
+      "evidence": "E5, E6 (reproducción con rate, controles interactivos, sim_time y remapping)",
+      "unit": "individual",
+      "descriptors": {
+        "N5": "Además de N4, analiza la sincronización temporal con reloj simulado (/clock y use_sim_time), ejecuta remapeo de tópicos en caliente (--remap) y demuestra avance paso a paso determinista.",
+        "N4": "Utiliza controles interactivos en consola (Espacio para pausa, 's' para single step, '+' / '-' para velocidad) y remapea tópicos para pruebas sin colisión en la red.",
+        "N3": "Reproduce datasets a velocidad modificada (--rate) y verifica la publicación de mensajes en tópicos esperados.",
+        "N2": "Reproduce bolsas únicamente a velocidad estándar sin controles interactivos o confunde la sincronización de tiempo simulado.",
+        "N1": "No logra reproducir el dataset grabado o no presenta evidencia verificable."
+      }
+    },
+    {
+      "code": "C4",
+      "name": "Patrón Flight Recorder (Caja Negra) y análisis post-mortem de fallas",
+      "weight_percent": 20,
+      "student_outcome": "SO1",
+      "performance_indicator": "1.1. Diagnostica anomalías de sincronización, jittering y fallos lógicos en sistemas robóticos mediante el análisis estructurado de trazas de logging y datos registrados.",
+      "method": "Rúbrica analítica, verificación de comandos y respuestas conceptuales",
+      "evidence": "E7, E8 (inyección de anomalía de jitter, monitoreo en rqt_console y volcado del ring buffer)",
+      "unit": "individual",
+      "descriptors": {
+        "N5": "Además de N4, explica la arquitectura de buffers circulares (Ring Buffers en RAM), diagnostica la causa raíz del jitter/anomalía inyectada e interpreta los registros post-mortem para mitigación en producción.",
+        "N4": "Inyecta la falla con el servicio /trigger_anomaly, monitorea alertas de ERROR en rqt_console y ejecuta el vaciado del Flight Recorder (/dump_flight_recorder) extrayendo el historial de telemetría.",
+        "N3": "Identifica la alerta de falla en consola, invoca el servicio de vaciado y visualiza las muestras extraídas.",
+        "N2": "Observa la falla pero no logra invocar los servicios de control o el volcado de memoria está incompleto.",
+        "N1": "No ejecuta el procedimiento de inyección y diagnóstico o no presenta evidencia de la caja negra."
+      }
+    },
+    {
+      "code": "C5",
+      "name": "Extracción programática y analítica de datos con rosbag2_py",
+      "weight_percent": 15,
+      "student_outcome": "SO7",
+      "performance_indicator": "7.1. Integra herramientas modernas de la industria (estándar de almacenamiento MCAP, visualizadores Foxglove/PlotJuggler y API programática rosbag2_py) para acelerar el ciclo de desarrollo robótico.",
+      "method": "Rúbrica analítica, verificación de comandos y respuestas conceptuales",
+      "evidence": "E9, E10 (script Python con rosbag2_py, deserialización CDR, métricas de jitter y respuestas conceptuales)",
+      "unit": "individual",
+      "descriptors": {
+        "N5": "Además de N4, extiende el script para generar análisis estadístico completo (promedios, máximos, detección automática de anomalías) y visualización o exportación sin depender de reproducción en tiempo real.",
+        "N4": "Implementa un script en Python utilizando rosbag2_py (SequentialReader, StorageOptions, ConverterOptions) para abrir el MCAP, deserializar mensajes CDR y extraer datos cuantitativos.",
+        "N3": "Ejecuta el script read_mcap_telemetry.py sobre el dataset y reporta el conteo de mensajes y métricas de jitter.",
+        "N2": "El script presenta errores de deserialización de tipos de mensaje o lee parcialmente los datos del bag.",
+        "N1": "No implementa la extracción con la API de Python o carece de evidencia verificable obligatoria."
+      }
+    }
+  ],
+  "evidence_items": [
+    {
+      "code": "E1",
+      "description": "Captura de terminal con el nodo de telemetría corriendo en INFO y cambio dinámico a DEBUG con ros2 param set, mostrando flujo cinemático en vivo."
+    },
+    {
+      "code": "E2",
+      "description": "Captura del formateo avanzado de consola mediante RCUTILS_CONSOLE_OUTPUT_FORMAT y RCUTILS_COLORIZED_OUTPUT con severidad, tiempo, función y línea."
+    },
+    {
+      "code": "E3",
+      "description": "Captura de ejecución de la grabación quirúrgica con ros2 bag record -s mcap --compression-format zstd de los 4 tópicos clave de telemetría."
+    },
+    {
+      "code": "E4",
+      "description": "Salida completa de ros2 bag info dataset_telemetria_kinova, evidenciando plugin mcap, conteo de mensajes, compresión zstd y tipos de mensaje."
+    },
+    {
+      "code": "E5",
+      "description": "Captura de reproducción determinista a velocidad reducida (--rate 0.5) y evidencia de uso de controles interactivos (pausa con Espacio, single-step con 's')."
+    },
+    {
+      "code": "E6",
+      "description": "Captura del Mini-Reto 1: reproducción con remapping de tópicos (--remap /burger/kinova/joint_states:=/burger/kinova/joint_states_replay) verificado con ros2 topic list/echo."
+    },
+    {
+      "code": "E7",
+      "description": "Captura de rqt_console con filtro de severidad en ERROR mostrando la alerta de falla tras invocar /burger/kinova/trigger_anomaly."
+    },
+    {
+      "code": "E8",
+      "description": "Captura del volcado del Flight Recorder tras invocar /burger/kinova/dump_flight_recorder en nivel DEBUG, mostrando muestras del ring buffer previas a la falla."
+    },
+    {
+      "code": "E9",
+      "description": "Código y ejecución del script scripts/read_mcap_telemetry.py sobre el dataset MCAP, mostrando catálogo de tópicos, total de mensajes y jitter promedio/máximo."
+    },
+    {
+      "code": "E10",
+      "description": "Respuestas técnicas a las preguntas conceptuales (comparativa MCAP vs SQLite3, throttling de logs y caso de uso de Flight Recorder en robótica)."
+    }
+  ],
+  "identification_fields": [
+    "Nombre completo del estudiante",
+    "Código institucional / STUDENT_ID",
+    "Grupo / Subgrupo",
+    "Fecha de entrega",
+    "Enlace o ubicación de la entrega",
+    "Commit evaluado, si aplica"
+  ]
+}

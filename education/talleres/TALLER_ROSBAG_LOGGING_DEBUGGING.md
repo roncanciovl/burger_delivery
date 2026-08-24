@@ -203,16 +203,16 @@ Grabar "todo" con `ros2 bag record -a` en un robot con cámaras y LiDARs es un e
 En la **Terminal 2**, ejecuta una grabación con almacenamiento MCAP y compresión Zstd:
 
 ```bash
-# Graba la odometría, pose y jittering del robot en formato MCAP:
+# Graba la estado articular (joint_states), diagnósticos y jittering del robot en formato MCAP:
 ros2 bag record -s mcap \
     --compression-mode file \
     --compression-format zstd \
     --max-bag-duration 30 \
-    -o dataset_telemetria_burger \
-    /burger_car_01/odom \
-    /burger_car_01/pose \
-    /burger_car_01/joint_jitter \
-    /burger_car_01/system_health
+    -o dataset_telemetria_kinova \
+    /burger/kinova/joint_states \
+    /burger/kinova/diagnostics \
+    /burger/kinova/joint_jitter \
+    /burger/kinova/system_health
 ```
 
 Deja correr la grabación durante 15 segundos y presiona `Ctrl+C`.
@@ -222,7 +222,7 @@ Deja correr la grabación durante 15 segundos y presiona `Ctrl+C`.
 Si tienes múltiples robots (`/burger_car_01`, `/burger_car_02`, etc.), puedes grabarlos a todos usando regex:
 
 ```bash
-ros2 bag record -s mcap -e "/burger_car_.*" -o dataset_flota_completa
+ros2 bag record -s mcap -e "/burger/kinova/.*" -o dataset_flota_completa
 ```
 
 ### 🛠️ Ejercicio 2.3: Inspección profunda de metadatos con `ros2 bag info`
@@ -230,7 +230,7 @@ ros2 bag record -s mcap -e "/burger_car_.*" -o dataset_flota_completa
 Inspecciona el archivo generado:
 
 ```bash
-ros2 bag info dataset_telemetria_burger
+ros2 bag info dataset_telemetria_kinova
 ```
 
 Analiza la salida en terminal:
@@ -252,7 +252,7 @@ Asegúrate de cerrar el nodo emulador en la Terminal 1 (`Ctrl+C`).
 En la **Terminal 1**, lanza la reproducción a mitad de velocidad:
 
 ```bash
-ros2 bag play dataset_telemetria_burger --rate 0.5
+ros2 bag play dataset_telemetria_kinova --rate 0.5
 ```
 
 Mientras se reproduce, prueba los **controles interactivos en la terminal**:
@@ -262,7 +262,7 @@ Mientras se reproduce, prueba los **controles interactivos en la terminal**:
 
 En la **Terminal 2**, verifica que los datos se están publicando en vivo:
 ```bash
-ros2 topic hz /burger_car_01/pose
+ros2 topic hz /burger/kinova/diagnostics
 ```
 
 ### 🛠️ Ejercicio 3.2: Reproducción con reloj de simulación (`/clock`)
@@ -271,7 +271,7 @@ Al probar algoritmos de navegación o SLAM con datos grabados, los nodos deben s
 
 1. Lanza el bag publicando el reloj simulado:
    ```bash
-   ros2 bag play dataset_telemetria_burger --clock 50
+   ros2 bag play dataset_telemetria_kinova --clock 50
    ```
 2. En otra terminal, cualquier nodo que ejecutes con `--ros-args -p use_sim_time:=true` consumirá el tiempo exacto del experimento histórico.
 
@@ -315,7 +315,7 @@ sequenceDiagram
    ```
 3. En una tercera terminal, inyecta una anomalía de vibración mecánica:
    ```bash
-   ros2 service call /burger_car_01/trigger_anomaly std_srvs/srv/SetBool "{data: true}"
+   ros2 service call /burger/kinova/trigger_anomaly std_srvs/srv/SetBool "{data: true}"
    ```
 4. Observa cómo aparecen alertas rojas de **ERROR** en `rqt_console` con el mensaje:
    `🚨 [FAULT TRIGGERED] Jitter excesivo! Posible desprendimiento de tag...`
@@ -326,7 +326,7 @@ sequenceDiagram
    ros2 param set /flight_recorder_telemetry_demo log_level DEBUG
 
    # Invocar el volcado del Flight Recorder:
-   ros2 service call /burger_car_01/dump_flight_recorder std_srvs/srv/Trigger
+   ros2 service call /burger/kinova/dump_flight_recorder std_srvs/srv/Trigger
    ```
 
 ---
@@ -374,7 +374,7 @@ def analyze_bag(bag_path: str):
         msg_type = get_message(type_map[topic])
         msg = deserialize_message(data, msg_type)
 
-        if topic == '/burger_car_01/joint_jitter':
+        if topic == '/burger/kinova/joint_jitter':
             jitter_values.append(msg.data)
         msg_count += 1
 
@@ -393,7 +393,7 @@ if __name__ == '__main__':
 
 Ejecuta el script sobre el dataset grabado en la Fase 2:
 ```bash
-python3 scripts/read_mcap_telemetry.py dataset_telemetria_burger
+python3 scripts/read_mcap_telemetry.py dataset_telemetria_kinova
 ```
 
 ---
@@ -407,9 +407,9 @@ python3 scripts/read_mcap_telemetry.py dataset_telemetria_burger
 4. Detén la grabación.
 5. Reproduce el bag **remapeando** el tópico de odometría hacia un nuevo tópico de prueba:
    ```bash
-   ros2 bag play dataset_incidente_mcap --remap /burger_car_01/odom:=/burger_car_01/odom_replay
+   ros2 bag play dataset_incidente_mcap --remap /burger/kinova/joint_states:=/burger/kinova/joint_states_replay
    ```
-6. Entrega una captura de pantalla donde se observe con `ros2 topic list` y `ros2 topic echo` que `/burger_car_01/odom_replay` contiene los datos registrados.
+6. Entrega una captura de pantalla donde se observe con `ros2 topic list` y `ros2 topic echo` que `/burger/kinova/joint_states_replay` contiene los datos registrados.
 
 ---
 
