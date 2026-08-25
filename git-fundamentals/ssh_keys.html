@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SSH Keys y Repositorios Privados</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d1117; --surface: #161b22; --border: #30363d;
+      --green: #3fb950; --blue: #58a6ff; --purple: #bc8cff;
+      --orange: #f0883e; --red: #f85149; --text: #e6edf3; --muted: #8b949e;
+      --accent: #f85149;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    nav { padding: 16px 32px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+    nav a { color: var(--muted); text-decoration: none; font-size: 14px; }
+    nav a:hover { color: var(--text); }
+    .nav-sep { color: var(--border); }
+    .hero { text-align: center; padding: 40px 20px 20px; }
+    .hero h1 { font-size: clamp(24px,4vw,42px); font-weight: 900; color: var(--accent); }
+    .hero p { color: var(--muted); margin-top: 10px; max-width: 600px; margin-left: auto; margin-right: auto; font-size: 15px; }
+    .controls { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; padding: 20px; }
+    .btn {
+      padding: 9px 18px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text); font-family: 'Fira Code', monospace;
+      font-size: 12px; cursor: pointer; transition: all 0.2s;
+    }
+    .btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(248,81,73,0.08); }
+    .btn.active { border-color: var(--accent); color: var(--accent); background: rgba(248,81,73,0.12); }
+    .stage { max-width: 920px; margin: 0 auto; padding: 10px 20px 30px; }
+    #flow-svg { width: 100%; height: auto; display: block; }
+    .info-panel {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px 24px; margin: 0 20px 30px;
+      max-width: 880px; margin-left: auto; margin-right: auto;
+    }
+    .info-panel h3 { color: var(--accent); font-size: 16px; margin-bottom: 8px; }
+    .info-panel p { color: var(--muted); font-size: 14px; line-height: 1.7; }
+    .cmd { font-family: 'Fira Code', monospace; background: rgba(248,81,73,0.12); color: var(--accent); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html">🏠 Inicio</a>
+  <span class="nav-sep">/</span>
+  <span style="color:var(--accent)">🔐 SSH Keys & Repos Privados</span>
+</nav>
+
+<div class="hero">
+  <h1>🔐 SSH Keys</h1>
+  <p>Acceso seguro y sin contraseñas a repositorios privados en GitHub usando criptografía de llave pública.</p>
+</div>
+
+<div class="controls">
+  <button class="btn active" id="btn-0" onclick="goStep(0)">1. ¿Por qué SSH?</button>
+  <button class="btn" id="btn-1" onclick="goStep(1)">2. Generar Llaves</button>
+  <button class="btn" id="btn-2" onclick="goStep(2)">3. Registrar en GitHub</button>
+  <button class="btn" id="btn-3" onclick="goStep(3)">4. Autenticación Exitosa</button>
+</div>
+
+<div class="stage">
+<svg id="flow-svg" viewBox="0 0 900 400" xmlns="http://www.w3.org/2000/svg">
+  <rect width="900" height="400" fill="#0d1117" rx="12"/>
+
+  <!-- GitHub Area -->
+  <rect x="550" y="40" width="310" height="320" rx="12" fill="#161b22" stroke="#30363d" stroke-width="2"/>
+  <text x="570" y="70" font-family="Inter" font-size="14" fill="#8b949e" font-weight="700">☁️ GitHub (Remoto)</text>
+  
+  <rect x="580" y="100" width="250" height="100" rx="8" fill="#0d1117" stroke="#f85149" stroke-width="1.5" stroke-dasharray="4 2"/>
+  <text x="705" y="130" text-anchor="middle" font-family="Inter" font-size="12" fill="#f85149" font-weight="600">Repo Privado de Equipo</text>
+  <text x="705" y="155" text-anchor="middle" font-family="Inter" font-size="10" fill="#8b949e">Acceso bloqueado sin autenticación</text>
+  <text x="705" y="175" text-anchor="middle" font-family="Inter" font-size="16" fill="#f85149">🔒</text>
+
+  <!-- GitHub Authorized Keys Area -->
+  <g id="github-keys" opacity="0">
+    <rect x="580" y="220" width="250" height="120" rx="8" fill="#0d1117" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="705" y="245" text-anchor="middle" font-family="Inter" font-size="12" fill="#3fb950" font-weight="600">Llaves Autorizadas</text>
+    <rect x="600" y="260" width="210" height="60" rx="4" fill="#161b22" stroke="#3fb950" stroke-width="1"/>
+    <text x="705" y="280" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#3fb950">id_ed25519.pub (Tu PC)</text>
+    <text x="705" y="300" text-anchor="middle" font-family="Inter" font-size="20" fill="#3fb950">🔑</text>
+  </g>
+
+  <!-- Local PC Area -->
+  <rect x="40" y="40" width="450" height="320" rx="12" fill="#0f1a1a" stroke="#30363d" stroke-width="2"/>
+  <text x="60" y="70" font-family="Inter" font-size="14" fill="#8b949e" font-weight="700">💻 Tu Máquina (Local)</text>
+
+  <!-- Blocked Action -->
+  <g id="blocked-action" opacity="1">
+    <path d="M 380 150 L 520 150" stroke="#f85149" stroke-width="3" stroke-dasharray="5 5"/>
+    <text x="450" y="140" text-anchor="middle" font-family="Inter" font-size="24" fill="#f85149">❌</text>
+    <text x="450" y="175" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#f85149">Permission denied</text>
+  </g>
+
+  <!-- Local Keys Area -->
+  <g id="local-keys" opacity="0">
+    <rect x="60" y="100" width="250" height="140" rx="8" fill="#0d1117" stroke="#bc8cff" stroke-width="1.5"/>
+    <text x="185" y="125" text-anchor="middle" font-family="Inter" font-size="12" fill="#bc8cff" font-weight="600">~/.ssh/</text>
+    
+    <rect x="80" y="140" width="210" height="35" rx="4" fill="#161b22" stroke="#f85149" stroke-width="1"/>
+    <text x="185" y="162" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#f85149">id_ed25519 (Privada 🤫)</text>
+    
+    <rect x="80" y="185" width="210" height="35" rx="4" fill="#161b22" stroke="#3fb950" stroke-width="1"/>
+    <text x="185" y="207" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#3fb950">id_ed25519.pub (Pública 📢)</text>
+  </g>
+
+  <!-- Key Transfer -->
+  <g id="key-transfer" opacity="0">
+    <path d="M 290 200 C 400 200, 450 290, 570 290" fill="none" stroke="#3fb950" stroke-width="2" stroke-dasharray="8 4">
+      <animate attributeName="stroke-dashoffset" from="100" to="0" dur="1s" repeatCount="indefinite" />
+    </path>
+    <text x="430" y="270" text-anchor="middle" font-family="Inter" font-size="12" fill="#3fb950">Copiar Pública a GitHub</text>
+  </g>
+
+  <!-- Success Action -->
+  <g id="success-action" opacity="0">
+    <path d="M 400 120 L 570 120" stroke="#3fb950" stroke-width="3"/>
+    <polygon points="560,115 570,120 560,125" fill="#3fb950" />
+    <path d="M 570 140 L 400 140" stroke="#3fb950" stroke-width="3"/>
+    <polygon points="410,135 400,140 410,145" fill="#3fb950" />
+    <text x="485" y="110" text-anchor="middle" font-family="Fira Code" font-size="11" fill="#3fb950">git clone git@github.com:...</text>
+    <text x="485" y="160" text-anchor="middle" font-family="Inter" font-size="20" fill="#3fb950">✅</text>
+  </g>
+
+</svg>
+</div>
+
+<div class="info-panel" id="info-box">
+  <h3 id="info-title">1. ¿Por qué SSH?</h3>
+  <p id="info-body">Los repositorios de los equipos son privados. Si intentas clonar por HTTPS sin un token, GitHub bloqueará la acción (<span class='cmd'>Permission denied</span>). SSH permite identificar tu computadora de forma segura sin pedir contraseñas todo el tiempo.</p>
+</div>
+
+<script>
+const steps = [
+  {
+    title: "1. ¿Por qué SSH?",
+    body: "Los repositorios de los equipos son privados. Si intentas clonar por HTTPS sin un token de acceso personal, GitHub rechazará la conexión con un error <span class='cmd'>Permission denied (publickey)</span>. SSH es la forma más profesional y cómoda de autenticarse.",
+    show: ["blocked-action"],
+    hide: ["local-keys", "key-transfer", "github-keys", "success-action"]
+  },
+  {
+    title: "2. Generar Par de Llaves",
+    body: "En tu terminal ejecutas <span class='cmd'>ssh-keygen -t ed25519</span>. Esto crea dos archivos en la carpeta ~/.ssh/: tu llave <b>Privada</b> (que nunca debes compartir) y tu llave <b>Pública</b> (que puedes darle a cualquier servidor).",
+    show: ["blocked-action", "local-keys"],
+    hide: ["key-transfer", "github-keys", "success-action"]
+  },
+  {
+    title: "3. Registrar en GitHub",
+    body: "Usas <span class='cmd'>cat ~/.ssh/id_ed25519.pub</span> para ver tu llave pública, la copias y la pegas en la configuración de <b>SSH and GPG keys</b> de tu cuenta de GitHub. Ahora GitHub conoce tu PC.",
+    show: ["local-keys", "github-keys", "key-transfer"],
+    hide: ["blocked-action", "success-action"]
+  },
+  {
+    title: "4. Autenticación Exitosa",
+    body: "¡Listo! Ahora cuando ejecutas <span class='cmd'>git clone git@github.com:...</span>, GitHub le manda un reto criptográfico a tu PC, tu llave privada lo resuelve automáticamente, y el acceso se concede sin pedirte contraseña.",
+    show: ["local-keys", "github-keys", "success-action"],
+    hide: ["blocked-action", "key-transfer"]
+  }
+];
+
+let current = 0;
+
+function goStep(n) {
+  current = n;
+  const s = steps[n];
+  document.querySelectorAll('.btn').forEach((b,i) => b.classList.toggle('active', i===n));
+  document.getElementById('info-title').textContent = s.title;
+  document.getElementById('info-body').innerHTML = s.body;
+
+  s.show.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) { el.style.transition='opacity 0.5s'; el.setAttribute('opacity','1'); el.style.opacity='1'; }
+  });
+  s.hide.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) { el.style.transition='opacity 0.4s'; el.setAttribute('opacity','0'); el.style.opacity='0'; }
+  });
+}
+
+goStep(0);
+</script>
+
+</body>
+</html>
