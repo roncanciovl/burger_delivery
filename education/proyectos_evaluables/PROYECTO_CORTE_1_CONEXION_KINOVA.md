@@ -19,6 +19,26 @@
 > | **Equipo 10** | [`burger-kinova-equipo-10`](https://github.com/umng-mecatronica-ros/burger-kinova-equipo-10) | `git clone https://github.com/umng-mecatronica-ros/burger-kinova-equipo-10.git burger_delivery` |
 > 
 > #### 2. Clonación Inicial y Configuración de Remotos (`origin` y `upstream`):
+> 
+> **Prerrequisito: Configuración de Llave SSH (Obligatorio para repositorios privados)**
+> Dado que el repositorio de tu equipo es privado, GitHub bloqueará el acceso si intentas usar HTTPS sin un token o si no has configurado una llave SSH. Para evitar bloqueos (como `Permission denied (publickey)` o que solicite contraseña repetidamente), debes generar y registrar una llave SSH en tu cuenta de GitHub:
+> 
+> ```bash
+> # 1. Generar la llave SSH (acepta la ruta por defecto presionando Enter)
+> ssh-keygen -t ed25519 -C "tu_correo_institucional@unimilitar.edu.co"
+> 
+> # 2. Iniciar el agente SSH y añadir tu llave
+> eval "$(ssh-agent -s)"
+> ssh-add ~/.ssh/id_ed25519
+> 
+> # 3. Mostrar la llave pública en la terminal para copiarla
+> cat ~/.ssh/id_ed25519.pub
+> ```
+> 
+> Copia el texto completo que muestra el último comando. Luego ve a tu cuenta en [GitHub > Settings > SSH and GPG keys > New SSH key](https://github.com/settings/keys), asígnale un nombre (ej. "Mi PC ROS") y pega la llave.
+> 
+> **Procedimiento de Clonación:**
+> 
 > ```bash
 > # 1. Ir a la carpeta src de tu workspace ROS 2
 > cd ~/ros2_ws/src
@@ -205,12 +225,19 @@ source install/setup.bash
 
 ### 6.3. Árbol de directorios del Workspace y Package
 
+Para evitar errores de compilación y ubicación, es fundamental comprender la estructura del workspace de ROS 2 (`ros2_ws`) y el propósito de cada una de sus carpetas principales:
+
+*   **`src/` (Source Space):** Es la **única carpeta donde debes ubicar el código fuente**. Aquí clonarás repositorios (como `burger_delivery` o `ros2_kortex`) y crearás tus packages. Nunca ejecutes `colcon build` estando dentro de esta carpeta, siempre en la raíz (`~/ros2_ws`).
+*   **`build/` (Build Space):** Se genera automáticamente al ejecutar `colcon build`. Contiene archivos intermedios usados por CMake y Python durante la compilación. No debes modificar ni crear archivos aquí.
+*   **`install/` (Install Space):** Se genera automáticamente al ejecutar `colcon build`. Contiene los ejecutables, librerías y scripts de setup finales de tus packages listos para ser usados. Al ejecutar `source install/setup.bash`, ROS 2 lee esta carpeta para encontrar tus nodos.
+*   **`log/` (Log Space):** Se genera automáticamente y contiene los registros de cada proceso de compilación de `colcon`. Útil para revisar errores detallados si falla un build.
+
 ```text
 ~/ros2_ws/                               <-- 🔨 RAÍZ: Aquí se ejecuta 'colcon build' y 'source install/setup.bash'
-├── build/
-├── install/
-├── log/
-└── src/
+├── build/                               <-- ⚙️ Archivos intermedios de compilación (Generado por colcon)
+├── install/                             <-- 🚀 Ejecutables y scripts de setup (Generado por colcon)
+├── log/                                 <-- 📝 Registros de errores de compilación (Generado por colcon)
+└── src/                                 <-- 📁 CÓDIGO FUENTE: Solo aquí se descargan y crean packages
     ├── ros2_kortex/                     <-- Stack del driver oficial de Kinova
     └── burger_delivery/                 <-- Repositorio oficial del equipo (burger-kinova-equipo-XX)
         ├── burger_kinova_connection/    <-- 📦 PACKAGE: Aquí se desarrolla el código del proyecto
