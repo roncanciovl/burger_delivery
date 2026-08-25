@@ -520,7 +520,7 @@ def build():
     add_list_item(doc, "Falla 5 (Capa 5 - Web App): Cámara desactivada en la interfaz web http://192.168.1.10.", 5)
 
     add_subheading(doc, "Fase 6: Grabación del Experimento y Exportación de Telemetría CSV")
-    add_list_item(doc, "Detenga la sesión de telemetría en el Monitor de Red y exporte el archivo telemetria_red_lab02.csv.", 1)
+    add_list_item(doc, "Detenga la sesión de telemetría en el Monitor de Red y exporte el archivo telemetria_red_lab02.csv, asegurándose que contenga los tiempos mínimos y máximos (RTT) necesarios para la investigación.", 1)
     add_list_item(doc, "Grabe un video continuo (2–4 min) que muestre en pantalla: PC A (Gateway + Monitor web), PC B (image_view + ros2 topic hz), demostración de una falla inducida y breve sustentación oral. Adjunte la URL en el informe.", 2)
 
     add_section_heading(doc, "RESULTADOS DE LA PRÁCTICA", page_break=True)

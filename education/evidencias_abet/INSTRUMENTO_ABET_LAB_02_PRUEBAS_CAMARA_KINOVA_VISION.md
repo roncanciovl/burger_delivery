@@ -73,11 +73,12 @@
 | **E3** | Captura y registro de respuesta del visor directo de profundidad (`test_kinova_camera.py --stream depth`). | |
 | **E4** | Archivos de imagen PNG capturados con tecla 's' (`kinova_capture_*.png`) con metadatos de resolución y tamaño. | |
 | **E5** | Medición comparativa de ancho de banda (`ros2 topic bw`) entre `/camera/color/image_raw` y `/camera/color/image_raw/compressed`, con cálculo de ahorro porcentual. | |
-| **E6** | Captura del Dashboard del Monitor de Red (`http://localhost:8080`) y archivo de telemetría exportado (`telemetria_red_lab02.csv`). | |
-| **E7** | Archivo de configuración `cyclonedds.xml` y captura de verificación remota de recepción y descompresión en Dispositivo B sobre Wi-Fi. | |
-| **E8** | Matriz diligenciada del diagnóstico por capas ante las cinco fallas inducidas y su procedimiento de recuperación. | |
-| **E9** | Video continuo grabado del experimento (2–4 min) que muestra terminales en PC A, visor en PC B, monitor de red web y sustentación oral. | |
-| **E10** | Informe técnico estructurado con comandos exactos, diagramas de arquitectura multi-PC, análisis de resultados y discusión técnica. | |
+| **E6** | Captura del Dashboard del Monitor de Red (`http://localhost:8080`) demostrando la estabilización del tráfico. | |
+| **E7** | Archivo original CSV de telemetría exportado (`telemetria_red_lab02.csv`) para investigación de la red. | |
+| **E8** | Archivo `cyclonedds.xml` y captura de verificación de recepción remota en Dispositivo B sobre Wi-Fi. | |
+| **E9** | Matriz diligenciada del diagnóstico por capas ante las 5 fallas inducidas y su recuperación. | |
+| **E10** | Video continuo del experimento (2–4 min) que muestra terminales en PC A, visor en PC B, monitor y sustentación. | |
+| **E11** | Informe técnico estructurado con comandos exactos, diagramas multi-PC, análisis y discusión técnica. | |
 
 ---
 

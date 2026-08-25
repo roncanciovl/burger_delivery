@@ -229,7 +229,7 @@ Induzca y resuelva las siguientes fallas sistemáticas registrando el aislamient
 ### Fase 6: Grabación del Experimento y Exportación de Telemetría CSV
 
 1. **Exportación del Log CSV del Monitor de Red:**
-   - Desde el panel web (`http://localhost:8080`), detenga la sesión de grabación de telemetría y descargue el archivo `.csv` generado (`telemetria_red_lab02.csv`).
+   - Desde el panel web (`http://localhost:8080`), detenga la sesión de grabación de telemetría y descargue el archivo `.csv` generado (`telemetria_red_lab02.csv`), asegurándose que contenga los tiempos mínimos y máximos (RTT) necesarios para la investigación.
 2. **Grabación Audiovisual del Experimento:**
    - Grabe un video continuo (duración sugerida: **2 a 4 minutos**) donde se muestre:
      - **Pantalla Dispositivo A:** Terminales del driver ROS 2, `image_transport` y el servidor del monitor de red.

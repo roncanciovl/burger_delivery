@@ -303,7 +303,7 @@ class TrafficSniffer:
     def _measure_gateway_quality(self) -> Dict[str, float]:
         """Mide latencia, jitter y pérdida de paquetes al Gateway"""
         if not self.gateway_ip or not re.match(r"^\d+\.\d+\.\d+\.\d+$", self.gateway_ip):
-            return {"latency_ms": 0.0, "jitter_ms": 0.0, "loss_percent": 0.0}
+            return {"latency_min_ms": 0.0, "latency_max_ms": 0.0, "latency_ms": 0.0, "jitter_ms": 0.0, "loss_percent": 0.0}
 
         try:
             cmd = ["ping", "-c", "2", "-i", "0.1", "-W", "1", self.gateway_ip]
@@ -316,9 +316,13 @@ class TrafficSniffer:
                 
                 rtt_match = re.search(r"rtt\s+min/avg/max/mdev\s*=\s*([0-9.]+)/([0-9.]+)/([0-9.]+)/([0-9.]+)", out)
                 if rtt_match:
+                    min_lat = float(rtt_match.group(1))
                     avg_lat = float(rtt_match.group(2))
+                    max_lat = float(rtt_match.group(3))
                     mdev_jitter = float(rtt_match.group(4))
                     return {
+                        "latency_min_ms": round(min_lat, 2),
+                        "latency_max_ms": round(max_lat, 2),
                         "latency_ms": round(avg_lat, 2),
                         "jitter_ms": round(mdev_jitter, 2),
                         "loss_percent": loss
@@ -326,7 +330,7 @@ class TrafficSniffer:
         except Exception:
             pass
 
-        return {"latency_ms": 0.0, "jitter_ms": 0.0, "loss_percent": 0.0}
+        return {"latency_min_ms": 0.0, "latency_max_ms": 0.0, "latency_ms": 0.0, "jitter_ms": 0.0, "loss_percent": 0.0}
 
 
     def update_tick(self):
@@ -392,6 +396,8 @@ class TrafficSniffer:
                 "udp_kbps": udp_kbps,
                 "dds_kbps": dds_kbps,
                 "microros_kbps": microros_kbps,
+                "gateway_latency_min_ms": gw_quality["latency_min_ms"],
+                "gateway_latency_max_ms": gw_quality["latency_max_ms"],
                 "gateway_latency_ms": gw_quality["latency_ms"],
                 "jitter_ms": gw_quality["jitter_ms"],
                 "packet_loss_percent": gw_quality["loss_percent"],
@@ -436,6 +442,8 @@ class TrafficSniffer:
                     "bytes_sent_rate": round(bytes_sent_delta / dt, 1),
                     "packets_recv_rate": round(pkts_recv_delta / dt, 1),
                     "packets_sent_rate": round(pkts_sent_delta / dt, 1),
+                    "gateway_latency_min_ms": gw_quality["latency_min_ms"],
+                    "gateway_latency_max_ms": gw_quality["latency_max_ms"],
                     "gateway_latency_ms": gw_quality["latency_ms"],
                     "gateway_jitter_ms": gw_quality["jitter_ms"],
                     "gateway_loss_percent": gw_quality["loss_percent"],
@@ -485,7 +493,7 @@ class TrafficSniffer:
                 "timestamp_iso", "elapsed_sec", "session_name", "scenario",
                 "total_kbps", "dds_kbps", "microros_kbps", "tcp_kbps", "udp_kbps",
                 "bytes_recv_rate", "bytes_sent_rate", "packets_recv_rate", "packets_sent_rate",
-                "gateway_latency_ms", "gateway_jitter_ms", "gateway_loss_percent",
+                "gateway_latency_min_ms", "gateway_latency_max_ms", "gateway_latency_ms", "gateway_jitter_ms", "gateway_loss_percent",
                 "dds_latency_ms", "dds_jitter_ms", "dds_loss_percent",
                 "active_dds_domains", "microros_active"
             ]

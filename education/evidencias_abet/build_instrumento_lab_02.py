@@ -284,11 +284,12 @@ def build_instrument():
         ("E3", "Captura y registro de respuesta del visor directo de profundidad (test_kinova_camera.py --stream depth)."),
         ("E4", "Archivos PNG de autocaptura (tecla 's') guardados para calibración/dataset con metadatos."),
         ("E5", "Medición comparativa de ancho de banda (ros2 topic bw) entre flujo crudo y comprimido (image_transport)."),
-        ("E6", "Captura del Dashboard del Monitor de Red (:8080) y archivo de telemetría exportado (telemetria_red_lab02.csv)."),
-        ("E7", "Archivo cyclonedds.xml y captura de verificación de recepción remota en Dispositivo B sobre Wi-Fi."),
-        ("E8", "Matriz diligenciada del diagnóstico por capas ante las 5 fallas inducidas y su recuperación."),
-        ("E9", "Video continuo del experimento (2–4 min) que muestra terminales en PC A, visor en PC B, monitor y sustentación."),
-        ("E10", "Informe técnico estructurado con comandos exactos, diagramas multi-PC, análisis y discusión técnica."),
+        ("E6", "Captura del Dashboard del Monitor de Red (:8080) demostrando la estabilización del tráfico."),
+        ("E7", "Archivo original CSV de telemetría exportado (telemetria_red_lab02.csv) para investigación de la red."),
+        ("E8", "Archivo cyclonedds.xml y captura de verificación de recepción remota en Dispositivo B sobre Wi-Fi."),
+        ("E9", "Matriz diligenciada del diagnóstico por capas ante las 5 fallas inducidas y su recuperación."),
+        ("E10", "Video continuo del experimento (2–4 min) que muestra terminales en PC A, visor en PC B, monitor y sustentación."),
+        ("E11", "Informe técnico estructurado con comandos exactos, diagramas multi-PC, análisis y discusión técnica."),
     ]
     add_table(doc, ["Código", "Evidencia directa", "Ubicación en informe / repositorio"], [[a, b, ""] for a, b in evidence], [2, 10, 5])
 
