@@ -1,5 +1,9 @@
 # 🎓 Guía Paso a Paso: Localización Visual 2D (Cámara Fija) y Navegación con micro-ROS
 
+> [!IMPORTANT]
+> **Actualización del Repositorio Privado del Equipo:**
+> Antes de iniciar o continuar con este taller, asegúrese de haber sincronizado su repositorio privado de equipo con los últimos cambios de la base del curso. Consulte la [Guía Oficial de Sincronización y Actualizaciones](../proyectos_evaluables/ACTUALIZACIONES_BASE_CORTE_1.md) para realizar este proceso correctamente.
+
 ¡Bienvenido! En este taller práctico aprenderás a implementar un sistema de **localización visual 2D** utilizando una **cámara en posición fija** (la cámara del Kinova estacionada en su posición *Home* o una cámara cenital sobre la mesa) para detectar marcadores visuales (**AprilTags / ArUco**) y transmitir la pose del robot en tiempo real hacia nodos embebidos en **micro-ROS (ESP32)**.
 
 Este taller está diseñado para trabajar con los conceptos esenciales de **ROS 2 del Primer Corte** (Nodos, Tópicos, Publicadores, Suscriptores y micro-ROS), **sin requerir el uso de árboles de transformadas TF2**, los cuales se abordarán formalmente en el Segundo Corte.

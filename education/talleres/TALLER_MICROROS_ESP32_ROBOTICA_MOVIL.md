@@ -1,5 +1,9 @@
 # 🎓 Guía Paso a Paso: Integración de micro-ROS en ESP32 para Plataformas Móviles y Drones
 
+> [!IMPORTANT]
+> **Actualización del Repositorio Privado del Equipo:**
+> Antes de iniciar o continuar con este taller, asegúrese de haber sincronizado su repositorio privado de equipo con los últimos cambios de la base del curso. Consulte la [Guía Oficial de Sincronización y Actualizaciones](../proyectos_evaluables/ACTUALIZACIONES_BASE_CORTE_1.md) para realizar este proceso correctamente.
+
 ¡Bienvenido! En este taller práctico aprenderás a convertir un microcontrolador de bajo costo (**ESP32 / ESP32-S3**) en un nodo nativo de primer nivel dentro del grafo distribuido de **ROS 2 Jazzy**. 
 
 Este taller está especialmente diseñado para los equipos a cargo de los **robots móviles de reparto (*burger cars*)**, plataformas diferenciales y drones.

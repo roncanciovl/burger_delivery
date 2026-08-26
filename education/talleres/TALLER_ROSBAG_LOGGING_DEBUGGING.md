@@ -1,5 +1,9 @@
 # 🎓 Guía Paso a Paso: Estado del Arte de rosbag2, Sistema de Logging y Depuración Avanzada en ROS 2
 
+> [!IMPORTANT]
+> **Actualización del Repositorio Privado del Equipo:**
+> Antes de iniciar o continuar con este taller, asegúrese de haber sincronizado su repositorio privado de equipo con los últimos cambios de la base del curso. Consulte la [Guía Oficial de Sincronización y Actualizaciones](../proyectos_evaluables/ACTUALIZACIONES_BASE_CORTE_1.md) para realizar este proceso correctamente.
+
 ¡Bienvenido! En este taller práctico explorarás el **estado del arte de las herramientas de registro (logging), grabación (rosbag2) e introspección determinista** en el ecosistema **ROS 2 (Jazzy / Rolling)**.
 
 Aprenderás a depurar robots complejos no mediante ensayo y error a ciegas, sino utilizando técnicas avanzadas de **análisis post-mortem**, **cajas negras de vuelo (Flight Recorders)**, **modificación dinámica de niveles de registro en caliente** y **reproducción paso a paso con el nuevo estándar de almacenamiento MCAP**.

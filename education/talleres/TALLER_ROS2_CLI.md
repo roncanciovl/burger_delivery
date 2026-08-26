@@ -1,5 +1,9 @@
 # 🎓 Guía Paso a Paso: Dominando la Interfaz de Línea de Comandos (CLI) de ROS 2
 
+> [!IMPORTANT]
+> **Actualización del Repositorio Privado del Equipo:**
+> Antes de iniciar o continuar con este taller, asegúrese de haber sincronizado su repositorio privado de equipo con los últimos cambios de la base del curso. Consulte la [Guía Oficial de Sincronización y Actualizaciones](../proyectos_evaluables/ACTUALIZACIONES_BASE_CORTE_1.md) para realizar este proceso correctamente.
+
 ¡Bienvenido! En esta guía (Taller) daremos nuestros primeros pasos prácticos en el ecosistema de ROS 2. Basándonos en los tutoriales iniciales oficiales de ROS 2 Jazzy, aprenderás a usar las herramientas de terminal (CLI) que te permitirán inspeccionar, depurar y controlar cualquier robot, sea simulado o físico.
 
 ## 🎯 Resultado de Aprendizaje Evaluable (RAE)
