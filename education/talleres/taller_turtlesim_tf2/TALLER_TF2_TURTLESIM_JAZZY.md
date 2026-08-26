@@ -1,6 +1,22 @@
-# Taller Práctico: Relacionando la Matemática de TF2 con Turtlesim (ROS 2 Jazzy)
+# 🎓 Guía Paso a Paso: Relacionando la Matemática de TF2 con Turtlesim (ROS 2 Jazzy)
 
-En este taller utilizaremos el simulador `turtlesim` para dar vida a los conceptos matemáticos (matrices de rotación, traslación, y grupos $SE(2)$) vistos en el cuaderno de transformaciones. El objetivo es que logres conectar las ecuaciones matemáticas con los comandos y herramientas reales de ROS 2.
+> [!IMPORTANT]
+> **Actualización del Repositorio Privado del Equipo:**
+> Antes de iniciar o continuar con este taller, asegúrese de haber sincronizado su repositorio privado de equipo con los últimos cambios de la base del curso. Consulte la [Guía Oficial de Sincronización y Actualizaciones](../../proyectos_evaluables/ACTUALIZACIONES_BASE_CORTE_1.md) para realizar este proceso correctamente.
+
+¡Bienvenido! En este taller utilizaremos el simulador `turtlesim` para dar vida a los conceptos matemáticos (matrices de rotación, traslación, y grupos $SE(2)$) vistos en el cuaderno de transformaciones. El objetivo es que logres conectar las ecuaciones matemáticas con los comandos y herramientas reales de ROS 2.
+
+---
+
+## 🎯 Resultado de Aprendizaje Evaluable (RAE)
+
+**RAE 1 (Primer Corte):** *Comprender la arquitectura distribuida, redes, comunicación técnica y experimentación en el ecosistema ROS 2.*
+
+### Indicadores ABET asociados:
+* **Indicador (SO1 - Aplicación de Ciencias Básicas e Ingeniería):** Aplica principios matemáticos (matrices de transformación homogénea, rotaciones y cuaterniones) para resolver problemas espaciales en robótica.
+* **Indicador (SO6 - Experimentación y Uso de Herramientas Modernas):** Conduce experimentos en simulación (`turtlesim`) utilizando herramientas modernas (`tf2_echo`, `rqt_tf_tree`) para validar empíricamente la composición de transformaciones.
+
+---
 
 ## Objetivos del Taller
 1. Relacionar la matriz de transformación homogénea ($T$) con la salida en tiempo real de los frames en ROS 2.
