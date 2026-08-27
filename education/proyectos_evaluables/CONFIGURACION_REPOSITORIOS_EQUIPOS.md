@@ -92,33 +92,35 @@ git commit -m "feat(monitor): implement joint state diagnostics"
 git push -u origin feat/apellido-kinova-monitor
 ```
 
-No se realiza `push` directo a `main`. Cada cambio llega mediante un pull request que incluya:
+No se realiza `push` directo a `main` con trabajo propio del equipo. Cada cambio llega mediante un pull request que incluya:
 
 1. propósito del cambio;
 2. pruebas ejecutadas y resultados;
 3. interfaces o parámetros modificados;
 4. revisión de por lo menos otro integrante.
 
+La única excepción es la sincronización con la base publicada por el docente (sección 5): al tratarse de material ajeno y de una operación mecánica, se fusiona directamente en `main` mediante el script del curso. La protección de rama de los repositorios de equipo no debe exigir pull request para `main`, de modo que esa operación sea posible.
+
 ## 5. Actualizaciones publicadas por el docente
 
-El curso no integra continuamente cualquier estado de `upstream/main`. El docente publica bases identificadas por periodo y corte, por ejemplo:
+El curso no integra continuamente cualquier estado de `upstream/main`, que puede contener trabajo en curso del docente. Las bases avaladas se publican en una rama dedicada:
 
 ```text
-base-2026-2-corte1
+upstream/base-latest
 ```
 
-El integrante responsable incorpora una base mediante una rama de sincronización y un pull request:
+Esa rama avanza en cada publicación, de modo que el procedimiento del equipo no cambia durante el semestre. Cualquier integrante incorpora la base con el script del curso:
 
 ```bash
-git fetch upstream --tags
-git switch -c sync/base-2026-2-corte1 origin/main
-git merge --no-ff refs/tags/base-2026-2-corte1
-git push -u origin sync/base-2026-2-corte1
+bash scripts/diagnostico_sync.sh                # revisa el setup e informa qué hay pendiente
+bash scripts/diagnostico_sync.sh --sincronizar  # fusiona la base en main y ofrece publicarla
 ```
 
-Después se abre un PR `sync/base-2026-2-corte1 -> main`, se revisan los conflictos y se ejecutan las pruebas. Este procedimiento conserva la prohibición de escribir directamente sobre `main`.
+El script verifica el entorno, se niega a operar si hay trabajo sin confirmar, ejecuta `git merge --no-ff` sobre `main` y se detiene con instrucciones si hay conflictos. Los demás integrantes actualizan con `git pull --ff-only origin main`.
 
-Las correcciones urgentes posteriores se publican con un identificador nuevo y una nota de cambios. No se reutiliza ni mueve una base ya publicada.
+Cada publicación queda registrada con un tag anotado inmutable generado automáticamente (`base-2026-2-AAAAMMDD`) y un GitHub Release marcado como *latest*. Una base ya publicada no se reutiliza ni se mueve: los tags nunca se reasignan. La trazabilidad de la integración queda además en el commit de merge del equipo, que registra el SHA exacto de la versión incorporada.
+
+El procedimiento detallado, con diagnóstico previo y solución de errores, está en la [Guía Oficial de Sincronización y Actualizaciones](ACTUALIZACIONES_BASE_CORTE_1.md).
 
 ## 6. Entrega y congelamiento
 

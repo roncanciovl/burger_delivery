@@ -1,119 +1,60 @@
-# 🔄 Guía Oficial de Sincronización y Actualizaciones — Corte 1 (2026-2)
+# 🔄 Sincronización con la base oficial del curso — 2026-2
 
-> **Asignatura:** ELECTIVA ELECTRONICA ( ROBOT OPERATING SYSTEM )  
-> **Periodo:** 2026-2  
-> **Tag oficial del corte:** `base-2026-2-corte1`  
-> **Repositorio docente (`upstream`):** [`https://github.com/roncanciovl/burger_delivery`](https://github.com/roncanciovl/burger_delivery)  
-> **Organización oficial:** [`https://github.com/umng-mecatronica-ros`](https://github.com/umng-mecatronica-ros)
+> **Asignatura:** ELECTIVA ELECTRONICA ( ROBOT OPERATING SYSTEM ) · **Periodo:** 2026-2  
+> **Repositorio docente (`upstream`):** [`roncanciovl/burger_delivery`](https://github.com/roncanciovl/burger_delivery) · **Organización:** [`umng-mecatronica-ros`](https://github.com/umng-mecatronica-ros)
 
----
-
-## 📌 1. Propósito de este documento
-
-Este documento detalla los cambios y adiciones incorporados en la versión base oficial del **Primer Corte (`base-2026-2-corte1`)** y establece el **procedimiento estándar y seguro** para que cada equipo sincronice estas actualizaciones en su repositorio privado asignado (`burger-kinova-equipo-XX`) sin sobreescribir su propio trabajo ni violar las políticas de control de versiones.
+Cuando el docente publica material nuevo, tu equipo lo incorpora con **dos comandos**. Funcionan igual todo el semestre: siempre traen la última versión oficial desde la rama `upstream/base-latest`.
 
 ---
 
-## 🚀 2. Resumen de novedades y cambios en la Base Corte 1
-
-La etiqueta `base-2026-2-corte1` consolida la estructura curricular y técnica definitiva para el desarrollo del primer corte:
-
-1. **🎓 Taller de Fundamentos de GitHub y Perfil Profesional:**
-   * Inclusión de [`education/talleres/TALLER_GITHUB_INICIO_PERFIL_REPOSITORIOS.md`](../talleres/TALLER_GITHUB_INICIO_PERFIL_REPOSITORIOS.md) con guía de autenticación 2FA, creación del Profile README `username/username` y exploración de repositorios.
-2. **🤖 Módulos de micro-ROS y Percepción 2D:**
-   * Inclusión de [`education/talleres/TALLER_MICROROS_ESP32_ROBOTICA_MOVIL.md`](../talleres/TALLER_MICROROS_ESP32_ROBOTICA_MOVIL.md) para arquitecturas XRCE-DDS en ESP32.
-   * Inclusión de [`education/talleres/TALLER_LOCALIZACION_APRILTAG_KINOVA_MICROROS.md`](../talleres/TALLER_LOCALIZACION_APRILTAG_KINOVA_MICROROS.md) para localización fiduciaria directa sin sobrecargar TF2.
-3. **📊 Instrumentos de Evidencia y Evaluación ABET:**
-   * Plantillas formales y actualizadas de recolección de evidencias para el Proyecto de Corte 1 y los laboratorios 01 y 02 en `education/evidencias_abet/`.
-4. **🛠️ Modernización de comandos de Git y configuración de red:**
-   * Migración de comandos legados `git checkout` a la sintaxis moderna `git switch`.
-   * Unificación de rutas de remotos `upstream` con protección de escritura (`push DISABLED`).
-
----
-
-## 🛠️ 3. Procedimiento paso a paso para sincronizar tu equipo
-
-Sigue este procedimiento en la terminal de tu máquina Ubuntu (`~/ros2_ws/src/burger_delivery`):
-
-### Paso 1: Configurar el remoto del docente (`upstream`)
-Verifica si ya tienes configurado el repositorio del docente como `upstream`.
+## 1. Revisar qué hay pendiente
 
 ```bash
 cd ~/ros2_ws/src/burger_delivery
-git remote -v
+bash scripts/diagnostico_sync.sh
 ```
 
-Si no aparece `upstream`, agrégalo según el protocolo que utilices:
+No modifica nada. Revisa tu setup (carpeta, trabajo sin confirmar, remotos, identidad, acceso a GitHub) y te muestra qué publicó el docente. Termina en uno de tres veredictos:
 
-* **Si usas SSH (Recomendado):**
-  ```bash
-  git remote add upstream git@github.com:roncanciovl/burger_delivery.git
-  ```
-* **Si usas HTTPS:**
-  ```bash
-  git remote add upstream https://github.com/roncanciovl/burger_delivery.git
-  ```
+| Veredicto | Qué hacer |
+|---|---|
+| `TODO EN ORDEN` | Continúa al punto 2. |
+| `NADA QUE HACER` | Ya tienes la última base. No hagas nada más. |
+| `CORRIGE ESTO ANTES DE SINCRONIZAR` | El script lista cada problema **con el comando que lo soluciona**. Corrígelos y vuelve a ejecutarlo. |
 
-* **🔒 Protección obligatoria de sólo lectura:**
-  ```bash
-  git remote set-url --push upstream DISABLED
-  ```
+> **La primera vez**, si aún no tienes configurado el repositorio del docente, deja que el script lo haga por ti:
+> ```bash
+> bash scripts/diagnostico_sync.sh --configurar
+> ```
 
 ---
 
-### Paso 2: Descargar las etiquetas del docente
-Descarga todos los commits y tags publicados por el docente sin alterar tus ramas locales:
+## 2. Integrar la base
 
 ```bash
-git fetch upstream --tags
+bash scripts/diagnostico_sync.sh --sincronizar
 ```
 
----
+Vuelve a revisar todo y, si está en orden, actualiza tu `main`, fusiona la base del docente y te pregunta si quieres publicarla en GitHub. **Cada integrante puede ejecutarlo por su cuenta**; quien lo haga primero publica, y a los demás el script les dirá que ya están al día.
 
-### Paso 3: Crear una rama de sincronización
-Crea una rama dedicada a la integración que parta del último estado de `main` en el repositorio de tu equipo:
+**Si aparecen conflictos**, el script se detiene y te dice qué archivos revisar. Significa que el docente y tu equipo editaron las mismas líneas:
 
-```bash
-# Asegurarse de tener la última versión de origin
-git fetch origin
-git switch -c sync/base-2026-2-corte1 origin/main
-```
-
----
-
-### Paso 4: Realizar la fusión explícita (`merge --no-ff`)
-Fusiona el tag oficial en tu rama de sincronización:
-
-```bash
-git merge --no-ff refs/tags/base-2026-2-corte1
-```
-
-> [!NOTE]
-> La bandera `--no-ff` (no fast-forward) es obligatoria porque crea un commit de merge explícito que certifica la fecha y el punto exacto en el que el equipo incorporó la base del docente.
-
-* **Si no hay conflictos:** Git abrirá el editor para guardar el mensaje del commit de merge. Guárdalo y ciérralo.
-* **Si hay conflictos:** Abre los archivos marcados, resuelve las diferencias en conjunto con tu equipo, ejecuta `git add <archivos>` y finaliza con `git commit`.
-
----
-
-### Paso 5: Publicar la rama y abrir Pull Request en GitHub
-
-1. **Subir la rama al repositorio de tu equipo:**
+1. Abre cada archivo listado y busca los bloques `<<<<<<<` / `=======` / `>>>>>>>`.
+2. Deja la versión correcta y **borra esas marcas**.
+3. Cierra el merge:
    ```bash
-   git push -u origin sync/base-2026-2-corte1
+   git add <archivos>
+   git commit
+   git push origin main
    ```
-2. **Abrir Pull Request en GitHub:**
-   * Entra a `https://github.com/umng-mecatronica-ros/burger-kinova-equipo-XX`.
-   * Verás el banner para crear el Pull Request desde `sync/base-2026-2-corte1` hacia `main`.
-   * Titúlalo: `chore: sincronizar base oficial corte 1 (base-2026-2-corte1)`.
-3. **Revisión por pares:**
-   * El compañero de equipo revisa los cambios y aprueba el PR.
-   * Se completa el **Merge Pull Request** hacia `main`.
+
+¿Prefieres empezar de cero? `git merge --abort` deshace todo y te deja como estabas.
 
 ---
 
-### Paso 6: Actualizar tu clon local
-Una vez hecho el merge en GitHub, cada integrante actualiza su rama `main` local:
+## 3. Los demás integrantes actualizan su copia
+
+Cuando alguien del equipo publique la sincronización:
 
 ```bash
 git switch main
@@ -122,29 +63,67 @@ git pull --ff-only origin main
 
 ---
 
-## ❓ 4. Preguntas Frecuentes y Buenas Prácticas
+> [!IMPORTANT]
+> **Esto aplica sólo a la base del docente.** El trabajo propio del equipo sigue entrando por rama y Pull Request revisado por un compañero (`git switch -c feat/apellido-tema`), porque esa revisión es evidencia evaluable del curso. Sincronizar es una operación mecánica sobre material ajeno; desarrollar no.
 
-### ¿Varios computadores pueden ejecutar el driver del robot (`kortex_driver`) al mismo tiempo?
-**No. Está estrictamente prohibido.** Ejecutar el driver en múltiples computadores para el mismo robot físico o en el mismo dominio ROS 2 produce colisiones críticas:
-1. **Bloqueo del robot:** La controladora del Kinova Gen3 sólo admite una sesión cíclica TCP/UDP en tiempo real. Múltiples conexiones disparan paradas de seguridad (*Safety Faults*).
-2. **Colisión de interfaces ROS 2:** Se duplican `/joint_states`, `/tf`, `/controller_manager` y el Action Server `/joint_trajectory_controller/follow_joint_trajectory`.
+---
 
-**Arquitectura correcta:**
-* **Estación A (físicamente conectada al robot):** `start_driver:=true robot_ip:=192.168.1.10`
-* **Estación B (estudiantes/clientes):** `start_driver:=false` (consume telemetría y envía metas a través de DDS).
-* **Simulación individual (modo Fake):** Si prueban con `use_fake_hardware:=true`, cada equipo debe usar un `ROS_DOMAIN_ID` distinto para no interferir en la red.
+## Problemas frecuentes
 
-### ¿Por qué no debemos hacer `git pull upstream main` directamente sobre `main`?
-Porque hacer pull directo a `main` viola la regla de gobernanza del curso (*no push directo a main*), no deja evidencia de revisión por pares en GitHub y puede provocar mezclas accidentales de ramas difíciles de auditar en la evaluación ABET.
+| Síntoma | Solución |
+|---|---|
+| `fatal: not a git repository` | Estás en otra carpeta: `cd ~/ros2_ws/src/burger_delivery` |
+| Tienes cambios sin confirmar | `git stash push -m "antes de sincronizar"` (los recuperas con `git stash pop`), o consérvalos en una rama propia con `git switch -c feat/apellido-avance` y un commit. |
+| `Permission denied (publickey)` | Tu llave SSH no está en GitHub. Verifica con `ssh -T git@github.com` y revisa la [guía de llaves SSH](../../git-fundamentals/ssh_keys.html). |
+| Tu `main` local tiene commits propios | Muévelos a una rama: `git switch -c feat/apellido-avance` y `git push -u origin HEAD`. |
+| El push a `main` fue rechazado | El repositorio exige Pull Request. Publica en una rama: `git switch -c "sync/base-$(date +%Y%m%d)"` y `git push -u origin HEAD`. |
+| `upstream/base-latest` no existe | `git fetch upstream`. Si persiste, avisa al docente. |
+| Te arrepentiste del merge | `git merge --abort` (antes del push) o `git reset --hard origin/main` si aún no habías publicado. |
 
-### ¿Qué pasa si el docente publica una corrección posterior (ej. `base-2026-2-corte1-fix1`)?
-El procedimiento es exactamente el mismo: sólo cambiarás el nombre del tag en el Paso 3 y 4 (`sync/base-2026-2-corte1-fix1` y `refs/tags/base-2026-2-corte1-fix1`).
+---
 
-### ¿Cómo confirmamos que la versión de entrega está lista?
-Al momento de la entrega final, se crea el tag de entrega inmutable:
+## Preguntas frecuentes
+
+**¿Debo cambiar algún comando cuando el docente publique material nuevo?**  
+No. `upstream/base-latest` avanza sola; repites los mismos dos comandos las veces que haga falta.
+
+**¿Por qué no hay un tag `last` que se reasigne?**  
+Porque Git no actualiza un tag ya descargado salvo con `--force`: dos equipos podrían creer que tienen la misma versión y tener contenidos distintos. Las ramas están hechas para avanzar y los tags para quedarse quietos. Cada publicación queda marcada con un tag inmutable con fecha (`base-2026-2-AAAAMMDD`).
+
+**¿Queda evidencia de qué versión integré?**  
+Sí. El commit de merge guarda el SHA exacto del estado que integraste, con fecha y autor, y su mensaje incluye el nombre del tag inmutable correspondiente.
+
+**¿Perderé el trabajo de mi equipo al fusionar?**  
+No. El merge **agrega** los cambios del docente sobre los tuyos; sólo te pide decidir cuando ambos tocaron las mismas líneas. Y el script no te deja empezar si tienes trabajo sin confirmar.
+
+**¿Por qué no `git pull upstream main`?**  
+Porque `upstream/main` puede contener trabajo en curso del docente. Sólo `base-latest` está avalada para consumo de los equipos.
+
+**¿Varios computadores pueden ejecutar el driver del robot (`kortex_driver`) a la vez?**  
+**No.** La controladora del Kinova Gen3 admite una sola sesión cíclica en tiempo real (múltiples conexiones disparan *Safety Faults*) y se duplicarían `/joint_states`, `/tf` y `/controller_manager`. La estación conectada al robot usa `start_driver:=true robot_ip:=192.168.1.10`; las demás, `start_driver:=false`. En modo `use_fake_hardware:=true`, cada equipo usa un `ROS_DOMAIN_ID` distinto.
+
+**¿Cómo se congela la entrega?**
 ```bash
+git switch main && git pull --ff-only origin main
 git tag -a entrega-2026-2-corte1 -m "Entrega oficial 2026-2 - corte 1"
 git push origin entrega-2026-2-corte1
 git rev-parse HEAD
 ```
 El SHA resultante es el identificador definitivo registrado en la evaluación.
+
+---
+
+## Anexo — Publicación de la base (uso del docente)
+
+`main` puede contener trabajo en curso; sólo lo que llega a `base-latest` queda disponible para los equipos:
+
+```bash
+git push origin main:base-latest
+```
+
+Ese push dispara [`.github/workflows/publicar-base.yml`](../../.github/workflows/publicar-base.yml), que crea un tag anotado inmutable `base-2026-2-AAAAMMDD` (con sufijo `.2`, `.3`… si hay varias publicaciones el mismo día) y un GitHub Release marcado *latest*.
+
+* El workflow sólo corre en `roncanciovl/burger_delivery`; en los repositorios de los equipos, que heredan el archivo, queda desactivado por la condición `if: github.repository == ...`.
+* El periodo académico se actualiza una vez por semestre en la variable `PERIODO` del workflow.
+* Para reestampar sin mover la rama: **Actions → Publicar base del curso → Run workflow**.
+* Como los equipos fusionan la base directamente en su `main`, la protección de rama de sus repositorios no debe exigir Pull Request para `main`; la disciplina de PR se mantiene para el trabajo propio de cada equipo.

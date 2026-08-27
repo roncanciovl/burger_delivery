@@ -1,0 +1,97 @@
+name: Publicar base del curso
+
+# Estampa un tag inmutable cada vez que se publica una nueva base en la rama
+# `base-latest`. Los equipos sincronizan contra la rama (nombre estable); los
+# tags quedan como evidencia auditable de qué estado exacto se publicó y cuándo.
+
+on:
+  push:
+    branches: [base-latest]
+  workflow_dispatch:
+    inputs:
+      motivo:
+        description: "Motivo de la publicación (queda anotado en el tag)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publicar-base
+  cancel-in-progress: false
+
+env:
+  # Editar al iniciar cada semestre.
+  PERIODO: "2026-2"
+
+jobs:
+  estampar-tag:
+    # Impide que el workflow se ejecute en los repositorios de los equipos,
+    # que heredan este archivo al sincronizar la base.
+    if: github.repository == 'roncanciovl/burger_delivery'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          # Historia completa: se necesitan los tags existentes para no repetir nombres.
+          fetch-depth: 0
+
+      - name: Calcular nombre del tag
+        id: tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="base-${PERIODO}-$(date -u +%Y%m%d)"
+          nombre="$base"
+          n=2
+          while git rev-parse -q --verify "refs/tags/${nombre}" >/dev/null; do
+            nombre="${base}.${n}"
+            n=$((n + 1))
+          done
+          echo "nombre=${nombre}" >> "$GITHUB_OUTPUT"
+          echo "Tag a crear: ${nombre}"
+
+      - name: Crear y publicar el tag inmutable
+        shell: bash
+        env:
+          NOMBRE: ${{ steps.tag.outputs.nombre }}
+          MOTIVO: ${{ inputs.motivo || format('Base del curso publicada automáticamente desde {0}', github.sha) }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${NOMBRE}" -m "${MOTIVO}"
+          git push origin "refs/tags/${NOMBRE}"
+
+      - name: Publicar Release marcado como latest
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NOMBRE: ${{ steps.tag.outputs.nombre }}
+        run: |
+          set -euo pipefail
+          gh release create "${NOMBRE}" \
+            --title "Base del curso ${NOMBRE}" \
+            --generate-notes \
+            --latest
+
+      - name: Resumen de la publicación
+        shell: bash
+        env:
+          NOMBRE: ${{ steps.tag.outputs.nombre }}
+        run: |
+          {
+            echo "## Base publicada"
+            echo ""
+            echo "| Dato | Valor |"
+            echo "|---|---|"
+            echo "| Tag inmutable | \`${NOMBRE}\` |"
+            echo "| Commit | \`${GITHUB_SHA}\` |"
+            echo "| Rama de publicación | \`base-latest\` |"
+            echo ""
+            echo "Los equipos sincronizan con \`git merge --no-ff upstream/base-latest\`."
+          } >> "$GITHUB_STEP_SUMMARY"
