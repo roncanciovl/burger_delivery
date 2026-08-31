@@ -113,7 +113,7 @@ burger_delivery/
 
 ### 🔬 1. AI Research and Spatial Reasoning
 - [⭐ **Strategic Publication & Zenodo Release Plan**](docs/research/PLAN_PUBLICACIONES_Y_RELEASES_ZENODO.md) *(2026-2027 editorial roadmap, open datasets & reproducibility)*
-- [**Scientific Workplan — VOLTA Research Group (A1)**](docs/research/PROPUESTA_VINCULACION_GRUPO_VOLTA.md) *(MinCiencias products, Q1 commitments and TRL roadmap)*
+- **Current institutional route:** endorsement is being processed with **GIDAM (Category A, UMNG)**; the decision and formalization remain pending. See the [GIDAM academic-linkage and endorsement proposal](docs/research/PROPUESTA_VINCULACION_GIDAM.md).
 - [**3D Spatial Reasoning Study with Gemini Robotics**](docs/research/EXPERIMENTO_IA_LOCALIZACION_GEMINI.md) *(Zero-shot localization & affordances)*
 - [**Gemini ER Integration Proposal**](ros2_setup/PROPUESTA_GEMINI_ER.md)
 

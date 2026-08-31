@@ -23,7 +23,7 @@ HTML_CONTENT = """<!DOCTYPE html>
       color: #64748b;
     }
     @bottom-left {
-      content: "Plan Estratégico de Publicaciones y Releases Zenodo — Grupo VOLTA (A1 - MinCiencias)";
+      content: "Plan Estratégico de Publicaciones y Releases Zenodo — Ruta de aval GIDAM (A, UMNG)";
       font-family: 'Liberation Sans', Helvetica, Arial, sans-serif;
       font-size: 8pt;
       color: #64748b;
@@ -202,7 +202,7 @@ HTML_CONTENT = """<!DOCTYPE html>
   <div class="meta-grid">
     <div class="meta-row">
       <div class="meta-cell"><strong>Proyecto:</strong> Burger-Cell (Framework ROS 2 Colaborativo)</div>
-      <div class="meta-cell"><strong>Grupo:</strong> VOLTA (A1 - MinCiencias) — Línea 2: Diseños Mecatrónicos</div>
+      <div class="meta-cell"><strong>Ruta de aval:</strong> GIDAM (A - MinCiencias), UMNG — en trámite</div>
     </div>
     <div class="meta-row">
       <div class="meta-cell"><strong>Investigador Principal:</strong> Prof. Henry Antonio Roncancio Velandia</div>
@@ -212,6 +212,10 @@ HTML_CONTENT = """<!DOCTYPE html>
   <a href="https://doi.org/10.5281/zenodo.21809949" target="_blank">
     <div class="badge-doi">Concept DOI Persistente: 10.5281/zenodo.21809949</div>
   </a>
+</div>
+
+<div class="highlight-box">
+  <strong>Estado institucional al 31-ago-2026:</strong> la solicitud de aval se tramita con GIDAM (Categoría A, UMNG) y permanece pendiente de decisión y formalización. No equivale todavía a aceptación, registro CvLAC ni aval GrupLAC.
 </div>
 
 <h2>1. Justificación y Fundamentos de los Releases Científicos</h2>
@@ -239,7 +243,7 @@ En la investigación de vanguardia en robótica, el repositorio digital constitu
     <tr>
       <td><strong>v1.0.0</strong></td>
       <td><strong>Ago 2026</strong><br><em>(Ejecutado)</em></td>
-      <td><strong>Línea Base del Framework y Registro Tecnológico</strong></td>
+      <td><strong>Línea Base del Framework y preservación con DOI</strong></td>
       <td><code>10.5281/zenodo.21809950</code></td>
       <td>• Paquete ROS 2 Jazzy y cinemática.<br>• Monitor de Red QoS CycloneDDS.<br>• Syllabus y guías docentes ABET.</td>
     </tr>
@@ -267,11 +271,11 @@ En la investigación de vanguardia en robótica, el repositorio digital constitu
   </tbody>
 </table>
 
-<h2>3. Detalle de Hitos Editoriales y Articulación VOLTA</h2>
+<h2>3. Detalle de Hitos Editoriales y Ruta Institucional GIDAM</h2>
 
 <h3>• Hito 1: Versión v1.0.0 — Software Científico Base (Completado)</h3>
 <p>
-Publicación de la plataforma experimental completa (Kinova Gen3 7-DOF, Robotiq 85, carritos TurtleBot, AprilTags dinámicos y dashboard de telemetría QoS a 1 Hz). Registrado con el DOI <strong>10.5281/zenodo.21809950</strong> y reportable en GrupLAC como Producto Tecnológico.
+Preservación de la versión v1.0.0 con el DOI <strong>10.5281/zenodo.21809950</strong>. El registro en CvLAC y el aval/asociación en GrupLAC permanecen pendientes y se gestionan por separado; la ruta institucional vigente está en trámite con GIDAM.
 </p>
 
 <h3>• Hito 2: Versión v1.1.0 — Dataset Abierto Unificado (Noviembre 2026)</h3>
@@ -296,7 +300,7 @@ Evolución a arquitectura distribuida con micro-ROS en microcontroladores ESP32-
   <li><strong>Metadatos .zenodo.json:</strong> Sincronizar descripción del hito, palabras clave tecnológicas y colaboradores estudiantiles.</li>
   <li><strong>Tag & Release en GitHub:</strong> Crear tag firmado y publicar release con Changelog Científico y Académico formal.</li>
   <li><strong>Verificación Zenodo:</strong> Confirmar ingestión por webhook y registrar el nuevo <em>Version DOI</em> asignado.</li>
-  <li><strong>Actualización Curricular:</strong> Actualizar READMEs y sincronizar producción en CvLAC / GrupLAC de MinCiencias.</li>
+  <li><strong>Actualización Curricular:</strong> actualizar READMEs y, tras contar con aceptación y soportes, registrar la producción en CvLAC y gestionar su aval/asociación en GrupLAC de GIDAM.</li>
 </ul>
 
 <table class="signatures-table">
@@ -306,8 +310,8 @@ Evolución a arquitectura distribuida con micro-ROS en microcontroladores ESP32-
       Investigador Proponente — Programa Ingeniería Mecatrónica<br>Universidad Militar Nueva Granada
     </td>
     <td style="width: 50%;">
-      <div class="sig-line">Dr. William Gómez Rivera, Ph.D. / Dr. William Aperador</div>
-      Docente Investigador / Líder Grupo de Investigación VOLTA (A1)<br>Facultad de Ingeniería — UMNG
+      <div class="sig-line">Ruta de aval institucional: GIDAM</div>
+      Grupo categoría A — Universidad Militar Nueva Granada<br>En trámite; pendiente de decisión y formalización
     </td>
   </tr>
 </table>

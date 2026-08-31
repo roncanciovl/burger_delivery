@@ -17,8 +17,9 @@ docs/
 │   ├── EXPERIMENTO_QOS_TELEMETRIA.md
 │   ├── PLAN_PUBLICACIONES_Y_RELEASES_ZENODO.md
 │   ├── PLAN_PUBLICACIONES_Y_RELEASES_ZENODO.pdf
-│   ├── PROPUESTA_VINCULACION_GRUPO_VOLTA.md
-│   └── PROPUESTA_VINCULACION_GRUPO_VOLTA.pdf
+│   ├── PROPUESTA_VINCULACION_GIDAM.md
+│   ├── PROPUESTA_VINCULACION_GIDAM.pdf
+│   └── EXPEDIENTE_AVAL_GIDAM.md
 ├── architecture/                # Especificaciones formales del sistema y cinemática
 │   ├── ros_burger_delivery.md
 │   ├── ros_burger_delivery.pdf
@@ -37,8 +38,9 @@ docs/
 ## 📑 Artículos y Reportes Destacados
 
 ### 🤖 1. Investigación en Inteligencia Artificial, QoS y Telemetría (`research/`)
-- [**Plan Estratégico de Publicaciones y Releases Zenodo (2026-2027) [Markdown]**](research/PLAN_PUBLICACIONES_Y_RELEASES_ZENODO.md) | [**[Versión PDF]**](research/PLAN_PUBLICACIONES_Y_RELEASES_ZENODO.pdf): Cronograma maestro editorial, gestión de datasets abiertos, protocolo de reproducibilidad y articulación de releases con el Grupo VOLTA (A1).
-- [**Propuesta de Vinculación al Grupo VOLTA (A1) [Markdown]**](research/PROPUESTA_VINCULACION_GRUPO_VOLTA.md) | [**[Versión PDF]**](research/PROPUESTA_VINCULACION_GRUPO_VOLTA.pdf): Documento formal de postulación y plan de trabajo científico para el Prof. William Gómez y el Dr. William Aperador.
+- [**Plan Estratégico de Publicaciones y Releases Zenodo (2026-2027) [Markdown]**](research/PLAN_PUBLICACIONES_Y_RELEASES_ZENODO.md) | [**[Versión PDF]**](research/PLAN_PUBLICACIONES_Y_RELEASES_ZENODO.pdf): Cronograma editorial, gestión de datasets, reproducibilidad y ruta de aval en trámite con GIDAM (Categoría A, UMNG).
+- [**Propuesta de Vinculación y Aval Académico — GIDAM [Markdown]**](research/PROPUESTA_VINCULACION_GIDAM.md) | [**[Versión PDF]**](research/PROPUESTA_VINCULACION_GIDAM.pdf): solicitud vigente de aval académico con GIDAM (Categoría A, UMNG), en trámite.
+- [**Expediente de Soporte para Aval — GIDAM**](research/EXPEDIENTE_AVAL_GIDAM.md): evidencia disponible, límites y condiciones de cierre para S15.
 - [**Razonamiento Espacial 3D y Localización con Gemini Robotics**](research/EXPERIMENTO_IA_LOCALIZACION_GEMINI.md): Estudio y arquitectura para localización *zero-shot* 3D basada en VLM (`gemini-robotics-er-1.6-preview`), affordances de agarre y triangulación multi-vista como alternativa a modelos clásicos como YOLO.
 - [**Protocolo Experimental: QoS, Jitter y Telemetría Robótica**](research/EXPERIMENTO_QOS_TELEMETRIA.md): Metodología cuantitativa y matemática para evaluar el impacto de la degradación inalámbrica en el seguimiento articular del Kinova Gen3 y la latencia de percepción espacial.
 

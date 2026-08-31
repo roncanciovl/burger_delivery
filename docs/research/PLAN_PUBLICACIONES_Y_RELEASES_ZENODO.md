@@ -2,7 +2,7 @@
 
 **Proyecto:** Burger-Cell: Heterogeneous ROS 2 Collaborative Robotics Framework  
 **Institución:** Universidad Militar Nueva Granada — Facultad de Ingeniería — Campus Nueva Granada  
-**Grupo de Investigación:** VOLTA (Categoría A1 - MinCiencias) — Línea 2: Diseños Mecatrónicos  
+**Ruta vigente de aval institucional:** GIDAM (Categoría A - MinCiencias), Universidad Militar Nueva Granada — solicitud en trámite; pendiente de decisión y formalización
 **Investigador Principal:** Prof. Henry Antonio Roncancio Velandia (`henry.roncancio@unimilitar.edu.co`) — ORCID: [0009-0009-9954-9813](https://orcid.org/0009-0009-9954-9813)  
 **Concept DOI Persistente (Zenodo / DataCite):** [`10.5281/zenodo.21809949`](https://doi.org/10.5281/zenodo.21809949)  
 
@@ -25,20 +25,22 @@ A diferencia del desarrollo de software comercial (donde se generan tags continu
 
 ---
 
-## 2. Articulación con los Compromisos Científicos del Grupo VOLTA
+## 2. Ruta institucional vigente: GIDAM
 
-El presente plan operacionaliza los compromisos establecidos en la [Propuesta de Vinculación al Grupo VOLTA](PROPUESTA_VINCULACION_GRUPO_VOLTA.md):
+Desde el 20 de agosto de 2026, la ruta institucional vigente para gestionar el aval del proyecto es el **Grupo de Investigación GIDAM (Categoría A - MinCiencias) de la UMNG**. La solicitud fue remitida por Henry Roncancio a William Gómez y escalada al director de GIDAM; al 31 de agosto de 2026 continúa **en trámite**. Esta condición no equivale todavía a aceptación, vinculación, aval GrupLAC ni registro en CvLAC.
+
+La [propuesta de vinculación y aval académico a GIDAM](PROPUESTA_VINCULACION_GIDAM.md) concentra la ruta institucional vigente.
 
 ```mermaid
 flowchart TD
-    subgraph Plan_VOLTA ["Plan de Publicaciones & Releases (2026-2027)"]
+    subgraph Plan_GIDAM ["Plan de Publicaciones & Releases (2026-2027)"]
         R100["v1.0.0 (Ago 2026)<br><b>Software Científico Base</b><br>DOI: 10.5281/zenodo.21809950"]
         R110["v1.1.0 (Nov 2026)<br><b>Dataset QoS + VLM</b><br>Cohorte ABET 2026-2"]
         R120["v1.2.0 (Mar 2027)<br><b>Paper Submission Q1</b><br>Flagship Benchmark"]
         R200["v2.0.0 (Jul 2027)<br><b>Autonomous Multi-Agent</b><br>Cohorte ABET 2027-1"]
     end
 
-    R100 --> PROD_MINCIENCIAS["Producto Tecnológico MinCiencias (GrupLAC)"]
+    R100 --> PROD_MINCIENCIAS["Registro CvLAC + aval GrupLAC<br>(pendientes; trámite con GIDAM)"]
     R110 --> DATASET_DATAPORT["Dataset Abierto (Zenodo / IEEE DataPort)"]
     R120 --> PAPER_Q1["Paper Flagship Q1/Q2 (IEEE T-ASE / RA-L / Sensors)"]
     R200 --> TESIS_MAESTRIA["Tesis de Maestría & Ponencia Internacional (CASE/IROS)"]
@@ -50,7 +52,7 @@ flowchart TD
 
 | Versión | Fecha Meta | Hito Científico Asociado | Identificador / DOI | Productos Entregables |
 |---|---|---|---|---|
-| **v1.0.0** | **Agosto 2026** *(Completado)* | **Línea Base del Framework y Registro Tecnológico** | `10.5281/zenodo.21809950` | • Paquete `burger_description` y cinemática Kinova.<br>• Monitor de Red Web con telemetría CycloneDDS.<br>• Guías docentes base y syllabus ABET.<br>• Registro formal en GrupLAC VOLTA. |
+| **v1.0.0** | **Agosto 2026** *(Completado)* | **Línea Base del Framework y preservación con DOI** | `10.5281/zenodo.21809950` | • Paquete `burger_description` y cinemática Kinova.<br>• Monitor de Red Web con telemetría CycloneDDS.<br>• Guías docentes base y syllabus ABET.<br>• Aval y registro institucional pendientes; trámite vigente con GIDAM. |
 | **v1.1.0** | **Noviembre 2026** | **Dataset Abierto de Telemetría QoS e Inferencia VLM** | Nuevo DOI asignado por Zenodo | • Pipeline completo Gemini Robotics VLM + MoveIt 2.<br>• Dataset consolidado de 500+ ciclos (DDS vs VLM vs RMSE).<br>• Cierre y consolidación de evidencias ABET 2026-2.<br>• Publicación en IEEE DataPort / Zenodo Data. |
 | **v1.2.0** | **Marzo 2027** | **Snapshot Oficial: Envío de Flagship Paper Q1/Q2** | Nuevo DOI asignado por Zenodo | • Código congelado y verificado para reproducibilidad del paper principal.<br>• Scripts de análisis estadístico automatizado (`analyze_telemetry_benchmark.py`).<br>• Manuscrito enviado a revista indexada (IEEE T-ASE / RA-L / Sensors). |
 | **v2.0.0** | **Julio 2027** | **Arquitectura Multi-Agente Autónoma y Cierre de Tesis** | Nuevo DOI asignado por Zenodo | • Celda multi-robot con micro-ROS en hardware ESP32-S3.<br>• Validación multi-cámara y evitación de colisiones dinámica.<br>• Sustentación de Tesis de Maestría / Pregrado.<br>• Envío a conferencia internacional (IEEE CASE / IROS). |
@@ -59,7 +61,7 @@ flowchart TD
 
 ## 4. Detalle de los Hitos Editoriales y Científicos
 
-### Hito 1: Versión v1.0.0 — *Foundation & Registered Scientific Software* (Completado)
+### Hito 1: Versión v1.0.0 — *Foundation & Preserved Scientific Software* (Completado)
 * **Fecha:** Agosto 2026
 * **DOI Inmutable:** [`10.5281/zenodo.21809950`](https://doi.org/10.5281/zenodo.21809950)
 * **Alcance:**
@@ -67,7 +69,7 @@ flowchart TD
   2. Publicación de árboles de transformación dinámicos (`tf2`) acoplados por visión AprilTag.
   3. Dashboard Web interactivo (`network_setup/monitor_red/`) con métricas QoS de red en tiempo real.
   4. Protocolo de laboratorio y syllabus alineado a criterios ABET (Student Outcomes 1, 6 y 7).
-* **Destino de Citación:** Registro de Software de Investigación en CvLAC/GrupLAC de MinCiencias.
+* **Destino de Citación:** DOI público verificable. El registro en CvLAC y el aval en GrupLAC continúan pendientes y deben cerrarse como trámites separados.
 
 ---
 
@@ -156,14 +158,29 @@ Antes de generar un tag de release en GitHub vinculado a Zenodo, el investigador
 
 ### Paso 6: Actualización de Tablas de Documentación y MinCiencias
 - [ ] Actualizar la tabla de versiones en [README.md](../../README.md) y [README_en.md](../../README_en.md).
-- [ ] Actualizar el registro de producción tecnológica en el aplicativo **CvLAC** del investigador y **GrupLAC** del Grupo VOLTA.
+- [ ] Actualizar el registro de producción tecnológica en **CvLAC** y gestionar su asociación/aval en **GrupLAC de GIDAM**, únicamente después de contar con aceptación y soportes verificables.
 
 ---
 
-## 7. Aprobación y Seguimiento del Plan
+## 7. Control de cambios y TODO institucional
+
+### Control de cambios
+
+- **2026-08-31:** se estableció **GIDAM (Categoría A, UMNG)** como ruta de aval institucional. El estado registrado es **en trámite**, no aval concedido; v1.0.0 no declara registro formal en GrupLAC.
+
+### TODO institucional — S15
+
+- [x] Consolidar el [expediente de soporte para GIDAM](EXPEDIENTE_AVAL_GIDAM.md) con evidencia disponible y límites de la solicitud.
+- [ ] Obtener respuesta formal de GIDAM sobre la solicitud de vinculación/aval.
+- [ ] Conservar evidencia verificable de aceptación y definir la ruta de asociación del producto en GrupLAC.
+- [ ] Registrar el software en CvLAC con sus soportes, sin confundir el DOI de Zenodo con aval de grupo.
+- [ ] Cerrar S15 únicamente cuando el registro CvLAC y la constancia de aval/asociación GrupLAC sean visibles o estén documentados.
+
+---
+
+## 8. Aprobación y Seguimiento del Plan
 
 | Rol | Nombre | Firma / Estado |
 |:---:|:---:|:---:|
 | **Investigador Proponente** | **Prof. Henry Antonio Roncancio Velandia**<br>Docente e Investigador Mecatrónica UMNG | *Aprobado y en Ejecución* |
-| **Docente Investigador VOLTA** | **Dr. William Gómez Rivera, Ph.D.**<br>Grupo VOLTA (Categoría A1) | *Revisión y Acompañamiento* |
-| **Líder del Grupo VOLTA** | **Dr. William Arnulfo Aperador Chaparro**<br>Líder Grupo de Investigación VOLTA | *Aval Institucional* |
+| **Ruta de aval institucional** | **Grupo de Investigación GIDAM**<br>Categoría A — Universidad Militar Nueva Granada | *En trámite; pendiente de decisión y formalización* |
