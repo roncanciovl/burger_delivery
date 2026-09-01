@@ -186,6 +186,133 @@ New-NetFirewallRule -DisplayName "ROS 2 DDS Outbound (Domain 42)" -Direction Out
 ```
 *Si alguna vez cambias tu `ROS_DOMAIN_ID`, deberás recalcular los puertos y actualizar estas reglas.*
 
+#### WSL2 en modo reflejado: reglas y verificación del firewall Hyper-V
+
+En `networkingMode=mirrored`, el firewall tradicional de Windows y el firewall de Hyper-V son capas diferentes. Una regla `New-NetFirewallRule` puede estar activa y, aun así, Hyper-V puede bloquear la entrada hacia WSL. Microsoft identifica WSL con el siguiente `VMCreatorId`:
+
+```powershell
+$wslId = '{40E0AC32-46A5-438A-A0B2-2B479E8F2E90}'
+```
+
+El siguiente ejemplo reproduce la configuración validada para `ROS_DOMAIN_ID=0` y limita el origen a la subred del laboratorio `192.168.1.0/24`. Ejecútalo en PowerShell como administrador:
+
+```powershell
+# Prueba nativa `ros2 multicast` (UDP 49150)
+New-NetFirewallRule `
+  -Name 'ROS2-Multicast-Test-Windows' `
+  -DisplayName 'ROS 2 Multicast Test Windows' `
+  -Direction Inbound -Protocol UDP -LocalPort 49150 `
+  -RemoteAddress '192.168.1.0/24' -Profile Any -Action Allow
+
+New-NetFirewallHyperVRule `
+  -Name 'ROS2-Multicast-Test-HyperV' `
+  -DisplayName 'ROS 2 Multicast Test WSL' `
+  -Direction Inbound -VMCreatorId $wslId -Protocol UDP `
+  -LocalPorts 49150 -RemoteAddresses '192.168.1.0/24' -Action Allow
+
+# Descubrimiento y tráfico DDS del dominio 0
+New-NetFirewallHyperVRule `
+  -Name 'ROS2-DDS-Domain0-HyperV' `
+  -DisplayName 'ROS 2 DDS Domain 0 WSL' `
+  -Direction Inbound -VMCreatorId $wslId -Protocol UDP `
+  -LocalPorts '7400-7500' -RemoteAddresses '192.168.1.0/24' -Action Allow
+```
+
+Si una regla ya existe, no la dupliques. Inspecciónala con los comandos de verificación siguientes o actualízala explícitamente.
+
+##### 1. Verificar el modo de red y el perfil de Windows
+
+Dentro de WSL:
+
+```bash
+wslinfo --networking-mode
+```
+
+Resultado esperado: `mirrored`.
+
+En PowerShell:
+
+```powershell
+Get-NetConnectionProfile |
+  Select-Object InterfaceAlias, Name, NetworkCategory, IPv4Connectivity
+```
+
+Registra qué perfil —`Public` o `Private`— tiene la interfaz conectada a la red del robot. Las reglas anteriores usan `Profile Any`, pero restringen la dirección remota a `192.168.1.0/24`.
+
+##### 2. Verificar el estado general del firewall Hyper-V para WSL
+
+```powershell
+Get-NetFirewallHyperVVMSetting -Name $wslId |
+  Select-Object Name, Enabled, DefaultInboundAction, DefaultOutboundAction, LoopbackEnabled
+```
+
+Es válido que `DefaultInboundAction` permanezca en `Block`: las excepciones específicas de ROS 2 deben aparecer como reglas `Allow`. No es necesario abrir globalmente toda la entrada de WSL.
+
+##### 3. Verificar las reglas Hyper-V creadas
+
+```powershell
+Get-NetFirewallHyperVRule `
+  -Name 'ROS2-Multicast-Test-HyperV','ROS2-DDS-Domain0-HyperV' |
+  Select-Object Name, Enabled, Direction, Action, Protocol, LocalPorts, RemoteAddresses |
+  Format-Table -AutoSize
+```
+
+Comprueba estas propiedades:
+
+| Regla | Estado | Dirección / acción | Protocolo y puertos | Origen permitido |
+|---|:---:|:---:|:---:|:---:|
+| `ROS2-Multicast-Test-HyperV` | `Enabled` | `Inbound` / `Allow` | UDP `49150` | `192.168.1.0/24` |
+| `ROS2-DDS-Domain0-HyperV` | `Enabled` | `Inbound` / `Allow` | UDP `7400-7500` | `192.168.1.0/24` |
+
+##### 4. Verificar la regla tradicional de Windows
+
+```powershell
+$rule = Get-NetFirewallRule -Name 'ROS2-Multicast-Test-Windows'
+$rule | Select-Object Name, Enabled, Direction, Action, Profile
+$rule | Get-NetFirewallPortFilter | Select-Object Protocol, LocalPort
+$rule | Get-NetFirewallAddressFilter | Select-Object RemoteAddress
+```
+
+El resultado debe indicar `Enabled`, `Inbound`, `Allow`, protocolo UDP, puerto local `49150` y dirección remota `192.168.1.0/24`.
+
+##### 5. Validación funcional entre dos computadores
+
+En el PC receptor —WSL—:
+
+```bash
+ros2 multicast receive
+```
+
+En el PC emisor:
+
+```bash
+ros2 multicast send
+```
+
+Resultado esperado en el receptor:
+
+```text
+Received from 192.168.1.152:<PUERTO_ORIGEN>: 'Hello World!'
+```
+
+Esta prueba confirma que el datagrama multicast atraviesa el router, Windows y Hyper-V hasta WSL. Después valida DDS:
+
+```bash
+ros2 topic info /chatter --verbose --no-daemon
+```
+
+Con un `talker` remoto activo, debe aparecer `Publisher count: 1`. Si multicast funciona pero el publicador continúa en `0`, verifica en ambos computadores:
+
+```bash
+printenv ROS_DOMAIN_ID
+printenv RMW_IMPLEMENTATION
+printenv ROS_AUTOMATIC_DISCOVERY_RANGE
+```
+
+Los equipos deben utilizar el mismo dominio y `SUBNET`; para eliminar una variable del diagnóstico, utiliza también la misma implementación RMW en ambos extremos. En el caso validado, el emisor utilizaba `rmw_fastrtps_cpp` y el receptor `rmw_cyclonedds_cpp`; al ejecutar ambos con Fast DDS se recibió `/chatter` correctamente.
+
+> Para `ROS_DOMAIN_ID=42`, conserva la misma metodología, cambia el nombre descriptivo de la regla y sustituye `7400-7500` por el rango calculado para ese dominio (`17900-18150`). Consulta también la [documentación oficial de red WSL](https://learn.microsoft.com/en-us/windows/wsl/networking#mirrored-mode-networking).
+
 #### Opción B: Desbloqueo General de Puertos UDP/TCP (Rápido, pero de Alto Riesgo)
 ⚠️ **ADVERTENCIA CRÍTICA DE CIBERSEGURIDAD:** Esta opción abre el tráfico de **todos los puertos UDP y TCP** a través del firewall para ROS 2. 
 - **¿Por qué hacerlo?** Si trabajas con múltiples dominios a la vez o cambias constantemente de `ROS_DOMAIN_ID` y no quieres recalcular puertos, esto garantiza que la red siempre funcionará de inmediato.
