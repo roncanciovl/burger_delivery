@@ -140,6 +140,7 @@ burger_delivery/
 - [**Controles y Configuración del Monitor de Red**](network_setup/MONITOR_RED_CONTROLES_Y_CONFIGURACION.md)
 - [**Diagnóstico de Red ROS 2**](network_setup/DIAGNOSTICO_RED.md)
 - [**Configuración de Red Recomendada**](network_setup/ROS2_NETWORK_CONFIG.md)
+- [**Troubleshooting: bloqueo del daemon de ROS 2 en WSL**](TROUBLESHOOTING.md)
 - [**Guía TP-Link Archer AX12**](network_setup/router_tplink_ax12_config.md)
 
 ### 🎓 6. Ecosistema Docente y Formación (ABET)

@@ -118,49 +118,45 @@ ros2 topic echo /test
 
 ---
 
-## 5. Análisis: El Problema del Bloqueo del Daemon de ROS 2
+## 5. Bloqueo del daemon de ROS 2 en WSL
 
-**Introducción: Comandos de Inspección en ROS 2**
-Para comprender qué está sucediendo en tu red de ROS 2, típicamente utilizas dos comandos fundamentales de la interfaz de línea de comandos (CLI):
-- `ros2 node list`: Muestra todos los nodos activos que se han descubierto en tu red actual.
-- `ros2 topic list`: Muestra todos los canales de comunicación (tópicos) por los cuales los nodos están enviando o recibiendo datos.
-Estos comandos son esenciales para observar el estado de tu red, pero dependen de un proceso en segundo plano que a veces falla.
+Los comandos `ros2 node list`, `ros2 topic list` y otras consultas de introspección utilizan un daemon local que mantiene información del grafo ROS 2. Este proceso se comunica con la CLI por `127.0.0.1` y se inicia con el `ROS_DOMAIN_ID`, RMW y perfiles DDS activos en ese momento.
 
-**¿En qué consiste el problema?**
-A menudo, al ejecutar comandos de inspección como los mencionados arriba (`ros2 topic list` o `ros2 node list`), la terminal se queda congelada (bloqueada) o tarda demasiado en responder sin mostrar los datos reales de la red.
+En WSL2 se ha reportado un caso reproducible en el que esa conexión local queda esperando hasta terminar en `TimeoutError`, especialmente con ROS 2 Humble y red reflejada. También aparecen inconsistencias cuando se cambia de dominio, RMW, perfil DDS, Wi-Fi o VPN sin reiniciar el daemon. Esto es distinto de una falla de multicast: el daemon puede estar bloqueado aunque los nodos continúen intercambiando datos.
 
-**Análisis de la causa:**
-ROS 2 utiliza un proceso en segundo plano llamado **Daemon** (`_ros2_daemon`). Su propósito es mantener un caché de la topología de la red (nodos, tópicos, servicios) para responder rápidamente a los comandos de la CLI, evitando tener que redescubrir toda la red cada vez que escribes un comando.
+### Diagnóstico rápido
 
-El problema ocurre porque este daemon es susceptible a **cambios e inconsistencias en la red**:
-1. **Cambios de IP / Interfaz:** Si pasas de una red Wi-Fi a otra, enciendes una VPN, o WSL cambia su IP, el daemon mantiene en caché las rutas antiguas. Al intentar comunicarse con las direcciones cacheadas, los paquetes se pierden y provoca un "timeout" o bloqueo.
-2. **Problemas de Multicast:** En redes Wi-Fi saturadas o corporativas, los paquetes UDP Multicast (usados para descubrimiento) se pierden. El daemon se queda esperando respuestas de nodos que sabe que existen pero que no puede alcanzar.
-3. **Conflictos del RMW:** Fast DDS (el default) a veces genera bloqueos internos de descubrimiento (deadlocks) si hay mucho ruido en la red o si la red es inestable.
+```bash
+timeout 15s ros2 node list
+timeout 15s ros2 node list --no-daemon
+```
 
-**Alternativas y Soluciones:**
+Si solo se bloquea la primera consulta, la ruta local CLI-daemon es la sospecha principal. Si ambas fallan, continúa revisando RMW, DDS, multicast y firewall.
 
-1. **Evitar el Daemon (Bypass CLI):**
-   Puedes forzar a la CLI a no usar el caché del daemon añadiendo la bandera `--no-daemon`. Esto hará que el comando tarde un par de segundos más (porque descubre la red desde cero), pero garantiza que mostrará la información real y evitará el bloqueo.
-   ```bash
-   ros2 topic list --no-daemon
-   ros2 node list --no-daemon
-   ```
+### Recuperación
 
-2. **Reiniciar el Daemon (Hard Reset):**
-   Si la red cambió (ej. activaste el Modo Espejo o cambiaste de red), debes purgar el daemon para que vuelva a escanear.
-   ```bash
-   ros2 daemon stop
-   ros2 daemon start
-   
-   # Si el proceso no se detiene correctamente, fuérzalo:
-   pkill -f _ros2_daemon
-   ```
+```bash
+# Intento de cierre normal
+timeout 5s ros2 daemon stop
 
-3. **Cambiar el RMW a CycloneDDS:**
-   Como configuramos en el Paso 1, usar `rmw_cyclonedds_cpp` reduce drásticamente los problemas de bloqueo del daemon. CycloneDDS maneja la memoria y el descubrimiento de forma mucho más eficiente en redes inalámbricas frente a caídas de paquetes.
+# Si no responde, inspecciona el PID exacto
+pgrep -af '(_ros2_daemon|--name ros2-daemon)'
 
-4. **Usar Discovery Server (Ver sección 7):**
-   Si el multicast sigue bloqueando el daemon, cambiar a un servidor de descubrimiento centralizado elimina el problema de raíz al erradicar la dependencia del tráfico Multicast.
+# Sustituye <PID>; SIGTERM permite una salida ordenada
+kill <PID>
+
+# Solo si el mismo proceso continúa vivo
+kill -KILL <PID>
+
+# Inicia con el entorno actual y valida
+ros2 daemon start
+timeout 5s ros2 daemon status
+timeout 15s ros2 node list
+```
+
+No uses `sudo` ni empieces con `kill -9`. Verifica en la salida de `pgrep` que el dominio y el RMW sean los esperados antes de terminar el proceso.
+
+La explicación completa, el flujo de decisión, la recuperación de WSL y las fuentes oficiales están en [TROUBLESHOOTING.md](../TROUBLESHOOTING.md).
 
 ---
 
