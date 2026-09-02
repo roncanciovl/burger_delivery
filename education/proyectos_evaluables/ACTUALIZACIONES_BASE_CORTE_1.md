@@ -7,6 +7,33 @@ Cuando el docente publica material nuevo, tu equipo lo incorpora con **dos coman
 
 ---
 
+## 0. Arranque único — sólo si tu equipo no tiene el script
+
+Si el punto 1 responde `bash: scripts/diagnostico_sync.sh: No such file or directory`, la base de tu equipo es anterior a la publicación del script. Haz **una sola vez** esa misma integración a mano: el script viene dentro de la base, así que después sigues el flujo normal.
+
+```bash
+cd ~/ros2_ws/src/burger_delivery
+git remote add upstream git@github.com:roncanciovl/burger_delivery.git
+git remote set-url --push upstream DISABLED
+git fetch upstream
+git switch main
+git pull --ff-only origin main
+git merge --no-ff upstream/base-latest
+git push origin main
+```
+
+Si `git remote add` responde `remote upstream already exists`, sáltate esa línea y sigue con el resto. Los conflictos y el push rechazado se resuelven igual que en el punto 2.
+
+Confirma que quedó listo:
+
+```bash
+bash scripts/diagnostico_sync.sh
+```
+
+Debe responder `NADA QUE HACER`. A partir de aquí no vuelves a usar este punto.
+
+---
+
 ## 1. Revisar qué hay pendiente
 
 ```bash
@@ -73,6 +100,7 @@ git pull --ff-only origin main
 | Síntoma | Solución |
 |---|---|
 | `fatal: not a git repository` | Estás en otra carpeta: `cd ~/ros2_ws/src/burger_delivery` |
+| `scripts/diagnostico_sync.sh: No such file or directory` | Tu base es anterior al script: haz el **punto 0** una vez. |
 | Tienes cambios sin confirmar | `git stash push -m "antes de sincronizar"` (los recuperas con `git stash pop`), o consérvalos en una rama propia con `git switch -c feat/apellido-avance` y un commit. |
 | `Permission denied (publickey)` | Tu llave SSH no está en GitHub. Verifica con `ssh -T git@github.com` y revisa la [guía de llaves SSH](../../git-fundamentals/ssh_keys.html). |
 | Tu `main` local tiene commits propios | Muévelos a una rama: `git switch -c feat/apellido-avance` y `git push -u origin HEAD`. |
