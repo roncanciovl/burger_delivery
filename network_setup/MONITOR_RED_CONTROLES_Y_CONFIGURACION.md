@@ -39,7 +39,7 @@ El monitor combina cuatro mecanismos:
 3. Inspección de los puertos locales `8888` y `11811` para detectar Micro-ROS Agent y DDS Discovery Server.
 4. Contadores globales de interfaces de red y pruebas `ping` para producir telemetría.
 
-El monitor no cambia el dominio de nodos ROS 2 que ya se estén ejecutando en otros procesos o computadores. Tampoco configura el router, el firewall, CycloneDDS ni Fast DDS.
+El monitor no cambia el dominio de nodos ROS 2 que ya se estén ejecutando en otros procesos o computadores. Tampoco configura el router, el firewall, CycloneDDS ni Fast DDS. En WSL consulta en modo de solo lectura las reglas de Windows/Hyper-V y muestra si coinciden con la política distribuida del proyecto.
 
 ### Estados de dominio
 
@@ -102,13 +102,13 @@ El servidor también realiza un escaneo inicial y refrescos abreviados aproximad
 
 ### Botón `Test Multicast UDP`
 
-Abre un receptor local, envía un mensaje a `239.255.0.1:7400` y muestra:
+Abre un receptor local, envía un mensaje a `225.0.0.1:49150` y muestra:
 
 - éxito o fallo;
 - descripción del resultado;
 - tiempo de retorno local.
 
-Un resultado exitoso valida que el host puede enviar y recibir localmente en ese grupo multicast. No prueba por sí solo que otro computador reciba el paquete ni descarta AP Isolation, filtrado Wi-Fi o reglas de firewall entre equipos. Para validar la red distribuida se necesita una prueba desde dos hosts.
+El grupo y puerto se separan deliberadamente de SPDP/DDS para no confundir esta prueba con actividad ROS 2. Un resultado exitoso valida únicamente que el host puede enviar y recibir localmente en ese grupo multicast. No prueba que otro computador reciba el paquete ni descarta AP Isolation, filtrado Wi-Fi o reglas de firewall entre equipos. Para validar la red distribuida se necesita una prueba desde dos hosts.
 
 ### Botón `×` del modal
 
@@ -279,7 +279,9 @@ El panel muestra como máximo quince entradas relevantes:
 - Micro-ROS Agent en UDP `8888`;
 - DDS Discovery Server en `11811`.
 
-`OBSERVED` significa que llegó tráfico RTPS. `LISTENING` significa que se detectó un socket local. Son evidencias diferentes.
+También presenta el estado de la política distribuida. En WSL verifica, sin modificar el sistema, que las reglas `ROS2-Distributed-LAN-HyperV` y `ROS2-Distributed-LAN-Windows` permitan UDP entrante en cualquier puerto solamente desde `192.168.1.0/24`; comprueba además el bloqueo entrante predeterminado y alerta sobre reglas ROS/DDS heredadas abiertas a `Any`. El estado se refresca cada 30 segundos.
+
+`OBSERVED` significa que llegó tráfico RTPS. `LISTENING` significa que se detectó un socket local. Son evidencias diferentes. El listado SPDP no intenta enumerar los puertos UDP dinámicos que CycloneDDS puede asignar para datos.
 
 El observador evita abrir bloques DDS que se crucen con rangos UDP efímeros del sistema. En WSL también considera el rango dinámico habitual de Windows para no bloquear puertos de otras aplicaciones.
 
@@ -339,6 +341,7 @@ python3 network_setup/monitor_red/server.py --host 127.0.0.1 --port 8080
 | Método | Ruta | Función |
 |---|---|---|
 | `GET` | `/api/status` | Entorno y red detectada. |
+| `GET` | `/api/firewall` | Cumplimiento de la política Windows/Hyper-V, en modo de solo lectura. |
 | `GET` | `/api/devices` | Dispositivos y dominios por IP. |
 | `GET` | `/api/traffic` | Métricas actuales e historial. |
 | `POST` | `/api/scan` | Barrido completo de red. |
@@ -354,11 +357,12 @@ python3 network_setup/monitor_red/server.py --host 127.0.0.1 --port 8080
 1. Conecte los computadores a la misma subred del proyecto.
 2. Exporte el mismo `ROS_DOMAIN_ID` en cada terminal antes de iniciar los nodos.
 3. Inicie al menos un nodo ROS 2 en cada computador.
-4. Abra el monitor y espere varios anuncios SPDP.
-5. Pulse `Escanear Red`.
-6. Compruebe que cada PC aparezca con `domain_source=observed` representado como “DDS observado”.
-7. Use el filtro del dominio y confirme que solo permanezcan los equipos esperados.
-8. Compare con `ros2 node list` ejecutado bajo el mismo dominio.
+4. Abra el monitor y confirme `Firewall distribuido verificado`.
+5. Espere varios anuncios SPDP.
+6. Pulse `Escanear Red`.
+7. Compruebe que cada PC aparezca con `domain_source=observed` representado como “DDS observado”.
+8. Use el filtro del dominio y confirme que solo permanezcan los equipos esperados.
+9. Compare con `ros2 node list` ejecutado bajo el mismo dominio.
 
 Criterio: la persona participante puede explicar por qué un PC conectado pero sin tráfico RTPS aparece con dominio desconocido, y por qué un Domain ID configurado no demuestra actividad.
 
@@ -369,6 +373,7 @@ Criterio: la persona participante puede explicar por qué un PC conectado pero s
 | PC remoto con `Domain desconocido` | No llegó SPDP multicast, no hay nodo activo o el descubrimiento es unicast/Discovery Server. | Verifique nodos, dominio, firewall y rango de descubrimiento. |
 | `Sin RTPS observado` en el PC local | El dominio está configurado, pero no se vio un anuncio válido. | Inicie un nodo ROS 2 y revise multicast. |
 | Test multicast exitoso, pero no aparecen otros PCs | La prueba solo confirmó el loop local. | Ejecute una prueba multicast entre dos hosts y revise AP Isolation. |
+| `Firewall distribuido no alineado` | Falta una regla, cambió la política predeterminada o existe una regla ROS/DDS abierta a cualquier red. | Consulte el detalle del indicador y aplique la sección 6 de `ROS2_NETWORK_CONFIG.md` desde PowerShell como administrador. |
 | Gateway o subred inesperados | El host está conectado a otra red o una VPN cambió la ruta. | Revise `ip route` e `ip -o -4 addr`. |
 | Domain “no observable” | Su bloque DDS cruza un rango UDP efímero. | Seleccione un dominio seguro para el sistema operativo. |
 | Micro-ROS Agent inactivo | No se detectó UDP 8888 local. | Inicie el agente y confirme con `ss -lunp | rg ':8888'`. |
@@ -387,4 +392,3 @@ Criterio: la persona participante puede explicar por qué un PC conectado pero s
 | `network_setup/monitor_red/static/app.js` | Interacción, polling, filtros y gráfica. |
 | `network_setup/MONITOR_UI_GUIA.md` | Descripción general de arquitectura y recorrido visual. |
 | `network_setup/ROS2_NETWORK_CONFIG.md` | Configuración recomendada de ROS 2, DDS y firewall. |
-

@@ -22,6 +22,8 @@ Para resolver un problema de red, sigue este orden de herramientas locales:
 *   Usa **`analisis_trafico_ros2.sh`** para escanear la subred en busca de otros robots e identificar cuellos de botella de ancho de banda.
 *   Usa **`test_wan_access.sh`** si tienes "falsa conexión" (tienes IP pero el router bloquea la salida a Internet o HTTPS).
 
+> **Firewall distribuido en WSL:** una regla limitada a UDP `7400-7500` sólo cubre parte de los puertos RTPS. La política del proyecto permite todo UDP entrante hacia WSL exclusivamente desde `192.168.1.0/24` y conserva bloqueado cualquier otro origen. Consulta la [configuración y verificación completa](ROS2_NETWORK_CONFIG.md#6-configuración-del-firewall-para-una-red-ros-2-distribuida).
+
 ---
 
 ## 2. Análisis y Pruebas en `analisis_trafico_ros2.sh`
@@ -32,7 +34,7 @@ El script `analisis_trafico_ros2.sh` es la herramienta de nivel 3 principal para
 Comprueba la configuración de entorno para asegurar que utilices los parámetros correctos. Evalúa si la variable `RMW_IMPLEMENTATION` está ajustada a `rmw_cyclonedds_cpp` (recomendada para redes Wi-Fi) en lugar del default en Jazzy/Humble, y detecta tus identificadores de dominio (`ROS_DOMAIN_ID`) y rangos de descubrimiento.
 
 ### 1. Escaneo de Dominios Activos (DDS Discovery Scan)
-Utiliza la herramienta de Linux `ss` para identificar qué puertos UDP del rango estándar DDS (7400 a 32000) están recibiendo tráfico. A partir de los puertos activos, calcula (con la fórmula inversa `(puerto - 7400)/250`) de manera explícita cuáles son los `DOMAIN_ID` circulando en la red. 
+Utiliza la herramienta de Linux `ss` para identificar los puertos UDP abiertos por los procesos DDS. Los puertos multicast SPDP permiten relacionar tráfico con un dominio mediante la fórmula inversa `(puerto - 7400)/250`; los puertos unicast dinámicos no deben interpretarse como dominios adicionales.
 **Importancia**: Operar múltiples dominios en la misma red Wi-Fi genera problemas graves de estabilidad debido a la amplificación y cruzamiento excesivos del tráfico Multicast de descubrimiento.
 
 ### 2. Medición de Ancho de Banda (Bandwidth)
@@ -78,16 +80,18 @@ sudo apt update && sudo apt install -y tshark
 ### Comandos Críticos de Análisis
 1. **Escaneo de Dominios Activos**:
    ```bash
-   sudo tshark -i any -f "udp portrange 7400-8000" -T fields -e ip.src -e udp.dstport -e rtps.domain_id
+   sudo tshark -i any -f "udp" -Y "rtps" -T fields -e ip.src -e udp.srcport -e udp.dstport -e rtps.domain_id
    ```
 2. **Ancho de Banda por Dispositivo**:
    ```bash
-   sudo tshark -i any -f "udp portrange 7400-8000" -q -z conv,udp
+   sudo tshark -i any -f "udp" -Y "rtps" -q -z conv,udp
    ```
 3. **Inspección de Paquetes RTPS (Verbose)**:
    ```bash
-   sudo tshark -i any -f "udp portrange 7400-8000" -Y "rtps" -V
+   sudo tshark -i any -f "udp" -Y "rtps" -V
    ```
+
+El filtro de captura no se limita a `7400-8000` porque podría ocultar tráfico DDS que use puertos UDP dinámicos.
 
 ### Síntomas a Detectar
 *   **Conflictos de Dominio**: Tráfico en múltiples puertos base (7400, 7650, etc.) indica que otros usuarios están usando ROS 2 en la misma WiFi.

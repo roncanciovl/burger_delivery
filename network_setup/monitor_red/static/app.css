@@ -806,6 +806,49 @@ body {
 /* ==========================================================================
    Sockets Inspector
    ========================================================================== */
+.firewall-policy {
+  margin: 14px 24px 0;
+  padding: 12px 14px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: rgba(15, 23, 42, 0.7);
+}
+
+.firewall-policy strong {
+  display: block;
+  color: var(--text-main);
+  font-size: 0.85rem;
+}
+
+.firewall-policy p {
+  margin-top: 3px;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.firewall-policy-icon {
+  font-size: 1.05rem;
+  line-height: 1.3;
+}
+
+.firewall-policy-ok {
+  border-color: rgba(16, 185, 129, 0.45);
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.firewall-policy-warning {
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.firewall-policy-unknown {
+  border-color: rgba(148, 163, 184, 0.35);
+}
+
 .sockets-container {
   padding: 16px 24px;
   display: flex;

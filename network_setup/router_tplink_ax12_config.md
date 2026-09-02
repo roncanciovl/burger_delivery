@@ -150,14 +150,30 @@ Hace que WSL comparta la misma IP que Windows (`192.168.1.100`), eliminando todo
    ```
 5. Al volver a abrir tu terminal de Ubuntu/Jazzy, verás que `ip addr` muestra la IP `192.168.1.100`.
 
-#### Opción B: Port Proxy (Si no usas Modo Espejo)
-Si prefieres mantener NAT, debes "puentear" el puerto UDP de micro-ROS desde Windows hacia WSL.
+6. En PowerShell como administrador, permite UDP hacia WSL únicamente desde la subred ROS:
 
-Ejecuta en PowerShell como **Administrador**:
-```powershell
-# Reemplaza 172.x.x.x con la IP que sale en 'ip addr' dentro de WSL
-netsh interface portproxy add v4tov4 listenaddress=192.168.1.100 listenport=8888 connectaddress=172.x.x.x connectport=8888
-```
+   ```powershell
+   $wslId = '{40E0AC32-46A5-438A-A0B2-2B479E8F2E90}'
+   $rosSubnet = '192.168.1.0/24'
+
+   New-NetFirewallHyperVRule `
+     -Name 'ROS2-Distributed-LAN-HyperV' `
+     -DisplayName 'ROS 2 Distributed LAN WSL' `
+     -Direction Inbound -VMCreatorId $wslId `
+     -Protocol UDP -RemoteAddresses $rosSubnet -Action Allow
+
+   New-NetFirewallRule `
+     -Name 'ROS2-Distributed-LAN-Windows' `
+     -DisplayName 'ROS 2 Distributed LAN WSL' `
+     -Direction Inbound -Protocol UDP -LocalPort Any `
+     -RemoteAddress $rosSubnet -Profile Any -Action Allow
+   ```
+
+   Esta política cubre los puertos dinámicos de DDS sin permitir tráfico procedente de otras subredes. Conserva habilitados los firewalls de Windows y Hyper-V. La [guía ROS 2 de red](ROS2_NETWORK_CONFIG.md#6-configuración-del-firewall-para-una-red-ros-2-distribuida) contiene la verificación completa.
+
+#### Opción B: red NAT
+
+No utilices `netsh interface portproxy` como solución para DDS: esa herramienta no resuelve el descubrimiento multicast ni la distribución general de datagramas UDP. Si el equipo no admite `networkingMode=mirrored`, utiliza Ubuntu nativo, una máquina virtual con adaptador puente o un DDS Router/puente ROS 2 en el límite de red.
 
 ---
 
@@ -171,7 +187,7 @@ Usa este checklist antes de pasar a los tests:
 [ ] 3. Smart Connect desactivado (recomendado)
 [ ] 4. SSID "ros2" con password "ros12345" configurado
 [ ] 5. DHCP activo y reserva de IP 192.168.1.100 para el PC
-[ ] 6. Firewall/Access Control verificado
+[ ] 6. Firewall/Access Control verificado: UDP hacia WSL sólo desde 192.168.1.0/24
 [ ] 7. Router reiniciado después de cambios
 ```
 

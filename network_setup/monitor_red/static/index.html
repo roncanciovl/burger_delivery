@@ -43,7 +43,7 @@
           </svg>
           <span id="scan-btn-text">Escanear Red</span>
         </button>
-        <button id="btn-test-multicast" class="btn btn-secondary" title="Probar transmisión de Multicast UDP">
+        <button id="btn-test-multicast" class="btn btn-secondary" title="Probar el eco UDP multicast local; no sustituye una prueba entre PCs">
           <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
           </svg>
@@ -334,8 +334,15 @@
         <!-- Diagnóstico de Sockets y Puertos ROS 2 -->
         <section class="card ros2-panel-card">
           <div class="card-header">
-            <h2 class="card-title">Inspección de Sockets y Puertos ROS 2</h2>
-            <span class="card-subtitle">Puertos RTPS 7400+, 8888, 11811</span>
+            <h2 class="card-title">Observación RTPS y servicios locales</h2>
+            <span class="card-subtitle">SPDP calculado; los datos DDS pueden usar UDP dinámico</span>
+          </div>
+          <div class="firewall-policy firewall-policy-unknown" id="firewall-policy">
+            <span class="firewall-policy-icon" id="firewall-policy-icon">⏳</span>
+            <div>
+              <strong id="firewall-policy-title">Verificando firewall distribuido…</strong>
+              <p id="firewall-policy-detail">Windows y Hyper-V deben aceptar UDP sólo desde 192.168.1.0/24.</p>
+            </div>
           </div>
           <div class="sockets-container" id="sockets-list">
             <!-- Poblar dinámicamente -->
@@ -371,7 +378,7 @@
     <div id="modal-multicast" class="modal-overlay hidden">
       <div class="modal-card">
         <div class="modal-header">
-          <h3 class="modal-title">Resultado de Prueba Multicast UDP</h3>
+          <h3 class="modal-title">Resultado del eco multicast local</h3>
           <button id="modal-close" class="btn-close">&times;</button>
         </div>
         <div class="modal-body" id="modal-multicast-body">

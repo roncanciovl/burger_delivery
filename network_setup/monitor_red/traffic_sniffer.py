@@ -118,19 +118,21 @@ class TrafficSniffer:
         except OSError:
             pass
 
-        def overlaps_ephemeral(domain_id: int) -> bool:
-            block_start = 7400 + 250 * domain_id
-            block_end = block_start + 249
-            return any(
-                block_start <= ephemeral_end and block_end >= ephemeral_start
-                for ephemeral_start, ephemeral_end in ephemeral_ranges
-            )
-
         return [
             domain_id
             for domain_id in range(cls.MAX_ROS_DOMAIN_ID + 1)
-            if not overlaps_ephemeral(domain_id)
+            if not cls._domain_block_overlaps_ranges(domain_id, ephemeral_ranges)
         ]
+
+    @staticmethod
+    def _domain_block_overlaps_ranges(domain_id: int, ranges: List[Any]) -> bool:
+        """Indica si el bloque calculado del dominio se cruza con algún rango."""
+        block_start = 7400 + 250 * domain_id
+        block_end = block_start + 249
+        return any(
+            block_start <= range_end and block_end >= range_start
+            for range_start, range_end in ranges
+        )
 
     @staticmethod
     def _is_rtps_packet(data: bytes) -> bool:

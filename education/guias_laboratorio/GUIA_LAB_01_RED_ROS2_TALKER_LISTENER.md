@@ -28,7 +28,7 @@ En la robótica móvil e industrial moderna, los sistemas rara vez ejecutan toda
 ROS 2 (*Robot Operating System 2*) adopta como capa de transporte de datos el estándar industrial DDS (*Data Distribution Service*). A diferencia de ROS 1, que dependía de un nodo centralizador `roscore`, ROS 2 utiliza un modelo completamente descentralizado de descubrimiento por pares (*peer-to-peer*), fundamentado en tres pilares conceptuales:
 
 1. **Grafo computacional descentralizado:** red dinámica compuesta por nodos procesadores de información que intercambian datos mediante tópicos —canales bus de datos bajo el patrón publicador/suscriptor—.
-2. **Dominio de ROS 2 (`ROS_DOMAIN_ID`):** mecanismo de aislamiento lógico sobre la red física. Los nodos que comparten un mismo `ROS_DOMAIN_ID` —entero entre 0 y 101 para esta práctica— pertenecen al mismo segmento computacional y pueden descubrirse automáticamente mediante paquetes UDP multicast —puertos 7400–7500 por defecto—.
+2. **Dominio de ROS 2 (`ROS_DOMAIN_ID`):** mecanismo de aislamiento lógico sobre la red física. Los nodos que comparten un mismo `ROS_DOMAIN_ID` —entero entre 0 y 101 para esta práctica— pertenecen al mismo segmento computacional y pueden descubrirse automáticamente mediante UDP multicast. Los puertos RTPS calculados a partir del dominio no representan necesariamente todos los sockets: DDS también puede utilizar puertos UDP unicast dinámicos.
 3. **Middleware DDS e implementación RMW (*ROS Middleware*):** capa de abstracción que gestiona el descubrimiento, la serialización de mensajes y la Calidad de Servicio (QoS). Mientras que `rmw_fastrtps_cpp` es la implementación por defecto indicada en la guía, para esta práctica se utiliza `rmw_cyclonedds_cpp` en ambos dispositivos por su comportamiento esperado en la red Wi-Fi del laboratorio.
 
 ### 2.2. Importancia de la práctica
@@ -170,7 +170,7 @@ La práctica se realiza en parejas. Las cantidades indicadas corresponden a cada
 > **Riesgo de interferencia en DDS:** ROS 2 utiliza paquetes UDP multicast para el descubrimiento automático. Si dos equipos utilizan el mismo `ROS_DOMAIN_ID` en la misma red Wi-Fi, sus nodos se descubrirán e interconectarán, lo que puede generar colisiones de tópicos e interferencia entre grupos.
 
 1. **Aislamiento obligatorio:** cada grupo de laboratorio debe acordar un `ROS_DOMAIN_ID` único asignado por el docente.
-2. **Configuración de firewall:** verificar que las reglas de firewall no bloqueen el tráfico legítimo de ROS 2 en el rango de puertos UDP 7400 a 7500.
+2. **Configuración de firewall:** en WSL2, permitir UDP entrante solamente desde la subred ROS asignada y conservar bloqueado cualquier otro origen. No deshabilitar globalmente Windows Defender Firewall ni el firewall de Hyper-V.
 
 ---
 
@@ -216,6 +216,27 @@ La práctica se realiza en parejas. Las cantidades indicadas corresponden a cada
 > ```
 >
 > Después ejecute `wsl --shutdown` en PowerShell y abra nuevamente WSL2.
+
+5. Si utiliza WSL2, configure en PowerShell como administrador la excepción distribuida del laboratorio:
+
+   ```powershell
+   $wslId = '{40E0AC32-46A5-438A-A0B2-2B479E8F2E90}'
+   $rosSubnet = '192.168.1.0/24'
+
+   New-NetFirewallHyperVRule `
+     -Name 'ROS2-Distributed-LAN-HyperV' `
+     -DisplayName 'ROS 2 Distributed LAN WSL' `
+     -Direction Inbound -VMCreatorId $wslId `
+     -Protocol UDP -RemoteAddresses $rosSubnet -Action Allow
+
+   New-NetFirewallRule `
+     -Name 'ROS2-Distributed-LAN-Windows' `
+     -DisplayName 'ROS 2 Distributed LAN WSL' `
+     -Direction Inbound -Protocol UDP -LocalPort Any `
+     -RemoteAddress $rosSubnet -Profile Any -Action Allow
+   ```
+
+   Esta excepción permite los puertos UDP calculados y dinámicos de DDS, pero sólo acepta tráfico originado en `192.168.1.0/24`. La entrada general debe permanecer en `Block`. No repita los comandos si las reglas ya existen; verifique primero siguiendo la [guía de configuración de red](../../network_setup/ROS2_NETWORK_CONFIG.md#65-verificación-obligatoria).
 
 ### Fase 2: Configuración del middleware DDS y variables de entorno
 

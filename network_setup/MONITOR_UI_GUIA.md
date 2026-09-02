@@ -20,7 +20,7 @@ El **Monitor de Red de Burger-Cell** es una aplicación web ligera, reactiva y d
                                                 │ (JSON)
                            ┌────────────────────▼────────────────────┐
                            │          server.py (HTTP Server)        │
-                           │  - Endpoints /api/traffic, /api/scan    │
+                           │  - /api/traffic, /api/scan, /api/firewall│
                            │  - Endpoints /api/benchmark/*           │
                            │  - Servidor estático sin dependencias   │
                            └──────────────┬─────────────┬────────────┘
@@ -31,6 +31,11 @@ El **Monitor de Red de Burger-Cell** es una aplicación web ligera, reactiva y d
                     │ - Medición RTT/Jitter │         │ - Mapeo de IPs y MACs │
                     │ - Data Logger CSV     │         │ - Detección de roles  │
                     └───────────────────────┘         └───────────────────────┘
+                                                ┌────────────────────────────┐
+                                                │ firewall_status.py         │
+                                                │ - Consulta de solo lectura │
+                                                │ - Reglas Windows/Hyper-V   │
+                                                └────────────────────────────┘
 ```
 
 ### Características Principales:
@@ -38,6 +43,7 @@ El **Monitor de Red de Burger-Cell** es una aplicación web ligera, reactiva y d
 2. **Observación sin privilegios (`No sudo`):** Escucha pasivamente los anuncios SPDP multicast y valida la cabecera RTPS antes de asociar una IP con un dominio.
 3. **Grabador Científico de Telemetría:** Registra métricas de QoS (latencia, jitter, pérdida, ancho de banda DDS) con exportación automática a formato `.csv`.
 4. **Resiliente a Subredes Mixtas:** Detecta automáticamente si el host está en la red del robot (`192.168.1.x`) o en redes institucionales (`10.0.28.x`), alertando desajustes en tiempo real.
+5. **Verificación de firewall en WSL:** Comprueba en modo de solo lectura que Windows y Hyper-V permitan UDP entrante exclusivamente desde la subred ROS y conserven el bloqueo predeterminado para las demás redes.
 
 ---
 
@@ -84,7 +90,7 @@ Acceder desde cualquier navegador web en:
 
 - **Badge de Estado en Vivo (`sse-badge`):** Indica la conexión activa con el servidor (`Conectado en Vivo (1 Hz)`). Si el servidor se apaga, cambia a rojo indicando reconexión.
 - **Botón `🔍 Escanear Red` (`btn-scan`):** Ejecuta un barrido ARP y de ping ICMP en la subred local mediante `device_scanner.py` para descubrir nuevos dispositivos conectados (ESP32, Kinova, PC secundarias).
-- **Botón `📶 Test Multicast UDP` (`btn-test-multicast`):** Abre un modal que envía un paquete UDP crudo a la dirección de Multicast DDS `239.255.0.1:7400`. Valida instantáneamente si el router permite el descubrimiento automático de ROS 2.
+- **Botón `📶 Test Multicast UDP` (`btn-test-multicast`):** Ejecuta un eco local en `225.0.0.1:49150`, separado de los puertos DDS. Confirma el envío y recepción multicast dentro del host, pero no valida el router, el firewall entre equipos ni el descubrimiento distribuido. Para eso se requieren dos computadores.
 
 ---
 
@@ -177,6 +183,10 @@ La detección remota requiere anuncios SPDP multicast visibles. Si el RMW usa ex
 
 El observador evita los dominios cuyo bloque DDS se cruza con el rango UDP efímero configurado en `/proc/sys/net/ipv4/ip_local_port_range`. En WSL también considera el rango dinámico de Windows. Un dominio en cualquiera de esos rangos se marca como no observable para no bloquear puertos de otras aplicaciones.
 
+El panel de servicios incluye un indicador de firewall actualizado cada 30 segundos. En WSL valida las reglas `ROS2-Distributed-LAN-HyperV` y `ROS2-Distributed-LAN-Windows`, la subred remota `192.168.1.0/24`, UDP en cualquier puerto, las políticas predeterminadas de bloqueo entrante y posibles reglas ROS/DDS heredadas abiertas a `Any`. Esta comprobación nunca crea ni modifica reglas. En Linux nativo aparece como no aplicable.
+
+Las entradas RTPS corresponden a los puertos multicast SPDP calculados. No representan todos los sockets de datos: CycloneDDS puede negociar puertos UDP dinámicos, que el panel no enumera como una lista fija.
+
 ---
 
 ## 4. Estructura del Dataset de Telemetría (`.csv`)
@@ -211,5 +221,5 @@ python3 scripts/analyze_telemetry_benchmark.py --file network_setup/monitor_red/
 ## 6. Referencias Cruzadas
 
 - 📄 **Protocolo Experimental Completo:** [EXPERIMENTO_QOS_TELEMETRIA.md](file:///home/roncanciovl/ros2_ws/src/burger_delivery/docs/research/EXPERIMENTO_QOS_TELEMETRIA.md)
-- ⚙️ **Configuración de Red y Firewall:** [ROS2_NETWORK_CONFIG.md](file:///home/roncanciovl/ros2_ws/src/burger_delivery/network_setup/ROS2_NETWORK_CONFIG.md)
+- ⚙️ **Configuración de Red y Firewall:** [ROS2_NETWORK_CONFIG.md](ROS2_NETWORK_CONFIG.md)
 - 🐍 **Script de Análisis Estadístico:** [analyze_telemetry_benchmark.py](file:///home/roncanciovl/ros2_ws/src/burger_delivery/scripts/analyze_telemetry_benchmark.py)

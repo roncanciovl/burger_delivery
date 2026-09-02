@@ -24,6 +24,7 @@ if CURRENT_DIR not in sys.path:
     sys.path.insert(0, CURRENT_DIR)
 
 from device_scanner import DeviceScanner
+from firewall_status import get_firewall_status
 from traffic_sniffer import TrafficSniffer
 
 STATIC_DIR = os.path.join(CURRENT_DIR, "static")
@@ -34,8 +35,8 @@ scanner = DeviceScanner()
 sniffer = TrafficSniffer(gateway_ip=scanner.gateway_ip)
 
 
-def test_udp_multicast(group="239.255.0.1", port=7400, timeout_sec=1.5) -> dict:
-    """Realiza una prueba rápida de envío y recepción de UDP Multicast"""
+def test_udp_multicast(group="225.0.0.1", port=49150, timeout_sec=1.5) -> dict:
+    """Realiza un eco multicast local; no valida el trayecto entre computadores."""
     received = False
     test_msg = f"ROS2_PING_{int(time.time()*1000)}".encode("utf-8")
     
@@ -63,8 +64,12 @@ def test_udp_multicast(group="239.255.0.1", port=7400, timeout_sec=1.5) -> dict:
                 received = True
                 return {
                     "success": True,
-                    "message": f"Multicast UDP recibido correctamente desde {addr[0]}",
-                    "latency_ms": round(elapsed_ms, 2)
+                    "scope": "local_loopback",
+                    "group": group,
+                    "port": port,
+                    "message": f"Eco multicast local recibido desde {addr[0]}",
+                    "warning": "No valida la entrada desde otro PC ni las reglas del firewall distribuido.",
+                    "latency_ms": round(elapsed_ms, 2),
                 }
         except socket.timeout:
             pass
@@ -73,12 +78,24 @@ def test_udp_multicast(group="239.255.0.1", port=7400, timeout_sec=1.5) -> dict:
             tx_sock.close()
             
     except Exception as e:
-        return {"success": False, "message": f"Error en socket multicast: {str(e)}", "latency_ms": 0.0}
+        return {
+            "success": False,
+            "scope": "local_loopback",
+            "group": group,
+            "port": port,
+            "message": f"Error en eco multicast local: {str(e)}",
+            "warning": "Ejecuta una prueba desde dos computadores para validar la red distribuida.",
+            "latency_ms": 0.0,
+        }
 
     return {
         "success": False,
-        "message": "Timeout: No se recibió eco multicast (Revisar AP Isolation en Router o Firewall)",
-        "latency_ms": 0.0
+        "scope": "local_loopback",
+        "group": group,
+        "port": port,
+        "message": "Timeout: no se recibió el eco multicast local",
+        "warning": "Este resultado no identifica por sí solo el estado del router o del firewall remoto.",
+        "latency_ms": 0.0,
     }
 
 
@@ -158,6 +175,7 @@ class NetworkMonitorHandler(BaseHTTPRequestHandler):
                     "local_ip": scanner.local_ip,
                     "subnet": scanner.subnet_cidr
                 },
+                "firewall": get_firewall_status(),
                 "traffic_summary": sniffer.current_metrics
             }
             self._set_json_headers(status_data)
@@ -185,13 +203,18 @@ class NetworkMonitorHandler(BaseHTTPRequestHandler):
             self._set_json_headers(snapshot)
             return
 
-        # 5. API: Estado del Benchmark de Telemetría
+        # 5. API: Política de firewall distribuido para WSL
+        elif path == "/api/firewall":
+            self._set_json_headers(get_firewall_status())
+            return
+
+        # 6. API: Estado del Benchmark de Telemetría
         elif path == "/api/benchmark/status":
             b_status = sniffer.get_benchmark_status()
             self._set_json_headers(b_status)
             return
 
-        # 6. API: Descarga del último CSV de Benchmark
+        # 7. API: Descarga del último CSV de Benchmark
         elif path == "/api/benchmark/download":
             csv_content = sniffer.get_latest_benchmark_csv_content()
             if csv_content:

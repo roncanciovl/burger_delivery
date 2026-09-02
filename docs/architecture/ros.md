@@ -101,31 +101,20 @@ export ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET
 export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 ```
 
-**Para una guía detallada multi-PC:** Consulta [`network_setup/ROS2_NETWORK_CONFIG.md`](network_setup/ROS2_NETWORK_CONFIG.md)
+**Para una guía detallada multi-PC:** consulta [`network_setup/ROS2_NETWORK_CONFIG.md`](../../network_setup/ROS2_NETWORK_CONFIG.md).
 
 ## 2.5. Recomendaciones sobre el Firewall
 
-El sistema de comunicación de ROS 2 (DDS) utiliza varios puertos UDP para el descubrimiento y el intercambio de datos.
+ROS 2/DDS utiliza multicast, puertos RTPS calculados a partir del dominio y, según la implementación, puertos UDP dinámicos. Por ello, permitir únicamente `7400-7500` no garantiza la comunicación distribuida completa.
 
-**ADVERTENCIA DE SEGURIDAD:** Deshabilitar el firewall solo debe hacerse en una **red local controlada y de confianza**, como la red de pruebas dedicada para este proyecto. **NUNCA** desactives el firewall en un PC conectado directamente a una red pública o no segura.
+En la LAN de robótica se adopta esta política:
 
-Para fines de desarrollo y depuración en un entorno controlado, la forma más sencilla de descartar problemas de red es deshabilitar temporalmente el firewall.
+1. La entrada permanece bloqueada de forma predeterminada.
+2. Se permite todo UDP entrante hacia WSL únicamente desde `192.168.1.0/24`.
+3. La excepción se configura tanto en Windows Defender Firewall como en el firewall de Hyper-V.
+4. La misma política se aplica en cada computador WSL participante.
 
-**En Ubuntu/Linux (usando `ufw`):**
-
-```bash
-# Comprobar el estado actual del firewall
-sudo ufw status
-
-# Deshabilitar el firewall
-sudo ufw disable
-
-# Para volver a habilitarlo después de las pruebas
-# sudo ufw enable
-```
-
-**En Windows:**
-Busca "Firewall de Windows Defender" en el menú de inicio y desactívalo para las redes "Privadas".
+No deshabilites el firewall ni crees una regla UDP con origen `Any`. La excepción por subred cubre los puertos dinámicos sin exponer WSL a redes diferentes de la LAN ROS. Los comandos administrativos y su verificación están en la [guía de configuración de red](../../network_setup/ROS2_NETWORK_CONFIG.md#64-windows-11-y-wsl2-en-modo-reflejado).
 
 \newpage
 

@@ -16,6 +16,7 @@ const state = {
     microros: []
   },
   currentTraffic: null,
+  firewall: null,
   isScanning: false,
   syncSeconds: 0,
   isCalibrated: false,
@@ -92,6 +93,8 @@ function setupLivePolling() {
   setInterval(fetchBenchmarkStatus, 1000);
   // Polling de dispositivos cada 4000ms
   setInterval(fetchDevicesSnapshot, 4000);
+  // El estado de firewall requiere una consulta PowerShell; se actualiza con menor frecuencia.
+  setInterval(fetchFirewallStatus, 30000);
 }
 
 async function fetchDevicesSnapshot() {
@@ -132,6 +135,7 @@ async function fetchInitialData() {
         const ddsVal = document.getElementById('val-dds-domains');
         if (ddsVal) ddsVal.textContent = `Configurado local: ${domainId}; esperando RTPS`;
       }
+      if (statusRes.firewall) updateFirewallStatus(statusRes.firewall);
     })
     .catch(err => console.warn('Error cargando /api/status:', err));
 
@@ -160,6 +164,66 @@ async function fetchInitialData() {
       }
     })
     .catch(err => console.warn('Error cargando /api/traffic:', err));
+}
+
+
+async function fetchFirewallStatus() {
+  try {
+    const res = await fetch('/api/firewall');
+    const data = await res.json();
+    updateFirewallStatus(data);
+  } catch (error) {
+    updateFirewallStatus({
+      supported: true,
+      compliant: false,
+      message: 'No fue posible consultar el estado del firewall.'
+    });
+  }
+}
+
+
+function updateFirewallStatus(firewall) {
+  state.firewall = firewall;
+  const container = document.getElementById('firewall-policy');
+  const icon = document.getElementById('firewall-policy-icon');
+  const title = document.getElementById('firewall-policy-title');
+  const detail = document.getElementById('firewall-policy-detail');
+  if (!container || !icon || !title || !detail) return;
+
+  container.classList.remove(
+    'firewall-policy-ok',
+    'firewall-policy-warning',
+    'firewall-policy-unknown'
+  );
+
+  if (firewall.supported === false) {
+    container.classList.add('firewall-policy-unknown');
+    icon.textContent = 'ℹ️';
+    title.textContent = 'Firewall Hyper-V no aplicable';
+    detail.textContent = firewall.message || 'El monitor se ejecuta fuera de WSL.';
+  } else if (firewall.compliant === true) {
+    container.classList.add('firewall-policy-ok');
+    icon.textContent = '✅';
+    title.textContent = 'Firewall distribuido verificado';
+    detail.textContent = `${firewall.message} Verificado: ${firewall.checked_at || '--'}`;
+  } else {
+    container.classList.add('firewall-policy-warning');
+    icon.textContent = '⚠️';
+    title.textContent = 'Firewall distribuido no alineado';
+    const checkLabels = {
+      hyperv_rule: 'regla Hyper-V',
+      windows_rule: 'regla Windows',
+      default_inbound_block: 'bloqueo entrante predeterminado de Hyper-V',
+      default_outbound_allow: 'salida predeterminada de Hyper-V',
+      windows_default_policy: 'políticas predeterminadas de Windows',
+      legacy_rules_scoped: 'reglas ROS/DDS heredadas',
+      query_failed: 'consulta PowerShell'
+    };
+    const failures = Array.isArray(firewall.failed_checks) && firewall.failed_checks.length
+      ? ` Controles pendientes: ${firewall.failed_checks.map(item => checkLabels[item] || item).join(', ')}.`
+      : '';
+    detail.textContent = `${firewall.message || 'Revisa las reglas Windows/Hyper-V.'}${failures}`;
+  }
 }
 
 
@@ -825,7 +889,7 @@ function setupEventListeners() {
     modalBody.replaceChildren();
     
     const p = document.createElement('p');
-    p.textContent = 'Enviando paquete UDP Multicast a 239.255.0.1:7400...';
+    p.textContent = 'Probando eco local UDP multicast en 225.0.0.1:49150...';
     modalBody.appendChild(p);
     modal.classList.remove('hidden');
 
@@ -837,7 +901,7 @@ function setupEventListeners() {
       const h4 = document.createElement('h4');
       h4.style.color = data.success ? '#10b981' : '#ef4444';
       h4.style.marginBottom = '8px';
-      h4.textContent = data.success ? '✅ Multicast Funcionando' : '❌ Falla en Multicast';
+      h4.textContent = data.success ? '✅ Eco multicast local OK' : '❌ Falló el eco multicast local';
 
       const desc = document.createElement('p');
       desc.textContent = data.message;
@@ -848,9 +912,16 @@ function setupEventListeners() {
       lat.style.marginTop = '6px';
       lat.textContent = `Tiempo de respuesta: ${data.latency_ms} ms`;
 
+      const warning = document.createElement('p');
+      warning.style.fontSize = '0.8rem';
+      warning.style.color = '#f59e0b';
+      warning.style.marginTop = '10px';
+      warning.textContent = data.warning || 'Esta prueba no valida la comunicación entre dos computadores.';
+
       modalBody.appendChild(h4);
       modalBody.appendChild(desc);
       modalBody.appendChild(lat);
+      modalBody.appendChild(warning);
     } catch (err) {
       modalBody.replaceChildren();
       const errP = document.createElement('p');
