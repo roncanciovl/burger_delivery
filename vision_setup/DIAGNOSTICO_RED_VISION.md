@@ -33,7 +33,17 @@ Si este testeo falla, verifica los cortafuegos internos de tu sistema:
 ---
 
 ## 3. Comprobando Carga sobre Tópicos ROS 2
-Si tu red y script RTSP pasaron el test satisfactoriamente, significa que el entorno base conectivo es ideal. Es tiempo de usar `ros2_kortex_vision`. Una vez lanzado tu archivo `robot.launch.py`, comprueba que Ubuntu esté decodificando las matrices.
+Si tu red y script RTSP pasaron el test satisfactoriamente, significa que el entorno base conectivo es ideal. Es tiempo de usar `ros2_kortex_vision`, que se clona aparte de `ros2_kortex`:
+
+```bash
+cd ~/ros2_ws/src
+git clone -b ros2 https://github.com/Kinovarobotics/ros2_kortex_vision.git
+cd ~/ros2_ws && colcon build --symlink-install
+source ~/ros2_ws/install/setup.bash
+ros2 launch kinova_vision kinova_vision.launch.py device:=192.168.1.10
+```
+
+Con el driver corriendo, comprueba que Ubuntu esté decodificando las matrices.
 
 ```bash
 ros2 topic hz /camera/color/image_raw

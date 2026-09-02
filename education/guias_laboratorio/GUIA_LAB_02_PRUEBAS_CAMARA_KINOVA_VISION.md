@@ -4,7 +4,7 @@
 
 | FACULTAD | PROGRAMA | ASIGNATURA | SEMESTRE | CÓDIGO GUÍA | REVISIÓN |
 |:---|:---|:---|:---:|:---:|:---:|
-| Facultad de Ingeniería | Ingeniería Mecatrónica | ROBOT OPERATING SYSTEM - ROS | VIII – IX | GL-AA-F-1 / LAB-02 | 1.3 (2026-2) |
+| Facultad de Ingeniería | Ingeniería Mecatrónica | ROBOT OPERATING SYSTEM - ROS | VIII – IX | GL-AA-F-1 / LAB-02 | 1.5 (2026-2) |
 
 ---
 
@@ -13,6 +13,8 @@
 | Descripción del Cambio | Justificación | Fecha |
 |---|---|:---:|
 | Integración de Monitor de Red Híbrido y Grabación del Experimento | Incorporación del panel web de telemetría en tiempo real (`monitor_red`), exportación de logs CSV de QoS y protocolo de grabación audiovisual obligatoria del experimento distribuido. | 17/08/2026 |
+| Corrección de los comandos ROS 2 de las Fases 3 y 4 | `ros2 launch burger_delivery robot.launch.py` no existe: `burger_delivery` no es un paquete ROS 2. Se documenta la instalación de `ros2_kortex_vision` e `image-transport-plugins`, el lanzamiento real (`kinova_vision.launch.py`), el descubrimiento del parámetro `jpeg_quality`, la sintaxis ROS 2 de `image_view` y el perfil versionado `network_setup/cyclonedds.xml`. | 02/09/2026 |
+| Corrección del procedimiento del stream de profundidad (Fase 2) | El stream `depth` del Kinova usa payload RTP `X-GST` (no H.264): se documenta la instalación obligatoria de los plugins GStreamer, se separa el procedimiento de `color` y `depth`, y se corrige el backend esperado en la Tabla 2. | 02/09/2026 |
 
 ---
 
@@ -163,25 +165,102 @@ La práctica se estructura en seis fases:
 
 ### Fase 2: Passthrough Óptico Directo por RTSP (Sin ROS 2)
 
-1. **Prueba de Video RGB y Depth en Gateway Local:**
+> [!IMPORTANT]
+> **Requisito previo obligatorio (una sola vez por equipo).** El stream de
+> profundidad del Kinova **no** viaja como H.264: viaja como RTP con payload
+> propio de GStreamer (`application/x-rtp, encoding-name=X-GST`) y solo puede
+> abrirse con el backend **GStreamer**. Ubuntu 24.04 instala por defecto
+> únicamente `gstreamer1.0-plugins-base`, que **no** incluye `rtspsrc` ni
+> `rtpgstdepay`. Instale los plugins antes de la Fase 2:
+> ```bash
+> sudo apt update && sudo apt install -y \
+>     gstreamer1.0-tools gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
+>     gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav
+> ```
+> Verifique con: `gst-inspect-1.0 rtspsrc && gst-inspect-1.0 rtpgstdepay`
+
+1. **Prueba de Video RGB en Gateway Local:**
    En el Dispositivo A, ejecute el script directo de validación óptica:
    ```bash
    python3 ~/ros2_ws/src/burger_delivery/scripts/test_kinova_camera.py --ip 192.168.1.10 --stream color
    ```
    - Verifique fluidez ($\ge 25\text{ FPS}$) y transporte FFMPEG TCP (`rtsp_transport=tcp`, `nobuffer`, `low_delay`).
-   - Pruebe el stream de profundidad con `--stream depth`.
    - Realice 3 capturas fotográficas de calibración con la tecla **`s`** (`kinova_capture_*.png`) y salga con **`q`**.
+
+2. **Prueba del Stream de Profundidad (`--stream depth`):**
+   ```bash
+   python3 ~/ros2_ws/src/burger_delivery/scripts/test_kinova_camera.py --ip 192.168.1.10 --stream depth
+   ```
+   - El script **omite FFMPEG a propósito** en este stream y usa GStreamer con
+     `rtpgstdepay`. Los mensajes `[WARN] FFMPEG TCP no funcionó` que aparecían
+     antes en profundidad **no eran una falla de red ni del sensor**: FFmpeg no
+     implementa el depayloader `X-GST`.
+   - La imagen llega en **`GRAY16_LE` a 480x270**, con la distancia en
+     **milímetros** por píxel; el visor la colorea con `COLORMAP_JET` y muestra
+     la distancia del píxel central. Los píxeles negros son *sin dato*.
+   - Con **`s`** se guardan dos archivos: la vista coloreada
+     (`kinova_capture_N.png`) y la profundidad métrica de 16 bits
+     (`kinova_capture_N_raw16.png`), que es la que sirve para medir.
+   - Ajuste el rango de coloreado con `--max-depth 2000` si la escena es cercana.
+
+> [!TIP]
+> **Falla típica reportada.** Si aparece `No URI handler implemented for "rtsp"`
+> seguido de `CAP_IMAGES: can't find starting number`, el problema **no es el
+> robot**: OpenCV se compiló con soporte GStreamer pero faltan los plugins del
+> paso previo. OpenCV, al quedarse sin backends, intenta interpretar la URL como
+> una secuencia de imágenes numeradas, de ahí ese último error tan confuso.
 
 ---
 
 ### Fase 3: Compresión de Video en ROS 2 (`image_transport`) y Ahorro de Ancho de Banda
 
-1. **Lanzamiento del Nodo Publicador de Visión con Compresión:**
+> [!IMPORTANT]
+> **Instalación previa (una sola vez).** El driver de visión del Kinova
+> (`kinova_vision`) vive en un repositorio **separado** de `ros2_kortex` y no
+> viene con el workspace. Los tópicos `/compressed` tampoco existen si falta el
+> plugin de compresión de `image_transport`.
+>
+> ```bash
+> # 1. Dependencias de sistema (GStreamer de desarrollo + plugins de transporte)
+> sudo apt update && sudo apt install -y \
+>     gstreamer1.0-tools gstreamer1.0-libav \
+>     libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+>     libgstreamer-plugins-good1.0-dev \
+>     gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
+>     ros-jazzy-image-transport-plugins ros-jazzy-image-view \
+>     ros-jazzy-depth-image-proc
+>
+> # 2. Clonar y compilar el driver de visión
+> cd ~/ros2_ws/src
+> git clone -b ros2 https://github.com/Kinovarobotics/ros2_kortex_vision.git
+> cd ~/ros2_ws && colcon build --symlink-install
+> source ~/ros2_ws/install/setup.bash
+> ```
+>
+> Sin `ros-jazzy-image-transport-plugins` el nodo arranca, pero **solo publica
+> el tópico crudo**: `/camera/color/image_raw/compressed` nunca aparece y la
+> Fase 3 completa se vuelve imposible. Compruébelo con:
+> ```bash
+> ros2 run image_transport list_transports   # debe listar 'compressed'
+> ```
+
+1. **Lanzamiento del Nodo Publicador de Visión:**
    En el Dispositivo A, inicie el driver de visión:
    ```bash
-   ros2 launch burger_delivery robot.launch.py
+   ros2 launch kinova_vision kinova_vision.launch.py device:=192.168.1.10
    ```
-2. **Inspección y Comparativa de Ancho de Banda (`ros2 topic bw`):**
+   Argumentos útiles: `launch_depth:=false` (solo color), `depth_registration:=true`
+   (nube de puntos registrada), `max_color_pub_rate:=30.0`.
+
+2. **Verificación de los Tópicos Publicados:**
+   ```bash
+   ros2 topic list | grep camera
+   ros2 node list | grep kinova_vision
+   ```
+   Debe ver los nodos `/camera/kinova_vision_color` y `/camera/kinova_vision_depth`,
+   y los tópicos `/camera/color/image_raw` y `/camera/color/image_raw/compressed`.
+
+3. **Inspección y Comparativa de Ancho de Banda (`ros2 topic bw`):**
    ```bash
    # Flujo crudo:
    ros2 topic bw /camera/color/image_raw
@@ -190,18 +269,47 @@ La práctica se estructura en seis fases:
    ros2 topic bw /camera/color/image_raw/compressed
    ```
    - Calcule el ahorro porcentual ($> 90\%$) y anótelo en la **Tabla 3**.
-   - Ajuste la calidad dinámicamente con `ros2 param set /camera/camera_node_driver jpeg_quality 80`.
+
+4. **Ajuste Dinámico de la Calidad JPEG:**
+   El nombre del parámetro lo construye `image_transport` a partir del tópico y
+   del *namespace* del nodo, así que **descúbralo primero** en lugar de
+   copiarlo a ciegas:
+   ```bash
+   ros2 param list /camera/kinova_vision_color | grep -i jpeg
+   ```
+   Luego aplíquelo con el nombre exacto que le devolvió el comando anterior:
+   ```bash
+   ros2 param set /camera/kinova_vision_color <nombre.exacto>.compressed.jpeg_quality 30
+   ```
+   Repita la medición del paso 3 con $q=80$ y $q=30$ para completar la Tabla 3.
 
 ---
 
 ### Fase 4: Despliegue y Verificación Distribuida sobre Wi-Fi con CycloneDDS
 
 1. **Configuración de CycloneDDS en Ambos Equipos:**
+   El perfil ya está versionado en el repositorio
+   (`network_setup/cyclonedds.xml`). Use **ruta absoluta**: con `$PWD` el
+   archivo solo se encuentra si lanza el comando desde el directorio exacto.
    ```bash
    export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
    export ROS_DOMAIN_ID=15
-   export CYCLONEDDS_URI=file://$PWD/cyclonedds.xml
+   export CYCLONEDDS_URI=file://$HOME/ros2_ws/src/burger_delivery/network_setup/cyclonedds.xml
    ```
+   Antes de continuar, **edite el archivo** y sustituya `wlan0` por el nombre
+   real de su interfaz Wi-Fi (véalo con `ip -brief addr`). En el Dispositivo A
+   debe apuntar a la NIC **inalámbrica**, no a la Ethernet del Kinova: si
+   CycloneDDS elige la 192.168.1.x, el Dispositivo B nunca descubrirá los nodos.
+
+   Verifique que el perfil se cargó de verdad:
+   ```bash
+   printenv CYCLONEDDS_URI RMW_IMPLEMENTATION ROS_DOMAIN_ID
+   test -r ~/ros2_ws/src/burger_delivery/network_setup/cyclonedds.xml && echo "perfil legible"
+   ros2 topic list          # debe responder en menos de 5 s
+   ```
+   Si `ros2 topic list` se queda colgado, el perfil apunta a una interfaz
+   inexistente: revise el nombre en `<NetworkInterface name="...">`.
+
 2. **Recepción, Descompresión y Visualización en Dispositivo B:**
    Desde el Dispositivo B (conectado por Wi-Fi):
    ```bash
@@ -209,8 +317,15 @@ La práctica se estructura en seis fases:
    ros2 topic hz /camera/color/image_raw/compressed
 
    # Descompresión y visualización remota con image_view:
-   ros2 run image_view image_view --ros-args --remap image:=/camera/color/image_raw _image_transport:=compressed
+   ros2 run image_view image_view --ros-args \
+       -r image:=/camera/color/image_raw \
+       -p image_transport:=compressed
    ```
+   > [!NOTE]
+   > La sintaxis `_image_transport:=compressed` es de **ROS 1** y en ROS 2 se
+   > ignora en silencio: el visor se suscribiría al tópico crudo y saturaría el
+   > Wi-Fi sin avisar. En ROS 2 los parámetros van con `-p` y los remapeos con `-r`.
+
    - Observe en el **Monitor de Red** cómo se comporta la tasa de paquetes y el jitter durante el streaming.
 
 ---
@@ -219,9 +334,9 @@ La práctica se estructura en seis fases:
 
 Induzca y resuelva las siguientes fallas sistemáticas registrando el aislamiento en la **Tabla 5**:
 1. **Falla 1 (Capa 1 - Red):** Desconexión o subred incorrecta en Wi-Fi.
-2. **Falla 2 (Capa 2 - RTSP):** Credenciales erróneas en `test_kinova_camera.py`.
+2. **Falla 2 (Capa 2 - RTSP / Códec):** Credenciales o IP erróneas en `test_kinova_camera.py`, y desinstalación temporal de `gstreamer1.0-plugins-good` para reproducir el fallo `No URI handler implemented for "rtsp"` en el stream de profundidad.
 3. **Falla 3 (Capa 3 - CycloneDDS):** Conflicto de `ROS_DOMAIN_ID` o RMW diferente entre PC A y B.
-4. **Falla 4 (Capa 4 - Compresión):** Suscripción al tópico crudo en Wi-Fi y saturación del canal.
+4. **Falla 4 (Capa 4 - Compresión):** Suscripción al tópico crudo en Wi-Fi (`-p image_transport:=raw`) y saturación del canal.
 5. **Falla 5 (Capa 5 - Web App):** Desactivación de la cámara en `http://192.168.1.10`.
 
 ---
@@ -252,7 +367,7 @@ Induzca y resuelva las siguientes fallas sistemáticas registrando el aislamient
 | Stream / Configuración | Backend Activo | FPS Medido | Latencia Percibida | Estabilidad Visual |
 |---|:---:|:---:|:---:|:---:|
 | **Color RGB (`--stream color`)** | FFMPEG TCP | | | |
-| **Profundidad (`--stream depth`)** | FFMPEG TCP | | | |
+| **Profundidad (`--stream depth`)** | GStreamer (`rtpgstdepay`, GRAY16_LE) | | | |
 | **Color con transporte UDP** | FFMPEG UDP | | | |
 | **Captura Guardada (PNG)** | Archivo: `kinova_capture_1.png` | Resolución: | Tamaño: ____ KB | |
 

@@ -498,18 +498,24 @@ def build():
     add_list_item(doc, "Abra el navegador en http://localhost:8080 (o http://192.168.50.10:8080 desde Dispositivo B). Inicie la sesión de grabación de telemetría.", 3)
 
     add_subheading(doc, "Fase 2: Passthrough Óptico Directo por RTSP (Sin ROS 2)")
-    add_list_item(doc, "En Dispositivo A, ejecute: python3 ~/ros2_ws/src/burger_delivery/scripts/test_kinova_camera.py --ip 192.168.1.10 --stream color", 1)
-    add_list_item(doc, "Compruebe tasa de cuadros (>= 25 FPS), flujo Depth (--stream depth) y capture 3 imágenes de calibración con tecla 's'.", 2)
+    add_list_item(doc, "REQUISITO PREVIO: instale los plugins de GStreamer (el stream de profundidad los exige): sudo apt install -y gstreamer1.0-tools gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav", 1)
+    add_list_item(doc, "En Dispositivo A, ejecute: python3 ~/ros2_ws/src/burger_delivery/scripts/test_kinova_camera.py --ip 192.168.1.10 --stream color", 2)
+    add_list_item(doc, "Compruebe tasa de cuadros (>= 25 FPS) y capture 3 imágenes de calibración con la tecla 's'.", 3)
+    add_list_item(doc, "Ejecute el flujo de profundidad: --stream depth. Este stream usa payload RTP X-GST y solo abre con GStreamer (rtpgstdepay); FFMPEG falla por diseño, no por red. Llega en GRAY16_LE 480x270 con la distancia en milímetros.", 4)
+    add_list_item(doc, "Si aparece 'No URI handler implemented for rtsp' seguido de 'CAP_IMAGES: can't find starting number', faltan los plugins del paso 1: no es una falla del robot.", 5)
 
     add_subheading(doc, "Fase 3: Compresión de Video en ROS 2 (image_transport) y Ahorro de Ancho de Banda")
-    add_list_item(doc, "En Dispositivo A, lance el publicador de visión: ros2 launch burger_delivery robot.launch.py", 1)
-    add_list_item(doc, "Mida con ros2 topic bw el ancho de banda crudo vs comprimido (/camera/color/image_raw/compressed) y calcule el ahorro en la Tabla 3.", 2)
-    add_list_item(doc, "Ajuste dinámicamente jpeg_quality (80 vs 30) mediante: ros2 param set /camera/camera_node_driver jpeg_quality 80", 3)
+    add_list_item(doc, "INSTALACIÓN PREVIA: el driver de visión está en un repositorio aparte de ros2_kortex. Instale dependencias y compile: sudo apt install -y gstreamer1.0-tools gstreamer1.0-libav libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-good1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good ros-jazzy-image-transport-plugins ros-jazzy-image-view ros-jazzy-depth-image-proc ; luego cd ~/ros2_ws/src && git clone -b ros2 https://github.com/Kinovarobotics/ros2_kortex_vision.git && cd ~/ros2_ws && colcon build --symlink-install", 1)
+    add_list_item(doc, "Sin ros-jazzy-image-transport-plugins el nodo solo publica el tópico crudo y /compressed nunca aparece. Verifique con: ros2 run image_transport list_transports", 2)
+    add_list_item(doc, "En Dispositivo A, lance el publicador de visión: ros2 launch kinova_vision kinova_vision.launch.py device:=192.168.1.10", 3)
+    add_list_item(doc, "Verifique los nodos /camera/kinova_vision_color y /camera/kinova_vision_depth con: ros2 node list | grep kinova_vision", 4)
+    add_list_item(doc, "Mida con ros2 topic bw el ancho de banda crudo vs comprimido (/camera/color/image_raw/compressed) y calcule el ahorro en la Tabla 3.", 5)
+    add_list_item(doc, "Descubra el nombre real del parámetro de calidad (depende del namespace del nodo): ros2 param list /camera/kinova_vision_color | grep -i jpeg ; y aplíquelo con ros2 param set usando ese nombre exacto, comparando q=80 vs q=30.", 6)
 
     add_subheading(doc, "Fase 4: Despliegue Distribuido sobre Wi-Fi con CycloneDDS")
-    add_list_item(doc, "En ambos dispositivos exporte: export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp y el mismo ROS_DOMAIN_ID.", 1)
-    add_list_item(doc, "Cree el archivo cyclonedds.xml definiendo NetworkInterfaceAddress (wlan0) y MaxMessageSize (65500B).", 2)
-    add_list_item(doc, "Desde Dispositivo B (Wi-Fi), mida la frecuencia remota y visualice el flujo con image_view, observando el tráfico en el Monitor de Red.", 3)
+    add_list_item(doc, "En ambos dispositivos exporte: export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp, el mismo ROS_DOMAIN_ID y la RUTA ABSOLUTA del perfil: export CYCLONEDDS_URI=file://$HOME/ros2_ws/src/burger_delivery/network_setup/cyclonedds.xml", 1)
+    add_list_item(doc, "Edite network_setup/cyclonedds.xml y sustituya wlan0 por su interfaz Wi-Fi real (ip -brief addr). En CycloneDDS 0.10 la interfaz se fija con Interfaces/NetworkInterface: el antiguo NetworkInterfaceAddress ya no existe. Compare MaxMessageSize 8192B (Wi-Fi) contra 65500B (Ethernet).", 2)
+    add_list_item(doc, "Desde Dispositivo B (Wi-Fi), mida la frecuencia remota y visualice con la sintaxis ROS 2 (la de ROS 1 se ignora en silencio): ros2 run image_view image_view --ros-args -r image:=/camera/color/image_raw -p image_transport:=compressed", 3)
 
     add_subheading(doc, "Fase 5: Protocolo de Diagnóstico Metódico ante Fallas Inducidas")
     add_body(doc, "Induzca y resuelva sistemáticamente las cinco fallas registrando el aislamiento en la Tabla 5:")
@@ -544,7 +550,7 @@ def build():
         [
             ["Stream / Configuración", "Backend Activo", "FPS Medido", "Latencia Percibida", "Estabilidad Visual"],
             ["Color RGB (--stream color)", "FFMPEG TCP", "", "", ""],
-            ["Profundidad (--stream depth)", "FFMPEG TCP", "", "", ""],
+            ["Profundidad (--stream depth)", "GStreamer (rtpgstdepay, GRAY16_LE)", "", "", ""],
             ["Color con transporte UDP", "FFMPEG UDP", "", "", ""],
             ["Captura guardada (PNG)", "kinova_capture_1.png", "Resolución: ______", "Tamaño: ____ KB", ""],
         ],

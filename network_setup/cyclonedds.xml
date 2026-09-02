@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Perfil CycloneDDS para el LAB-02 (visión distribuida Kinova sobre Wi-Fi).
+
+  Uso:
+      export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+      export CYCLONEDDS_URI=file://$HOME/ros2_ws/src/burger_delivery/network_setup/cyclonedds.xml
+
+  Verificado contra el esquema de CycloneDDS 0.10.x (ros-jazzy-cyclonedds).
+  IMPORTANTE: en 0.10 el elemento <NetworkInterfaceAddress> YA NO EXISTE;
+  la forma correcta de fijar la interfaz es <Interfaces><NetworkInterface/>.
+-->
+<CycloneDDS xmlns="https://cdds.io/config"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="https://cdds.io/config https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd">
+  <Domain Id="any">
+    <General>
+      <!--
+        Fije la interfaz por la que debe salir el tráfico DDS.
+        Sustituya el nombre por el de SU equipo (véalo con: ip -brief addr).
+          - Dispositivo A (Gateway): la NIC Wi-Fi, NO la Ethernet del Kinova.
+          - Dispositivo B: su NIC Wi-Fi.
+        Sin esto, CycloneDDS puede elegir la Ethernet 192.168.1.x y los nodos
+        remotos nunca se descubren.
+      -->
+      <Interfaces>
+        <NetworkInterface name="wlan0" multicast="default" priority="default"/>
+      </Interfaces>
+
+      <AllowMulticast>true</AllowMulticast>
+
+      <!--
+        MaxMessageSize: tamaño máximo del payload UDP que genera CycloneDDS.
+        FragmentSize:   tamaño de cada fragmento DDSI.
+
+        En Wi-Fi la MTU es 1500 B. Con MaxMessageSize=65500B un solo datagrama
+        se parte en ~45 fragmentos IP y basta perder UNO para descartar el
+        mensaje completo: con imágenes comprimidas eso se traduce en caídas
+        bruscas de 'ros2 topic hz'. Por eso aquí se usan valores conservadores
+        que caben en la MTU.
+
+        Para el enlace CABLEADO Gigabit puede subir a:
+            <MaxMessageSize>65500B</MaxMessageSize>
+            <FragmentSize>4000B</FragmentSize>
+        Compare ambos escenarios en la Tabla 4 y en el Análisis 2.
+      -->
+      <MaxMessageSize>8192B</MaxMessageSize>
+      <FragmentSize>1344B</FragmentSize>
+    </General>
+
+    <Internal>
+      <!--
+        Buffer de escritura por writer. Las imágenes comprimidas son ráfagas
+        grandes; un WhcHigh pequeño estrangula al publicador en Wi-Fi.
+      -->
+      <Watermarks>
+        <WhcHigh>2MB</WhcHigh>
+      </Watermarks>
+    </Internal>
+
+    <Discovery>
+      <!--
+        Si el multicast está bloqueado por el router del laboratorio,
+        descomente los Peers y ponga las IP fijas de cada dispositivo.
+      -->
+      <ParticipantIndex>auto</ParticipantIndex>
+      <!--
+      <Peers>
+        <Peer address="192.168.50.10"/>
+        <Peer address="192.168.50.20"/>
+      </Peers>
+      -->
+    </Discovery>
+
+    <Tracing>
+      <!-- Suba a 'config' o 'finest' solo para depurar el descubrimiento. -->
+      <Verbosity>warning</Verbosity>
+    </Tracing>
+  </Domain>
+</CycloneDDS>
