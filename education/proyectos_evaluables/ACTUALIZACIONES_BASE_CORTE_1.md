@@ -143,15 +143,21 @@ El SHA resultante es el identificador definitivo registrado en la evaluación.
 
 ## Anexo — Publicación de la base (uso del docente)
 
-`main` puede contener trabajo en curso; sólo lo que llega a `base-latest` queda disponible para los equipos:
+`main` puede contener trabajo en curso; sólo lo que llega a la rama `base-latest` queda disponible para los equipos. Publicar es un acto deliberado, por cualquiera de estas dos vías equivalentes:
+
+**Desde el navegador** — **Actions → Publicar base del curso → Run workflow**, acción `publicar`. El workflow mueve `base-latest` a `main` y estampa el tag. No depende de la rama que quede seleccionada en el desplegable: `publicar` toma siempre `main`.
+
+**Desde la terminal**
 
 ```bash
 git push origin main:base-latest
 ```
 
-Ese push dispara [`.github/workflows/publicar-base.yml`](../../.github/workflows/publicar-base.yml), que crea un tag anotado inmutable `base-2026-2-AAAAMMDD` (con sufijo `.2`, `.3`… si hay varias publicaciones el mismo día) y un GitHub Release marcado *latest*.
+Cualquiera de las dos crea un tag anotado inmutable `base-2026-2-AAAAMMDD` (con sufijo `.2`, `.3`… si hay varias publicaciones el mismo día) y un GitHub Release marcado *latest*, mediante [`.github/workflows/publicar-base.yml`](../../.github/workflows/publicar-base.yml).
 
+* La acción `reestampar` vuelve a etiquetar la base ya publicada **sin mover la rama**: sirve para rehacer un tag, no para publicar material nuevo.
+* Si `base-latest` ya apunta al mismo commit que `main`, `publicar` no hace nada y lo informa: no estampa tags duplicados.
+* El push a `base-latest` nunca es forzado. Si esa rama tuviera commits ausentes en `main`, el workflow falla en vez de descartarlos.
 * El workflow sólo corre en `roncanciovl/burger_delivery`; en los repositorios de los equipos, que heredan el archivo, queda desactivado por la condición `if: github.repository == ...`.
 * El periodo académico se actualiza una vez por semestre en la variable `PERIODO` del workflow.
-* Para reestampar sin mover la rama: **Actions → Publicar base del curso → Run workflow**.
 * Como los equipos fusionan la base directamente en su `main`, la protección de rama de sus repositorios no debe exigir Pull Request para `main`; la disciplina de PR se mantiene para el trabajo propio de cada equipo.

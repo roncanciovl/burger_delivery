@@ -1,7 +1,12 @@
 name: Publicar base del curso
 
-# Estampa un tag inmutable cada vez que se publica una nueva base en la rama
-# `base-latest`. Los equipos sincronizan contra la rama (nombre estable); los
+# Publica la base oficial del curso y estampa un tag inmutable con fecha.
+#
+# Dos maneras equivalentes de publicar:
+#   * Terminal:   git push origin main:base-latest
+#   * Navegador:  Actions -> Publicar base del curso -> Run workflow -> publicar
+#
+# Los equipos sincronizan contra la rama `base-latest` (nombre estable); los
 # tags quedan como evidencia auditable de qué estado exacto se publicó y cuándo.
 
 on:
@@ -9,6 +14,14 @@ on:
     branches: [base-latest]
   workflow_dispatch:
     inputs:
+      accion:
+        description: "publicar = mueve base-latest a main y estampa el tag · reestampar = sólo vuelve a estampar la base ya publicada"
+        type: choice
+        required: true
+        default: publicar
+        options:
+          - publicar
+          - reestampar
       motivo:
         description: "Motivo de la publicación (queda anotado en el tag)"
         required: false
@@ -37,11 +50,39 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v5
         with:
+          # `publicar` toma siempre main, sin importar la rama que quede
+          # seleccionada en el desplegable de la interfaz; `reestampar` toma la
+          # base ya publicada; el push toma el commit que acaba de llegar.
+          ref: ${{ github.event_name == 'push' && github.sha || (inputs.accion == 'publicar' && 'main' || 'base-latest') }}
           # Historia completa: se necesitan los tags existentes para no repetir nombres.
           fetch-depth: 0
 
+      - name: Publicar main en la rama base-latest
+        id: publicacion
+        if: github.event_name == 'workflow_dispatch' && inputs.accion == 'publicar'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --quiet origin base-latest 2>/dev/null || true
+
+          if git rev-parse -q --verify refs/remotes/origin/base-latest >/dev/null &&
+             [[ "$(git rev-parse HEAD)" == "$(git rev-parse origin/base-latest)" ]]; then
+            echo "sin-novedad=si" >> "$GITHUB_OUTPUT"
+            echo "::notice::base-latest ya apunta al mismo commit que main: no hay material nuevo que publicar."
+            exit 0
+          fi
+
+          # Sin --force: si base-latest tuviera commits ausentes en main, el push
+          # se rechaza en vez de descartarlos en silencio.
+          if ! git push origin "HEAD:refs/heads/base-latest"; then
+            echo "::error::La rama base-latest tiene commits que no están en main. Intégralos en main y vuelve a ejecutar."
+            exit 1
+          fi
+          echo "Rama base-latest movida a $(git rev-parse --short HEAD)."
+
       - name: Calcular nombre del tag
         id: tag
+        if: steps.publicacion.outputs.sin-novedad != 'si'
         shell: bash
         run: |
           set -euo pipefail
@@ -53,13 +94,15 @@ jobs:
             n=$((n + 1))
           done
           echo "nombre=${nombre}" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           echo "Tag a crear: ${nombre}"
 
       - name: Crear y publicar el tag inmutable
+        if: steps.publicacion.outputs.sin-novedad != 'si'
         shell: bash
         env:
           NOMBRE: ${{ steps.tag.outputs.nombre }}
-          MOTIVO: ${{ inputs.motivo || format('Base del curso publicada automáticamente desde {0}', github.sha) }}
+          MOTIVO: ${{ inputs.motivo || format('Base del curso publicada automáticamente desde {0}', steps.tag.outputs.sha) }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
@@ -68,6 +111,7 @@ jobs:
           git push origin "refs/tags/${NOMBRE}"
 
       - name: Publicar Release marcado como latest
+        if: steps.publicacion.outputs.sin-novedad != 'si'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
@@ -83,15 +127,24 @@ jobs:
         shell: bash
         env:
           NOMBRE: ${{ steps.tag.outputs.nombre }}
+          SHA: ${{ steps.tag.outputs.sha }}
+          SIN_NOVEDAD: ${{ steps.publicacion.outputs.sin-novedad }}
         run: |
           {
-            echo "## Base publicada"
-            echo ""
-            echo "| Dato | Valor |"
-            echo "|---|---|"
-            echo "| Tag inmutable | \`${NOMBRE}\` |"
-            echo "| Commit | \`${GITHUB_SHA}\` |"
-            echo "| Rama de publicación | \`base-latest\` |"
-            echo ""
-            echo "Los equipos sincronizan con \`git merge --no-ff upstream/base-latest\`."
+            if [[ "${SIN_NOVEDAD}" == "si" ]]; then
+              echo "## No había nada que publicar"
+              echo ""
+              echo "La rama \`base-latest\` ya apuntaba al mismo commit que \`main\`."
+              echo "Para volver a estampar la base ya publicada, ejecuta el workflow con la acción \`reestampar\`."
+            else
+              echo "## Base publicada"
+              echo ""
+              echo "| Dato | Valor |"
+              echo "|---|---|"
+              echo "| Tag inmutable | \`${NOMBRE}\` |"
+              echo "| Commit | \`${SHA}\` |"
+              echo "| Rama de publicación | \`base-latest\` |"
+              echo ""
+              echo "Los equipos sincronizan con \`bash scripts/diagnostico_sync.sh --sincronizar\`."
+            fi
           } >> "$GITHUB_STEP_SUMMARY"
