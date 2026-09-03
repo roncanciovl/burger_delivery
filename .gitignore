@@ -47,3 +47,6 @@ education/administracion/
 **/roster.csv
 **/capture.json
 **/source_map.csv
+
+# Trazas generadas por CycloneDDS en el directorio de trabajo
+cyclonedds.log

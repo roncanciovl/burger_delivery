@@ -4,10 +4,11 @@
 import os
 import time
 import unittest
+import unittest.mock
 from unittest.mock import patch
 
 from device_scanner import DeviceScanner
-from firewall_status import evaluate_wsl_firewall
+from firewall_status import _resolve_ros_subnet, evaluate_wsl_firewall
 from traffic_sniffer import TrafficSniffer
 
 
@@ -140,6 +141,35 @@ class FirewallPolicyTests(unittest.TestCase):
         result = evaluate_wsl_firewall(self.valid_status)
         self.assertFalse(result["compliant"])
         self.assertIn("legacy_rules_scoped", result["failed_checks"])
+
+
+class RosSubnetResolutionTests(unittest.TestCase):
+    """La subred esperada debe poder adaptarse a redes distintas a la del laboratorio."""
+
+    def resolve_with(self, value):
+        entorno = dict(os.environ)
+        if value is None:
+            entorno.pop("ROS_LAN_SUBNET", None)
+        else:
+            entorno["ROS_LAN_SUBNET"] = value
+        with unittest.mock.patch.dict(os.environ, entorno, clear=True):
+            return _resolve_ros_subnet()
+
+    def test_lab_subnet_is_the_default(self):
+        self.assertEqual(
+            self.resolve_with(None), ("192.168.1.0/24", "192.168.1.0/255.255.255.0")
+        )
+
+    def test_custom_subnet_is_honoured_in_both_notations(self):
+        self.assertEqual(
+            self.resolve_with("10.42.0.0/24"), ("10.42.0.0/24", "10.42.0.0/255.255.255.0")
+        )
+
+    def test_host_address_is_normalised_to_its_network(self):
+        self.assertEqual(self.resolve_with("192.168.5.37/24")[0], "192.168.5.0/24")
+
+    def test_invalid_value_falls_back_to_the_lab_subnet(self):
+        self.assertEqual(self.resolve_with("no-es-una-subred")[0], "192.168.1.0/24")
 
 
 if __name__ == "__main__":

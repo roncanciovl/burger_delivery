@@ -84,7 +84,7 @@ printf 'RMW_IMPLEMENTATION=%s\n' "${RMW_IMPLEMENTATION:-predeterminado}"
 printf 'ROS_AUTOMATIC_DISCOVERY_RANGE=%s\n' "${ROS_AUTOMATIC_DISCOVERY_RANGE:-predeterminado}"
 ```
 
-Sustituye `<distro>` por la distribución instalada, por ejemplo `humble` o `jazzy`. En este proyecto, las máquinas participantes deben compartir el dominio configurado —actualmente `ROS_DOMAIN_ID=42`— y utilizar una configuración RMW compatible.
+Sustituye `<distro>` por la distribución instalada; en este proyecto es `jazzy`. Las máquinas participantes deben compartir el dominio configurado —`ROS_DOMAIN_ID=0`, el dominio de pruebas del docente y valor por defecto de ROS 2— y utilizar la misma implementación RMW (`rmw_cyclonedds_cpp`).
 
 ### 2. Compara la consulta con y sin daemon
 

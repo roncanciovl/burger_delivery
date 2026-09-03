@@ -15,36 +15,52 @@ echo -e "${CYAN}=====================================${NC}"
 echo -e "${CYAN} Diagnóstico de micro-ROS Network${NC}"
 echo -e "${CYAN}=====================================${NC}"
 
-# Configuración - Modifica estos valores según tu setup
-AGENT_IP="192.168.1.100"
-AGENT_PORT=8888
-ESP32_IPS=("192.168.1.101" "192.168.1.102")  # Agrega las IPs de tus ESP32s aquí
+# Configuración. Se autodetecta para funcionar en cualquier máquina; puedes
+# sobrescribirla desde el entorno sin editar el script:
+#   AGENT_IP=192.168.1.100 ESP32_IPS="192.168.1.101 192.168.1.102" bash diagnostico_microros.sh
+detectar_ip_local() {
+    # IP de origen de la ruta por defecto: es la que ven los demás equipos.
+    local ip
+    ip=$(ip -4 route get 1.1.1.1 2>/dev/null | awk '{for (i=1; i<=NF; i++) if ($i=="src") {print $(i+1); exit}}')
+    if [ -z "$ip" ]; then
+        # Respaldo: primera IP global que no esté en la interfaz loopback.
+        ip=$(ip -4 -brief addr show scope global 2>/dev/null | awk '$1!="lo" {split($3, a, "/"); print a[1]; exit}')
+    fi
+    echo "$ip"
+}
+
+IP_LOCAL=$(detectar_ip_local)
+AGENT_IP="${AGENT_IP:-$IP_LOCAL}"
+AGENT_PORT="${AGENT_PORT:-8888}"
+read -r -a ESP32_IPS <<< "${ESP32_IPS:-192.168.1.101 192.168.1.102}"
+ROS_DOMAIN_ID_ESPERADO="${ROS_DOMAIN_ID_ESPERADO:-0}"
 
 echo -e "\n${YELLOW}[INFO] Configuración actual:${NC}"
-echo "  - Agent IP: $AGENT_IP"
+echo "  - Agent IP: $AGENT_IP (IP local detectada; los ESP32 deben apuntar aquí)"
 echo "  - Agent Port: $AGENT_PORT"
 echo "  - ESP32s a verificar: ${ESP32_IPS[*]}"
 
 # ======================================
 # 1. Verificar IP del PC Principal
 # ======================================
-echo -e "\n${YELLOW}[1/8] Verificando IP del PC Principal...${NC}"
-CURRENT_IP=$(ip -4 addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -v '127.0.0.1' | head -n 1)
+echo -e "\n${YELLOW}[1/9] Verificando IP del PC Principal...${NC}"
+CURRENT_IP="$IP_LOCAL"
 
-if [ "$CURRENT_IP" == "$AGENT_IP" ]; then
-    echo -e "  ${GREEN}✅ IP correcta: $CURRENT_IP${NC}"
-elif [ -n "$CURRENT_IP" ]; then
+if [ -z "$CURRENT_IP" ]; then
+    echo -e "  ${RED}❌ No se pudo determinar la IP${NC}"
+elif [ "$CURRENT_IP" == "$AGENT_IP" ]; then
+    echo -e "  ${GREEN}✅ IP del agente: $CURRENT_IP${NC}"
+    echo -e "     ${NC}Este valor debe coincidir con 'agent_ip' en el firmware de los ESP32.${NC}"
+else
     echo -e "  ${YELLOW}⚠️  IP actual: $CURRENT_IP${NC}"
     echo -e "     Esperada: $AGENT_IP"
-    echo -e "  ${RED}Verifica la reserva DHCP en el router${NC}"
-else
-    echo -e "  ${RED}❌ No se pudo determinar la IP${NC}"
+    echo -e "  ${RED}Verifica la reserva DHCP en el router o corrige AGENT_IP${NC}"
 fi
 
 # ======================================
 # 2. Verificar estado del Firewall
 # ======================================
-echo -e "\n${YELLOW}[2/8] Verificando estado del Firewall...${NC}"
+echo -e "\n${YELLOW}[2/9] Verificando estado del Firewall...${NC}"
 
 # Verificar si ufw está instalado
 if command -v ufw &> /dev/null; then
@@ -78,7 +94,7 @@ fi
 # ======================================
 # 3. Verificar si el puerto 8888 está en uso
 # ======================================
-echo -e "\n${YELLOW}[3/8] Verificando puerto UDP $AGENT_PORT...${NC}"
+echo -e "\n${YELLOW}[3/9] Verificando puerto UDP $AGENT_PORT...${NC}"
 
 if command -v ss &> /dev/null; then
     PORT_INFO=$(ss -ulnp 2>/dev/null | grep ":$AGENT_PORT")
@@ -106,7 +122,7 @@ fi
 # ======================================
 # 4. Ping a ESP32s
 # ======================================
-echo -e "\n${YELLOW}[4/8] Verificando conectividad ICMP (ping) a ESP32s...${NC}"
+echo -e "\n${YELLOW}[4/9] Verificando conectividad ICMP (ping) a ESP32s...${NC}"
 for esp_ip in "${ESP32_IPS[@]}"; do
     if ping -c 2 -W 1 "$esp_ip" &>/dev/null; then
         echo -e "  ${GREEN}✅ $esp_ip responde a ping${NC}"
@@ -128,13 +144,15 @@ done
 # ======================================
 # 5. Verificar variables de entorno ROS
 # ======================================
-echo -e "\n${YELLOW}[5/8] Verificando variables de entorno ROS 2...${NC}"
+echo -e "\n${YELLOW}[5/9] Verificando variables de entorno ROS 2...${NC}"
 
 if [ -n "$ROS_DOMAIN_ID" ]; then
-    if [ "$ROS_DOMAIN_ID" == "0" ]; then
-        echo -e "  ${GREEN}✅ ROS_DOMAIN_ID = $ROS_DOMAIN_ID (correcto)${NC}"
+    if [ "$ROS_DOMAIN_ID" == "$ROS_DOMAIN_ID_ESPERADO" ]; then
+        echo -e "  ${GREEN}✅ ROS_DOMAIN_ID = $ROS_DOMAIN_ID (coincide con el dominio del proyecto)${NC}"
     else
-        echo -e "  ${YELLOW}⚠️  ROS_DOMAIN_ID = $ROS_DOMAIN_ID (debe ser 0)${NC}"
+        echo -e "  ${YELLOW}⚠️  ROS_DOMAIN_ID = $ROS_DOMAIN_ID (el proyecto usa $ROS_DOMAIN_ID_ESPERADO)${NC}"
+        echo -e "     ${NC}No es un error si tu grupo tiene un dominio asignado, pero TODAS${NC}"
+        echo -e "     ${NC}las máquinas y el agente micro-ROS deben usar el mismo valor.${NC}"
     fi
 else
     echo -e "  ${GREEN}✅ ROS_DOMAIN_ID no configurado (usa default 0)${NC}"
@@ -244,7 +262,7 @@ if [ -n "$GATEWAY" ]; then
     echo -e "  ${YELLOW}2. Smart Connect (WiFi 6) - Desactivar si causa problemas${NC}"
     echo -e "     ${NC}Ruta: Advanced → Wireless → Wireless Settings${NC}"
     echo -e "  "
-    echo -e "  ${YELLOW}3. IP fija 192.168.1.100 reservada para este PC${NC}"
+    echo -e "  ${YELLOW}3. IP fija reservada para este PC ($AGENT_IP)${NC}"
     if [ -n "$MAC_ADDRESS" ]; then
         echo -e "     ${NC}MAC: $MAC_ADDRESS${NC}"
     fi

@@ -135,7 +135,7 @@ Advanced → Security → Access Control
 **Problema:** Por defecto, WSL2 usa NAT, lo que significa que tiene una IP distinta a la de Windows (ej. `172.x.x.x`) y los robots/router no pueden verlo directamente.
 
 #### Opción A: Modo Espejo (Mirrored Mode) - RECOMENDADO ⭐
-Hace que WSL comparta la misma IP que Windows (`192.168.1.100`), eliminando todos los problemas de visibilidad de red.
+Hace que WSL comparta la misma IP que Windows, eliminando todos los problemas de visibilidad de red. En el PC principal esa IP es la reservada `192.168.1.100`; en cualquier otro equipo será la que le asigne el DHCP dentro de `192.168.1.101-254`.
 
 1. En Windows, presiona `Win + R`, escribe `%USERPROFILE%` y presiona Enter.
 2. Crea o edita el archivo llamado `.wslconfig`.
@@ -148,7 +148,7 @@ Hace que WSL comparta la misma IP que Windows (`192.168.1.100`), eliminando todo
    ```powershell
    wsl --shutdown
    ```
-5. Al volver a abrir tu terminal de Ubuntu/Jazzy, verás que `ip addr` muestra la IP `192.168.1.100`.
+5. Al volver a abrir tu terminal de Ubuntu/Jazzy, `ip -brief addr` mostrará la misma IP `192.168.1.x` que tiene Windows. Confírmalo con `wslinfo --networking-mode` (debe responder `mirrored`).
 
 6. En PowerShell como administrador, permite UDP hacia WSL únicamente desde la subred ROS:
 
@@ -186,7 +186,7 @@ Usa este checklist antes de pasar a los tests:
 [ ] 2. AP Isolation está DESACTIVADO
 [ ] 3. Smart Connect desactivado (recomendado)
 [ ] 4. SSID "ros2" con password "ros12345" configurado
-[ ] 5. DHCP activo y reserva de IP 192.168.1.100 para el PC
+[ ] 5. DHCP activo y reserva de IP 192.168.1.100 para el PC que ejecuta el agente micro-ROS
 [ ] 6. Firewall/Access Control verificado: UDP hacia WSL sólo desde 192.168.1.0/24
 [ ] 7. Router reiniciado después de cambios
 ```

@@ -76,7 +76,7 @@ No hace lo siguiente:
 Para iniciar nodos reales en el mismo dominio, configure la terminal antes de arrancarlos:
 
 ```bash
-export ROS_DOMAIN_ID=42
+export ROS_DOMAIN_ID=0   # dominio del proyecto; use el asignado por el docente si es otro
 ```
 
 Si el bloque de puertos DDS del dominio se cruza con el rango UDP efímero de Linux o Windows/WSL, la interfaz informa que ese dominio no es observable por este mecanismo pasivo.
@@ -311,15 +311,18 @@ La persona participante debe aplicar esos cambios en el entorno ROS 2 o en la ad
 | `ROS_DOMAIN_ID` | `0` | Configuración local del monitor y valor inicial del campo Domain ID. |
 | `RMW_IMPLEMENTATION` | Texto recomendado `rmw_cyclonedds_cpp` | Se informa en `/api/status`; el monitor no selecciona ni inicia el RMW. |
 | `ROS_AUTOMATIC_DISCOVERY_RANGE` | Texto `SUBNET` | Se informa en `/api/status`; el monitor no reconfigura nodos existentes. |
+| `CYCLONEDDS_URI` | — | Perfil DDS del proyecto. El monitor no lo usa, pero los nodos ROS 2 sí. |
+| `ROS_LAN_SUBNET` | `192.168.1.0/24` | Subred ROS contra la que se validan las reglas de firewall. Declárela solo si su red no es la del laboratorio; debe exportarse **antes** de lanzar el servidor. |
 
 Los textos predeterminados de `RMW_IMPLEMENTATION` y `ROS_AUTOMATIC_DISCOVERY_RANGE` son referencias de la API, no variables exportadas automáticamente.
 
 Ejemplo de arranque configurado:
 
 ```bash
-export ROS_DOMAIN_ID=42
+export ROS_DOMAIN_ID=0
 export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 export ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET
+export CYCLONEDDS_URI=file://$HOME/ros2_ws/src/burger_delivery/network_setup/cyclonedds.xml
 python3 network_setup/monitor_red/server.py --host 127.0.0.1 --port 8080
 ```
 

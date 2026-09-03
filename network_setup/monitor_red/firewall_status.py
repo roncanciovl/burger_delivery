@@ -1,17 +1,39 @@
 #!/usr/bin/env python3
 """Verificación de solo lectura de la política ROS 2 para WSL/Hyper-V."""
 
+import ipaddress
 import json
 import os
 import shutil
 import subprocess
 import threading
 import time
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 
 
-ROS_SUBNET = "192.168.1.0/24"
-ROS_SUBNET_WINDOWS = "192.168.1.0/255.255.255.0"
+DEFAULT_ROS_SUBNET = "192.168.1.0/24"
+
+
+def _resolve_ros_subnet() -> Tuple[str, str]:
+    """Subred ROS esperada en las reglas de firewall.
+
+    Por defecto es la del laboratorio (192.168.1.0/24). Un equipo cuya red ROS
+    sea otra la declara con ROS_LAN_SUBNET (por ejemplo 10.42.0.0/24) sin
+    editar este archivo. Se devuelven las dos notaciones que usa Windows:
+    CIDR y máscara larga.
+    """
+    raw = (os.environ.get("ROS_LAN_SUBNET") or "").strip() or DEFAULT_ROS_SUBNET
+    try:
+        network = ipaddress.ip_network(raw, strict=False)
+    except ValueError:
+        network = ipaddress.ip_network(DEFAULT_ROS_SUBNET)
+    return (
+        f"{network.network_address}/{network.prefixlen}",
+        f"{network.network_address}/{network.netmask}",
+    )
+
+
+ROS_SUBNET, ROS_SUBNET_WINDOWS = _resolve_ros_subnet()
 WSL_CREATOR_ID = "{40E0AC32-46A5-438A-A0B2-2B479E8F2E90}"
 HYPERV_RULE_NAME = "ROS2-Distributed-LAN-HyperV"
 WINDOWS_RULE_NAME = "ROS2-Distributed-LAN-Windows"

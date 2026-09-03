@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Perfil CycloneDDS para el LAB-02 (visión distribuida Kinova sobre Wi-Fi).
+  Perfil CycloneDDS del proyecto burger_delivery.
 
-  Uso:
+  Uso (idéntico en todas las máquinas):
       export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
       export CYCLONEDDS_URI=file://$HOME/ros2_ws/src/burger_delivery/network_setup/cyclonedds.xml
+
+  El perfil es PORTABLE: no fija nombres de interfaz, por lo que funciona igual
+  en Ubuntu nativo (wlan0/enp*), en WSL2 en modo reflejado (eth*) y en equipos
+  con una sola NIC. Solo debe editarse en el caso dual-homed descrito abajo.
 
   Verificado contra el esquema de CycloneDDS 0.10.x (ros-jazzy-cyclonedds).
   IMPORTANTE: en 0.10 el elemento <NetworkInterfaceAddress> YA NO EXISTE;
@@ -16,15 +20,21 @@
   <Domain Id="any">
     <General>
       <!--
-        Fije la interfaz por la que debe salir el tráfico DDS.
-        Sustituya el nombre por el de SU equipo (véalo con: ip -brief addr).
-          - Dispositivo A (Gateway): la NIC Wi-Fi, NO la Ethernet del Kinova.
-          - Dispositivo B: su NIC Wi-Fi.
-        Sin esto, CycloneDDS puede elegir la Ethernet 192.168.1.x y los nodos
-        remotos nunca se descubren.
+        Selección automática de la interfaz de salida: CycloneDDS elige la NIC
+        activa con multicast disponible. Es lo correcto para un equipo con una
+        sola NIC en la subred ROS.
+
+        CASO DUAL-HOMED (una NIC hacia el Kinova y otra hacia la subred ROS):
+        la autodetección puede escoger la NIC equivocada y los nodos remotos
+        nunca se descubren. Solo en ese caso, comente el bloque automático y
+        descomente el manual, sustituyendo el nombre por el de SU equipo
+        (véalo con: ip -brief addr).
       -->
       <Interfaces>
+        <NetworkInterface autodetermine="true" multicast="default" priority="default"/>
+        <!--
         <NetworkInterface name="wlan0" multicast="default" priority="default"/>
+        -->
       </Interfaces>
 
       <AllowMulticast>true</AllowMulticast>
@@ -61,13 +71,14 @@
     <Discovery>
       <!--
         Si el multicast está bloqueado por el router del laboratorio,
-        descomente los Peers y ponga las IP fijas de cada dispositivo.
+        descomente los Peers y ponga las IP fijas de cada dispositivo de la
+        subred ROS (por defecto 192.168.1.0/24).
       -->
       <ParticipantIndex>auto</ParticipantIndex>
       <!--
       <Peers>
-        <Peer address="192.168.50.10"/>
-        <Peer address="192.168.50.20"/>
+        <Peer address="192.168.1.100"/>
+        <Peer address="192.168.1.101"/>
       </Peers>
       -->
     </Discovery>

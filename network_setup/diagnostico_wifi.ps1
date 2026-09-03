@@ -1,4 +1,4 @@
-# diagnostico_wifi.ps1
+﻿# diagnostico_wifi.ps1
 # Script de diagnóstico para verificar la calidad y estado de la conexión WiFi en Windows
 # Uso: .\diagnostico_wifi.ps1
 

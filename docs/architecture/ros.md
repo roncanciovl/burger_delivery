@@ -68,7 +68,7 @@ El siguiente diagrama ilustra cómo todos los componentes se interconectan a tra
 
 ### 2.3.1. Router WiFi / Punto de Acceso
 
-*   **Función:** Crear la red WiFi (`ros`), actuar como servidor DHCP para la subred `192.168.1.0/24`, y gestionar el tráfico entre la red local y la WAN.
+*   **Función:** Crear la red WiFi (`ros2`), actuar como servidor DHCP para la subred `192.168.1.0/24`, y gestionar el tráfico entre la red local y la WAN.
 *   **Configuración Crítica:**
     1.  **SSID y Contraseña:** Configurar el nombre de red (SSID) a `ros2` y la contraseña a `ros12345` para facilitar la conexión durante el desarrollo.
     2.  **Aislamiento de Clientes (AP Isolation):** **DESACTIVAR** esta función. Si está activada, los dispositivos WiFi no podrán comunicarse entre sí, rompiendo la comunicación de ROS 2.

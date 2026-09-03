@@ -293,22 +293,30 @@ La práctica se estructura en seis fases:
    archivo solo se encuentra si lanza el comando desde el directorio exacto.
    ```bash
    export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
-   export ROS_DOMAIN_ID=15
+   export ROS_DOMAIN_ID=15   # dominio asignado a este laboratorio; el del proyecto es 0
    export CYCLONEDDS_URI=file://$HOME/ros2_ws/src/burger_delivery/network_setup/cyclonedds.xml
    ```
-   Antes de continuar, **edite el archivo** y sustituya `wlan0` por el nombre
-   real de su interfaz Wi-Fi (véalo con `ip -brief addr`). En el Dispositivo A
-   debe apuntar a la NIC **inalámbrica**, no a la Ethernet del Kinova: si
-   CycloneDDS elige la 192.168.1.x, el Dispositivo B nunca descubrirá los nodos.
+   El perfil selecciona la interfaz automáticamente, así que **no requiere
+   edición** en un equipo con una sola NIC en la red Wi-Fi del laboratorio.
+
+   **Excepción — Dispositivo A (dual-homed):** tiene una NIC Ethernet hacia el
+   Kinova y otra Wi-Fi hacia el Dispositivo B, y la autodetección puede escoger
+   la equivocada. Solo en ese equipo, edite `network_setup/cyclonedds.xml`,
+   comente el bloque `autodetermine` y descomente el manual con el nombre real
+   de su interfaz **inalámbrica** (véalo con `ip -brief addr`). Si CycloneDDS
+   elige la Ethernet del Kinova, el Dispositivo B nunca descubrirá los nodos.
 
    Verifique que el perfil se cargó de verdad:
    ```bash
    printenv CYCLONEDDS_URI RMW_IMPLEMENTATION ROS_DOMAIN_ID
    test -r ~/ros2_ws/src/burger_delivery/network_setup/cyclonedds.xml && echo "perfil legible"
-   ros2 topic list          # debe responder en menos de 5 s
+   bash ~/ros2_ws/src/burger_delivery/network_setup/test_ros2_network.sh
    ```
-   Si `ros2 topic list` se queda colgado, el perfil apunta a una interfaz
-   inexistente: revise el nombre en `<NetworkInterface name="...">`.
+   El script valida, entre otras cosas, que la interfaz declarada en el perfil
+   exista en la máquina. Si en su lugar `ros2 topic list` falla con
+   `does not match an available interface`, el perfil apunta a una interfaz
+   inexistente: corrija el nombre en `<NetworkInterface name="...">` o vuelva a
+   dejar activo el bloque `autodetermine`.
 
 2. **Recepción, Descompresión y Visualización en Dispositivo B:**
    Desde el Dispositivo B (conectado por Wi-Fi):

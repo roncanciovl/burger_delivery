@@ -183,7 +183,7 @@ La detección remota requiere anuncios SPDP multicast visibles. Si el RMW usa ex
 
 El observador evita los dominios cuyo bloque DDS se cruza con el rango UDP efímero configurado en `/proc/sys/net/ipv4/ip_local_port_range`. En WSL también considera el rango dinámico de Windows. Un dominio en cualquiera de esos rangos se marca como no observable para no bloquear puertos de otras aplicaciones.
 
-El panel de servicios incluye un indicador de firewall actualizado cada 30 segundos. En WSL valida las reglas `ROS2-Distributed-LAN-HyperV` y `ROS2-Distributed-LAN-Windows`, la subred remota `192.168.1.0/24`, UDP en cualquier puerto, las políticas predeterminadas de bloqueo entrante y posibles reglas ROS/DDS heredadas abiertas a `Any`. Esta comprobación nunca crea ni modifica reglas. En Linux nativo aparece como no aplicable.
+El panel de servicios incluye un indicador de firewall actualizado cada 30 segundos. En WSL valida las reglas `ROS2-Distributed-LAN-HyperV` y `ROS2-Distributed-LAN-Windows`, la subred remota esperada (`192.168.1.0/24`, o la declarada en `ROS_LAN_SUBNET` antes de lanzar el servidor), UDP en cualquier puerto, las políticas predeterminadas de bloqueo entrante y posibles reglas ROS/DDS heredadas abiertas a `Any`. Esta comprobación nunca crea ni modifica reglas. En Linux nativo aparece como no aplicable.
 
 Las entradas RTPS corresponden a los puertos multicast SPDP calculados. No representan todos los sockets de datos: CycloneDDS puede negociar puertos UDP dinámicos, que el panel no enumera como una lista fija.
 

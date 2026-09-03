@@ -514,7 +514,7 @@ def build():
 
     add_subheading(doc, "Fase 4: Despliegue Distribuido sobre Wi-Fi con CycloneDDS")
     add_list_item(doc, "En ambos dispositivos exporte: export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp, el mismo ROS_DOMAIN_ID y la RUTA ABSOLUTA del perfil: export CYCLONEDDS_URI=file://$HOME/ros2_ws/src/burger_delivery/network_setup/cyclonedds.xml", 1)
-    add_list_item(doc, "Edite network_setup/cyclonedds.xml y sustituya wlan0 por su interfaz Wi-Fi real (ip -brief addr). En CycloneDDS 0.10 la interfaz se fija con Interfaces/NetworkInterface: el antiguo NetworkInterfaceAddress ya no existe. Compare MaxMessageSize 8192B (Wi-Fi) contra 65500B (Ethernet).", 2)
+    add_list_item(doc, "El perfil network_setup/cyclonedds.xml autodetecta la interfaz y no requiere edicion en equipos con una sola NIC. Solo en el Dispositivo A (dual-homed) comente el bloque autodetermine y fije su interfaz Wi-Fi real (ip -brief addr). En CycloneDDS 0.10 la interfaz se fija con Interfaces/NetworkInterface: el antiguo NetworkInterfaceAddress ya no existe. Compare MaxMessageSize 8192B (Wi-Fi) contra 65500B (Ethernet).", 2)
     add_list_item(doc, "Desde Dispositivo B (Wi-Fi), mida la frecuencia remota y visualice con la sintaxis ROS 2 (la de ROS 1 se ignora en silencio): ros2 run image_view image_view --ros-args -r image:=/camera/color/image_raw -p image_transport:=compressed", 3)
 
     add_subheading(doc, "Fase 5: Protocolo de Diagnóstico Metódico ante Fallas Inducidas")

@@ -1,4 +1,4 @@
-# diagnostico_microros.ps1
+﻿# diagnostico_microros.ps1
 # Script de diagnóstico para depurar problemas de comunicación micro-ROS
 # Uso: .\diagnostico_microros.ps1
 
@@ -6,28 +6,49 @@ Write-Host "=====================================" -ForegroundColor Cyan
 Write-Host " Diagnóstico de micro-ROS Network" -ForegroundColor Cyan
 Write-Host "=====================================" -ForegroundColor Cyan
 
-# Configuración - Modifica estos valores según tu setup
-$AGENT_IP = "192.168.1.100"
-$AGENT_PORT = 8888
-$ESP32_IPS = @("192.168.1.101", "192.168.1.102")  # Agrega las IPs de tus ESP32s aquí
+# Configuración. Se autodetecta para funcionar en cualquier máquina; puedes
+# sobrescribirla con variables de entorno sin editar el script:
+#   $env:AGENT_IP="192.168.1.100"; .\diagnostico_microros.ps1
+# IP de origen de la ruta por defecto: es la que ven los demás equipos. En un
+# PC con dos redes (institucional y del router ROS) evita elegir la equivocada.
+$IP_LOCAL = (
+    Find-NetRoute -RemoteIPAddress '1.1.1.1' -ErrorAction SilentlyContinue |
+    Where-Object { $_.IPAddress } |
+    Select-Object -First 1 -ExpandProperty IPAddress
+)
+if (-not $IP_LOCAL) {
+    $IP_LOCAL = (
+        Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+        Where-Object { $_.InterfaceAlias -notmatch 'Loopback' -and $_.IPAddress -notmatch '^(127\.|169\.254\.)' } |
+        Sort-Object -Property SkipAsSource, InterfaceMetric |
+        Select-Object -First 1 -ExpandProperty IPAddress
+    )
+}
+$AGENT_IP = if ($env:AGENT_IP) { $env:AGENT_IP } else { $IP_LOCAL }
+$AGENT_PORT = if ($env:AGENT_PORT) { [int]$env:AGENT_PORT } else { 8888 }
+$ESP32_IPS = if ($env:ESP32_IPS) { $env:ESP32_IPS -split '[,\s]+' } else { @("192.168.1.101", "192.168.1.102") }
+$ROS_DOMAIN_ID_ESPERADO = if ($env:ROS_DOMAIN_ID_ESPERADO) { $env:ROS_DOMAIN_ID_ESPERADO } else { "0" }
 
 Write-Host "`n[INFO] Configuración actual:" -ForegroundColor Yellow
-Write-Host "  - Agent IP: $AGENT_IP"
+Write-Host "  - Agent IP: $AGENT_IP (los ESP32 deben apuntar aquí)"
 Write-Host "  - Agent Port: $AGENT_PORT"
 Write-Host "  - ESP32s a verificar: $($ESP32_IPS -join ', ')"
 
 # ======================================
 # 1. Verificar IP del PC Principal
 # ======================================
-Write-Host "`n[1/8] Verificando IP del PC Principal..." -ForegroundColor Yellow
-$wifiAdapter = Get-NetIPAddress -InterfaceAlias "Wi-Fi*" -AddressFamily IPv4 -ErrorAction SilentlyContinue | Select-Object -First 1
+Write-Host "`n[1/9] Verificando IP del PC Principal..." -ForegroundColor Yellow
+# No se asume Wi-Fi: el equipo puede estar cableado a la red ROS.
+$wifiAdapter = Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+    Where-Object { $_.IPAddress -eq $IP_LOCAL } | Select-Object -First 1
 
 if ($wifiAdapter -and $wifiAdapter.IPAddress -eq $AGENT_IP) {
-    Write-Host "  ✅ IP correcta: $($wifiAdapter.IPAddress)" -ForegroundColor Green
+    Write-Host "  ✅ IP del agente: $($wifiAdapter.IPAddress) (interfaz $($wifiAdapter.InterfaceAlias))" -ForegroundColor Green
+    Write-Host "     Debe coincidir con 'agent_ip' en el firmware de los ESP32." -ForegroundColor Gray
 } elseif ($wifiAdapter) {
     Write-Host "  ⚠️  IP actual: $($wifiAdapter.IPAddress)" -ForegroundColor Yellow
     Write-Host "     Esperada: $AGENT_IP" -ForegroundColor Yellow
-    Write-Host "     Verifica la reserva DHCP en el router" -ForegroundColor Red
+    Write-Host "     Verifica la reserva DHCP en el router o corrige AGENT_IP" -ForegroundColor Red
 } else {
     Write-Host "  ❌ No se encontró adaptador WiFi activo" -ForegroundColor Red
 }
@@ -35,7 +56,7 @@ if ($wifiAdapter -and $wifiAdapter.IPAddress -eq $AGENT_IP) {
 # ======================================
 # 2. Verificar estado del Firewall
 # ======================================
-Write-Host "`n[2/8] Verificando estado del Firewall de Windows..." -ForegroundColor Yellow
+Write-Host "`n[2/9] Verificando estado del Firewall de Windows..." -ForegroundColor Yellow
 $firewallProfiles = Get-NetFirewallProfile | Select-Object Name, Enabled
 
 foreach ($profile in $firewallProfiles) {
@@ -59,7 +80,7 @@ if ($firewallRule) {
 # ======================================
 # 3. Verificar si el puerto 8888 está en uso
 # ======================================
-Write-Host "`n[3/8] Verificando puerto UDP $AGENT_PORT..." -ForegroundColor Yellow
+Write-Host "`n[3/9] Verificando puerto UDP $AGENT_PORT..." -ForegroundColor Yellow
 $udpEndpoint = Get-NetUDPEndpoint | Where-Object LocalPort -eq $AGENT_PORT
 
 if ($udpEndpoint) {
@@ -78,7 +99,7 @@ if ($udpEndpoint) {
 # ======================================
 # 4. Ping a ESP32s
 # ======================================
-Write-Host "`n[4/8] Verificando conectividad ICMP (ping) a ESP32s..." -ForegroundColor Yellow
+Write-Host "`n[4/9] Verificando conectividad ICMP (ping) a ESP32s..." -ForegroundColor Yellow
 foreach ($esp_ip in $ESP32_IPS) {
     $pingResult = Test-Connection -ComputerName $esp_ip -Count 2 -Quiet -ErrorAction SilentlyContinue
     if ($pingResult) {
@@ -102,13 +123,14 @@ foreach ($esp_ip in $ESP32_IPS) {
 # ======================================
 # 5. Verificar variables de entorno ROS
 # ======================================
-Write-Host "`n[5/8] Verificando variables de entorno ROS 2..." -ForegroundColor Yellow
+Write-Host "`n[5/9] Verificando variables de entorno ROS 2..." -ForegroundColor Yellow
 
 if ($env:ROS_DOMAIN_ID) {
-    if ($env:ROS_DOMAIN_ID -eq "0") {
-        Write-Host "  ✅ ROS_DOMAIN_ID = $env:ROS_DOMAIN_ID (correcto)" -ForegroundColor Green
+    if ($env:ROS_DOMAIN_ID -eq $ROS_DOMAIN_ID_ESPERADO) {
+        Write-Host "  ✅ ROS_DOMAIN_ID = $env:ROS_DOMAIN_ID (coincide con el dominio del proyecto)" -ForegroundColor Green
     } else {
-        Write-Host "  ⚠️  ROS_DOMAIN_ID = $env:ROS_DOMAIN_ID (debe ser 0)" -ForegroundColor Yellow
+        Write-Host "  ⚠️  ROS_DOMAIN_ID = $env:ROS_DOMAIN_ID (el proyecto usa $ROS_DOMAIN_ID_ESPERADO)" -ForegroundColor Yellow
+        Write-Host "     Todas las máquinas y el agente deben compartir el mismo valor." -ForegroundColor Gray
     }
 } else {
     Write-Host "  ✅ ROS_DOMAIN_ID no configurado (usa default 0)" -ForegroundColor Green
@@ -206,7 +228,7 @@ if ($gateway) {
     Write-Host "     2. Smart Connect (WiFi 6) - Desactivar si causa problemas" -ForegroundColor Yellow
     Write-Host "        Ruta: Advanced → Wireless → Wireless Settings" -ForegroundColor Gray
     Write-Host "     " -ForegroundColor White
-    Write-Host "     3. IP fija 192.168.1.100 reservada para este PC" -ForegroundColor Yellow
+    Write-Host "     3. IP fija reservada para este PC ($AGENT_IP)" -ForegroundColor Yellow
     Write-Host "        MAC: $($wifiInterface.MacAddress)" -ForegroundColor Gray
     Write-Host "        Ruta: Advanced → Network → DHCP Server → Address Reservation" -ForegroundColor Gray
     Write-Host "     " -ForegroundColor White

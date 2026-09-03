@@ -90,7 +90,7 @@ LAB_CRITERIA = [
         "indicator": INDICATOR_21,
         "descriptors": [
             "Además de N4, analiza la estructura de paquetes RTPS en Wi-Fi, optimiza parámetros avanzados en cyclonedds.xml (MaxMessageSize, fragmentación UDP), exporta telemetría CSV completa desde el Monitor de Red y justifica las políticas QoS SensorData.",
-            "Configura rmw_cyclonedds_cpp en ambos equipos, define cyclonedds.xml con interfaz wlan0, lanza el Monitor de Red (:8080) y verifica recepción remota fluida (>= 20 Hz) en Dispositivo B.",
+            "Configura rmw_cyclonedds_cpp en ambos equipos, valida la selección de interfaz de cyclonedds.xml, lanza el Monitor de Red (:8080) y verifica recepción remota fluida (>= 20 Hz) en Dispositivo B.",
             "Establece comunicación distribuida con CycloneDDS en el mismo ROS_DOMAIN_ID, lanza el monitor de red y recibe el tópico de video comprimido en el Dispositivo B.",
             "La comunicación distribuida es intermitente debido a conflictos de RMW o no se registran métricas del monitor de red.",
             "No logra comunicación distribuida entre Dispositivo A y B o carece de evidencia sobre el middleware y telemetría.",
