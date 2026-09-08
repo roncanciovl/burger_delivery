@@ -199,7 +199,10 @@ solo brazo y varios equipos, **estará ocupado casi siempre**—. El cuello de b
 qué máquina corre un nodo.** `ros2 topic info --verbose` devuelve el GID del participante
 DDS, no un hostname ni una IP.
 
-Como no hay comando que lo responda, la respuesta tiene que ser una **convención**:
+Con el dominio compartido, el package sí responde esa pregunta: cada `kinova_monitor`
+verifica localmente si su máquina tiene la sesión con el robot y lo publica en
+`/burger/kinova/diagnostics` (sección 2.2, paso 2). Pero eso **presupone** el dominio
+común, así que la base sigue siendo una **convención**:
 
 > ### 📌 Convención del laboratorio
 >
@@ -216,11 +219,14 @@ qué: si todos comparten el dominio, *"¿quién tiene el robot?"* deja de ser un
 incontestable y pasa a resolverse con un comando:
 
 ```bash
+# ¿Hay un driver corriendo?
 timeout 15s ros2 node list | grep controller_manager
+# ¿En qué máquina?
+ros2 topic echo /burger/kinova/diagnostics --once | grep -A8 "identidad de la estación"
 ```
 
-Si aparece, el driver está corriendo y ya sabes que debes conectarte a él en lugar de
-lanzar el tuyo. Si cada equipo usa un dominio distinto, esa misma consulta devuelve vacío
+Si aparece, el driver está corriendo, sabes en qué computador, y debes conectarte a él en
+lugar de lanzar el tuyo. Si cada equipo usa un dominio distinto, esa misma consulta devuelve vacío
 aunque el robot esté plenamente en uso, y sólo queda barrer dominios a ciegas
 (sección 2.2, paso 3) o preguntar en voz alta.
 
@@ -304,9 +310,37 @@ visible para ti. No lances otro: **conéctate a él** (sección 2.3, opción A).
 
 > **Qué NO vas a obtener por aquí:** el nombre de la máquina que lo ejecuta.
 > `ros2 topic info /joint_states --verbose` muestra el GID del participante DDS, no un
-> hostname ni una IP. Para saber *quién* lo tiene, la vía es la convención de la sección
-> 2.0 —una estación anfitriona designada y anotada— o preguntar. Cada persona sí puede
-> comprobar **su propia** máquina con el `ss` del paso 1.
+> hostname ni una IP. **ROS 2 no expone en qué máquina corre un nodo.**
+
+Para eso el package publica la identidad de cada estación en el diagnóstico. Cada
+`kinova_monitor` comprueba **localmente** si su propia máquina mantiene la sesión TCP con
+la controladora, y lo anuncia. Desde cualquier estación del mismo dominio:
+
+```bash
+ros2 topic echo /burger/kinova/diagnostics --once | grep -A8 "identidad de la estación"
+```
+
+```text
+message: PC-LAB-01 (192.168.1.42) — anfitriona
+  rol_estacion    : anfitriona
+  rol_verificado  : si
+  rol_evidencia   : sesión TCP establecida con 192.168.1.10:10000
+```
+
+| `rol_estacion` | `rol_verificado` | Significado |
+| :--- | :---: | :--- |
+| `anfitriona` | `si` | **Esa máquina tiene el robot.** Hay sesión TCP establecida: es prueba directa, no una suposición |
+| `cliente` | `si` | Esa máquina no tiene el robot. Es el estado normal de una estación cliente |
+| `desconocido` | `no` | Lanzó el driver pero aún no hay sesión, o el robot está en `SYN-SENT` (no responde) |
+
+Cada monitor sólo afirma sobre sí mismo, que es lo único que puede verificar: en una red
+conmutada nadie ve las conexiones TCP de otro equipo. Por eso **la anfitriona se anuncia**
+en vez de intentar detectarse desde fuera. No hay IP que configurar, y si mañana la
+anfitriona es otro computador el diagnóstico lo refleja solo.
+
+> ⚠ Esto sólo funciona si compartes el `ROS_DOMAIN_ID` con la estación anfitriona —otra
+> razón para la convención de la sección 2.0—. Si no lo compartes, sigue valiendo el `ss`
+> del paso 1 para **tu propia** máquina, y preguntar para el resto.
 
 > Si estos comandos se bloquean, el problema es el daemon, no el robot: ve a la
 > [sección 1](#1-bloqueo-del-daemon-de-ros-2-en-wsl) antes de seguir.

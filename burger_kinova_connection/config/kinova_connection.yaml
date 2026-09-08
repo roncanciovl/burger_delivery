@@ -43,6 +43,14 @@ launch:
 /**:
   ros__parameters:
 
+    # ---- Identidad de la estación ----------------------------------------------------
+    # El monitor NO se conecta al robot: robot_ip sólo le sirve para comprobar si ESTA
+    # máquina mantiene la sesión TCP con la controladora, y anunciarlo en el diagnóstico.
+    # Así cualquier estación del mismo dominio sabe quién tiene el robot ocupado, sin
+    # configurar ninguna IP de anfitriona y sin dejar de funcionar si mañana es otra.
+    robot_ip: "0.0.0.0"
+    start_driver: false
+
     # ---- Interfaces ROS 2 -----------------------------------------------------------
     joint_state_topic: "/joint_states"
     diagnostics_topic: "/burger/kinova/diagnostics"

@@ -243,6 +243,10 @@ def _setup(context, *args, **kwargs):
         'use_fake_hardware': use_fake_hardware,
         'enable_motion': enable_motion,
         'log_level': log_level,
+        # El monitor no se conecta al robot; usa estos dos para saber si ESTA estación
+        # es la anfitriona del driver y anunciarlo en el diagnóstico.
+        'robot_ip': robot_ip,
+        'start_driver': start_driver,
     }
     actions.append(Node(
         package=PACKAGE_NAME,

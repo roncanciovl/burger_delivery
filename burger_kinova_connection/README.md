@@ -321,9 +321,41 @@ El array trae cuatro `DiagnosticStatus`:
 | `name` | Qué reporta |
 |---|---|
 | `estado general` | `OK`/`WARN`/`ERROR` consolidado, modo fake o real, habilitación de movimiento, último error y nivel de log vigente |
+| `identidad de la estación` | Hostname e IP de la máquina que publica, y si es la **anfitriona** del driver o una cliente — verificado localmente |
 | `telemetría /joint_states` | Edad, frecuencia estimada, intervalo máximo, articulaciones detectadas y faltantes, mensajes rechazados, interrupciones, muestras en la caja negra y **acción recomendada** |
 | `controladores ros2_control` | Disponibilidad del servicio, controladores requeridos, cuáles no están activos y el estado individual de cada uno |
 | `habilitación de movimiento` | `enable_motion`, si hay bloqueo enclavado y por qué, anomalía inyectada y el comando exacto de rehabilitación |
+
+### Quién tiene el robot ocupado
+
+ROS 2 no expone en qué máquina corre un nodo: `ros2 topic info --verbose` sólo da el GID
+del participante DDS. Por eso cada `kinova_monitor` comprueba **localmente** si su propia
+máquina mantiene la sesión TCP con la controladora del Kinova, y lo anuncia:
+
+```bash
+ros2 topic echo /burger/kinova/diagnostics --once | grep -A8 "identidad de la estación"
+```
+
+```text
+message: PC-LAB-01 (192.168.1.42) — anfitriona
+  rol_estacion    : anfitriona
+  rol_verificado  : si
+  rol_evidencia   : sesión TCP establecida con 192.168.1.10:10000
+```
+
+Cada monitor sólo afirma sobre sí mismo, que es lo único verificable: en una red conmutada
+nadie ve las conexiones TCP de otro equipo. Por eso **la anfitriona se anuncia** en lugar
+de intentar detectarla desde fuera. No hay ninguna IP que configurar, y si la anfitriona
+cambia de computador el diagnóstico lo refleja solo.
+
+| `rol_estacion` | `rol_verificado` | Significado |
+|---|:---:|---|
+| `anfitriona` | `si` | Esa máquina tiene el robot. Sesión TCP establecida: evidencia directa |
+| `cliente` | `si` | No tiene el robot. Estado normal de una estación cliente |
+| `desconocido` | `no` | Lanzó el driver pero aún no hay sesión, o el robot no responde (`SYN-SENT`) |
+
+Requiere compartir el `ROS_DOMAIN_ID` con la anfitriona. Procedimiento completo en
+[`TROUBLESHOOTING.md`](../TROUBLESHOOTING.md) §2.
 
 ### Criterio de clasificación
 
@@ -545,6 +577,7 @@ burger_kinova_connection/
 │   ├── kinova_monitor.py           # nodo monitor y publicador de diagnóstico
 │   ├── safe_trajectory_client.py   # cliente de acción con validación de seguridad
 │   ├── link_metrics.py             # métricas y clasificación del enlace (lógica pura)
+│   ├── station_identity.py         # ¿es esta máquina la anfitriona del driver?
 │   ├── safety.py                   # validación de metas y configuración (lógica pura)
 │   ├── logging_support.py          # niveles, throttling, nivel dinámico, transiciones
 │   └── flight_recorder.py          # caja negra: búfer circular y volcado post-mortem

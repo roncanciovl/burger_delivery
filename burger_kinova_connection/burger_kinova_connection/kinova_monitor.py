@@ -69,6 +69,7 @@ from burger_kinova_connection.logging_support import (
     ThrottledLogger,
 )
 from burger_kinova_connection.safety import validate_safety_config
+from burger_kinova_connection.station_identity import describir_estacion
 
 from controller_manager_msgs.srv import ListControllers
 
@@ -109,6 +110,11 @@ class KinovaMonitor(Node):
                                '/joint_trajectory_controller/follow_joint_trajectory')
         self.declare_parameter('use_fake_hardware', True)
         self.declare_parameter('enable_motion', False)
+        # robot_ip y start_driver llegan desde el launch. El monitor NO los usa para
+        # conectarse (eso es del driver); los usa para saber si ESTA máquina es la
+        # estación anfitriona, y anunciarlo en el diagnóstico.
+        self.declare_parameter('robot_ip', '0.0.0.0')
+        self.declare_parameter('start_driver', False)
         self.declare_parameter(
             'expected_joints',
             ['joint_1', 'joint_2', 'joint_3', 'joint_4', 'joint_5', 'joint_6', 'joint_7'],
@@ -141,6 +147,8 @@ class KinovaMonitor(Node):
         self._use_fake_hardware = bool(self.get_parameter('use_fake_hardware').value)
         self._enable_motion = bool(self.get_parameter('enable_motion').value)
         self._motion_controller = str(self.get_parameter('motion_controller').value)
+        self._robot_ip = str(self.get_parameter('robot_ip').value)
+        self._driver_local = bool(self.get_parameter('start_driver').value)
         self._required_controllers: List[str] = list(
             self.get_parameter('required_controllers').value)
 
@@ -489,6 +497,7 @@ class KinovaMonitor(Node):
         array.header.stamp = self.get_clock().now().to_msg()
         array.status = [
             self._general_status(overall, link_reason, ctrl_reason, motion_ok, motion_reason),
+            self._station_status(),
             self._telemetry_status(link_state, link_reason, link_action, now),
             self._controller_status(ctrl_state, ctrl_reason, ctrl_missing),
             self._motion_status(motion_ok, motion_reason),
@@ -521,6 +530,32 @@ class KinovaMonitor(Node):
                      value='; '.join(self._config_errors) or 'ninguno'),
             KeyValue(key='nivel_log', value=self._level.level_name),
         ]
+        return status
+
+    def _station_status(self):
+        """
+        Anunciar qué estación es esta y si es la anfitriona del driver.
+
+        ROS 2 no expone en qué máquina corre un nodo, así que con un solo robot y varios
+        equipos nadie puede averiguar por introspección quién lo tiene ocupado. Cada
+        monitor resuelve su mitad del problema: comprueba **localmente** si su máquina
+        mantiene la sesión TCP con la controladora y lo publica aquí. Cualquier estación
+        del mismo dominio lee entonces quién es la anfitriona, sin configuración que
+        mantener y sin dejar de funcionar cuando mañana sea otro computador.
+        """
+        info = describir_estacion(self._robot_ip, self._driver_local)
+        status = DiagnosticStatus()
+        # Informativo, nunca ERROR: ser cliente es el estado normal y esperado.
+        status.level = (DiagnosticStatus.OK if info['rol_verificado'] == 'si'
+                        else DiagnosticStatus.WARN)
+        status.name = 'burger_kinova_connection: identidad de la estación'
+        status.hardware_id = 'kinova_gen3_7dof'
+        status.message = (
+            f"{info['estacion']} ({info['estacion_ip'] or 'ip desconocida'}) — "
+            f"{info['rol_estacion']}"
+        )
+        status.values = [KeyValue(key=k, value=v) for k, v in info.items()]
+        status.values.append(KeyValue(key='robot_ip', value=self._robot_ip))
         return status
 
     def _telemetry_status(self, state, reason, action, now):
