@@ -456,6 +456,7 @@ Recorre las capas **en este orden**; no saltes ninguna.
 | 8 | Telemetría con saltos temporales | `ros2 node list \| grep -c kortex` | **Dos drivers** para el mismo robot: viola la regla de unicidad |
 | 9 | `ros2 node/topic/param` termina en `TimeoutError` | `timeout 15s ros2 node list --no-daemon` | Daemon de la CLI bloqueado en WSL: reinícialo (sección 6.0) |
 | 10 | `ros2_control_node` aborta con `Activated mimic joints cannot have command interfaces` | `use_fake_hardware:=true` con pinza | Incompatibilidad `ros2_kortex`/Jazzy: el launch ya la evita en modo fake (sección 6.1) |
+| 12 | Overruns del `controller_manager`, `BaseCyclicClient::Refresh` timeout, pérdidas de telemetría | `ping -c 500 -i 0.02 <robot>`: mira **mdev y max**, no avg | La estación del driver está por WiFi. Pásala a cable |
 | 11 | Un `-p` de la CLI parece ignorarse | Lee la línea `... iniciado \| dry_run=... \| enable_motion=...` | La sección con nombre de nodo del YAML gana sobre `-p` (sección 5) |
 
 Referencias del repositorio:
@@ -473,6 +474,13 @@ Todo lo anterior queda validado en simulación. Para la sesión con el robot fí
    todas las terminales de las dos estaciones.
 2. Confirma que **una sola** estación tendrá `start_driver:=true`. Dos drivers contra el
    mismo Kinova compiten por la única sesión de control a 1 kHz de la API Kortex.
+   **Esa estación debe estar conectada por cable Ethernet, no por WiFi.** No es una
+   recomendación de rendimiento: medido sobre el robot real, por WiFi el ciclo de
+   control se rompe (132 overruns, un hueco de 3.25 s y 2 pérdidas de telemetría en
+   120 s), mientras que por cable el peor intervalo fue de 20.6 ms y no hubo ninguna
+   pérdida. Las estaciones cliente (`start_driver:=false`) sí pueden ir por WiFi: sólo
+   consumen telemetría por DDS. Detalle en
+   [`docs/EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md`](docs/EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md).
 3. Verifica la ruta física antes del launch:
    ```bash
    ping -c 4 192.168.1.10        # ajusta a la IP verificada el día de la práctica
@@ -539,8 +547,12 @@ burger_kinova_connection/
 ├── config/kinova_connection.yaml
 ├── docs/
 │   ├── TEORIA_LOGGING_ROS2.md      # teoría del subsistema de logging de ROS 2
-│   └── VALIDACION_CORTE_1.md       # registro de las pruebas de aceptación
-├── scripts/record_kinova_bag.sh
+│   ├── VALIDACION_CORTE_1.md       # registro de las pruebas de aceptación
+│   └── EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md   # A/B del enlace sobre el robot real
+├── scripts/
+│   ├── record_kinova_bag.sh        # grabación quirúrgica de evidencia
+│   ├── benchmark_enlace_kinova.sh  # una rama de un experimento A/B del enlace
+│   └── analizar_enlace.py          # distribución insesgada de intervalos
 └── test/                           # pruebas unitarias + estilo (flake8, pep257, copyright)
 ```
 

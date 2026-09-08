@@ -1,0 +1,9 @@
+### robot 192.168.1.10 (500 paquetes @ 20 ms)
+--- 192.168.1.10 ping statistics ---
+500 packets transmitted, 500 received, 0% packet loss, time 10298ms
+rtt min/avg/max/mdev = 2.023/4.759/26.822/2.914 ms, pipe 2
+
+### gateway 192.168.1.1 (500 paquetes @ 20 ms) — control del mismo primer salto
+--- 192.168.1.1 ping statistics ---
+500 packets transmitted, 500 received, 0% packet loss, time 10303ms
+rtt min/avg/max/mdev = 2.442/5.431/38.391/4.156 ms, pipe 2

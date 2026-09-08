@@ -7,9 +7,9 @@ Registro de las pruebas de aceptación PA-01 a PA-10.
 | Fecha de esta ejecución | 2026-09-08 |
 | Entorno | Ubuntu 24.04 sobre WSL2 · ROS 2 Jazzy |
 | Middleware | `rmw_cyclonedds_cpp` · `ROS_DOMAIN_ID=0` · `ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET` (por defecto) |
-| Hardware | **Simulado** (`use_fake_hardware:=true`) con el driver oficial `kortex_bringup` |
+| Hardware | Simulado (`use_fake_hardware:=true`) **y Kinova Gen3 real** (`192.168.1.10`) |
 | Estaciones | Una sola estación (A y B en el mismo equipo) |
-| Robot físico | **No disponible en esta sesión** |
+| Robot físico | **Disponible** desde 2026-09-08; enlace por cable Ethernet |
 
 > Las filas marcadas **PENDIENTE (robot real)** requieren el Kinova Gen3 conectado.
 > Sigue la *Lista de verificación para el Kinova real* (sección 11 del README) y anota
@@ -84,7 +84,9 @@ Grafo observado:
 
 ---
 
-## PA-03 · Telemetría — ✅ en simulación · **PENDIENTE (robot real)**
+## PA-03 · Telemetría — ✅ en simulación · ✅ **sobre el robot real**
+
+### En simulación
 
 ```bash
 ros2 topic hz /joint_states
@@ -95,13 +97,42 @@ average rate: 99.976   min: 0.009s  max: 0.011s  std dev: 0.00035s  window: 102
 average rate: 99.998   min: 0.009s  max: 0.011s  std dev: 0.00030s  window: 203
 ```
 
-Siete articulaciones `joint_1`…`joint_7`, sin interrupciones, muy por encima del mínimo
-configurado (`min_joint_state_hz: 20.0`). Falta repetir la medición durante 60 s
-continuos sobre el robot físico.
+### Sobre el Kinova Gen3 real (127 s continuos, enlace por cable)
+
+Medición insesgada sobre bolsa MCAP, no sobre los avisos del `controller_manager`
+(que sólo se imprimen cuando un ciclo se pasa, y por tanto sobrestiman el problema):
+
+```text
+mensajes /joint_states : 12706 en 127.1 s
+frecuencia media       : 99.96 Hz   (nominal 100, mínimo exigido 20)
+intervalo p50          : 10.00 ms
+intervalo p90          : 10.30 ms
+intervalo p99          : 10.61 ms
+intervalo máximo       : 20.63 ms
+intervalos > 20 ms     : 2 de 12706  (0.016 %)
+articulaciones         : 7/7, ninguna faltante
+mensajes rechazados    : 0
+interrupciones         : 0
+```
+
+Supera el requisito de 60 s con holgura. **El enlace debe ser cableado**: por WiFi la
+misma prueba dio 72.24 Hz de media, un intervalo máximo de 3251 ms y **dos pérdidas de
+telemetría**. Ver [`EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md`](EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md).
 
 ---
 
-## PA-04 · Controladores — ✅
+## PA-04 · Controladores — ✅ en simulación · ✅ **sobre el robot real**
+
+Sobre el robot físico, con la sesión Kortex activa
+(`KortexMultiInterfaceHardware successfully activated!`):
+
+```text
+[kinova_monitor] [CONTROLADORES] joint_state_broadcaster=active, joint_trajectory_controller=active
+[kinova_monitor] [TRANSICIÓN] ERROR -> OK | telemetría saludable: 100.1 Hz, edad 0.004 s,
+                 7/7 articulaciones | todos los controladores requeridos están activos
+```
+
+En simulación:
 
 ```bash
 ros2 control list_controllers
@@ -199,6 +230,11 @@ Códigos de salida: `1` (meta bloqueada por seguridad) en los tres casos.
 
 ## PA-08 · Movimiento autorizado — ✅ en simulación · **PENDIENTE (robot real)**
 
+> Con el enlace por cable ya se cumplen las condiciones para intentarlo. Requiere espacio
+> despejado, parada de emergencia accesible y autorización del responsable del
+> laboratorio. **No ejecutar desde una estación inalámbrica.**
+
+
 ```bash
 ros2 run burger_kinova_connection safe_trajectory_client --ros-args \
   --params-file <config> -p dry_run:=false -p enable_motion:=true \
@@ -258,6 +294,10 @@ repita de forma independiente sobre el robot real.
 | 3 | `-p dry_run:=false` se ignoraba en silencio | Precedencia de parámetros de ROS 2 | **Corregido**: los parámetros sobrescribibles desde la CLI se movieron a la sección `/**` del YAML |
 | 4 | La frecuencia se estimaba en miles de Hz al suscribirse | Ráfaga de mensajes encolados por DDS | **Corregido**: `min_rate_observation_s` exige observación continua antes de creer la estimación |
 | 5 | Spawner de `twist_controller --inactive` termina con código 1 | `kortex_bringup` | Ajeno a este package; no impide activar broadcaster ni controlador de trayectoria |
+| 6 | `fault_controller` no carga: `picknik_reset_fault_controller` no encontrado | Paquete opcional ausente | Ajeno a este package; no son faltas de seguridad del robot |
+| 7 | Por WiFi, la sesión Kortex se rompe: 132 overruns, `BaseCyclicClient::Refresh` timeout de 3.0 s y 2 pérdidas de telemetría en 120 s | Enlace de la estación | **Resuelto**: la estación del driver debe ir por cable. Experimento A/B documentado en [`EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md`](EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md) |
+| 8 | `ros2 bag record` ignora `SIGINT` dirigido a su PID fuera de una terminal | Instrumental de medición | **Corregido** en `benchmark_enlace_kinova.sh`: `setsid` + señal al grupo de procesos + verificación |
+| 9 | `apply_kinova_smooth_movement.py` no parchea nada: busca `SetMessageTimeout(500)`, que ya no existe en la versión clonada de `ros2_kortex`, e imprime "Parcheado" igual | Script del repositorio | **Pendiente**, fuera del alcance de este package |
 
 ---
 
