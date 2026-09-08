@@ -6,6 +6,7 @@ Esta guía cubre los dos fallos que más tiempo consumen en el laboratorio:
 | :--- | :--- |
 | `ros2 node list`, `topic list` o `param set` se bloquean o terminan en `TimeoutError` | [1. Bloqueo del daemon de la CLI](#1-bloqueo-del-daemon-de-ros-2-en-wsl) |
 | El driver no arranca, o hay telemetría duplicada, porque **el robot ya está en uso** | [2. Hardware ocupado: un solo robot, varias estaciones](#2-hardware-ocupado-un-solo-robot-y-varias-estaciones) |
+| No sé quién tiene el robot ocupado | [2.0 La configuración recomendada](#20-la-configuración-recomendada-léela-antes-que-el-resto) |
 
 ---
 
@@ -190,6 +191,45 @@ La persona que realiza el diagnóstico puede distinguir el servicio local del da
 
 ## 2. Hardware ocupado: un solo robot y varias estaciones
 
+### 2.0 La configuración recomendada (léela antes que el resto)
+
+El verdadero cuello de botella del laboratorio no es que el robot esté ocupado —con un
+solo brazo y varios equipos, **estará ocupado casi siempre**—. El cuello de botella es
+*saber quién lo tiene*. Y esa pregunta no tiene respuesta técnica: **ROS 2 no expone en
+qué máquina corre un nodo.** `ros2 topic info --verbose` devuelve el GID del participante
+DDS, no un hostname ni una IP.
+
+Como no hay comando que lo responda, la respuesta tiene que ser una **convención**:
+
+> ### 📌 Convención del laboratorio
+>
+> 1. **Un único computador ejecuta el driver.** Siempre el mismo, designado y anotado
+>    junto al robot. Es la *estación anfitriona*. Hospeda todos los drivers que hablan con
+>    el hardware: el brazo (`kortex_bringup`) y el de visión, que comparten la misma IP.
+> 2. **Esa estación va por cable Ethernet.** Por WiFi la sesión de control se rompe; está
+>    medido, no es una preferencia (sección 2.3, opción B).
+> 3. **Todos los demás usan el mismo `ROS_DOMAIN_ID`** que la estación anfitriona, y
+>    lanzan con `start_driver:=false`. Pueden ir por WiFi.
+
+Esta convención es la que **hace desaparecer el cuello de botella**, y conviene ver por
+qué: si todos comparten el dominio, *"¿quién tiene el robot?"* deja de ser una pregunta
+incontestable y pasa a resolverse con un comando:
+
+```bash
+timeout 15s ros2 node list | grep controller_manager
+```
+
+Si aparece, el driver está corriendo y ya sabes que debes conectarte a él en lugar de
+lanzar el tuyo. Si cada equipo usa un dominio distinto, esa misma consulta devuelve vacío
+aunque el robot esté plenamente en uso, y sólo queda barrer dominios a ciegas
+(sección 2.2, paso 3) o preguntar en voz alta.
+
+Dicho de otro modo: **el dominio compartido no es un detalle de configuración, es el
+mecanismo de coordinación.** El resto de esta sección es qué hacer cuando la convención
+no se siguió, o cuando algo quedó a medias.
+
+---
+
 ### 2.1 El error de concepto que hay que quitarse primero
 
 Lo que está ocupado **no es el driver: es el robot**. Y esa ocupación vive en una capa
@@ -262,6 +302,12 @@ timeout 15s ros2 topic info /joint_states
 Si ves `/controller_manager` y `/joint_states` **con un publicador**, hay un driver activo y
 visible para ti. No lances otro: **conéctate a él** (sección 2.3, opción A).
 
+> **Qué NO vas a obtener por aquí:** el nombre de la máquina que lo ejecuta.
+> `ros2 topic info /joint_states --verbose` muestra el GID del participante DDS, no un
+> hostname ni una IP. Para saber *quién* lo tiene, la vía es la convención de la sección
+> 2.0 —una estación anfitriona designada y anotada— o preguntar. Cada persona sí puede
+> comprobar **su propia** máquina con el `ss` del paso 1.
+
 > Si estos comandos se bloquean, el problema es el daemon, no el robot: ve a la
 > [sección 1](#1-bloqueo-del-daemon-de-ros-2-en-wsl) antes de seguir.
 
@@ -272,7 +318,10 @@ mutuamente invisibles**. Si un compañero corre el driver en `ROS_DOMAIN_ID=7` y
 el `0`, `ros2 node list` te devuelve una lista vacía aunque el robot esté plenamente en uso.
 
 No existe un comando de ROS 2 que responda *"¿en qué dominio está el driver?"*, porque para
-preguntarlo ya tendrías que estar en ese dominio. Hay dos vías:
+preguntarlo ya tendrías que estar en ese dominio.
+
+Si estás aquí, es que la convención de la sección 2.0 no se siguió: con un dominio único
+para todo el laboratorio este paso no existiría. Hay dos vías para salir del paso:
 
 1. **Preguntar.** En la práctica es lo más rápido y lo que evita accidentes. El dominio de
    trabajo del curso es `ROS_DOMAIN_ID=0` salvo acuerdo explícito del equipo.
@@ -331,7 +380,9 @@ de control del robot.
 
 #### Opción B · Montar el laboratorio para que "ocupado" deje de ser un error
 
-Esto no resuelve un incidente: define quién puede ocupar el robot.
+Es la convención de la sección 2.0, con su justificación. No resuelve un incidente: define
+quién puede ocupar el robot, y de paso convierte *"¿quién lo tiene?"* en una consulta de
+un solo comando.
 
 - **Una única estación anfitriona** ejecuta *todos* los drivers que hablan con el hardware:
   el brazo (`kortex_bringup`) y el de visión. El módulo de visión del Gen3 vive en la misma
@@ -361,6 +412,9 @@ Sólo entonces la siguiente estación lanza con `start_driver:=true`.
 
 ### 2.4 Prevención
 
+- **Aplica la convención de la sección 2.0**: una estación anfitriona designada, por cable,
+  y un único `ROS_DOMAIN_ID` para todo el laboratorio. Es lo que convierte "¿quién tiene el
+  robot?" en un comando en vez de una búsqueda.
 - Cierra siempre el driver con `Ctrl+C` / `SIGINT`. Un `kill -9` deja la sesión Kortex
   abierta y el siguiente arranque falla sin motivo aparente.
 - Antes de lanzar con `start_driver:=true`, comprueba en un solo paso que nadie lo tiene:
@@ -377,7 +431,9 @@ Sólo entonces la siguiente estación lanza con `start_driver:=true`.
 
 La persona que diagnostica distingue la sesión Kortex del grafo DDS, sabe que cambiar de
 dominio no libera el robot, identifica con `ss` qué proceso tiene la sesión, y decide con
-criterio entre conectarse como cliente o pedir que liberen el hardware.
+criterio entre conectarse como cliente o pedir que liberen el hardware. Y entiende por qué
+el dominio compartido no es un detalle de configuración sino el mecanismo con el que el
+equipo se coordina alrededor de un único robot.
 
 ## Fuentes técnicas
 

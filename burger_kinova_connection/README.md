@@ -103,7 +103,11 @@ Estación B
 ```
 
 > ⚠ **Regla de unicidad del driver.** Sólo la estación conectada físicamente al robot
-> ejecuta el driver. Dos instancias compiten por la única sesión de control en tiempo real
+> ejecuta el driver. Con un solo robot y varios equipos, designa **una estación anfitriona
+> fija, por cable**, y haz que todos compartan su `ROS_DOMAIN_ID`: ROS 2 no expone en qué
+> máquina corre un nodo, así que el dominio compartido es lo que convierte *"¿quién tiene
+> el robot?"* en un `ros2 node list` en vez de una búsqueda a ciegas. Procedimiento
+> completo en [`TROUBLESHOOTING.md`](../TROUBLESHOOTING.md) §2. Dos instancias compiten por la única sesión de control en tiempo real
 > (1 kHz) de la API Kortex —provocando *Session already in use*, timeouts de heartbeat y
 > paradas de seguridad— y además duplican `/joint_states`, `/controller_manager` y el
 > servidor de acción dentro del mismo `ROS_DOMAIN_ID`.
@@ -456,6 +460,7 @@ Recorre las capas **en este orden**; no saltes ninguna.
 | 8 | Telemetría con saltos temporales | `ros2 node list \| grep -c kortex` | **Dos drivers** para el mismo robot: viola la regla de unicidad |
 | 9 | `ros2 node/topic/param` termina en `TimeoutError` | `timeout 15s ros2 node list --no-daemon` | Daemon de la CLI bloqueado en WSL: reinícialo (sección 6.0) |
 | 10 | `ros2_control_node` aborta con `Activated mimic joints cannot have command interfaces` | `use_fake_hardware:=true` con pinza | Incompatibilidad `ros2_kortex`/Jazzy: el launch ya la evita en modo fake (sección 6.1) |
+| 13 | El driver no arranca, o hay `/joint_states` duplicado | `ss -tanp \| grep <robot_ip>`; `ros2 node list` | El robot ya está ocupado. Ver [`TROUBLESHOOTING.md`](../TROUBLESHOOTING.md) §2 |
 | 12 | Overruns del `controller_manager`, `BaseCyclicClient::Refresh` timeout, pérdidas de telemetría | `ping -c 500 -i 0.02 <robot>`: mira **mdev y max**, no avg | La estación del driver está por WiFi. Pásala a cable |
 | 11 | Un `-p` de la CLI parece ignorarse | Lee la línea `... iniciado \| dry_run=... \| enable_motion=...` | La sección con nombre de nodo del YAML gana sobre `-p` (sección 5) |
 
