@@ -187,6 +187,31 @@ El panel de servicios incluye un indicador de firewall actualizado cada 30 segun
 
 Las entradas RTPS corresponden a los puertos multicast SPDP calculados. No representan todos los sockets de datos: CycloneDDS puede negociar puertos UDP dinámicos, que el panel no enumera como una lista fija.
 
+#### Distintivo `🔒 ANFITRIONA · driver Kinova`
+
+Con un solo robot y varias estaciones, la pregunta que más tiempo hace perder es **qué máquina tiene ocupado el Kinova**. La tabla la responde de un vistazo: la fila de esa estación lleva un distintivo verde adicional, y las que se anuncian sin tener el robot llevan uno gris de `cliente ROS 2`.
+
+Ese dato **no se obtiene observando la red**, y conviene entender por qué:
+
+- El tráfico entre la estación que ejecuta el driver y la controladora es **unicast**. En una red conmutada el switch lo entrega únicamente a esos dos puertos, así que ninguna tercera máquina —el monitor incluido— puede verlo.
+- Esnifar ARP tampoco sirve: exigiría `CAP_NET_RAW`, privilegio que este monitor evita a propósito, y Linux refresca la entrada ARP con sondas **unicast**, de modo que sólo sería visible el instante inicial en que arranca el driver.
+- Sondear el puerto de control del robot para comprobar si está ocupado significaría intentar abrir una sesión Kortex contra un brazo que puede estar en movimiento, con riesgo de perturbar la sesión real y disparar una parada de seguridad.
+
+Por eso **la estación que tiene el robot se anuncia**. Cada `kinova_monitor` comprueba en su propio `/proc/net/tcp` si mantiene la sesión TCP con la controladora y difunde el resultado por broadcast UDP (puerto `45455`). El monitor sólo escucha: [`station_listener.py`](monitor_red/station_listener.py), sin privilegios y sin configurar ninguna dirección, porque la IP de origen se toma del propio `recvfrom` y se correlaciona con la lista de dispositivos.
+
+| Campo | Significado |
+| :--- | :--- |
+| `is_driver_host` | La estación declara tener el robot **y** lo verificó con una sesión TCP establecida |
+| `station_role` | `anfitriona`, `cliente` o `desconocido`, según lo que la máquina comprobó de sí misma |
+| `station_evidence` | La evidencia concreta, p. ej. `sesión TCP establecida con 192.168.1.10:10000` |
+| `station_age_s` | Antigüedad del último anuncio recibido |
+
+Los anuncios caducan a los 20 segundos sin recibirse, así que si la anfitriona se apaga el distintivo desaparece solo: no hace falta un mensaje de despedida que un apagón nunca llegaría a enviar.
+
+> **Es un anuncio, no una autoridad.** Refleja lo que esa máquina *declara* de sí misma tras verificarlo localmente. Cualquier equipo de la red podría emitir uno falso; en una red de laboratorio cerrada resulta aceptable, pero el dato no es una prueba criptográfica. El único campo que un anuncio no puede falsear sin suplantar la dirección es la IP, porque la fija el socket y no el contenido del mensaje.
+
+Endpoint asociado: `GET /api/estaciones` devuelve la anfitriona y todas las estaciones que se anuncian, sin necesidad de escanear la red. La misma información viaja embebida en `GET /api/devices`, y en ROS 2 está en `/burger/kinova/diagnostics` (ver [`TROUBLESHOOTING.md`](../TROUBLESHOOTING.md) §2).
+
 ---
 
 ## 4. Estructura del Dataset de Telemetría (`.csv`)

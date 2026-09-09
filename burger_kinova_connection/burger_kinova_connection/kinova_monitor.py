@@ -69,6 +69,11 @@ from burger_kinova_connection.logging_support import (
     ThrottledLogger,
 )
 from burger_kinova_connection.safety import validate_safety_config
+from burger_kinova_connection.station_announcer import (
+    construir_anuncio,
+    PUERTO_ANUNCIO,
+    StationAnnouncer,
+)
 from burger_kinova_connection.station_identity import describir_estacion
 
 from controller_manager_msgs.srv import ListControllers
@@ -115,6 +120,10 @@ class KinovaMonitor(Node):
         # estación anfitriona, y anunciarlo en el diagnóstico.
         self.declare_parameter('robot_ip', '0.0.0.0')
         self.declare_parameter('start_driver', False)
+        # Anuncio del rol de la estación para el monitor de red del laboratorio.
+        self.declare_parameter('announce_station', True)
+        self.declare_parameter('announce_port', PUERTO_ANUNCIO)
+        self.declare_parameter('announce_period_s', 5.0)
         self.declare_parameter(
             'expected_joints',
             ['joint_1', 'joint_2', 'joint_3', 'joint_4', 'joint_5', 'joint_6', 'joint_7'],
@@ -216,6 +225,26 @@ class KinovaMonitor(Node):
             ListControllers, f'{self._controller_ns}/list_controllers')
         self._reset_srv = self.create_service(
             Trigger, '~/rehabilitar_movimiento', self._on_reset_latch)
+
+        # --------------------------------------------------- anuncio de estación ---
+        # Nadie puede observar desde fuera qué máquina tiene la sesión con el robot: ese
+        # tráfico es unicast y el switch no lo replica. Así que esta estación anuncia por
+        # broadcast lo que sí puede verificar de sí misma, y el monitor del laboratorio lo
+        # muestra. Si algo del anuncio falla, el nodo continúa: no es crítico.
+        self._announcer: Optional[StationAnnouncer] = None
+        self._announce_timer = None
+        if bool(self.get_parameter('announce_station').value):
+            self._announcer = StationAnnouncer(
+                puerto=int(self.get_parameter('announce_port').value),
+                on_error=lambda motivo: self.get_logger().warn(
+                    f'[ANUNCIO] {motivo}. El monitor de red no verá esta estación; '
+                    f'el diagnóstico ROS 2 no se ve afectado.'
+                ),
+            )
+            self._announce_timer = self.create_timer(
+                max(1.0, float(self.get_parameter('announce_period_s').value)),
+                self._announce_station,
+            )
 
         diagnostic_period = 1.0 / max(0.01, float(self.get_parameter('diagnostic_rate_hz').value))
         self._diagnostic_timer = self.create_timer(diagnostic_period, self._publish_diagnostics)
@@ -532,6 +561,20 @@ class KinovaMonitor(Node):
         ]
         return status
 
+    def _announce_station(self) -> None:
+        """
+        Emitir el anuncio periódico del rol de esta estación.
+
+        El periodo también actúa como TTL en el receptor: si esta estación se apaga, el
+        monitor deja de recibir y su entrada caduca sola, sin necesidad de un mensaje de
+        despedida que un apagón nunca llegaría a enviar.
+        """
+        if self._announcer is None:
+            return
+        identidad = describir_estacion(self._robot_ip, self._driver_local)
+        self._announcer.anunciar(
+            construir_anuncio(identidad, self._robot_ip, self.get_name()))
+
     def _station_status(self):
         """
         Anunciar qué estación es esta y si es la anfitriona del driver.
@@ -556,6 +599,16 @@ class KinovaMonitor(Node):
         )
         status.values = [KeyValue(key=k, value=v) for k, v in info.items()]
         status.values.append(KeyValue(key='robot_ip', value=self._robot_ip))
+        if self._announcer is None:
+            status.values.append(KeyValue(key='anuncio_broadcast', value='desactivado'))
+        else:
+            status.values.append(KeyValue(
+                key='anuncio_broadcast',
+                value=f'emitidos={self._announcer.enviados} '
+                      f'fallos={self._announcer.fallos}'))
+            if self._announcer.ultimo_error:
+                status.values.append(KeyValue(
+                    key='anuncio_ultimo_error', value=self._announcer.ultimo_error))
         return status
 
     def _telemetry_status(self, state, reason, action, now):

@@ -357,6 +357,20 @@ cambia de computador el diagnóstico lo refleja solo.
 Requiere compartir el `ROS_DOMAIN_ID` con la anfitriona. Procedimiento completo en
 [`TROUBLESHOOTING.md`](../TROUBLESHOOTING.md) §2.
 
+El monitor además **anuncia** ese mismo dato por broadcast UDP (puerto `45455`), de modo
+que el monitor de red del laboratorio marca la fila de la anfitriona con un distintivo
+propio sin necesidad de hablar ROS 2 ni de compartir dominio. Se desactiva con
+`-p announce_station:=false`.
+
+| Parámetro | Valor | Propósito |
+|---|---:|---|
+| `announce_station` | `true` | Emitir el anuncio de rol para el monitor de red |
+| `announce_port` | `45455` | Puerto UDP del anuncio |
+| `announce_period_s` | `5.0` | Periodo de emisión; también actúa como TTL en el receptor |
+
+Si la red no admite broadcast, el nodo lo registra una vez y sigue funcionando con
+normalidad: el anuncio es una comodidad, no una función crítica del enlace.
+
 ### Criterio de clasificación
 
 | Estado | Condición |
@@ -578,6 +592,7 @@ burger_kinova_connection/
 │   ├── safe_trajectory_client.py   # cliente de acción con validación de seguridad
 │   ├── link_metrics.py             # métricas y clasificación del enlace (lógica pura)
 │   ├── station_identity.py         # ¿es esta máquina la anfitriona del driver?
+│   ├── station_announcer.py        # lo anuncia por broadcast al monitor del lab
 │   ├── safety.py                   # validación de metas y configuración (lógica pura)
 │   ├── logging_support.py          # niveles, throttling, nivel dinámico, transiciones
 │   └── flight_recorder.py          # caja negra: búfer circular y volcado post-mortem

@@ -24,6 +24,7 @@ if CURRENT_DIR not in sys.path:
     sys.path.insert(0, CURRENT_DIR)
 
 from device_scanner import DeviceScanner
+from station_listener import StationListener
 from firewall_status import get_firewall_status
 from traffic_sniffer import TrafficSniffer
 
@@ -33,6 +34,36 @@ STATIC_DIR = os.path.join(CURRENT_DIR, "static")
 # Inicialización de servicios
 scanner = DeviceScanner()
 sniffer = TrafficSniffer(gateway_ip=scanner.gateway_ip)
+# Escucha los anuncios de rol de las estaciones ROS 2. Ninguna máquina puede observar
+# desde fuera quién tiene la sesión con el robot —ese tráfico es unicast y el switch no
+# lo replica—, así que la estación que la tiene se anuncia y aquí sólo se recibe.
+station_listener = StationListener()
+station_listener.start()
+
+
+def _decorar_con_estaciones(devices):
+    """
+    Añadir a cada dispositivo el rol que esa máquina anuncia, si lo anuncia.
+
+    La correlación se hace por la IP de origen del datagrama, no por la que declara el
+    mensaje: es el único campo que un anuncio no puede falsear sin suplantar la
+    dirección.
+    """
+    for device in devices:
+        anuncio = station_listener.rol_de(device.get("ip", ""))
+        if anuncio is None:
+            device["station_role"] = None
+            device["is_driver_host"] = False
+            continue
+        es_anfitriona = (anuncio["rol"] == "anfitriona"
+                         and anuncio["verificado"] == "si")
+        device["station_role"] = anuncio["rol"]
+        device["station_name"] = anuncio["estacion"]
+        device["station_evidence"] = anuncio["evidencia"]
+        device["station_robot_ip"] = anuncio["robot_ip"]
+        device["station_age_s"] = anuncio["edad_s"]
+        device["is_driver_host"] = es_anfitriona
+    return devices
 
 
 def test_udp_multicast(group="225.0.0.1", port=49150, timeout_sec=1.5) -> dict:
@@ -192,9 +223,15 @@ class NetworkMonitorHandler(BaseHTTPRequestHandler):
             resp = {
                 "count": len(scanner.cached_devices),
                 "last_scan": time.strftime("%H:%M:%S", time.localtime(scanner.last_scan_time)) if scanner.last_scan_time else "--",
-                "devices": scanner.cached_devices
+                "devices": _decorar_con_estaciones(scanner.cached_devices),
+                "stations": station_listener.resumen()
             }
             self._set_json_headers(resp)
+            return
+
+        # 3.b API: Quién anuncia tener el robot, sin necesidad de escanear la red
+        elif path == "/api/estaciones":
+            self._set_json_headers(station_listener.resumen())
             return
 
         # 4. API: Snapshot de tráfico en tiempo real e historial

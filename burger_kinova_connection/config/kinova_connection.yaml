@@ -51,6 +51,13 @@ launch:
     robot_ip: "0.0.0.0"
     start_driver: false
 
+    # Anuncia el rol de esta estación por broadcast UDP para el monitor de red del
+    # laboratorio, que así marca la fila de la anfitriona sin hablar ROS 2 ni compartir
+    # dominio. Si la red no admite broadcast, el nodo lo registra una vez y continúa.
+    announce_station: true
+    announce_port: 45455
+    announce_period_s: 5.0
+
     # ---- Interfaces ROS 2 -----------------------------------------------------------
     joint_state_topic: "/joint_states"
     diagnostics_topic: "/burger/kinova/diagnostics"

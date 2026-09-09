@@ -340,7 +340,30 @@ anfitriona es otro computador el diagnóstico lo refleja solo.
 
 > ⚠ Esto sólo funciona si compartes el `ROS_DOMAIN_ID` con la estación anfitriona —otra
 > razón para la convención de la sección 2.0—. Si no lo compartes, sigue valiendo el `ss`
-> del paso 1 para **tu propia** máquina, y preguntar para el resto.
+> del paso 1 para **tu propia** máquina, y el monitor de red del párrafo siguiente, que
+> no depende del dominio.
+
+##### Sin abrir una terminal: el monitor de red
+
+La misma información aparece en la tabla de dispositivos del monitor web, con un
+distintivo verde `🔒 ANFITRIONA · driver Kinova` en la fila de la máquina que lo tiene:
+
+```bash
+./network_setup/iniciar_monitor.sh        # y abrir http://<ip-del-monitor>:8080
+```
+
+Llega por un canal distinto —broadcast UDP en el puerto `45455`, no DDS—, así que
+**funciona aunque no compartas el `ROS_DOMAIN_ID`**. Es la vía recomendada para quien
+llega al laboratorio y sólo quiere saber si el robot está libre. Detalle en
+[`MONITOR_UI_GUIA.md`](network_setup/MONITOR_UI_GUIA.md) §3.7.
+
+Las tres superficies muestran el mismo dato verificado, y ninguna sustituye a las otras:
+
+| Vía | Alcance | Cuándo usarla |
+| :--- | :--- | :--- |
+| `ss -tanp` (paso 1) | Sólo tu máquina | Sospechas de un huérfano tuyo |
+| `/burger/kinova/diagnostics` | Estaciones de tu dominio | Ya estás trabajando en ROS 2 |
+| Monitor de red | Toda la subred, sin ROS | Llegas al lab y quieres saber si está libre |
 
 > Si estos comandos se bloquean, el problema es el daemon, no el robot: ve a la
 > [sección 1](#1-bloqueo-del-daemon-de-ros-2-en-wsl) antes de seguir.

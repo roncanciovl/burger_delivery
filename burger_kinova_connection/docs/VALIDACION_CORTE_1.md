@@ -268,6 +268,48 @@ tal como exige la regla de throttling del taller de logging.
 
 ---
 
+## Identificación de la estación anfitriona — ✅ **sobre el robot real**
+
+Verificado el 2026-09-09 con el driver conectado al Kinova, en la red del laboratorio con
+**8 estaciones más** presentes.
+
+Sesión real sostenida por el driver:
+
+```text
+ESTAB  192.168.1.42:57423  192.168.1.10:10000  users:(("ros2_control_no",pid=5411,fd=12))
+```
+
+Lo que anuncia el monitor (`GET /api/estaciones` del monitor de red):
+
+```json
+{
+  "anfitriona": {
+    "ip": "192.168.1.42",
+    "estacion": "DESKTOP-3ISD7FI",
+    "rol": "anfitriona",
+    "verificado": "si",
+    "evidencia": "sesión TCP establecida con 192.168.1.10:10000",
+    "edad_s": 2.0
+  }
+}
+```
+
+Y en la tabla de dispositivos, de 17 equipos detectados sólo esa fila queda marcada:
+
+```text
+  192.168.1.1     role=router  station=None
+  192.168.1.42    role=host    station=anfitriona   <== distintivo verde
+  192.168.1.10    role=robot   station=None
+  ... (8 estaciones más, todas station=None)
+```
+
+Antes de lanzar el driver, `anfitriona` era `null`. Enlace simultáneo en `OK` a 98.0 Hz
+con 7/7 articulaciones y ambos controladores activos. Cierre ordenado verificado
+(`KortexMultiInterfaceHardware successfully deactivated!`), con la sesión pasando a
+`TIME-WAIT` sin proceso asociado.
+
+---
+
 ## PA-09 · DDS distribuido — **PENDIENTE (dos estaciones)**
 
 Validado parcialmente: monitor y driver como **procesos independientes** descubriéndose

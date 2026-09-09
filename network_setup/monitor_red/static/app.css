@@ -738,6 +738,25 @@ body {
 .role-esp32 { background: rgba(168, 85, 247, 0.2); color: #e9d5ff; border: 1px solid rgba(192, 132, 252, 0.5); }
 .role-device { background: rgba(148, 163, 184, 0.1); color: var(--text-muted); border: 1px solid rgba(148, 163, 184, 0.2); }
 
+/* Estación que declara tener la sesión de control del Kinova. Verde ámbar intenso:
+   es el dato que se busca de un vistazo al llegar al laboratorio. */
+.role-anfitriona {
+  background: rgba(16, 185, 129, 0.18);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.55);
+  margin-left: 6px;
+  font-weight: 600;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
+}
+/* Estación ROS 2 que se anuncia pero NO tiene el robot: informativo y discreto. */
+.role-estacion-cliente {
+  background: rgba(148, 163, 184, 0.08);
+  color: var(--text-muted);
+  border: 1px dashed rgba(148, 163, 184, 0.35);
+  margin-left: 6px;
+  font-weight: 400;
+}
+
 .device-role-badge.dds-role-highlight {
   background: linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(126, 34, 206, 0.45)) !important;
   color: #ffffff !important;

@@ -376,6 +376,30 @@ function renderDevicesTable() {
     badge.className = `device-role-badge role-${d.role}${d.is_dds_active ? ' dds-role-highlight' : ''}`;
     badge.textContent = (d.is_dds_active && !d.label?.startsWith('⚡') ? '⚡ ' : '') + (d.label || d.role);
     tdRole.appendChild(badge);
+
+    // Anfitriona del driver del Kinova. Nadie puede observar desde fuera qué máquina
+    // tiene la sesión con el robot: ese trafico es unicast y el switch no lo replica.
+    // Lo que se muestra aquí es lo que esa máquina ANUNCIA de sí misma, tras haberlo
+    // verificado en su propio /proc/net/tcp.
+    if (d.is_driver_host) {
+      const anfitriona = document.createElement('span');
+      anfitriona.className = 'device-role-badge role-anfitriona';
+      anfitriona.textContent = '🔒 ANFITRIONA · driver Kinova';
+      anfitriona.title =
+        `${d.station_name || ''} declara tener el robot ${d.station_robot_ip || ''}\n` +
+        `${d.station_evidence || ''}\n` +
+        `Anuncio recibido hace ${d.station_age_s ?? '?'} s. ` +
+        `Es lo que la máquina declara, verificado localmente por ella.`;
+      tdRole.appendChild(anfitriona);
+    } else if (d.station_role === 'cliente') {
+      const cliente = document.createElement('span');
+      cliente.className = 'device-role-badge role-estacion-cliente';
+      cliente.textContent = 'cliente ROS 2';
+      cliente.title =
+        `${d.station_name || ''} no tiene el robot.\n${d.station_evidence || ''}`;
+      tdRole.appendChild(cliente);
+    }
+
     tr.appendChild(tdRole);
 
     // 2. IP
