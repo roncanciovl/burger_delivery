@@ -21,19 +21,34 @@
 ## 2. INTRODUCCIÓN
 
 ### 2.1. Contexto Teórico y Arquitectura de Flujo de Datos
-En celdas robóticas colaborativas, la arquitectura de procesamiento visual se distribuye entre dos nodos: una estación fija conectada físicamente al brazo robótico que actúa como pasarela (**Dispositivo A: Gateway**) para adquisición de hardware, y una estación remota (**Dispositivo B: Procesamiento Wi-Fi**) que ejecuta algoritmos de visión por computador (detección de *AprilTags*, segmentación semántica o estimación de pose 3D).
+En celdas robóticas colaborativas, la arquitectura de procesamiento visual se distribuye entre dos nodos: una estación que abre la sesión con el brazo y publica su flujo óptico en ROS 2 (**Dispositivo A: estación anfitriona**), y una estación remota (**Dispositivo B: Procesamiento Wi-Fi**) que ejecuta algoritmos de visión por computador (detección de *AprilTags*, segmentación semántica o estimación de pose 3D).
+
+> [!IMPORTANT]
+> **El laboratorio usa UNA sola subred: `192.168.1.0/24`.** Todos los equipos y
+> el propio Kinova cuelgan del router TP-Link AX12 (`192.168.1.1`, SSID `ros2`),
+> según [`network_setup/ROS2_NETWORK_CONFIG.md`](../../network_setup/ROS2_NETWORK_CONFIG.md)
+> §6.2 y [`network_setup/router_tplink_ax12_config.md`](../../network_setup/router_tplink_ax12_config.md).
+> El Dispositivo A **no enruta** entre dos redes: cualquier estación alcanza al
+> robot por IP. Lo que hace exclusivo al Dispositivo A es que es la **única
+> autorizada a mantener la sesión con la controladora**, porque el Kinova Gen3
+> solo admite una sesión cíclica en tiempo real (dos estaciones compitiendo
+> disparan *Safety Faults*). Esa es la convención de **estación anfitriona** que
+> implementa el paquete `burger_kinova_connection`.
 
 ```
 +---------------------------------------------------------------------------------------------------+
-|                            ARQUITECTURA DISTRIBUIDA DEL FLUJO DE VISIÓN                           |
+|          ARQUITECTURA DISTRIBUIDA DEL FLUJO DE VISIÓN - LAN ÚNICA 192.168.1.0/24                  |
 +---------------------------------------------------------------------------------------------------+
 
- [ Robot Kinova Gen3 ]            [ Dispositivo A: Gateway ]             [ Dispositivo B: Wi-Fi ]
- (Servidor RTSP H.264)            (Conectado por Ethernet)               (Estación Procesamiento)
-     192.168.1.10                      192.168.1.100                          192.168.50.20
+              Router TP-Link AX12 - 192.168.1.1 - SSID "ros2" (una sola subred para todos)
+                     |                            |                                  |
+ [ Robot Kinova Gen3 ]            [ Disp. A: Anfitriona ]                [ Disp. B: Wi-Fi ]
+ (Servidor RTSP H.264)            (Abre la sesión del robot)             (Estación Procesamiento)
+     192.168.1.10                      192.168.1.100                          192.168.1.101
+      (IP estática)                  (reserva DHCP fija)                   (DHCP .101-.254)
           |                                  |                                      |
           |  === 1. Enlace RTSP / H.264 ===> |                                      |
-          |      (Cable Ethernet Gigabit)    |                                      |
+          |      (Ethernet Gigabit)          |                                      |
           |                                  |                                      |
           |                       [ ros2_kortex_vision ]                            |
           |                                  ↓ (Decodifica H.264)                   |
@@ -58,7 +73,7 @@ En celdas robóticas colaborativas, la arquitectura de procesamiento visual se d
 ```
 
 #### ¿Por qué el Kinova utiliza RTSP y cómo se integra con ROS 2?
-El sensor óptico en la muñeca del Kinova Gen3 opera como un servidor RTSP nativo (puerto 554) transmitiendo video H.264. En el Gateway local (Dispositivo A), el driver decodifica este flujo, le estampa el reloj del sistema (`header.stamp`) y lo asocia al árbol cinemático (`TF2`). Luego, `image_transport` comprime dinámicamente el video a JPEG ($< 1.5\text{ MB/s}$, reduciendo $>90\%$ del ancho de banda) y lo distribuye mediante CycloneDDS sobre Wi-Fi.
+El sensor óptico en la muñeca del Kinova Gen3 opera como un servidor RTSP nativo (puerto 554) transmitiendo video H.264. En la estación anfitriona (Dispositivo A), el driver decodifica este flujo, le estampa el reloj del sistema (`header.stamp`) y lo asocia al árbol cinemático (`TF2`). Luego, `image_transport` comprime dinámicamente el video a JPEG ($< 1.5\text{ MB/s}$, reduciendo $>90\%$ del ancho de banda) y lo distribuye mediante CycloneDDS sobre Wi-Fi.
 
 #### Medición y Telemetría Científica con el Monitor de Red (`monitor_red`)
 El proyecto incorpora un **Monitor de Red Híbrido** (`network_setup/iniciar_monitor.sh`) que levanta un servidor web en `http://localhost:8080`. Este monitor escucha pasivamente los anuncios SPDP de descubrimiento multicast, audita el tráfico RTPS de puertos DDS (7400–8000), grafica la latencia RTT y el jitter en tiempo real, y registra la telemetría experimental en archivos `.csv` para análisis cuantitativo riguroso.
@@ -148,16 +163,29 @@ La práctica se estructura en seis fases:
 
 ### Fase 1: Diagnóstico de Red y Puesta en Marcha del Monitor de Red
 
-1. **Configuración de Enlaces:**
-   - Dispositivo A (Gateway): Ethernet `192.168.1.100/24` (Kinova `192.168.1.10`) y Wi-Fi `192.168.50.10/24`.
-   - Dispositivo B (Wi-Fi): Wi-Fi `192.168.50.20/24`.
+1. **Configuración de Enlaces (una sola subred `192.168.1.0/24`):**
+   - Router TP-Link AX12: `192.168.1.1`, SSID `ros2`. Pool DHCP `192.168.1.101-254`.
+   - Robot Kinova Gen3: `192.168.1.10` (IP estática, fuera del pool DHCP).
+   - Dispositivo A (anfitriona): `192.168.1.100/24` (reserva DHCP del PC principal).
+   - Dispositivo B (Wi-Fi): la IP que le asigne el DHCP dentro de `192.168.1.101-254`.
+
+   Confirme la suya y anótela antes de seguir; los comandos posteriores la usan:
+   ```bash
+   ip -brief addr        # busque la NIC conectada al SSID ros2
+   ip route | grep default
+   ping -c 4 192.168.1.1     # router
+   ping -c 4 192.168.1.10    # robot: alcanzable desde CUALQUIER estación
+   ```
+   > [!WARNING]
+   > Si su IP aparece en `10.0.28.x` / `10.0.29.x`, el Wi-Fi saltó a la red
+   > institucional. Vuelva a conectarse al SSID `ros2` antes de continuar.
 2. **Lanzamiento del Monitor de Red Híbrido:**
    En el Dispositivo A, ejecute:
    ```bash
    bash ~/ros2_ws/src/burger_delivery/network_setup/iniciar_monitor.sh
    ```
 3. **Acceso al Dashboard Web:**
-   Abra el navegador en `http://localhost:8080` (en PC A) o `http://192.168.50.10:8080` (desde PC B).
+   Abra el navegador en `http://localhost:8080` (en PC A) o `http://192.168.1.100:8080` (desde PC B).
    - Verifique el estado de la topología DDS, las interfaces detectadas y el tráfico RTPS en tiempo real.
    - En el panel de **Benchmark / Data Logger**, inicie una sesión de registro para capturar la telemetría de la práctica.
 
@@ -369,7 +397,8 @@ Induzca y resuelva las siguientes fallas sistemáticas registrando el aislamient
 | Enlace Evaluado | IP Origen / Destino | Paquetes (Tx/Rx) | RTT Mínimo (ms) | RTT Promedio (ms) | RTT Máximo (ms) | Jitter (mdev) | Estado |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | **Cableado (Disp. A -> Kinova)** | `192.168.1.100` -> `192.168.1.10` | 10 / ___ | | | | | |
-| **Inalámbrico (Disp. B -> Disp. A)** | `192.168.50.20` -> `192.168.50.10` | 10 / ___ | | | | | |
+| **Inalámbrico (Disp. B -> Kinova)** | `192.168.1.101` -> `192.168.1.10` | 10 / ___ | | | | | |
+| **Inalámbrico (Disp. B -> Disp. A)** | `192.168.1.101` -> `192.168.1.100` | 10 / ___ | | | | | |
 
 ### Tabla 2: Rendimiento del Visor RTSP Directo (`test_kinova_camera.py`)
 | Stream / Configuración | Backend Activo | FPS Medido | Latencia Percibida | Estabilidad Visual |

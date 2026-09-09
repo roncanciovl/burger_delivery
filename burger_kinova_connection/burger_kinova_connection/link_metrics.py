@@ -91,6 +91,7 @@ def validate_joint_state(
     names: Sequence[str],
     positions: Sequence[float],
     expected_joints: Sequence[str],
+    max_abs_rad: Optional[float] = None,
 ) -> JointStateValidation:
     """
     Validar un mensaje de estado articular sin depender del orden del arreglo.
@@ -99,7 +100,15 @@ def validate_joint_state(
 
     * no trae nombres,
     * los arreglos de nombres y posiciones son incoherentes en longitud,
-    * alguna posición de una articulación esperada no es un número finito.
+    * alguna posición de una articulación esperada no es un número finito,
+    * o alguna posición es finita pero físicamente imposible.
+
+    El último caso no es teórico. Con el robot real se observó ``joint_7`` reportando
+    ``1.12e+277`` rad de forma constante, con par exactamente cero, porque el brazo
+    anunciaba seis actuadores mientras el driver se lanzó con ``dof:=7``: la casilla de
+    esa articulación nunca se escribía y conservaba memoria sin inicializar. Como
+    ``1.12e+277`` **es** un número finito, comprobar sólo ``isfinite`` daba el enlace por
+    saludable mientras una de las siete articulaciones era basura.
 
     Un mensaje al que sólo le faltan articulaciones **sí** se considera inválido para
     comandar, pero se reporta con la lista concreta de faltantes para que el
@@ -108,6 +117,10 @@ def validate_joint_state(
     :param names: nombres de articulación tal como llegan en el mensaje.
     :param positions: posiciones correspondientes, en el mismo orden que ``names``.
     :param expected_joints: articulaciones que deben estar presentes.
+    :param max_abs_rad: magnitud máxima plausible de una posición articular. Si se
+        indica, una posición cuyo valor absoluto la supere invalida el mensaje. Un
+        límite generoso basta: sirve para distinguir telemetría de basura, no para
+        sustituir los límites articulares aprobados de ``joint_min_rad``/``joint_max_rad``.
     :returns: el resultado de la validación.
     """
     names = list(names)
@@ -143,6 +156,18 @@ def validate_joint_state(
             f"posiciones no finitas (NaN/inf) en: {', '.join(non_finite)}",
             positions=found,
         )
+
+    if max_abs_rad is not None:
+        implausibles = {j: v for j, v in found.items() if abs(v) > max_abs_rad}
+        if implausibles:
+            detalle = ', '.join(f'{j}={v:.3g}' for j, v in implausibles.items())
+            return JointStateValidation(
+                False,
+                f'posiciones físicamente imposibles (|q| > {max_abs_rad:g} rad): '
+                f'{detalle}. Suele indicar que el driver expone más articulaciones de '
+                f'las que el robot reporta, y esa casilla nunca se escribe',
+                positions=found,
+            )
 
     return JointStateValidation(True, '', positions=found, missing=[])
 
@@ -230,6 +255,7 @@ class LinkHealth:
         min_hz: float = 20.0,
         window_samples: int = 50,
         min_span_s: float = 0.5,
+        max_abs_rad: Optional[float] = None,
     ):
         """
         Construir el acumulador.
@@ -238,6 +264,8 @@ class LinkHealth:
         :param timeout_s: edad máxima tolerada del último mensaje válido.
         :param min_hz: frecuencia mínima aceptada antes de declarar degradación.
         :param window_samples: tamaño de la ventana del estimador de frecuencia.
+        :param max_abs_rad: magnitud máxima plausible de una posición articular; se
+            transporta para quien construya la validación a partir de este acumulador.
         :param min_span_s: tiempo real mínimo de observación continua antes de creer la
             frecuencia estimada. Al suscribirse, DDS entrega de golpe los mensajes ya
             encolados y la ventana se llena en microsegundos, produciendo estimaciones
@@ -249,6 +277,7 @@ class LinkHealth:
         self.expected_joints = list(expected_joints)
         self.timeout_s = float(timeout_s)
         self.min_hz = float(min_hz)
+        self.max_abs_rad = max_abs_rad
         self._rate = RateEstimator(window_samples)
         self._min_span_s = max(0.0, float(min_span_s))
         self._last_valid_s: Optional[float] = None

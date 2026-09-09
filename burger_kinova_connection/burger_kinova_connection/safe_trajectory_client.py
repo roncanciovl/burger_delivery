@@ -113,6 +113,7 @@ class SafeTrajectoryClient(Node):
         )
         self.declare_parameter('joint_state_timeout_s', 1.0)
         self.declare_parameter('min_joint_state_hz', 20.0)
+        self.declare_parameter('max_plausible_joint_rad', 100.0)
         self.declare_parameter('min_rate_observation_s', 0.5)
         self.declare_parameter('max_joint_delta_rad', 0.10)
         self.declare_parameter('trajectory_duration_s', 5.0)
@@ -136,6 +137,7 @@ class SafeTrajectoryClient(Node):
         self._joint_min = list(self.get_parameter('joint_min_rad').value)
         self._joint_max = list(self.get_parameter('joint_max_rad').value)
         self._max_delta = float(self.get_parameter('max_joint_delta_rad').value)
+        self._max_abs_rad = float(self.get_parameter('max_plausible_joint_rad').value)
         self._duration_s = float(self.get_parameter('trajectory_duration_s').value)
         self._enable_motion = bool(self.get_parameter('enable_motion').value)
         self._use_fake_hardware = bool(self.get_parameter('use_fake_hardware').value)
@@ -150,6 +152,7 @@ class SafeTrajectoryClient(Node):
             timeout_s=float(self.get_parameter('joint_state_timeout_s').value),
             min_hz=float(self.get_parameter('min_joint_state_hz').value),
             min_span_s=float(self.get_parameter('min_rate_observation_s').value),
+            max_abs_rad=self._max_abs_rad,
         )
         self._lock = threading.Lock()
 
@@ -175,7 +178,8 @@ class SafeTrajectoryClient(Node):
 
         :param msg: mensaje ``/joint_states`` recibido.
         """
-        validation = validate_joint_state(msg.name, msg.position, self._expected_joints)
+        validation = validate_joint_state(
+            msg.name, msg.position, self._expected_joints, self._max_abs_rad)
         with self._lock:
             self._health.update(validation, time.monotonic())
         if not validation.valid:

@@ -89,6 +89,62 @@ def test_rechaza_posiciones_no_finitas():
     assert 'joint_4' in result.reason
 
 
+def test_rechaza_posicion_finita_pero_imposible():
+    """
+    Regresión del robot real: joint_7 = 1.12e+277 rad con par cero.
+
+    El brazo anunciaba seis actuadores mientras el driver corría con dof:=7, así que esa
+    casilla nunca se escribía y conservaba memoria sin inicializar. Como el valor SÍ es
+    finito, comprobar sólo NaN/inf daba el enlace por saludable.
+    """
+    names, positions = _full_message()
+    positions[6] = 1.1207224803148005e+277
+    assert validate_joint_state(names, positions, JOINTS).valid
+    resultado = validate_joint_state(names, positions, JOINTS, max_abs_rad=100.0)
+    assert not resultado.valid
+    assert 'joint_7' in resultado.reason
+    assert 'imposibles' in resultado.reason
+
+
+def test_el_umbral_de_plausibilidad_es_opcional():
+    """Sin umbral, el comportamiento previo se conserva."""
+    names, positions = _full_message()
+    positions[2] = 500.0
+    assert validate_joint_state(names, positions, JOINTS).valid
+
+
+def test_una_posicion_plausible_no_se_rechaza():
+    """Un valor grande pero posible en una articulación continua se acepta."""
+    names, positions = _full_message()
+    positions[0] = 12.5    # ~2 vueltas acumuladas
+    assert validate_joint_state(names, positions, JOINTS, max_abs_rad=100.0).valid
+
+
+def test_el_umbral_reporta_todas_las_articulaciones_afectadas():
+    """El motivo enumera cada articulación implausible, no sólo la primera."""
+    names, positions = _full_message()
+    positions[1] = 1e200
+    positions[5] = -1e200
+    resultado = validate_joint_state(names, positions, JOINTS, max_abs_rad=100.0)
+    assert 'joint_2' in resultado.reason and 'joint_6' in resultado.reason
+
+
+def test_el_enlace_con_basura_no_es_saludable():
+    """Con una articulación imposible, el monitor no debe declarar el enlace sano."""
+    health = LinkHealth(JOINTS, timeout_s=1.0, min_hz=20.0, max_abs_rad=100.0)
+    stamp = 0.0
+    for _ in range(30):
+        names, positions = _full_message()
+        positions[6] = 1.1207224803148005e+277
+        health.update(
+            validate_joint_state(names, positions, JOINTS, health.max_abs_rad), stamp)
+        stamp += 0.025
+    state, reason, _ = health.classify(stamp)
+    assert state == STATE_ERROR
+    assert health.rejected == 30
+    assert 'imposibles' in health.last_error, reason
+
+
 def test_estimador_de_frecuencia():
     """La frecuencia media se calcula sobre la ventana deslizante."""
     estimator = RateEstimator(window_samples=10)

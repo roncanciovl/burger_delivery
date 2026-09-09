@@ -130,6 +130,7 @@ class KinovaMonitor(Node):
         )
         self.declare_parameter('joint_state_timeout_s', 1.0)
         self.declare_parameter('min_joint_state_hz', 20.0)
+        self.declare_parameter('max_plausible_joint_rad', 100.0)
         self.declare_parameter('diagnostic_rate_hz', 1.0)
         self.declare_parameter('hz_window_samples', 50)
         self.declare_parameter('min_rate_observation_s', 0.5)
@@ -156,6 +157,7 @@ class KinovaMonitor(Node):
         self._use_fake_hardware = bool(self.get_parameter('use_fake_hardware').value)
         self._enable_motion = bool(self.get_parameter('enable_motion').value)
         self._motion_controller = str(self.get_parameter('motion_controller').value)
+        self._max_abs_rad = float(self.get_parameter('max_plausible_joint_rad').value)
         self._robot_ip = str(self.get_parameter('robot_ip').value)
         self._driver_local = bool(self.get_parameter('start_driver').value)
         self._required_controllers: List[str] = list(
@@ -202,6 +204,7 @@ class KinovaMonitor(Node):
             min_hz=float(self.get_parameter('min_joint_state_hz').value),
             window_samples=int(self.get_parameter('hz_window_samples').value),
             min_span_s=float(self.get_parameter('min_rate_observation_s').value),
+            max_abs_rad=self._max_abs_rad,
         )
         self._controllers: Dict[str, str] = {}
         self._controller_service_ready = False
@@ -287,7 +290,8 @@ class KinovaMonitor(Node):
         :param msg: mensaje recibido.
         """
         now = self._now_s()
-        validation = validate_joint_state(msg.name, msg.position, self._expected_joints)
+        validation = validate_joint_state(
+            msg.name, msg.position, self._expected_joints, self._max_abs_rad)
         was_fresh = self._health.is_fresh(now)
         self._health.update(validation, now)
 

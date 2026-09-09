@@ -88,6 +88,13 @@ launch:
     # Al suscribirse, DDS entrega de golpe los mensajes ya encolados: sin esta guarda la
     # ventana se llena en microsegundos y el enlace parece ir a miles de Hz.
     min_rate_observation_s: 0.5
+    # Magnitud máxima plausible de una posición articular. No sustituye a los límites
+    # aprobados de abajo: sirve para distinguir telemetría de BASURA. Con el robot real
+    # se observó joint_7 = 1.12e+277 rad constante y par cero, porque el brazo anunciaba
+    # seis actuadores mientras el driver corría con dof:=7 y esa casilla nunca se
+    # escribía. Como 1.12e+277 sí es un número finito, comprobar sólo NaN/inf daba el
+    # enlace por saludable.
+    max_plausible_joint_rad: 100.0
     diagnostic_rate_hz: 1.0        # frecuencia de publicación de /burger/kinova/diagnostics
 
     # ---- Límites de seguridad de la meta articular (RF-06 / §11) ---------------------

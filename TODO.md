@@ -75,6 +75,12 @@ Este documento centraliza las tareas pendientes, oportunidades de mejora identif
   - [ ] Reproducir el temblor de forma controlada **con la estación por cable**, ejecutando una trayectoria articular lenta y grabando `/joint_states` en MCAP.
   - [ ] Comparar A/B con y sin parche, ya sobre enlace cableado, midiendo la desviación por articulación respecto de la trayectoria comandada (no a ojo).
   - [ ] Según el resultado: retirar el parche, o documentarlo con evidencia en [`INSTALACION_KORTEX.md`](file:///home/roncanciovl/ros2_ws/src/burger_delivery/ros2_setup/INSTALACION_KORTEX.md) §3.4 explicando qué mide y qué corrige.
+- [ ] **🔴 Determinar si el Kinova es de 6 o de 7 GDL** (bloquea PA-08 y la meta articular):
+  - El driver reporta `Actuator count reported by robot is '6'` de forma consistente, mientras todo el proyecto se configura con `dof:=7`. La séptima casilla nunca se escribe: se observó `joint_7 = 1.12e+277` en una sesión y `0.0` en otra, siempre bit-idéntica dentro de cada sesión mientras el resto muestra ruido de encoder.
+  - [ ] Consultar la interfaz web del robot (`http://192.168.1.10`, puerto 80 activo, requiere credenciales) para distinguir **Gen3 de 6 GDL** de **Gen3 de 7 GDL con el actuador 7 fuera de línea o en falla**.
+  - [ ] Según el resultado: corregir `dof`, `expected_joints`, `safe_joint_positions_rad`, `joint_min_rad` y `joint_max_rad` —todos dimensionados a 7—, o abrir la reparación del actuador.
+  - [ ] Revisar el enunciado del proyecto y el resto de la documentación, que declaran 7 GDL en todas partes.
+  - Detalle en [ANOMALIAS_HARDWARE.md](file:///home/roncanciovl/ros2_ws/src/burger_delivery/network_setup/ANOMALIAS_HARDWARE.md) §3.
 - [ ] **Cuantificar el residuo que aporta WSL2**: con el enlace ya por cable persisten 6 overruns en 120 s y el driver sigue avisando `Could not enable FIFO RT scheduling policy`. Repetir la rama `ethernet` en Linux nativo para separar la contribución de la capa WSL2 de la del enlace.
 
 ---
