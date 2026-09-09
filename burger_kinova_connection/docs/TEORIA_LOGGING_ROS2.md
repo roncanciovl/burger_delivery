@@ -57,7 +57,7 @@ correlacionadas.
 
 | Nivel | Valor | Criterio | Ejemplo real en `burger_kinova_connection` |
 |---|---:|---|---|
-| `DEBUG` | 10 | Trazas por ciclo. **Desactivado en operación normal** para no degradar el determinismo. | Posición de las siete articulaciones en cada mensaje, delta calculado por articulación, volcado de la caja negra |
+| `DEBUG` | 10 | Trazas por ciclo. **Desactivado en operación normal** para no degradar el determinismo. | Posición de las seis articulaciones en cada mensaje, delta calculado por articulación, volcado de la caja negra |
 | `INFO` | 20 | Progreso verificable | `kinova_monitor iniciado`, `Meta ACEPTADA por el controlador`, cambio en la lista de controladores |
 | `WARN` | 30 | Condición inesperada pero recuperable | Frecuencia de `/joint_states` por debajo del mínimo, `list_controllers` todavía no disponible |
 | `ERROR` | 40 | Falla funcional que impide la tarea | Telemetría vencida, meta rechazada, límite articular excedido, servidor de acción ausente |
@@ -190,9 +190,9 @@ Un monitor que repite `ERROR: sin telemetría` a 1 Hz genera miles de líneas id
 contiene la cronología limpia del incidente:
 
 ```
-[INFO]  [TRANSICIÓN] INICIO -> OK    | telemetría saludable: 40.0 Hz, edad 0.012 s, 7/7 articulaciones
+[INFO]  [TRANSICIÓN] INICIO -> OK    | telemetría saludable: 40.0 Hz, edad 0.012 s, 6/6 articulaciones
 [ERROR] [TRANSICIÓN] OK -> ERROR     | telemetría vencida: 1.35 s sin mensaje válido (límite 1.00 s)
-[INFO]  [TRANSICIÓN] ERROR -> OK     | telemetría saludable: 39.8 Hz, edad 0.010 s, 7/7 articulaciones
+[INFO]  [TRANSICIÓN] ERROR -> OK     | telemetría saludable: 39.8 Hz, edad 0.010 s, 6/6 articulaciones
 ```
 
 Tres líneas describen por completo las pruebas de aceptación **PA-05** (pérdida de

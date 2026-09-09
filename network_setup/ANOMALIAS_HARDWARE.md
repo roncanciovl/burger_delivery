@@ -91,7 +91,22 @@ una de las siete era ficción.
 Peor aún, `safe_trajectory_client` calcularía el desplazamiento de `joint_7` contra esa
 posición inventada y podría enviar una meta para una articulación que no existe.
 
-### Sugerencias
+### ✅ Resuelto (2026-09-09)
+
+**El brazo es un Gen3 de 6 GDL con pinza Robotiq 2F-85.** Con `dof:=6` publica
+`joint_1..joint_6` más `robotiq_85_left_knuckle_joint`, todas con lecturas reales, y se
+activan `joint_state_broadcaster`, `joint_trajectory_controller` y
+`robotiq_gripper_controller`.
+
+Por qué no se había podido usar la configuración correcta: el commit local `b4ae524` en
+`ros2_kortex` retiró los parámetros de simulación del macro pero **dejó los bloques
+`<xacro:if>` que los usaban**, con expresiones `${}` vacías. La descripción de 6 GDL
+fallaba con `error: invalid syntax (<expression>, line 0)`, un mensaje que no apunta a la
+causa, así que se venía usando `dof:=7` sobre un brazo de seis. Se completó el refactor
+eliminando esos bloques. Los estudiantes clonan `ros2_kortex` de Kinova sin ese commit,
+por lo que nunca les afectó.
+
+### Sugerencias (histórico del diagnóstico)
 
 1. **Determinar primero qué es el robot.** Su interfaz web responde en el puerto 80
    (`http://192.168.1.10`) y requiere credenciales. Hay que distinguir dos casos con

@@ -1,7 +1,7 @@
 # `burger_kinova_connection`
 
 Package ROS 2 de **pruebas de conectividad** entre el proyecto `burger_delivery` y un
-manipulador **Kinova Gen3 de 7 grados de libertad**.
+manipulador **Kinova Gen3 de 6 grados de libertad** con pinza Robotiq 2F-85.
 
 Verifica, monitorea y utiliza de forma controlada el enlace con el robot: confirma que el
 driver y sus controladores están disponibles, valida la telemetría articular, publica un
@@ -268,7 +268,7 @@ ros2 launch burger_kinova_connection kinova_connection.launch.py \
 > Es una incompatibilidad de `ros2_kortex` con Jazzy, no de este package, y no puede
 > corregirse aquí porque el requisito de calidad prohíbe modificar `ros2_kortex`. Como la
 > pinza además está fuera del alcance del corte 1, el launch la omite en modo fake, lo
-> avisa por consola y valida el brazo de 7 GDL completo. **Con hardware real la pinza sí
+> avisa por consola y valida el brazo de 6 GDL completo. **Con hardware real la pinza sí
 > se transfiere**: en esa rama del xacro las articulaciones `mimic` no llevan
 > `command_interface` y el driver arranca sin problema.
 >
@@ -375,16 +375,16 @@ normalidad: el anuncio es una comodidad, no una función crítica del enlace.
 
 | Estado | Condición |
 |---|---|
-| `OK` | Telemetría fresca, siete articulaciones y frecuencia ≥ `min_joint_state_hz` |
+| `OK` | Telemetría fresca, seis articulaciones y frecuencia ≥ `min_joint_state_hz` |
 | `WARN` | Enlace vivo pero degradado: frecuencia baja o mensajes rechazados |
 | `ERROR` | Sin telemetría, telemetría vencida, articulaciones faltantes o controlador requerido inactivo |
 
 Cada transición queda registrada una sola vez en `/rosout`:
 
 ```
-[INFO]  [TRANSICIÓN] INICIO -> OK  | telemetría saludable: 40.0 Hz, edad 0.012 s, 7/7 articulaciones
+[INFO]  [TRANSICIÓN] INICIO -> OK  | telemetría saludable: 40.0 Hz, edad 0.012 s, 6/6 articulaciones
 [ERROR] [TRANSICIÓN] OK -> ERROR   | telemetría vencida: 1.35 s sin mensaje válido (límite 1.00 s)
-[INFO]  [TRANSICIÓN] ERROR -> OK   | telemetría saludable: 39.8 Hz, edad 0.010 s, 7/7 articulaciones
+[INFO]  [TRANSICIÓN] ERROR -> OK   | telemetría saludable: 39.8 Hz, edad 0.010 s, 6/6 articulaciones
 ```
 
 ---
@@ -499,7 +499,7 @@ Recorre las capas **en este orden**; no saltes ninguna.
 | 1 | `estado_general = ERROR`, `edad_s = sin_datos` | `ros2 node list`, `ros2 topic list` | Driver no arrancado, o `ROS_DOMAIN_ID` distinto entre estaciones |
 | 2 | Nodos visibles pero sin telemetría | `ros2 topic hz /joint_states` | Firewall o multicast DDS bloqueado en la red del laboratorio |
 | 3 | `frecuencia_hz` por debajo del mínimo | `ros2 topic hz /joint_states`, `top` | WiFi saturado o CPU al límite; considera Ethernet |
-| 4 | `articulaciones_faltantes` no vacío | `ros2 topic echo /joint_states --once` | Bringup lanzado sin `dof:=7` o con el modelo equivocado |
+| 4 | `articulaciones_faltantes` no vacío | `ros2 topic echo /joint_states --once` | Bringup lanzado sin `dof:=6` o con el modelo equivocado |
 | 5 | Controladores no activos | `ros2 control list_controllers` | El spawner falló; revisa el log del bringup |
 | 6 | `[INFRAESTRUCTURA] servidor de acción no apareció` | `ros2 action list` | `joint_trajectory_controller` inactivo o nombre de acción distinto |
 | 7 | `META BLOQUEADA` | Informe del cliente en modo seco | Cada motivo aparece con su valor concreto |
@@ -560,8 +560,8 @@ Todo lo anterior queda validado en simulación. Para la sesión con el robot fí
 | ID | Prueba | Comando / procedimiento | Resultado esperado |
 |---|---|---|---|
 | PA-01 | Compilación limpia | `colcon build --packages-select burger_kinova_connection` y `colcon test` | Sin errores de compilación, importación ni estilo |
-| PA-02 | Grafo en modo fake | Modo 6.1 + `ros2 node list`, `ros2 topic list` | Monitor activo, siete articulaciones, diagnóstico publicado |
-| PA-03 | Telemetría real | Modo 6.2 + `ros2 topic hz /joint_states` durante 60 s | Siete articulaciones, sin interrupciones, frecuencia > mínimo |
+| PA-02 | Grafo en modo fake | Modo 6.1 + `ros2 node list`, `ros2 topic list` | Monitor activo, seis articulaciones, diagnóstico publicado |
+| PA-03 | Telemetría real | Modo 6.2 + `ros2 topic hz /joint_states` durante 60 s | Seis articulaciones, sin interrupciones, frecuencia > mínimo |
 | PA-04 | Controladores | `ros2 control list_controllers` y el estado del diagnóstico | Broadcaster y controlador de trayectoria `active` |
 | PA-05 | Pérdida de enlace | Detener el driver o aislar la red | `[TRANSICIÓN] OK -> ERROR` tras el timeout, sin caída del monitor |
 | PA-06 | Recuperación | Restaurar el driver o la red | `[TRANSICIÓN] ERROR -> OK` sin reiniciar el monitor |

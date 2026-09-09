@@ -26,7 +26,7 @@ Clasificación de la salud del enlace (RF-03):
 ============  =========================================================================
 Estado        Condición
 ============  =========================================================================
-``OK``        Telemetría fresca, siete articulaciones presentes y frecuencia ≥ mínima.
+``OK``        Telemetría fresca, las articulaciones esperadas presentes y frecuencia ≥ mínima.
 ``WARN``      Enlace vivo pero degradado: frecuencia baja, o mensajes rechazados.
 ``ERROR``     Sin telemetría, telemetría vencida o articulaciones faltantes.
 ============  =========================================================================
@@ -436,7 +436,8 @@ class LinkHealth:
             return (
                 STATE_ERROR,
                 f"articulaciones faltantes: {', '.join(self._missing)}",
-                'Confirma que el bringup se lanzó con dof:=7 y el modelo Gen3 correcto.',
+                'Confirma que el bringup se lanzó con el dof correcto (este brazo es de 6 GDL) '
+                'y el modelo Gen3 adecuado.',
             )
         hz = self.hz()
         if not self.rate_is_reliable():

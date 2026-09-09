@@ -94,7 +94,7 @@
 
 ## 1. Descripción
 
-La persona participante debe diseñar e implementar un package ROS 2 llamado `burger_kinova_connection` que permita verificar, monitorear y utilizar de forma controlada la comunicación entre el proyecto `burger_delivery` y un manipulador Kinova Gen3 de 7 grados de libertad.
+La persona participante debe diseñar e implementar un package ROS 2 llamado `burger_kinova_connection` que permita verificar, monitorear y utilizar de forma controlada la comunicación entre el proyecto `burger_delivery` y un manipulador Kinova Gen3 de 6 grados de libertad con pinza Robotiq 2F-85.
 
 El package utilizará el stack existente `ros2_kortex`. No debe reimplementar el driver, modificar el protocolo propietario de Kinova ni comunicarse directamente con la API Kortex. Su responsabilidad comienza en las interfaces ROS 2 que publica el driver.
 
@@ -106,7 +106,7 @@ Construir una arquitectura ROS 2 reproducible que pueda:
 
 1. Iniciar o descubrir el driver del Kinova.
 2. Confirmar que el robot y sus controladores están disponibles.
-3. Recibir y validar el estado de las siete articulaciones.
+3. Recibir y validar el estado de las seis articulaciones.
 4. Publicar un diagnóstico comprensible del enlace.
 5. Enviar una trayectoria articular de prueba bajo condiciones explícitas de seguridad.
 6. Funcionar tanto en una estación única como en una arquitectura DDS distribuida entre dos computadores.
@@ -117,13 +117,28 @@ Construir una arquitectura ROS 2 reproducible que pueda:
 |---|---|
 | Sistema operativo | Ubuntu 24.04 |
 | Middleware | ROS 2 Jazzy |
-| Manipulador | Kinova Gen3, 7 DOF |
+| Manipulador | Kinova Gen3, **6 DOF** |
 | Pinza disponible | Robotiq 2F-85 |
 | Driver | `kortex_driver` mediante `ros2_control` |
 | Bringup | `kortex_bringup/gen3.launch.py` |
 | Control articular | `joint_trajectory_controller` |
 | Estado articular | `/joint_states` |
 | Red | Ethernet hacia el robot y DDS entre estaciones ROS 2 |
+
+> [!IMPORTANT]
+> **El brazo del laboratorio es un Gen3 de SEIS grados de libertad**, no de siete. El
+> propio driver lo declara al arrancar:
+>
+> ```text
+> [KortexMultiInterfaceHardware]: Actuator count reported by robot is '6'
+> ```
+>
+> Lanzarlo con `dof:=7` no produce un error: el driver expone una séptima articulación
+> que el robot nunca alimenta, y esa casilla publica lo que hubiera en memoria. Se ha
+> observado `joint_7` reportando `1.12e+277` rad en una sesión y `0.0` en otra, siempre
+> constante mientras el resto muestra ruido de encoder. El caso `0.0` es especialmente
+> traicionero: es finito, cae dentro de todos los límites y supera cualquier validación
+> de rango. Detalle en [`ANOMALIAS_HARDWARE.md`](../../network_setup/ANOMALIAS_HARDWARE.md) §3.
 
 La dirección `192.168.1.10` documentada en el entorno local puede utilizarse como ejemplo de laboratorio, pero debe suministrarse mediante configuración o argumento de launch. No debe quedar escrita como constante dentro del código Python.
 
@@ -341,7 +356,7 @@ Los ejecutables y el launch deben quedar disponibles desde `install/`; no se ace
 - Cargar `kinova_connection.yaml`.
 - Iniciar `kinova_monitor`.
 - Incluir opcionalmente `kortex_bringup/gen3.launch.py` cuando `start_driver:=true`.
-- Transferir `robot_ip`, `use_fake_hardware`, `launch_rviz`, `dof:=7` y la configuración de la pinza al bringup.
+- Transferir `robot_ip`, `use_fake_hardware`, `launch_rviz`, `dof:=6` y la configuración de la pinza al bringup.
 - Permitir `start_driver:=false` para operar como cliente de un driver ejecutado en otra estación.
 
 ### RF-03. Monitoreo del estado articular
@@ -349,7 +364,7 @@ Los ejecutables y el launch deben quedar disponibles desde `install/`; no se ace
 `kinova_monitor` debe:
 
 - Suscribirse a `/joint_states`.
-- Comprobar la presencia de `joint_1` a `joint_7` sin depender del orden del arreglo.
+- Comprobar la presencia de `joint_1` a `joint_6` sin depender del orden del arreglo. La articulación de la pinza (`robotiq_85_left_knuckle_joint`) también aparece en `/joint_states` y debe ignorarse sin invalidar el mensaje.
 - Rechazar mensajes cuyos arreglos de nombres y posiciones sean incoherentes.
 - Medir frecuencia aproximada, edad del último mensaje y cantidad de interrupciones.
 - Distinguir entre conexión saludable, degradada y perdida.
@@ -478,8 +493,8 @@ ros2 launch burger_kinova_connection kinova_connection.launch.py \
 | ID | Prueba | Procedimiento mínimo | Resultado esperado |
 |---|---|---|---|
 | PA-01 | Compilación limpia | Compilar únicamente el package y ejecutar `colcon test` | Sin errores de compilación, importación o estilo |
-| PA-02 | Grafo en modo fake | Lanzar con hardware simulado e inspeccionar nodos e interfaces | Monitor activo, siete articulaciones y diagnóstico publicado |
-| PA-03 | Telemetría real | Conectar el Kinova y observar `/joint_states` durante al menos 60 s | Siete articulaciones, sin interrupciones y frecuencia superior al mínimo configurado |
+| PA-02 | Grafo en modo fake | Lanzar con hardware simulado e inspeccionar nodos e interfaces | Monitor activo, seis articulaciones y diagnóstico publicado |
+| PA-03 | Telemetría real | Conectar el Kinova y observar `/joint_states` durante al menos 60 s | Seis articulaciones, sin interrupciones y frecuencia superior al mínimo configurado |
 | PA-04 | Controladores | Consultar `list_controllers` desde el nodo y desde CLI | Broadcaster y controlador de trayectoria activos |
 | PA-05 | Pérdida de enlace | Detener el driver o aislar el cliente de la red | Transición a `ERROR` después del timeout, sin caída del monitor |
 | PA-06 | Recuperación | Restaurar el driver o la red | Regreso a estado saludable sin reiniciar el monitor |
@@ -580,7 +595,7 @@ El proyecto se considera técnicamente completo cuando:
 
 - Existe un package instalable y no una colección de scripts sueltos en el repositorio del equipo.
 - El monitor distingue correctamente conexión saludable, degradada y perdida.
-- La información de las siete articulaciones es verificable.
+- La información de las seis articulaciones es verificable.
 - El estado de los controladores se consulta mediante ROS 2.
 - Ninguna meta puede enviarse con movimiento deshabilitado o telemetría inválida.
 - La trayectoria aprobada se ejecuta y reporta su resultado.

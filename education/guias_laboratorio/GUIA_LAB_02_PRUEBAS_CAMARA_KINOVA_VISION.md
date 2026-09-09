@@ -4,7 +4,7 @@
 
 | FACULTAD | PROGRAMA | ASIGNATURA | SEMESTRE | CÓDIGO GUÍA | REVISIÓN |
 |:---|:---|:---|:---:|:---:|:---:|
-| Facultad de Ingeniería | Ingeniería Mecatrónica | ROBOT OPERATING SYSTEM - ROS | VIII – IX | GL-AA-F-1 / LAB-02 | 1.5 (2026-2) |
+| Facultad de Ingeniería | Ingeniería Mecatrónica | ROBOT OPERATING SYSTEM - ROS | VIII – IX | GL-AA-F-1 / LAB-02 | 1.6 (2026-2) |
 
 ---
 
@@ -13,6 +13,7 @@
 | Descripción del Cambio | Justificación | Fecha |
 |---|---|:---:|
 | Integración de Monitor de Red Híbrido y Grabación del Experimento | Incorporación del panel web de telemetría en tiempo real (`monitor_red`), exportación de logs CSV de QoS y protocolo de grabación audiovisual obligatoria del experimento distribuido. | 17/08/2026 |
+| Corrección del direccionamiento IP a la subred real del laboratorio | La guía usaba una subred Wi-Fi `192.168.50.0/24` inexistente en el proyecto. El laboratorio opera una LAN plana `192.168.1.0/24` (router TP-Link AX12 en `192.168.1.1`, Kinova en `192.168.1.10`, reserva `192.168.1.100`, DHCP `.101-.254`). Se corrigen diagrama, Fase 1, Fase 4, Tabla 1 y la Pregunta 3, y se reemplaza el rol de *Gateway* enrutador por el de **estación anfitriona**. | 09/09/2026 |
 | Corrección de los comandos ROS 2 de las Fases 3 y 4 | `ros2 launch burger_delivery robot.launch.py` no existe: `burger_delivery` no es un paquete ROS 2. Se documenta la instalación de `ros2_kortex_vision` e `image-transport-plugins`, el lanzamiento real (`kinova_vision.launch.py`), el descubrimiento del parámetro `jpeg_quality`, la sintaxis ROS 2 de `image_view` y el perfil versionado `network_setup/cyclonedds.xml`. | 02/09/2026 |
 | Corrección del procedimiento del stream de profundidad (Fase 2) | El stream `depth` del Kinova usa payload RTP `X-GST` (no H.264): se documenta la instalación obligatoria de los plugins GStreamer, se separa el procedimiento de `color` y `depth`, y se corrige el backend esperado en la Tabla 2. | 02/09/2026 |
 
@@ -41,7 +42,7 @@ En celdas robóticas colaborativas, la arquitectura de procesamiento visual se d
 +---------------------------------------------------------------------------------------------------+
 
               Router TP-Link AX12 - 192.168.1.1 - SSID "ros2" (una sola subred para todos)
-                     |                            |                                  |
+          |                                  |                                      |
  [ Robot Kinova Gen3 ]            [ Disp. A: Anfitriona ]                [ Disp. B: Wi-Fi ]
  (Servidor RTSP H.264)            (Abre la sesión del robot)             (Estación Procesamiento)
      192.168.1.10                      192.168.1.100                          192.168.1.101
@@ -325,14 +326,16 @@ La práctica se estructura en seis fases:
    export CYCLONEDDS_URI=file://$HOME/ros2_ws/src/burger_delivery/network_setup/cyclonedds.xml
    ```
    El perfil selecciona la interfaz automáticamente, así que **no requiere
-   edición** en un equipo con una sola NIC en la red Wi-Fi del laboratorio.
+   edición**: en la topología del laboratorio cada equipo tiene una sola NIC
+   activa dentro de `192.168.1.0/24` y la autodetección acierta.
 
-   **Excepción — Dispositivo A (dual-homed):** tiene una NIC Ethernet hacia el
-   Kinova y otra Wi-Fi hacia el Dispositivo B, y la autodetección puede escoger
-   la equivocada. Solo en ese equipo, edite `network_setup/cyclonedds.xml`,
-   comente el bloque `autodetermine` y descomente el manual con el nombre real
-   de su interfaz **inalámbrica** (véalo con `ip -brief addr`). Si CycloneDDS
-   elige la Ethernet del Kinova, el Dispositivo B nunca descubrirá los nodos.
+   **Excepción — equipos dual-homed:** si su Dispositivo A tiene además una
+   segunda NIC en otra red (una Ethernet de campus, una VPN o una interfaz
+   virtual de Docker/WSL), la autodetección puede escoger la equivocada y el
+   Dispositivo B no descubrirá ningún nodo. Solo en ese caso edite
+   `network_setup/cyclonedds.xml`, comente el bloque `autodetermine` y
+   descomente el manual con el nombre real de la interfaz conectada al SSID
+   `ros2` (véalo con `ip -brief addr`).
 
    Verifique que el perfil se cargó de verdad:
    ```bash
@@ -369,7 +372,7 @@ La práctica se estructura en seis fases:
 ### Fase 5: Protocolo de Diagnóstico Metódico por Capas ante Fallas Inducidas
 
 Induzca y resuelva las siguientes fallas sistemáticas registrando el aislamiento en la **Tabla 5**:
-1. **Falla 1 (Capa 1 - Red):** Desconexión o subred incorrecta en Wi-Fi.
+1. **Falla 1 (Capa 1 - Red):** Desconexión del SSID `ros2` o salto a la red institucional (`10.0.28.x`), que saca al equipo de `192.168.1.0/24`.
 2. **Falla 2 (Capa 2 - RTSP / Códec):** Credenciales o IP erróneas en `test_kinova_camera.py`, y desinstalación temporal de `gstreamer1.0-plugins-good` para reproducir el fallo `No URI handler implemented for "rtsp"` en el stream de profundidad.
 3. **Falla 3 (Capa 3 - CycloneDDS):** Conflicto de `ROS_DOMAIN_ID` o RMW diferente entre PC A y B.
 4. **Falla 4 (Capa 4 - Compresión):** Suscripción al tópico crudo en Wi-Fi (`-p image_transport:=raw`) y saturación del canal.
@@ -458,7 +461,7 @@ Induzca y resuelva las siguientes fallas sistemáticas registrando el aislamient
 
 1. **Pregunta 1:** Si se incrementa la resolución a 1080p, ¿qué compromiso existe entre la carga de CPU de compresión en el Gateway y el ancho de banda consumido en Wi-Fi?
 2. **Pregunta 2:** ¿Por qué en CycloneDDS es fundamental ajustar `MaxMessageSize` cuando se transmiten paquetes UDP de video comprimido?
-3. **Pregunta 3:** ¿Por qué en una arquitectura robótica distribuida NO se recomienda consumir el stream RTSP directamente desde la estación Wi-Fi sin pasar por el nodo de ROS 2 en el Gateway? *(Considere estampas de tiempo `header.stamp`, marcos `TF2` y aislamiento de subredes).*
+3. **Pregunta 3:** En este laboratorio la red es plana, así que el Dispositivo B **sí** puede abrir el RTSP del robot directamente. ¿Por qué aun así NO se recomienda hacerlo, y se exige pasar por el nodo ROS 2 de la estación anfitriona? *(Considere las estampas `header.stamp`, los marcos `TF2`, el ancho de banda del H.264 sin comprimir sobre Wi-Fi y el límite de sesiones concurrentes de la controladora del Kinova).*
 
 ---
 

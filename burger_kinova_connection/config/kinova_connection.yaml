@@ -1,5 +1,5 @@
 # =====================================================================================
-# burger_kinova_connection — Configuración única del enlace con el Kinova Gen3 (7 GDL)
+# burger_kinova_connection — Configuración del enlace con el Kinova Gen3 (6 GDL + 2F-85)
 # =====================================================================================
 # REGLAS:
 #   * Ninguna IP, usuario o contraseña vive dentro del código Python: todo llega por aquí
@@ -30,7 +30,13 @@ launch:
     launch_rviz: false
     # Parámetros que se transfieren tal cual al bringup oficial de Kinova.
     robot_type: "gen3"
-    dof: 7
+    # ⚠ El brazo del laboratorio es un Gen3 de SEIS grados de libertad con pinza
+    # Robotiq 2F-85. El propio driver lo confirma al arrancar:
+    #     KortexMultiInterfaceHardware: Actuator count reported by robot is '6'
+    # Lanzarlo con dof:=7 hace que el driver exponga una séptima articulación que el
+    # robot nunca alimenta: su casilla conserva memoria sin inicializar y ha llegado a
+    # publicar 1.12e+277 rad. Ver network_setup/ANOMALIAS_HARDWARE.md §3.
+    dof: 6
     gripper: "robotiq_2f_85"
     robot_controller: "joint_trajectory_controller"
     # Nivel de log inicial de los nodos del package (se puede cambiar en caliente).
@@ -42,6 +48,9 @@ launch:
 # -------------------------------------------------------------------------------------
 /**:
   ros__parameters:
+
+    # Identificador del hardware que acompaña cada DiagnosticStatus.
+    hardware_id: "kinova_gen3_6dof_robotiq_2f_85"
 
     # ---- Identidad de la estación ----------------------------------------------------
     # El monitor NO se conecta al robot: robot_ip sólo le sirve para comprobar si ESTA
@@ -69,9 +78,12 @@ launch:
     # Habilitación explícita de comandos físicos. NUNCA se sube a true en el repositorio.
     enable_motion: false
 
-    # ---- Nombres de las siete articulaciones del Gen3 --------------------------------
+    # ---- Nombres de las seis articulaciones del Gen3 ---------------------------------
     # El orden de este arreglo NO se usa para indexar /joint_states; sólo declara qué
     # articulaciones deben estar presentes (RF-03).
+    # Seis articulaciones. La articulación de la pinza
+    # (robotiq_85_left_knuckle_joint) también aparece en /joint_states, pero no se
+    # declara aquí: el monitor ignora las articulaciones adicionales.
     expected_joints:
       - "joint_1"
       - "joint_2"
@@ -79,7 +91,6 @@ launch:
       - "joint_4"
       - "joint_5"
       - "joint_6"
-      - "joint_7"
 
     # ---- Salud del enlace (RF-03) ----------------------------------------------------
     joint_state_timeout_s: 1.0     # edad máxima tolerada del último /joint_states
@@ -103,13 +114,17 @@ launch:
 
     # Meta articular de la prueba controlada. Debe aprobarse en laboratorio antes de
     # ejecutarse sobre hardware real. Valores en radianes, en el orden de expected_joints.
-    safe_joint_positions_rad: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    safe_joint_positions_rad: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
     # Límites articulares aprobados para la validación local previa al envío de la meta.
     # Deben ser IGUALES o MÁS RESTRICTIVOS que los límites del modelo real. Nunca se
     # amplían para "hacer pasar" una prueba.
-    joint_min_rad: [-3.14, -2.24, -3.14, -2.57, -3.14, -2.09, -3.14]
-    joint_max_rad: [3.14, 2.24, 3.14, 2.57, 3.14, 2.09, 3.14]
+    # Tomados del URDF real del Gen3 6 GDL: joint_2 = ±2.24, joint_3 = ±2.57 y
+    # joint_5 = ±2.09 son revolutas con tope; joint_1, joint_4 y joint_6 son CONTINUAS
+    # y no tienen límite en el modelo, así que aquí se acotan a una vuelta por
+    # prudencia. Nunca se amplían para hacer pasar una prueba.
+    joint_min_rad: [-3.14, -2.24, -2.57, -3.14, -2.09, -3.14]
+    joint_max_rad: [3.14, 2.24, 2.57, 3.14, 2.09, 3.14]
 
     # ---- Cliente de trayectoria segura (RF-06) ---------------------------------------
     # ⚠ Estos dos parámetros viven aquí, bajo `/**`, y NO bajo una sección con el nombre

@@ -7,7 +7,7 @@ Registro de las pruebas de aceptación PA-01 a PA-10.
 | Fecha de esta ejecución | 2026-09-08 |
 | Entorno | Ubuntu 24.04 sobre WSL2 · ROS 2 Jazzy |
 | Middleware | `rmw_cyclonedds_cpp` · `ROS_DOMAIN_ID=0` · `ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET` (por defecto) |
-| Hardware | Simulado (`use_fake_hardware:=true`) **y Kinova Gen3 real** (`192.168.1.10`) |
+| Hardware | Simulado (`use_fake_hardware:=true`) **y Kinova Gen3 real de 6 GDL + Robotiq 2F-85** (`192.168.1.10`) |
 | Estaciones | Una sola estación (A y B en el mismo equipo) |
 | Robot físico | **Disponible** desde 2026-09-08; enlace por cable Ethernet |
 
@@ -266,10 +266,9 @@ tal como exige la regla de throttling del taller de logging.
 > Sobre el robot real esta prueba requiere espacio despejado, parada de emergencia
 > accesible y autorización del responsable del laboratorio.
 >
-> ⚠ **Además está bloqueada por la incidencia 10**: el robot anuncia seis actuadores, así
-> que `joint_7` es un valor inventado. Enviar una meta de siete elementos comandaría una
-> articulación que el brazo no reporta. Resolver primero si es un Gen3 de 6 GDL o un 7 GDL
-> con el actuador 7 fuera de línea.
+> La incidencia 10 que la bloqueaba está resuelta: el brazo es un Gen3 de 6 GDL y la
+> configuración ya usa seis articulaciones. La meta aprobada debe tener **seis**
+> elementos.
 
 ---
 
@@ -344,7 +343,7 @@ repita de forma independiente sobre el robot real.
 | 6 | `fault_controller` no carga: `picknik_reset_fault_controller` no encontrado | Paquete opcional ausente | Ajeno a este package; no son faltas de seguridad del robot |
 | 7 | Por WiFi, la sesión Kortex se rompe: 132 overruns, `BaseCyclicClient::Refresh` timeout de 3.0 s y 2 pérdidas de telemetría en 120 s | Enlace de la estación | **Resuelto**: la estación del driver debe ir por cable. Experimento A/B documentado en [`EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md`](EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md) |
 | 8 | `ros2 bag record` ignora `SIGINT` dirigido a su PID fuera de una terminal | Instrumental de medición | **Corregido** en `benchmark_enlace_kinova.sh`: `setsid` + señal al grupo de procesos + verificación |
-| 10 | **`joint_7` fabricado**: el robot reporta 6 actuadores mientras el driver corre con `dof:=7`; esa casilla nunca se escribe y vale memoria sin inicializar (`1.12e+277` en una sesión, `0.0` en otra) | Configuración del proyecto vs. hardware | **ABIERTO** — bloquea PA-08. Ver [`ANOMALIAS_HARDWARE.md`](../../network_setup/ANOMALIAS_HARDWARE.md) §3 |
+| 10 | **`joint_7` fabricado**: el robot reporta 6 actuadores mientras el driver corre con `dof:=7`; esa casilla nunca se escribe y vale memoria sin inicializar (`1.12e+277` en una sesión, `0.0` en otra) | Configuración del proyecto vs. hardware | **RESUELTO** (2026-09-09): el brazo es de 6 GDL con pinza. Configuración, enunciado y guía de instalación corregidos. Ver [`ANOMALIAS_HARDWARE.md`](../../network_setup/ANOMALIAS_HARDWARE.md) §3 |
 | 9 | `apply_kinova_smooth_movement.py` no parchea nada: busca `SetMessageTimeout(500)`, que ya no existe en la versión clonada de `ros2_kortex`, e imprime "Parcheado" igual | Script del repositorio | **Pendiente**, fuera del alcance de este package |
 
 ---

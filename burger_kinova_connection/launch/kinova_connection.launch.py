@@ -119,7 +119,7 @@ def _resolve_gripper(gripper: str, use_fake_hardware: bool, force: bool):
     Es una incompatibilidad de ``ros2_kortex`` con Jazzy, no de este package, y no puede
     corregirse aquí: el requisito de calidad prohíbe modificar archivos dentro de
     ``ros2_kortex``. Como la pinza está además fuera del alcance del corte 1, en modo
-    fake se omite y el brazo de 7 GDL se valida completo.
+    fake se omite y el brazo de 6 GDL se valida completo.
 
     :param gripper: valor solicitado del argumento ``gripper``.
     :param use_fake_hardware: ``True`` si se opera con hardware simulado.
@@ -138,7 +138,7 @@ def _resolve_gripper(gripper: str, use_fake_hardware: bool, force: bool):
         f'⚠ gripper:={solicitada} se omite en modo fake. El bloque ros2_control de esa '
         f'pinza en ros2_kortex declara articulaciones mimic con command_interface, y '
         f'ROS 2 Jazzy aborta el ros2_control_node con "Activated mimic joints cannot '
-        f'have command interfaces". Se valida el brazo de 7 GDL sin pinza (la pinza '
+        f'have command interfaces". Se valida el brazo de 6 GDL sin pinza (la pinza '
         f'está fuera del alcance del corte 1). Con hardware real la pinza SÍ se '
         f'transfiere. Para forzarla de todos modos: force_gripper_in_fake:=true'
     )
@@ -323,8 +323,10 @@ def generate_launch_description() -> LaunchDescription:
             'robot_type', default_value=str(defaults.get('robot_type', 'gen3')),
             description='Modelo transferido a kortex_bringup.'),
         DeclareLaunchArgument(
-            'dof', default_value=str(defaults.get('dof', 7)),
-            description='Grados de libertad del manipulador.'),
+            'dof', default_value=str(defaults.get('dof', 6)),
+            description='Grados de libertad del manipulador. El brazo del laboratorio '
+                        'es un Gen3 de 6 GDL: lanzarlo con 7 fabrica una articulación '
+                        'que el robot no reporta.'),
         DeclareLaunchArgument(
             'gripper', default_value=str(defaults.get('gripper', 'robotiq_2f_85')),
             description='Pinza transferida a kortex_bringup. Usa "none" para el brazo '

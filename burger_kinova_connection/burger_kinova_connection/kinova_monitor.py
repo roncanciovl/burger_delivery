@@ -13,7 +13,7 @@
 # limitations under the License.
 
 r"""
-Monitor del enlace ROS 2 con el manipulador Kinova Gen3 de 7 GDL.
+Monitor del enlace ROS 2 con el manipulador Kinova Gen3 de 6 GDL.
 
 Responsabilidades (RF-03, RF-04, RF-05, RF-08):
 
@@ -126,7 +126,7 @@ class KinovaMonitor(Node):
         self.declare_parameter('announce_period_s', 5.0)
         self.declare_parameter(
             'expected_joints',
-            ['joint_1', 'joint_2', 'joint_3', 'joint_4', 'joint_5', 'joint_6', 'joint_7'],
+            ['joint_1', 'joint_2', 'joint_3', 'joint_4', 'joint_5', 'joint_6'],
         )
         self.declare_parameter('joint_state_timeout_s', 1.0)
         self.declare_parameter('min_joint_state_hz', 20.0)
@@ -140,14 +140,15 @@ class KinovaMonitor(Node):
             ['joint_state_broadcaster', 'joint_trajectory_controller'],
         )
         self.declare_parameter('motion_controller', 'joint_trajectory_controller')
+        self.declare_parameter('hardware_id', 'kinova_gen3_6dof_robotiq_2f_85')
         self.declare_parameter('max_joint_delta_rad', 0.10)
         self.declare_parameter('trajectory_duration_s', 5.0)
         self.declare_parameter(
-            'safe_joint_positions_rad', [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+            'safe_joint_positions_rad', [0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
         self.declare_parameter(
-            'joint_min_rad', [-3.14, -2.24, -3.14, -2.57, -3.14, -2.09, -3.14])
+            'joint_min_rad', [-3.14, -2.24, -2.57, -3.14, -2.09, -3.14])
         self.declare_parameter(
-            'joint_max_rad', [3.14, 2.24, 3.14, 2.57, 3.14, 2.09, 3.14])
+            'joint_max_rad', [3.14, 2.24, 2.57, 3.14, 2.09, 3.14])
         declare_logging_parameters(self)
 
         self._joint_state_topic = self.get_parameter('joint_state_topic').value
@@ -158,6 +159,7 @@ class KinovaMonitor(Node):
         self._enable_motion = bool(self.get_parameter('enable_motion').value)
         self._motion_controller = str(self.get_parameter('motion_controller').value)
         self._max_abs_rad = float(self.get_parameter('max_plausible_joint_rad').value)
+        self._hardware_id = str(self.get_parameter('hardware_id').value)
         self._robot_ip = str(self.get_parameter('robot_ip').value)
         self._driver_local = bool(self.get_parameter('start_driver').value)
         self._required_controllers: List[str] = list(
@@ -548,7 +550,7 @@ class KinovaMonitor(Node):
         status = DiagnosticStatus()
         status.level = _DIAGNOSTIC_LEVEL[overall]
         status.name = 'burger_kinova_connection: estado general'
-        status.hardware_id = 'kinova_gen3_7dof'
+        status.hardware_id = self._hardware_id
         status.message = f'{overall}: {link_reason}'
         status.values = [
             KeyValue(key='estado_general', value=overall),
@@ -596,7 +598,7 @@ class KinovaMonitor(Node):
         status.level = (DiagnosticStatus.OK if info['rol_verificado'] == 'si'
                         else DiagnosticStatus.WARN)
         status.name = 'burger_kinova_connection: identidad de la estación'
-        status.hardware_id = 'kinova_gen3_7dof'
+        status.hardware_id = self._hardware_id
         status.message = (
             f"{info['estacion']} ({info['estacion_ip'] or 'ip desconocida'}) — "
             f"{info['rol_estacion']}"
@@ -621,7 +623,7 @@ class KinovaMonitor(Node):
         status = DiagnosticStatus()
         status.level = _DIAGNOSTIC_LEVEL[state]
         status.name = 'burger_kinova_connection: telemetría /joint_states'
-        status.hardware_id = 'kinova_gen3_7dof'
+        status.hardware_id = self._hardware_id
         status.message = reason
         detected = self._health.detected
         status.values = [
@@ -649,7 +651,7 @@ class KinovaMonitor(Node):
         status = DiagnosticStatus()
         status.level = _DIAGNOSTIC_LEVEL[state]
         status.name = 'burger_kinova_connection: controladores ros2_control'
-        status.hardware_id = 'kinova_gen3_7dof'
+        status.hardware_id = self._hardware_id
         status.message = reason
         status.values = [
             KeyValue(key='servicio', value=f'{self._controller_ns}/list_controllers'),
@@ -670,7 +672,7 @@ class KinovaMonitor(Node):
         status = DiagnosticStatus()
         status.level = DiagnosticStatus.OK if motion_ok else DiagnosticStatus.WARN
         status.name = 'burger_kinova_connection: habilitación de movimiento'
-        status.hardware_id = 'kinova_gen3_7dof'
+        status.hardware_id = self._hardware_id
         status.message = (
             'movimiento habilitado' if motion_ok else f'movimiento bloqueado: {reason}')
         status.values = [

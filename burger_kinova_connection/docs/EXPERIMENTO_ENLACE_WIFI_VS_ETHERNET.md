@@ -1,6 +1,6 @@
 # Experimento: efecto del enlace de la estación sobre el ciclo de control del Kinova Gen3
 
-**Fecha:** 2026-09-08 · **Robot:** Kinova Gen3 7 GDL, `192.168.1.10` · **Estación:** WSL2 sobre Windows
+**Fecha:** 2026-09-08 · **Robot:** Kinova Gen3 6 GDL, `192.168.1.10` · **Estación:** WSL2 sobre Windows
 
 ---
 

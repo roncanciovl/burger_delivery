@@ -109,7 +109,7 @@ class SafeTrajectoryClient(Node):
         self.declare_parameter('require_operator_confirmation', True)
         self.declare_parameter(
             'expected_joints',
-            ['joint_1', 'joint_2', 'joint_3', 'joint_4', 'joint_5', 'joint_6', 'joint_7'],
+            ['joint_1', 'joint_2', 'joint_3', 'joint_4', 'joint_5', 'joint_6'],
         )
         self.declare_parameter('joint_state_timeout_s', 1.0)
         self.declare_parameter('min_joint_state_hz', 20.0)
@@ -118,11 +118,11 @@ class SafeTrajectoryClient(Node):
         self.declare_parameter('max_joint_delta_rad', 0.10)
         self.declare_parameter('trajectory_duration_s', 5.0)
         self.declare_parameter(
-            'safe_joint_positions_rad', [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+            'safe_joint_positions_rad', [0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
         self.declare_parameter(
-            'joint_min_rad', [-3.14, -2.24, -3.14, -2.57, -3.14, -2.09, -3.14])
+            'joint_min_rad', [-3.14, -2.24, -2.57, -3.14, -2.09, -3.14])
         self.declare_parameter(
-            'joint_max_rad', [3.14, 2.24, 3.14, 2.57, 3.14, 2.09, 3.14])
+            'joint_max_rad', [3.14, 2.24, 2.57, 3.14, 2.09, 3.14])
         self.declare_parameter('action_server_timeout_s', 10.0)
         self.declare_parameter('goal_result_timeout_s', 30.0)
         declare_logging_parameters(self)
