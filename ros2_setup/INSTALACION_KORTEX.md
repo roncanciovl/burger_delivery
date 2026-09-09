@@ -226,14 +226,23 @@ En la ventana:
 
 ### Opción B: Comando directo desde terminal
 
-**Mover a una posición de prueba** (valores en radianes, 5 segundos de transición):
+> [!WARNING]
+> Los dos comandos siguientes mueven el robot **sin ninguna validación**: no comprueban
+> la posición actual, ni los límites articulares, ni el tamaño del desplazamiento. Un
+> valor mal tecleado se ejecuta tal cual. Para las pruebas del curso usa
+> `burger_kinova_reference`, que valida todo eso antes de contactar el servidor de acción.
+> Espacio despejado y parada de emergencia accesible en cualquier caso.
+
+**Mover a una posición de prueba** (valores en radianes, 5 segundos de transición).
+**Seis** articulaciones, y dentro de los límites reales del Gen3 de 6 GDL
+(`joint_2` ±2.24, `joint_3` ±2.57, `joint_5` ±2.09):
 ```bash
 ros2 action send_goal /joint_trajectory_controller/follow_joint_trajectory \
   control_msgs/action/FollowJointTrajectory \
   "{trajectory: {
-    joint_names: [joint_1, joint_2, joint_3, joint_4, joint_5, joint_6, joint_7],
+    joint_names: [joint_1, joint_2, joint_3, joint_4, joint_5, joint_6],
     points: [{
-      positions: [0.0, 0.3, 3.14, 1.3, 0.0, 0.5, 0.0],
+      positions: [0.0, 0.3, 1.0, 1.3, 0.0, 0.5],
       time_from_start: {sec: 5, nanosec: 0}
     }]
   }}"
@@ -244,9 +253,9 @@ ros2 action send_goal /joint_trajectory_controller/follow_joint_trajectory \
 ros2 action send_goal /joint_trajectory_controller/follow_joint_trajectory \
   control_msgs/action/FollowJointTrajectory \
   "{trajectory: {
-    joint_names: [joint_1, joint_2, joint_3, joint_4, joint_5, joint_6, joint_7],
+    joint_names: [joint_1, joint_2, joint_3, joint_4, joint_5, joint_6],
     points: [{
-      positions: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      positions: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
       time_from_start: {sec: 5, nanosec: 0}
     }]
   }}"

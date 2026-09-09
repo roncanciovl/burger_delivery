@@ -135,7 +135,7 @@ La práctica se estructura en seis fases:
 ### 5.1. Equipos del Laboratorio (por grupo)
 | DESCRIPCIÓN | CANTIDAD | UNIDAD DE MEDIDA |
 |---|:---:|:---:|
-| Brazo manipulador Kinova Gen3 (7-DOF) con módulo de visión integrado en la muñeca | 1 | Unidad |
+| Brazo manipulador Kinova Gen3 (6-DOF) con módulo de visión integrado en la muñeca | 1 | Unidad |
 | Switch Gigabit Ethernet + Router Wi-Fi 6 | 1 | Unidad |
 | Estación fija (Dispositivo A: Gateway Kinova) con Ubuntu 24.04 y ROS 2 Jazzy | 1 | Unidad |
 | Pulsador de parada de emergencia física y cableado de alimentación | 1 | Unidad |
