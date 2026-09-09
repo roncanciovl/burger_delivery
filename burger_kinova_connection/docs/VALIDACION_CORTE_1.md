@@ -228,7 +228,60 @@ Códigos de salida: `1` (meta bloqueada por seguridad) en los tres casos.
 
 ---
 
-## PA-08 · Movimiento autorizado — ✅ en simulación · **PENDIENTE (robot real)**
+## PA-08 · Movimiento autorizado — ✅ en simulación · ✅ **sobre el robot real**
+
+### Sobre el Kinova Gen3 de 6 GDL (2026-09-09)
+
+Con espacio despejado, parada de emergencia accesible y autorización del responsable del
+laboratorio. Movimiento deliberadamente mínimo: **sólo `joint_6` (muñeca), +0.05 rad =
+2.9°**, en 5 s.
+
+Pose de partida leída del robot y meta construida sobre ella, no sobre valores fijos:
+
+```text
+  articulación      actual        meta          Δ
+  joint_1          -3.0294       -3.0294      -0.0000
+  joint_2          -0.2658       -0.2658      +0.0000
+  joint_3          +1.8683       +1.8683      +0.0000
+  joint_4          +0.6188       +0.6188      +0.0000
+  joint_5          -0.7071       -0.7071      -0.0000
+  joint_6          -2.0610       -2.0110      +0.0500
+```
+
+Ejecución:
+
+```text
+[ENVÍO] Enviando meta de 1 punto(s) con duración 5.00 s.
+[RESULTADO] Meta ACEPTADA por el controlador.
+[FEEDBACK] t=0.040 s | error máximo por articulación=0.00002 rad
+[FEEDBACK] t=2.040 s | error máximo por articulación=0.00034 rad
+[FEEDBACK] t=4.089 s | error máximo por articulación=0.00020 rad
+[RESULTADO] Trayectoria completada con éxito | error_code=SUCCESSFUL
+```
+
+Verificación independiente de la pose alcanzada, con error por debajo de `0.0001` rad
+(0.006°) en las seis articulaciones. Un segundo movimiento devolvió el brazo a su pose
+inicial en 8 s, también con `SUCCESSFUL`, dejando el robot como se encontró
+(`Δ` máximo respecto al origen: `0.00012` rad).
+
+Código de salida `0` en ambos. La pinza no se comandó en ningún momento.
+
+### PA-07 repetido sobre hardware real
+
+Con `enable_motion:=true` y `dry_run:=false` —es decir, sin ninguna red de seguridad
+salvo la validación local— se solicitó un desplazamiento de `joint_6` de 0.561 rad:
+
+```text
+Estado: META BLOQUEADA antes de contactar el servidor de acción:
+  ✗ joint_6: desplazamiento 0.5610 rad supera max_joint_delta_rad=0.1000 rad
+```
+
+No apareció la línea `[ENVÍO]`: el robot no se movió y la meta nunca llegó al servidor de
+acción. Código de salida `1`.
+
+---
+
+## PA-08 · Movimiento autorizado en simulación (registro previo)
 
 > Con el enlace por cable ya se cumplen las condiciones para intentarlo. Requiere espacio
 > despejado, parada de emergencia accesible y autorización del responsable del
