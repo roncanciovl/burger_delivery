@@ -7,6 +7,7 @@ Esta guía cubre los dos fallos que más tiempo consumen en el laboratorio:
 | `ros2 node list`, `topic list` o `param set` se bloquean o terminan en `TimeoutError` | [1. Bloqueo del daemon de la CLI](#1-bloqueo-del-daemon-de-ros-2-en-wsl) |
 | El driver no arranca, o hay telemetría duplicada, porque **el robot ya está en uso** | [2. Hardware ocupado: un solo robot, varias estaciones](#2-hardware-ocupado-un-solo-robot-y-varias-estaciones) |
 | No sé quién tiene el robot ocupado | [2.0 La configuración recomendada](#20-la-configuración-recomendada-léela-antes-que-el-resto) |
+| Mi código parece correcto y aun así el driver no arranca, o publica datos absurdos | [3. Fallos de plataforma ajenos a tu código](#3-fallos-de-plataforma-ajenos-a-tu-código) |
 
 ---
 
@@ -491,6 +492,107 @@ dominio no libera el robot, identifica con `ss` qué proceso tiene la sesión, y
 criterio entre conectarse como cliente o pedir que liberen el hardware. Y entiende por qué
 el dominio compartido no es un detalle de configuración sino el mecanismo con el que el
 equipo se coordina alrededor de un único robot.
+
+
+---
+
+## 3. Fallos de plataforma ajenos a tu código
+
+Esta sección recoge tres problemas detectados el 2026-09-09 durante la validación sobre el
+robot real. Los tres hacen fallar **cualquier implementación correcta**, así que si tu
+proyecto del corte 1 no funcionó, empieza por descartarlos antes de revisar tu código.
+
+### 3.1 El brazo es de 6 GDL, y el enunciado decía 7
+
+Hasta el 2026-09-09 el enunciado del proyecto y las guías declaraban un Kinova Gen3 de
+**siete** grados de libertad. El brazo del laboratorio tiene **seis**, con pinza Robotiq
+2F-85. El propio driver lo dice en cada arranque:
+
+```text
+[KortexMultiInterfaceHardware]: Actuator count reported by robot is '6'
+```
+
+Lo traicionero es que **lanzarlo con `dof:=7` no produce ningún error**. El driver expone
+una séptima articulación que el robot nunca alimenta, y esa casilla publica lo que hubiera
+en memoria:
+
+| Sesión | `joint_7` position | `joint_7` effort |
+| :--- | ---: | ---: |
+| Una | `1.1207224803148005e+277` | `0.0` |
+| Otra | `0.0` | `0.0` |
+
+Las consecuencias sobre un proyecto bien hecho:
+
+- Tu monitor reporta `7/7 articulaciones` y telemetría saludable, porque el valor **es**
+  finito y, cuando cae en `0.0`, está dentro de todos los límites articulares. Ninguna
+  validación de rango puede distinguirlo de una articulación legítimamente en el origen.
+- Tu cliente de trayectoria calcula el desplazamiento de `joint_7` contra una posición
+  inventada, y una meta de siete elementos comanda una articulación que no existe.
+
+**Cómo detectarlo.** Compara el ruido por articulación con el robot quieto: las reales
+fluctúan en los últimos decimales, la fabricada es bit-idéntica.
+
+```bash
+for i in 1 2 3 4 5; do ros2 topic echo /joint_states --once | grep -A8 "^position:"; done
+```
+
+**Qué hacer.** Usar `dof:=6` y seis articulaciones en `expected_joints`,
+`safe_joint_positions_rad`, `joint_min_rad` y `joint_max_rad`. La articulación de la pinza
+(`robotiq_85_left_knuckle_joint`) también aparece en `/joint_states` y debe **ignorarse**
+sin invalidar el mensaje. Detalle en
+[`ANOMALIAS_HARDWARE.md`](network_setup/ANOMALIAS_HARDWARE.md) §3.
+
+### 3.2 Con pinza, el launch no arranca: `Invalid parameter "mock_sensor_commands"`
+
+```text
+error: Invalid parameter "mock_sensor_commands"
+  when instantiating macro: robotiq_gripper (/opt/ros/jazzy/share/robotiq_description/...)
+```
+
+El `kortex_description` que viene de Kinova pasa al macro de la pinza argumentos que el
+`robotiq_description` instalado por apt en Jazzy **no acepta**. El macro instalado admite
+`sim_ignition`, `sim_isaac`, `use_fake_hardware`, `fake_sensor_commands`,
+`include_ros2_control` y `com_port`; el de Kinova le envía además `mock_sensor_commands`,
+`sim_gazebo`, `isaac_joint_commands` e `isaac_joint_states`.
+
+No es un fallo de tu launch ni de tus parámetros: el xacro no llega a generarse, así que
+**ningún nodo arranca**. Procedimiento de corrección en
+[`INSTALACION_KORTEX.md`](ros2_setup/INSTALACION_KORTEX.md) §3.4.b.
+
+### 3.3 `error: invalid syntax (<expression>, line 0)` al generar el URDF
+
+Aparece si alguien retiró de un xacro los parámetros de simulación **pero dejó los bloques
+`<xacro:if>` que los usaban**, quedando expresiones `${}` vacías:
+
+```xml
+<xacro:if value="${}">          <!-- ← expresión vacía: xacro no puede evaluarla -->
+  <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+</xacro:if>
+```
+
+El mensaje no señala el archivo ni la variable, sólo `line 0`. Para localizarlo:
+
+```bash
+grep -rn '\${}' ~/ros2_ws/src/ros2_kortex/kortex_description/
+```
+
+La corrección es eliminar también esos bloques, no reponer las variables. Ocurrió en la
+máquina del docente y dejó inutilizable la descripción de 6 GDL, que es la de este robot;
+por eso se venía usando `dof:=7` y se llegó al problema 3.1.
+
+### 3.4 Si tu proyecto del corte 1 no funcionó
+
+Antes de dar por malo tu código, comprueba en este orden:
+
+1. `ros2 topic echo /joint_states --once` — ¿aparecen seis articulaciones más la de la
+   pinza, o siete `joint_N`? Si son siete, estabas contra el problema 3.1.
+2. ¿El launch llegaba a arrancar con pinza? Si no, era el problema 3.2.
+3. ¿La estación que ejecutaba el driver estaba por **cable**? Por WiFi la sesión de
+   control se rompe: medido, 132 desbordamientos y 2 pérdidas de telemetría en 120 s
+   ([`EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md`](burger_kinova_connection/docs/EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md)).
+4. ¿Había otra estación con el driver abierto? Ver la [sección 2](#2-hardware-ocupado-un-solo-robot-y-varias-estaciones).
+
+Sólo si los cuatro salen limpios tiene sentido revisar la lógica de tu package.
 
 ## Fuentes técnicas
 
