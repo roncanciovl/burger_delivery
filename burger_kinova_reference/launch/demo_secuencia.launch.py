@@ -104,23 +104,11 @@ def _setup(context, *args, **kwargs):
             'robot_ip': arg('robot_ip'),
             'use_fake_hardware': arg('use_fake_hardware'),
             'enable_motion': str(enable_motion).lower(),
-            'launch_rviz': 'false',  # Siempre desactivamos el de fábrica
+            'launch_rviz': arg('launch_rviz'),
             'gripper': arg('gripper'),
             'dof': arg('dof'),
         }.items(),
     ))
-
-    # RViz personalizado de la simulación completa
-    if _as_bool(arg('launch_rviz')):
-        rviz_config = os.path.join(
-            get_package_share_directory('burger_description'), 'rviz', 'default.rviz')
-        acciones.append(Node(
-            package='rviz2',
-            executable='rviz2',
-            name='rviz2',
-            output='screen',
-            arguments=['-d', rviz_config],
-        ))
 
     # rqt_console: la ventana de log. Filtra /rosout por nodo y severidad.
     if _as_bool(arg('launch_rqt_console')):
