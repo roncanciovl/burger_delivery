@@ -36,6 +36,8 @@ setup(
             'kinova_monitor = burger_kinova_reference.kinova_monitor:main',
             'safe_trajectory_client = '
             'burger_kinova_reference.safe_trajectory_client:main',
+            'safe_sequence_client = '
+            'burger_kinova_reference.safe_sequence_client:main',
         ],
     },
 )

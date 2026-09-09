@@ -139,6 +139,46 @@ launch:
     # Pide confirmación por teclado antes de enviar la meta (uso interactivo).
     require_operator_confirmation: true
 
+    # ---- Secuencia autónoma (safe_sequence_client) -----------------------------------
+    # Deltas EN RADIANES respecto a la pose capturada al arrancar la secuencia, aplanados:
+    # cada bloque de 6 valores es un punto, porque ROS 2 no admite arreglos anidados como
+    # parámetro. Relativos y no absolutos, para que la secuencia sea ejecutable desde
+    # donde esté el brazo sin volver a aprobar una pose fija.
+    #
+    # La de por defecto es un barrido de muñeca visible en RViz: joint_6 avanza en pasos
+    # de 0.08 rad (4.6°) hasta +0.24, vuelve pasando por -0.24 y regresa. Ningún tramo
+    # supera max_joint_delta_rad, y ningún punto se aleja del origen más de
+    # max_sequence_excursion_rad.
+    #                    j1   j2   j3   j4   j5    j6
+    sequence_deltas_rad: [ 0.09,  0.09,  0.0,  0.0,  0.0,  0.09,
+                           0.18,  0.18,  0.0,  0.0,  0.0,  0.18,
+                           0.27,  0.27,  0.0,  0.0,  0.0,  0.27,
+                           0.36,  0.36,  0.0,  0.0,  0.0,  0.36,
+                           0.45,  0.45,  0.0,  0.0,  0.0,  0.45,
+                           0.54,  0.54,  0.0,  0.0,  0.0,  0.54,
+                           0.45,  0.45,  0.0,  0.0,  0.0,  0.45,
+                           0.36,  0.36,  0.0,  0.0,  0.0,  0.36,
+                           0.27,  0.27,  0.0,  0.0,  0.0,  0.27,
+                           0.18,  0.18,  0.0,  0.0,  0.0,  0.18,
+                           0.09,  0.09,  0.0,  0.0,  0.0,  0.09,
+                           0.00,  0.00,  0.0,  0.0,  0.0,  0.00,
+                          -0.09, -0.09,  0.0,  0.0,  0.0, -0.09,
+                          -0.18, -0.18,  0.0,  0.0,  0.0, -0.18,
+                          -0.27, -0.27,  0.0,  0.0,  0.0, -0.27,
+                          -0.36, -0.36,  0.0,  0.0,  0.0, -0.36,
+                          -0.45, -0.45,  0.0,  0.0,  0.0, -0.45,
+                          -0.54, -0.54,  0.0,  0.0,  0.0, -0.54,
+                          -0.45, -0.45,  0.0,  0.0,  0.0, -0.45,
+                          -0.36, -0.36,  0.0,  0.0,  0.0, -0.36,
+                          -0.27, -0.27,  0.0,  0.0,  0.0, -0.27,
+                          -0.18, -0.18,  0.0,  0.0,  0.0, -0.18,
+                          -0.09, -0.09,  0.0,  0.0,  0.0, -0.09,
+                           0.00,  0.00,  0.0,  0.0,  0.0,  0.00]
+    sequence_point_duration_s: 3.0    # duración de cada tramo
+    sequence_pause_s: 0.1             # pausa entre tramos, para poder seguirlo en RViz sin tirones
+    max_sequence_excursion_rad: 0.60  # alejamiento máximo del origen en cualquier punto
+    return_to_origin: true            # añade un punto final que devuelve el brazo al inicio
+
     # ---- Tiempos de espera del cliente de acción (RF-06 / RF-08) ---------------------
     action_server_timeout_s: 10.0  # espera explícita por el servidor de acción
     goal_result_timeout_s: 30.0    # vencido este plazo la meta se cancela de forma ordenada
