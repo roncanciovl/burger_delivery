@@ -14,7 +14,7 @@
 
 """Pruebas del subsistema de logging: niveles, throttling y transiciones."""
 
-from burger_kinova_connection.logging_support import (
+from burger_kinova_reference.logging_support import (
     describe_logging_environment,
     is_valid_severity,
     RECOMMENDED_CONSOLE_FORMAT,

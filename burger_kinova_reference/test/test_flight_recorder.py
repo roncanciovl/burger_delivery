@@ -14,7 +14,7 @@
 
 """Pruebas del búfer circular de la caja negra (patrón Flight Recorder)."""
 
-from burger_kinova_connection.flight_recorder import FlightRecorder
+from burger_kinova_reference.flight_recorder import FlightRecorder
 
 
 def test_respeta_la_capacidad():

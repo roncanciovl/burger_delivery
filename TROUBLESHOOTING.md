@@ -450,7 +450,7 @@ un solo comando.
   desbordamientos, un hueco de 3.25 s y 2 pérdidas de telemetría en 120 s— mientras que por
   cable el peor intervalo fue de 20.6 ms y no hubo ninguna pérdida. La medición completa
   está en
-  [`EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md`](burger_kinova_connection/docs/EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md).
+  [`EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md`](burger_kinova_reference/docs/EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md).
 - **Todas las demás estaciones son clientes** (opción A), y pueden ir por WiFi.
 - El equipo acuerda **un solo `ROS_DOMAIN_ID`** y lo anota donde todos lo vean.
 
@@ -589,7 +589,7 @@ Antes de dar por malo tu código, comprueba en este orden:
 2. ¿El launch llegaba a arrancar con pinza? Si no, era el problema 3.2.
 3. ¿La estación que ejecutaba el driver estaba por **cable**? Por WiFi la sesión de
    control se rompe: medido, 132 desbordamientos y 2 pérdidas de telemetría en 120 s
-   ([`EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md`](burger_kinova_connection/docs/EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md)).
+   ([`EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md`](burger_kinova_reference/docs/EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md)).
 4. ¿Había otra estación con el driver abierto? Ver la [sección 2](#2-hardware-ocupado-un-solo-robot-y-varias-estaciones).
 
 Sólo si los cuatro salen limpios tiene sentido revisar la lógica de tu package.
@@ -604,5 +604,5 @@ Sólo si los cuatro salen limpios tiene sentido revisar la lógica de tu package
 - [Microsoft Learn: arquitectura de red NAT y modo reflejado de WSL](https://learn.microsoft.com/en-us/windows/wsl/networking)
 - [Microsoft Learn: reinicio de WSL con `wsl --shutdown`](https://learn.microsoft.com/en-us/windows/wsl/basic-commands#shutdown)
 - [Documentación oficial de ROS 2: `ROS_DOMAIN_ID` y aislamiento del grafo](https://docs.ros.org/en/jazzy/Concepts/Intermediate/About-Domain-ID.html)
-- Medición propia del enlace sobre el robot real: [`EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md`](burger_kinova_connection/docs/EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md)
+- Medición propia del enlace sobre el robot real: [`EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md`](burger_kinova_reference/docs/EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md)
 - Regla de unicidad del driver y arquitectura distribuida: [`PROYECTO_CORTE_1_CONEXION_KINOVA.md`](education/proyectos_evaluables/PROYECTO_CORTE_1_CONEXION_KINOVA.md) §5

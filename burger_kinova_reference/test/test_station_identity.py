@@ -22,7 +22,7 @@ dependen de la red del laboratorio ni de que el robot esté conectado.
 import socket
 import struct
 
-from burger_kinova_connection.station_identity import (
+from burger_kinova_reference.station_identity import (
     describir_estacion,
     ip_local_hacia,
     ROL_ANFITRIONA,

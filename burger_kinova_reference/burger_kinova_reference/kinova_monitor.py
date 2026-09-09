@@ -41,19 +41,19 @@ muestra; perder la transición a ``ERROR`` invalidaría la evidencia del inciden
 
 Ejemplo de uso::
 
-    ros2 run burger_kinova_connection kinova_monitor --ros-args \\
-        --params-file install/burger_kinova_connection/share/\\
-burger_kinova_connection/config/kinova_connection.yaml
+    ros2 run burger_kinova_reference kinova_monitor --ros-args \\
+        --params-file install/burger_kinova_reference/share/\\
+burger_kinova_reference/config/kinova_connection.yaml
 """
 
 import time
 from typing import Dict, List, Optional, Tuple
 
-from burger_kinova_connection.flight_recorder import (
+from burger_kinova_reference.flight_recorder import (
     attach_flight_recorder_services,
     FlightRecorder,
 )
-from burger_kinova_connection.link_metrics import (
+from burger_kinova_reference.link_metrics import (
     LinkHealth,
     STATE_ERROR,
     STATE_OK,
@@ -61,20 +61,20 @@ from burger_kinova_connection.link_metrics import (
     validate_joint_state,
     worst_state,
 )
-from burger_kinova_connection.logging_support import (
+from burger_kinova_reference.logging_support import (
     declare_logging_parameters,
     DynamicLogLevel,
     log_logging_banner,
     StateTransitionLogger,
     ThrottledLogger,
 )
-from burger_kinova_connection.safety import validate_safety_config
-from burger_kinova_connection.station_announcer import (
+from burger_kinova_reference.safety import validate_safety_config
+from burger_kinova_reference.station_announcer import (
     construir_anuncio,
     PUERTO_ANUNCIO,
     StationAnnouncer,
 )
-from burger_kinova_connection.station_identity import describir_estacion
+from burger_kinova_reference.station_identity import describir_estacion
 
 from controller_manager_msgs.srv import ListControllers
 
@@ -549,7 +549,7 @@ class KinovaMonitor(Node):
         """Construir el estado consolidado del enlace."""
         status = DiagnosticStatus()
         status.level = _DIAGNOSTIC_LEVEL[overall]
-        status.name = 'burger_kinova_connection: estado general'
+        status.name = 'burger_kinova_reference: estado general'
         status.hardware_id = self._hardware_id
         status.message = f'{overall}: {link_reason}'
         status.values = [
@@ -597,7 +597,7 @@ class KinovaMonitor(Node):
         # Informativo, nunca ERROR: ser cliente es el estado normal y esperado.
         status.level = (DiagnosticStatus.OK if info['rol_verificado'] == 'si'
                         else DiagnosticStatus.WARN)
-        status.name = 'burger_kinova_connection: identidad de la estación'
+        status.name = 'burger_kinova_reference: identidad de la estación'
         status.hardware_id = self._hardware_id
         status.message = (
             f"{info['estacion']} ({info['estacion_ip'] or 'ip desconocida'}) — "
@@ -622,7 +622,7 @@ class KinovaMonitor(Node):
         age = self._health.age(now)
         status = DiagnosticStatus()
         status.level = _DIAGNOSTIC_LEVEL[state]
-        status.name = 'burger_kinova_connection: telemetría /joint_states'
+        status.name = 'burger_kinova_reference: telemetría /joint_states'
         status.hardware_id = self._hardware_id
         status.message = reason
         detected = self._health.detected
@@ -650,7 +650,7 @@ class KinovaMonitor(Node):
         """Construir el estado de los controladores de ``ros2_control``."""
         status = DiagnosticStatus()
         status.level = _DIAGNOSTIC_LEVEL[state]
-        status.name = 'burger_kinova_connection: controladores ros2_control'
+        status.name = 'burger_kinova_reference: controladores ros2_control'
         status.hardware_id = self._hardware_id
         status.message = reason
         status.values = [
@@ -671,7 +671,7 @@ class KinovaMonitor(Node):
         """Construir el estado de la habilitación de movimiento."""
         status = DiagnosticStatus()
         status.level = DiagnosticStatus.OK if motion_ok else DiagnosticStatus.WARN
-        status.name = 'burger_kinova_connection: habilitación de movimiento'
+        status.name = 'burger_kinova_reference: habilitación de movimiento'
         status.hardware_id = self._hardware_id
         status.message = (
             'movimiento habilitado' if motion_ok else f'movimiento bloqueado: {reason}')

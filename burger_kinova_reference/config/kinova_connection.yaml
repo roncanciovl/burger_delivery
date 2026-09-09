@@ -1,5 +1,5 @@
 # =====================================================================================
-# burger_kinova_connection — Configuración del enlace con el Kinova Gen3 (6 GDL + 2F-85)
+# burger_kinova_reference — Configuración del enlace con el Kinova Gen3 (6 GDL + 2F-85)
 # =====================================================================================
 # REGLAS:
 #   * Ninguna IP, usuario o contraseña vive dentro del código Python: todo llega por aquí
@@ -9,7 +9,7 @@
 #   * La primera validación de cualquier equipo se hace con `use_fake_hardware: true`.
 #
 # Sobrescritura desde launch:
-#   ros2 launch burger_kinova_connection kinova_connection.launch.py \
+#   ros2 launch burger_kinova_reference kinova_connection.launch.py \
 #       start_driver:=true robot_ip:=192.168.1.10 use_fake_hardware:=false
 # =====================================================================================
 

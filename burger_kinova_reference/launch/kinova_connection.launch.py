@@ -19,20 +19,20 @@ Un único archivo cubre los tres modos de operación exigidos por la especificac
 
 * **Validación sin robot** (modo fake, driver local)::
 
-      ros2 launch burger_kinova_connection kinova_connection.launch.py \\
+      ros2 launch burger_kinova_reference kinova_connection.launch.py \\
           start_driver:=true robot_ip:=0.0.0.0 use_fake_hardware:=true \\
           enable_motion:=false
 
 * **Driver y monitor en la misma estación** (estación A, conectada al robot)::
 
-      ros2 launch burger_kinova_connection kinova_connection.launch.py \\
+      ros2 launch burger_kinova_reference kinova_connection.launch.py \\
           start_driver:=true robot_ip:=192.168.1.10 use_fake_hardware:=false \\
           enable_motion:=false
 
 * **Monitor en una segunda estación** (estación B, cliente por DDS)::
 
       export ROS_DOMAIN_ID=<dominio_del_equipo>
-      ros2 launch burger_kinova_connection kinova_connection.launch.py \\
+      ros2 launch burger_kinova_reference kinova_connection.launch.py \\
           start_driver:=false enable_motion:=false
 
 ⚠ Sólo la estación conectada físicamente al robot puede usar ``start_driver:=true``.
@@ -63,7 +63,7 @@ from launch_ros.actions import Node
 
 import yaml
 
-PACKAGE_NAME = 'burger_kinova_connection'
+PACKAGE_NAME = 'burger_kinova_reference'
 
 
 def _load_launch_defaults(config_path):
@@ -180,7 +180,7 @@ def _setup(context, *args, **kwargs):
 
     # La validación de robot_ip vive en el package (safety.validate_robot_ip) y se importa
     # aquí para que el launch falle temprano, antes de arrancar el driver.
-    from burger_kinova_connection.safety import validate_robot_ip
+    from burger_kinova_reference.safety import validate_robot_ip
     ip_errors = validate_robot_ip(robot_ip, start_driver, use_fake_hardware)
     if ip_errors:
         return [LogInfo(msg=f'[ERROR] {error}') for error in ip_errors] + [

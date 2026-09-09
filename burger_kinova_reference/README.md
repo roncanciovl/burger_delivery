@@ -1,4 +1,23 @@
-# `burger_kinova_connection`
+# `burger_kinova_reference`
+
+> [!IMPORTANT]
+> ### Este NO es el package que debes entregar
+>
+> Es la **implementación de referencia** del docente, publicada tras validarse contra el
+> Kinova Gen3 real del laboratorio. Se llama `burger_kinova_reference` a propósito, para
+> no colisionar con el `burger_kinova_connection` que cada equipo construye en el
+> proyecto del corte 1: los dos pueden convivir en el mismo workspace y compilarse a la
+> vez.
+>
+> **Para qué usarla:**
+> - Contrastar decisiones de diseño contra las tuyas (`diff`, no copiar).
+> - Descartar si un fallo venía de tu código o de la plataforma: si la referencia tampoco
+>   arranca en tu equipo, el problema no es tuyo. Ver
+>   [`TROUBLESHOOTING.md`](../TROUBLESHOOTING.md) §3.
+> - Reproducir las mediciones sobre el robot real con el mismo instrumental.
+>
+> **Lo que no cambia:** el enunciado sigue pidiendo tu propio `burger_kinova_connection`,
+> con tus decisiones y tu trazabilidad de pull requests.
 
 Package ROS 2 de **pruebas de conectividad** entre el proyecto `burger_delivery` y un
 manipulador **Kinova Gen3 de 6 grados de libertad** con pinza Robotiq 2F-85.
@@ -47,7 +66,7 @@ Siempre desde la **raíz del workspace**, nunca desde una carpeta interna:
 
 ```bash
 cd ~/ros2_ws
-colcon build --packages-select burger_kinova_connection --symlink-install
+colcon build --packages-select burger_kinova_reference --symlink-install
 source install/setup.bash
 ```
 
@@ -55,19 +74,19 @@ Verificación de que quedó instalado (los ejecutables deben resolverse desde `i
 no desde `src/`):
 
 ```bash
-ros2 pkg executables burger_kinova_connection
-# burger_kinova_connection kinova_monitor
-# burger_kinova_connection safe_trajectory_client
+ros2 pkg executables burger_kinova_reference
+# burger_kinova_reference kinova_monitor
+# burger_kinova_reference safe_trajectory_client
 
-ros2 launch burger_kinova_connection kinova_connection.launch.py --show-args
+ros2 launch burger_kinova_reference kinova_connection.launch.py --show-args
 ```
 
 Pruebas unitarias y de estilo:
 
 ```bash
 cd ~/ros2_ws
-colcon test --packages-select burger_kinova_connection
-colcon test-result --verbose --test-result-base build/burger_kinova_connection
+colcon test --packages-select burger_kinova_reference
+colcon test-result --verbose --test-result-base build/burger_kinova_reference
 ```
 
 ---
@@ -98,7 +117,7 @@ Estación A  ── Ethernet ──> Kinova Gen3
         │  DDS (mismo ROS_DOMAIN_ID, misma red)
         ▼
 Estación B
-  └─ burger_kinova_connection (start_driver:=false)
+  └─ burger_kinova_reference (start_driver:=false)
        kinova_monitor + safe_trajectory_client + RViz2
 ```
 
@@ -247,7 +266,7 @@ export CYCLONEDDS_URI="file://$HOME/ros2_ws/src/burger_delivery/network_setup/cy
 ### 6.1. Validación sin robot (modo fake)
 
 ```bash
-ros2 launch burger_kinova_connection kinova_connection.launch.py \
+ros2 launch burger_kinova_reference kinova_connection.launch.py \
   start_driver:=true \
   robot_ip:=0.0.0.0 \
   use_fake_hardware:=true \
@@ -278,7 +297,7 @@ ros2 launch burger_kinova_connection kinova_connection.launch.py \
 ### 6.2. Driver y monitor en la misma estación
 
 ```bash
-ros2 launch burger_kinova_connection kinova_connection.launch.py \
+ros2 launch burger_kinova_reference kinova_connection.launch.py \
   start_driver:=true \
   robot_ip:=192.168.1.10 \
   use_fake_hardware:=false \
@@ -292,7 +311,7 @@ día de la práctica.
 
 ```bash
 export ROS_DOMAIN_ID=<dominio_del_equipo>
-ros2 launch burger_kinova_connection kinova_connection.launch.py \
+ros2 launch burger_kinova_reference kinova_connection.launch.py \
   start_driver:=false \
   enable_motion:=false
 ```
@@ -300,11 +319,11 @@ ros2 launch burger_kinova_connection kinova_connection.launch.py \
 ### 6.4. Ejecutables sueltos
 
 ```bash
-ros2 run burger_kinova_connection kinova_monitor --ros-args \
-  --params-file $(ros2 pkg prefix burger_kinova_connection)/share/burger_kinova_connection/config/kinova_connection.yaml
+ros2 run burger_kinova_reference kinova_monitor --ros-args \
+  --params-file $(ros2 pkg prefix burger_kinova_reference)/share/burger_kinova_reference/config/kinova_connection.yaml
 
-ros2 run burger_kinova_connection safe_trajectory_client --ros-args \
-  --params-file $(ros2 pkg prefix burger_kinova_connection)/share/burger_kinova_connection/config/kinova_connection.yaml \
+ros2 run burger_kinova_reference safe_trajectory_client --ros-args \
+  --params-file $(ros2 pkg prefix burger_kinova_reference)/share/burger_kinova_reference/config/kinova_connection.yaml \
   -p dry_run:=true
 ```
 
@@ -398,7 +417,7 @@ muestra el resumen al operador → espera al servidor de acción → envía y re
 ### Paso 1 — modo seco (obligatorio antes de cualquier movimiento)
 
 ```bash
-ros2 run burger_kinova_connection safe_trajectory_client --ros-args \
+ros2 run burger_kinova_reference safe_trajectory_client --ros-args \
   --params-file .../config/kinova_connection.yaml -p dry_run:=true
 ```
 
@@ -419,7 +438,7 @@ esperada cuando algo bloquea:
 ### Paso 2 — ejecución supervisada
 
 ```bash
-ros2 run burger_kinova_connection safe_trajectory_client --ros-args \
+ros2 run burger_kinova_reference safe_trajectory_client --ros-args \
   --params-file .../config/kinova_connection.yaml \
   -p dry_run:=false -p enable_motion:=true
 ```
@@ -478,7 +497,7 @@ ros2 service call /kinova_monitor/trigger_anomaly std_srvs/srv/SetBool "{data: f
 ros2 service call /kinova_monitor/rehabilitar_movimiento std_srvs/srv/Trigger
 
 # Grabación quirúrgica de evidencia (MCAP + zstd, tópicos explícitos):
-ros2 run burger_kinova_connection record_kinova_bag.sh dataset_pa03 60
+ros2 run burger_kinova_reference record_kinova_bag.sh dataset_pa03 60
 # o directamente:
 ros2 bag record -s mcap --compression-mode file --compression-format zstd \
   -o dataset_pa03 /joint_states /burger/kinova/diagnostics /rosout
@@ -541,7 +560,7 @@ Todo lo anterior queda validado en simulación. Para la sesión con el robot fí
    `robot_ip:=0.0.0.0` con `use_fake_hardware:=false`, así que la IP es obligatoria.
 5. **Primera pasada sin movimiento** (estación A):
    ```bash
-   ros2 launch burger_kinova_connection kinova_connection.launch.py \
+   ros2 launch burger_kinova_reference kinova_connection.launch.py \
      start_driver:=true robot_ip:=192.168.1.10 use_fake_hardware:=false \
      enable_motion:=false
    ```
@@ -549,7 +568,7 @@ Todo lo anterior queda validado en simulación. Para la sesión con el robot fí
    se transfiere en este modo.
 6. **Estación B como cliente**, sin driver:
    ```bash
-   ros2 launch burger_kinova_connection kinova_connection.launch.py start_driver:=false
+   ros2 launch burger_kinova_reference kinova_connection.launch.py start_driver:=false
    ```
 7. **Modo seco obligatorio** antes de cualquier movimiento, y sólo entonces la prueba
    supervisada con espacio despejado y parada de emergencia accesible (sección 8).
@@ -559,7 +578,7 @@ Todo lo anterior queda validado en simulación. Para la sesión con el robot fí
 
 | ID | Prueba | Comando / procedimiento | Resultado esperado |
 |---|---|---|---|
-| PA-01 | Compilación limpia | `colcon build --packages-select burger_kinova_connection` y `colcon test` | Sin errores de compilación, importación ni estilo |
+| PA-01 | Compilación limpia | `colcon build --packages-select burger_kinova_reference` y `colcon test` | Sin errores de compilación, importación ni estilo |
 | PA-02 | Grafo en modo fake | Modo 6.1 + `ros2 node list`, `ros2 topic list` | Monitor activo, seis articulaciones, diagnóstico publicado |
 | PA-03 | Telemetría real | Modo 6.2 + `ros2 topic hz /joint_states` durante 60 s | Seis articulaciones, sin interrupciones, frecuencia > mínimo |
 | PA-04 | Controladores | `ros2 control list_controllers` y el estado del diagnóstico | Broadcaster y controlador de trayectoria `active` |
@@ -581,12 +600,12 @@ entorno y observaciones.
 ## 13. Estructura del package
 
 ```text
-burger_kinova_connection/
+burger_kinova_reference/
 ├── package.xml
 ├── setup.py / setup.cfg
 ├── README.md
-├── resource/burger_kinova_connection
-├── burger_kinova_connection/
+├── resource/burger_kinova_reference
+├── burger_kinova_reference/
 │   ├── __init__.py
 │   ├── kinova_monitor.py           # nodo monitor y publicador de diagnóstico
 │   ├── safe_trajectory_client.py   # cliente de acción con validación de seguridad

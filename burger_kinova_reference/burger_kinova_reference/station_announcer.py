@@ -27,7 +27,7 @@ dirección del monitor en cada estación: el receptor obtiene la IP de origen de
 ``recvfrom`` y la correlaciona con la lista de dispositivos que ya construye.
 
 El contenido no es una inferencia por volumen de tráfico sino **evidencia verificada
-localmente** (:mod:`burger_kinova_connection.station_identity` lee ``/proc/net/tcp``).
+localmente** (:mod:`burger_kinova_reference.station_identity` lee ``/proc/net/tcp``).
 
 Limitaciones asumidas, todas documentadas en la interfaz de usuario del monitor:
 
@@ -56,7 +56,7 @@ def construir_anuncio(identidad: Dict[str, str], robot_ip: str,
     Construir la carga del anuncio a partir de la identidad ya verificada.
 
     :param identidad: resultado de
-        :func:`burger_kinova_connection.station_identity.describir_estacion`.
+        :func:`burger_kinova_reference.station_identity.describir_estacion`.
     :param robot_ip: dirección del robot a la que se refiere la comprobación.
     :param nodo: nombre del nodo que emite, para poder rastrearlo.
     :param ahora: marca de tiempo; por defecto la del sistema.

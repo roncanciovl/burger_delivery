@@ -1,6 +1,6 @@
 # Teoría del subsistema de logging de ROS 2 aplicada al enlace con el Kinova Gen3
 
-> Documento de referencia del package `burger_kinova_connection`.
+> Documento de referencia del package `burger_kinova_reference`.
 > Desarrolla la teoría del taller [`TALLER_ROSBAG_LOGGING_DEBUGGING.md`](../../education/talleres/TALLER_ROSBAG_LOGGING_DEBUGGING.md)
 > y la conecta con el código que la implementa dentro de este package.
 
@@ -47,7 +47,7 @@ red —incluidos los de la estación A cuando el driver corre allí— pueden ob
 la estación B y grabarse en la misma bolsa que la telemetría, con marcas de tiempo
 correlacionadas.
 
-> **Implementado en:** [`logging_support.py`](../burger_kinova_connection/logging_support.py),
+> **Implementado en:** [`logging_support.py`](../burger_kinova_reference/logging_support.py),
 > función `describe_logging_environment()` y `log_logging_banner()`, que reportan al
 > arrancar qué formato, qué nivel y qué directorio de logs produjeron cada captura.
 
@@ -55,7 +55,7 @@ correlacionadas.
 
 ## 2. Los cinco niveles de severidad
 
-| Nivel | Valor | Criterio | Ejemplo real en `burger_kinova_connection` |
+| Nivel | Valor | Criterio | Ejemplo real en `burger_kinova_reference` |
 |---|---:|---|---|
 | `DEBUG` | 10 | Trazas por ciclo. **Desactivado en operación normal** para no degradar el determinismo. | Posición de las seis articulaciones en cada mensaje, delta calculado por articulación, volcado de la caja negra |
 | `INFO` | 20 | Progreso verificable | `kinova_monitor iniciado`, `Meta ACEPTADA por el controlador`, cambio en la lista de controladores |
@@ -86,10 +86,10 @@ ROS 2 ofrece cuatro caminos para cambiar la verbosidad, del más estático al m�
 
 ```bash
 # 1. Al arrancar el proceso (estático):
-ros2 run burger_kinova_connection kinova_monitor --ros-args --log-level DEBUG
+ros2 run burger_kinova_reference kinova_monitor --ros-args --log-level DEBUG
 
 # 2. Sólo para un nodo concreto dentro de un launch con varios nodos:
-ros2 run burger_kinova_connection kinova_monitor --ros-args \
+ros2 run burger_kinova_reference kinova_monitor --ros-args \
     --log-level kinova_monitor:=DEBUG
 
 # 3. En caliente, por parámetro (el mecanismo que implementa este package):
@@ -253,7 +253,7 @@ El paso 4 es el que materializa el requisito §11.8: **después de una pérdida 
 comunicación el movimiento permanece deshabilitado hasta una nueva habilitación
 explícita.**
 
-> **Implementado en:** [`flight_recorder.py`](../burger_kinova_connection/flight_recorder.py).
+> **Implementado en:** [`flight_recorder.py`](../burger_kinova_reference/flight_recorder.py).
 > La clase `FlightRecorder` no importa `rclpy`, lo que permite probar el desbordamiento
 > circular y el volcado con `colcon test` sin robot ni grafo ROS 2.
 
@@ -350,7 +350,7 @@ ros2 bag play dataset_conexion_kinova --rate 0.5
 # Reproducción con reloj simulado a 50 Hz:
 ros2 bag play dataset_conexion_kinova --clock 50
 # y en otra terminal, cualquier nodo que deba consumir ese tiempo histórico:
-ros2 run burger_kinova_connection kinova_monitor --ros-args -p use_sim_time:=true
+ros2 run burger_kinova_reference kinova_monitor --ros-args -p use_sim_time:=true
 
 # Reproducción con remapeo, para comparar contra el flujo en vivo sin colisionar:
 ros2 bag play dataset_conexion_kinova --remap /joint_states:=/joint_states_replay

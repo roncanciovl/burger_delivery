@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>burger_kinova_connection</name>
+  <name>burger_kinova_reference</name>
   <version>1.0.0</version>
   <description>
     Verificación, monitoreo y uso controlado del enlace ROS 2 entre el proyecto

@@ -122,7 +122,7 @@ por lo que nunca les afectó.
 
 ### Mitigación parcial ya implementada
 
-`burger_kinova_connection` rechaza posiciones finitas pero físicamente imposibles
+`burger_kinova_reference` rechaza posiciones finitas pero físicamente imposibles
 (`max_plausible_joint_rad`, 100 rad por defecto), lo que captura el caso `1.12e+277`.
 **No captura el caso `0.0`**, y por diseño no puede: un cero es indistinguible de una
 articulación legítimamente en el origen. La detección robusta requeriría comparar el

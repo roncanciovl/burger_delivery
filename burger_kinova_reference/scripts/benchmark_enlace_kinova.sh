@@ -75,7 +75,7 @@ echo
 echo "=== 3/4 Driver + monitor durante ${SEGUNDOS} s (SIN movimiento) ==="
 # El launch arranca en su propio grupo de procesos (setsid) para poder señalizar a
 # TODO el árbol —driver, spawners, monitor— y no dejar huérfanos.
-setsid ros2 launch burger_kinova_connection kinova_connection.launch.py \
+setsid ros2 launch burger_kinova_reference kinova_connection.launch.py \
     start_driver:=true robot_ip:="$ROBOT_IP" use_fake_hardware:=false \
     enable_motion:=false gripper:=none launch_rviz:=false > driver.txt 2>&1 &
 LAUNCH_PID=$!

@@ -14,7 +14,7 @@
 
 """Pruebas de los límites de meta y del bloqueo de movimiento (RF-06, §11, PA-07)."""
 
-from burger_kinova_connection.safety import (
+from burger_kinova_reference.safety import (
     format_goal_report,
     validate_goal,
     validate_robot_ip,

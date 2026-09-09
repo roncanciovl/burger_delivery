@@ -1,4 +1,4 @@
-# Validación del corte 1 — `burger_kinova_connection`
+# Validación del corte 1 — `burger_kinova_reference`
 
 Registro de las pruebas de aceptación PA-01 a PA-10.
 
@@ -38,9 +38,9 @@ export CYCLONEDDS_URI="file://$HOME/ros2_ws/src/burger_delivery/network_setup/cy
 
 ```bash
 cd ~/ros2_ws
-colcon build --packages-select burger_kinova_connection --symlink-install
-colcon test --packages-select burger_kinova_connection
-colcon test-result --test-result-base build/burger_kinova_connection --verbose
+colcon build --packages-select burger_kinova_reference --symlink-install
+colcon test --packages-select burger_kinova_reference
+colcon test-result --test-result-base build/burger_kinova_reference --verbose
 ```
 
 ```text
@@ -56,7 +56,7 @@ de logging y resolución de la pinza en el launch.
 ## PA-02 · Grafo en modo fake — ✅
 
 ```bash
-ros2 launch burger_kinova_connection kinova_connection.launch.py \
+ros2 launch burger_kinova_reference kinova_connection.launch.py \
   start_driver:=true robot_ip:=0.0.0.0 use_fake_hardware:=true enable_motion:=false
 ```
 
@@ -200,7 +200,7 @@ Todos en modo seco: **ninguno contactó el servidor de acción**.
 **a) Movimiento deshabilitado**
 
 ```bash
-ros2 run burger_kinova_connection safe_trajectory_client --ros-args \
+ros2 run burger_kinova_reference safe_trajectory_client --ros-args \
   --params-file <config> -p dry_run:=true
 ```
 ```text
@@ -289,7 +289,7 @@ acción. Código de salida `1`.
 
 
 ```bash
-ros2 run burger_kinova_connection safe_trajectory_client --ros-args \
+ros2 run burger_kinova_reference safe_trajectory_client --ros-args \
   --params-file <config> -p dry_run:=false -p enable_motion:=true \
   -p "safe_joint_positions_rad:=[0.05,0.05,0.0,0.0,0.0,0.0,0.0]"
 ```

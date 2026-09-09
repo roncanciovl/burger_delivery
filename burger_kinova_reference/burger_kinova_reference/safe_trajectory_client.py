@@ -31,7 +31,7 @@ Orden de ejecución::
 
 Modo seco (por defecto)::
 
-    ros2 run burger_kinova_connection safe_trajectory_client --ros-args \\
+    ros2 run burger_kinova_reference safe_trajectory_client --ros-args \\
         -p dry_run:=true
 
 En modo seco se ejecuta **toda** la validación y no se contacta al servidor de acción.
@@ -51,14 +51,14 @@ from action_msgs.msg import GoalStatus
 
 from builtin_interfaces.msg import Duration
 
-from burger_kinova_connection.link_metrics import LinkHealth, validate_joint_state
-from burger_kinova_connection.logging_support import (
+from burger_kinova_reference.link_metrics import LinkHealth, validate_joint_state
+from burger_kinova_reference.logging_support import (
     declare_logging_parameters,
     DynamicLogLevel,
     log_logging_banner,
     ThrottledLogger,
 )
-from burger_kinova_connection.safety import (
+from burger_kinova_reference.safety import (
     format_goal_report,
     validate_goal,
     validate_safety_config,

@@ -14,7 +14,7 @@
 
 """Pruebas de validación de mensajes, frecuencia y vencimiento del enlace (RF-03)."""
 
-from burger_kinova_connection.link_metrics import (
+from burger_kinova_reference.link_metrics import (
     LinkHealth,
     RateEstimator,
     STATE_ERROR,

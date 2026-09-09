@@ -18,7 +18,7 @@ import json
 import socket
 import threading
 
-from burger_kinova_connection.station_announcer import (
+from burger_kinova_reference.station_announcer import (
     construir_anuncio,
     PUERTO_ANUNCIO,
     StationAnnouncer,
