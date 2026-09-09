@@ -221,16 +221,24 @@ def _setup(context, *args, **kwargs):
             'dof': arg('dof'),
             'use_fake_hardware': str(use_fake_hardware).lower(),
             'robot_controller': arg('robot_controller'),
-            'launch_rviz': str(launch_rviz).lower(),
-            # `gripper` se transfiere SIEMPRE, incluso vacío. Un launch incluido hereda
-            # las configuraciones del padre, así que omitir la clave no equivale a "sin
-            # pinza": gen3.launch.py vería el valor que este archivo ya declaró y su
-            # propio DeclareLaunchArgument no lo sobrescribiría.
+            'launch_rviz': 'false',  # Siempre desactivamos el RViz de fábrica
+            # `gripper` se transfiere SIEMPRE, incluso vacío.
             'gripper': gripper,
         }
         actions.append(IncludeLaunchDescription(
             PythonLaunchDescriptionSource(kortex_launch),
             launch_arguments=bringup_args.items(),
+        ))
+        
+    if launch_rviz:
+        rviz_config = os.path.join(
+            get_package_share_directory('burger_description'), 'rviz', 'default.rviz')
+        actions.append(Node(
+            package='rviz2',
+            executable='rviz2',
+            name='rviz2',
+            output='screen',
+            arguments=['-d', rviz_config],
         ))
     else:
         actions.append(LogInfo(msg=(
