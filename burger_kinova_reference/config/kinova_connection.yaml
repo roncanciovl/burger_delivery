@@ -1,0 +1,185 @@
+# =====================================================================================
+# burger_kinova_reference — Configuración del enlace con el Kinova Gen3 (6 GDL + 2F-85)
+# =====================================================================================
+# REGLAS:
+#   * Ninguna IP, usuario o contraseña vive dentro del código Python: todo llega por aquí
+#     o por argumento de launch.
+#   * `enable_motion` SIEMPRE arranca en false. Sólo se habilita de forma explícita y
+#     supervisada desde la línea de comandos.
+#   * La primera validación de cualquier equipo se hace con `use_fake_hardware: true`.
+#
+# Sobrescritura desde launch:
+#   ros2 launch burger_kinova_reference kinova_connection.launch.py \
+#       start_driver:=true robot_ip:=192.168.1.10 use_fake_hardware:=false
+# =====================================================================================
+
+# -------------------------------------------------------------------------------------
+# Sección consumida por el archivo de launch (no por un nodo).
+# Se declara con `ros__parameters` para que el cargador de parámetros de ROS 2 la ignore
+# de forma segura cuando el archivo completo se pasa a un nodo.
+# -------------------------------------------------------------------------------------
+launch:
+  ros__parameters:
+    # Incluir kortex_bringup/gen3.launch.py en ESTA estación.
+    # ⚠ Sólo la estación conectada físicamente al robot puede usar true.
+    start_driver: false
+    # Dirección del robot cuando el driver se inicia localmente.
+    # 0.0.0.0 es el valor seguro de modo fake; con hardware real se rechaza.
+    robot_ip: "0.0.0.0"
+    use_fake_hardware: true
+    launch_rviz: false
+    # Parámetros que se transfieren tal cual al bringup oficial de Kinova.
+    robot_type: "gen3"
+    # ⚠ El brazo del laboratorio es un Gen3 de SEIS grados de libertad con pinza
+    # Robotiq 2F-85. El propio driver lo confirma al arrancar:
+    #     KortexMultiInterfaceHardware: Actuator count reported by robot is '6'
+    # Lanzarlo con dof:=7 hace que el driver exponga una séptima articulación que el
+    # robot nunca alimenta: su casilla conserva memoria sin inicializar y ha llegado a
+    # publicar 1.12e+277 rad. Ver network_setup/ANOMALIAS_HARDWARE.md §3.
+    dof: 6
+    gripper: "robotiq_2f_85"
+    robot_controller: "joint_trajectory_controller"
+    # Nivel de log inicial de los nodos del package (se puede cambiar en caliente).
+    log_level: "info"
+
+# -------------------------------------------------------------------------------------
+# Parámetros comunes a todos los nodos del package.
+# `/**` aplica a cualquier nodo y a cualquier namespace.
+# -------------------------------------------------------------------------------------
+/**:
+  ros__parameters:
+
+    # Identificador del hardware que acompaña cada DiagnosticStatus.
+    hardware_id: "kinova_gen3_6dof_robotiq_2f_85"
+
+    # ---- Identidad de la estación ----------------------------------------------------
+    # El monitor NO se conecta al robot: robot_ip sólo le sirve para comprobar si ESTA
+    # máquina mantiene la sesión TCP con la controladora, y anunciarlo en el diagnóstico.
+    # Así cualquier estación del mismo dominio sabe quién tiene el robot ocupado, sin
+    # configurar ninguna IP de anfitriona y sin dejar de funcionar si mañana es otra.
+    robot_ip: "0.0.0.0"
+    start_driver: false
+
+    # Anuncia el rol de esta estación por broadcast UDP para el monitor de red del
+    # laboratorio, que así marca la fila de la anfitriona sin hablar ROS 2 ni compartir
+    # dominio. Si la red no admite broadcast, el nodo lo registra una vez y continúa.
+    announce_station: true
+    announce_port: 45455
+    announce_period_s: 5.0
+
+    # ---- Interfaces ROS 2 -----------------------------------------------------------
+    joint_state_topic: "/joint_states"
+    diagnostics_topic: "/burger/kinova/diagnostics"
+    controller_manager_ns: "/controller_manager"
+    trajectory_action_name: "/joint_trajectory_controller/follow_joint_trajectory"
+
+    # ---- Modo de operación ----------------------------------------------------------
+    use_fake_hardware: true
+    # Habilitación explícita de comandos físicos. NUNCA se sube a true en el repositorio.
+    enable_motion: false
+
+    # ---- Nombres de las seis articulaciones del Gen3 ---------------------------------
+    # El orden de este arreglo NO se usa para indexar /joint_states; sólo declara qué
+    # articulaciones deben estar presentes (RF-03).
+    # Seis articulaciones. La articulación de la pinza
+    # (robotiq_85_left_knuckle_joint) también aparece en /joint_states, pero no se
+    # declara aquí: el monitor ignora las articulaciones adicionales.
+    expected_joints:
+      - "joint_1"
+      - "joint_2"
+      - "joint_3"
+      - "joint_4"
+      - "joint_5"
+      - "joint_6"
+
+    # ---- Salud del enlace (RF-03) ----------------------------------------------------
+    joint_state_timeout_s: 1.0     # edad máxima tolerada del último /joint_states
+    min_joint_state_hz: 20.0       # frecuencia mínima aceptada para dar por buena la prueba
+    # Tiempo real mínimo que debe cubrir la ventana antes de creer la frecuencia estimada.
+    # Al suscribirse, DDS entrega de golpe los mensajes ya encolados: sin esta guarda la
+    # ventana se llena en microsegundos y el enlace parece ir a miles de Hz.
+    min_rate_observation_s: 0.5
+    # Magnitud máxima plausible de una posición articular. No sustituye a los límites
+    # aprobados de abajo: sirve para distinguir telemetría de BASURA. Con el robot real
+    # se observó joint_7 = 1.12e+277 rad constante y par cero, porque el brazo anunciaba
+    # seis actuadores mientras el driver corría con dof:=7 y esa casilla nunca se
+    # escribía. Como 1.12e+277 sí es un número finito, comprobar sólo NaN/inf daba el
+    # enlace por saludable.
+    max_plausible_joint_rad: 100.0
+    diagnostic_rate_hz: 1.0        # frecuencia de publicación de /burger/kinova/diagnostics
+
+    # ---- Límites de seguridad de la meta articular (RF-06 / §11) ---------------------
+    max_joint_delta_rad: 0.10      # cambio máximo permitido por articulación
+    trajectory_duration_s: 5.0     # duración MÍNIMA de la trayectoria de prueba
+
+    # Meta articular de la prueba controlada. Debe aprobarse en laboratorio antes de
+    # ejecutarse sobre hardware real. Valores en radianes, en el orden de expected_joints.
+    safe_joint_positions_rad: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+    # Límites articulares aprobados para la validación local previa al envío de la meta.
+    # Deben ser IGUALES o MÁS RESTRICTIVOS que los límites del modelo real. Nunca se
+    # amplían para "hacer pasar" una prueba.
+    # Tomados del URDF real del Gen3 6 GDL: joint_2 = ±2.24, joint_3 = ±2.57 y
+    # joint_5 = ±2.09 son revolutas con tope; joint_1, joint_4 y joint_6 son CONTINUAS
+    # y no tienen límite en el modelo, así que aquí se acotan a una vuelta por
+    # prudencia. Nunca se amplían para hacer pasar una prueba.
+    joint_min_rad: [-3.14, -2.24, -2.57, -3.14, -2.09, -3.14]
+    joint_max_rad: [3.14, 2.24, 2.57, 3.14, 2.09, 3.14]
+
+    # ---- Cliente de trayectoria segura (RF-06) ---------------------------------------
+    # ⚠ Estos dos parámetros viven aquí, bajo `/**`, y NO bajo una sección con el nombre
+    # del nodo. Motivo: ROS 2 da más precedencia a una sección con nombre de nodo que a
+    # un override `-p` de la línea de comandos (que se registra bajo el comodín `/**`).
+    # Si `dry_run` estuviera bajo `safe_trajectory_client:`, el comando documentado
+    # `-p dry_run:=false` se ignoraría en silencio y la prueba PA-08 nunca enviaría la
+    # meta. Ponerlos bajo `/**` hace que la CLI sí los pueda sobrescribir.
+    #
+    # Ejecuta TODA la validación sin enviar la meta al servidor de acción.
+    dry_run: true
+    # Pide confirmación por teclado antes de enviar la meta (uso interactivo).
+    require_operator_confirmation: true
+
+    # ---- Tiempos de espera del cliente de acción (RF-06 / RF-08) ---------------------
+    action_server_timeout_s: 10.0  # espera explícita por el servidor de acción
+    goal_result_timeout_s: 30.0    # vencido este plazo la meta se cancela de forma ordenada
+
+    # =================================================================================
+    # SUBSISTEMA DE LOGGING (ver docs/TEORIA_LOGGING_ROS2.md)
+    # =================================================================================
+    # Nivel inicial del logger del nodo. Cambiable en caliente sin reiniciar:
+    #   ros2 param set /kinova_monitor log_level debug
+    log_level: "info"
+
+    # Periodo de los logs limitados en frecuencia (throttling). Un log dentro de un
+    # callback de sensor a 40 Hz satura la CPU y rompe el determinismo: se emite como
+    # máximo un mensaje cada `log_throttle_period_s` segundos.
+    log_throttle_period_s: 2.0
+
+    # ---- Caja negra / Flight Recorder ------------------------------------------------
+    # Búfer circular en RAM con las últimas N muestras de telemetría. Ante una anomalía
+    # se vuelca en nivel DEBUG para análisis post-mortem, sin haber grabado nada a disco
+    # durante la operación nominal.
+    enable_flight_recorder: true
+    flight_recorder_samples: 200
+
+    # ---- Trazabilidad de eventos hacia /rosout ---------------------------------------
+    # Publica una transición de estado (OK/WARN/ERROR) sólo cuando el estado CAMBIA, para
+    # que /rosout y rqt_console contengan la línea de tiempo del incidente y no ruido.
+    log_state_transitions: true
+
+# -------------------------------------------------------------------------------------
+# Parámetros exclusivos del monitor.
+# -------------------------------------------------------------------------------------
+kinova_monitor:
+  ros__parameters:
+    # Ventana (número de mensajes) usada para estimar la frecuencia de /joint_states.
+    hz_window_samples: 50
+    # Periodo de consulta a /controller_manager/list_controllers (RF-04).
+    controller_query_period_s: 2.0
+    # Controladores que deben estar `active` antes de considerar el enlace saludable.
+    required_controllers:
+      - "joint_state_broadcaster"
+      - "joint_trajectory_controller"
+    # Controlador cuya inactividad bloquea el movimiento.
+    motion_controller: "joint_trajectory_controller"
+

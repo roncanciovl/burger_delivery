@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>burger_kinova_reference</name>
+  <version>1.0.0</version>
+  <description>
+    Verificación, monitoreo y uso controlado del enlace ROS 2 entre el proyecto
+    burger_delivery y un manipulador Kinova Gen3 de 7 GDL. Incluye el subsistema
+    de logging, trazabilidad y caja negra (flight recorder) del curso.
+  </description>
+  <maintainer email="henry.roncancio@unimilitar.edu.co">Henry Roncancio</maintainer>
+  <license>Apache-2.0</license>
+  <url type="repository">https://github.com/roncanciovl/burger_delivery</url>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>diagnostic_msgs</exec_depend>
+  <exec_depend>control_msgs</exec_depend>
+  <exec_depend>trajectory_msgs</exec_depend>
+  <exec_depend>controller_manager_msgs</exec_depend>
+  <exec_depend>rcl_interfaces</exec_depend>
+  <exec_depend>std_srvs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+
+  <!-- Driver oficial de Kinova: sólo se necesita cuando start_driver:=true -->
+  <exec_depend>kortex_bringup</exec_depend>
+
+  <!-- Herramientas de logging/registro usadas por el taller asociado -->
+  <exec_depend>rosbag2_py</exec_depend>
+  <exec_depend>rosbag2_storage_mcap</exec_depend>
+  <exec_depend>rqt_console</exec_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

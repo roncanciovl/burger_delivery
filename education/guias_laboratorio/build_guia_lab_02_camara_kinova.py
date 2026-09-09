@@ -493,9 +493,9 @@ def build():
     add_section_heading(doc, "PROCEDIMIENTO, MÉTODO O ACTIVIDADES A DESARROLLAR EN LA PRÁCTICA", page_break=True)
     
     add_subheading(doc, "Fase 1: Diagnóstico de Red y Puesta en Marcha del Monitor de Red")
-    add_list_item(doc, "Configure en Dispositivo A (Gateway): Ethernet 192.168.1.100/24 y Wi-Fi 192.168.50.10/24. En Dispositivo B: Wi-Fi 192.168.50.20/24.", 1)
+    add_list_item(doc, "El laboratorio usa UNA sola subred 192.168.1.0/24 (router TP-Link AX12 en 192.168.1.1, SSID ros2). Robot Kinova: 192.168.1.10 estática. Dispositivo A (anfitriona): 192.168.1.100 por reserva DHCP. Dispositivo B: IP del pool DHCP 192.168.1.101-254. Confirme la suya con ip -brief addr y verifique con ping 192.168.1.1 y ping 192.168.1.10.", 1)
     add_list_item(doc, "Lance el Monitor de Red en Dispositivo A: bash ~/ros2_ws/src/burger_delivery/network_setup/iniciar_monitor.sh", 2)
-    add_list_item(doc, "Abra el navegador en http://localhost:8080 (o http://192.168.50.10:8080 desde Dispositivo B). Inicie la sesión de grabación de telemetría.", 3)
+    add_list_item(doc, "Abra el navegador en http://localhost:8080 (o http://192.168.1.100:8080 desde Dispositivo B). Inicie la sesión de grabación de telemetría.", 3)
 
     add_subheading(doc, "Fase 2: Passthrough Óptico Directo por RTSP (Sin ROS 2)")
     add_list_item(doc, "REQUISITO PREVIO: instale los plugins de GStreamer (el stream de profundidad los exige): sudo apt install -y gstreamer1.0-tools gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav", 1)
@@ -537,7 +537,8 @@ def build():
         [
             ["Enlace Evaluado", "IP Origen / Destino", "Paquetes (Tx/Rx)", "RTT Mín (ms)", "RTT Prom (ms)", "RTT Máx (ms)", "Jitter (mdev)", "Estado"],
             ["Cableado (Disp. A -> Kinova)", "192.168.1.100 -> 192.168.1.10", "10 / ___", "", "", "", "", ""],
-            ["Inalámbrico (Disp. B -> Disp. A)", "192.168.50.20 -> 192.168.50.10", "10 / ___", "", "", "", "", ""],
+            ["Inalámbrico (Disp. B -> Disp. A)", "192.168.1.101 -> 192.168.1.100", "10 / ___", "", "", "", "", ""],
+            ["Inalámbrico (Disp. B -> Kinova)", "192.168.1.101 -> 192.168.1.10", "10 / ___", "", "", "", "", ""],
         ],
         material_model,
         font_size=7.2,

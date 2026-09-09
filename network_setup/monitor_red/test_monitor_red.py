@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Pruebas de regresión para atribución de ROS_DOMAIN_ID."""
 
+import json
 import os
 import time
 import unittest
@@ -9,6 +10,7 @@ from unittest.mock import patch
 
 from device_scanner import DeviceScanner
 from firewall_status import _resolve_ros_subnet, evaluate_wsl_firewall
+from station_listener import StationListener
 from traffic_sniffer import TrafficSniffer
 
 
@@ -170,6 +172,104 @@ class RosSubnetResolutionTests(unittest.TestCase):
 
     def test_invalid_value_falls_back_to_the_lab_subnet(self):
         self.assertEqual(self.resolve_with("no-es-una-subred")[0], "192.168.1.0/24")
+
+
+class StationAnnouncementTests(unittest.TestCase):
+    """Anuncios de rol de estación: quién tiene ocupado el robot."""
+
+    def setUp(self):
+        self.oyente = StationListener(puerto=0, ttl=10.0)
+
+    def _anuncio(self, **campos):
+        base = {
+            "v": 1,
+            "estacion": "PC-LAB-01",
+            "estacion_ip": "192.168.1.42",
+            "rol": "anfitriona",
+            "verificado": "si",
+            "evidencia": "sesión TCP establecida con 192.168.1.10:10000",
+            "robot_ip": "192.168.1.10",
+            "nodo": "kinova_monitor",
+            "ts": time.time(),
+        }
+        base.update(campos)
+        return json.dumps(base).encode("utf-8")
+
+    def test_registra_una_anfitriona(self):
+        self.oyente._procesar(self._anuncio(), "192.168.1.42")
+        anfitriona = self.oyente.anfitriona()
+        self.assertIsNotNone(anfitriona)
+        self.assertEqual(anfitriona["estacion"], "PC-LAB-01")
+        self.assertEqual(anfitriona["ip"], "192.168.1.42")
+
+    def test_la_ip_viene_del_socket_no_del_mensaje(self):
+        """Un anuncio no puede declarar una IP distinta a la suya."""
+        self.oyente._procesar(self._anuncio(estacion_ip="10.9.9.9"), "192.168.1.42")
+        self.assertEqual(self.oyente.anfitriona()["ip"], "192.168.1.42")
+
+    def test_un_cliente_no_es_anfitriona(self):
+        self.oyente._procesar(self._anuncio(rol="cliente"), "192.168.1.77")
+        self.assertIsNone(self.oyente.anfitriona())
+        self.assertEqual(len(self.oyente.estaciones()), 1)
+
+    def test_sin_verificar_no_cuenta_como_anfitriona(self):
+        """Declarar el rol no basta: el nodo sólo lo verifica con sesión establecida."""
+        self.oyente._procesar(self._anuncio(verificado="no"), "192.168.1.42")
+        self.assertIsNone(self.oyente.anfitriona())
+
+    def test_caduca_por_ttl(self):
+        """Si la estación se apaga, su anuncio caduca solo: no hace falta despedida."""
+        oyente = StationListener(puerto=0, ttl=0.01)
+        oyente._procesar(self._anuncio(), "192.168.1.42")
+        self.assertIsNotNone(oyente.anfitriona())
+        time.sleep(0.05)
+        self.assertIsNone(oyente.anfitriona())
+        self.assertEqual(oyente.estaciones(), [])
+
+    def test_ignora_datagramas_invalidos(self):
+        for basura in (b"no es json", b"[]", b"null", b'{"v": 99}', b"\xff\xfe"):
+            self.oyente._procesar(basura, "192.168.1.42")
+        self.assertEqual(self.oyente.estaciones(), [])
+
+    def test_trunca_campos_largos(self):
+        """Un anuncio hostil no debe poder inflar la interfaz."""
+        self.oyente._procesar(self._anuncio(estacion="X" * 5000), "192.168.1.42")
+        self.assertLessEqual(len(self.oyente.estaciones()[0]["estacion"]), 64)
+
+    def test_el_ultimo_anuncio_gana(self):
+        self.oyente._procesar(self._anuncio(rol="anfitriona"), "192.168.1.42")
+        self.oyente._procesar(self._anuncio(rol="cliente"), "192.168.1.42")
+        self.assertIsNone(self.oyente.anfitriona())
+        self.assertEqual(len(self.oyente.estaciones()), 1)
+
+    def test_consulta_por_ip(self):
+        self.oyente._procesar(self._anuncio(), "192.168.1.42")
+        self.assertEqual(self.oyente.rol_de("192.168.1.42")["rol"], "anfitriona")
+        self.assertIsNone(self.oyente.rol_de("192.168.1.99"))
+
+    def test_todas_las_consultas_devuelven_la_misma_forma(self):
+        """
+        rol_de, estaciones y anfitriona deben traer los mismos campos.
+
+        Regresión: rol_de omitía edad_s y el servidor reventaba con KeyError al decorar
+        la lista de dispositivos.
+        """
+        self.oyente._procesar(self._anuncio(), "192.168.1.42")
+        por_ip = self.oyente.rol_de("192.168.1.42")
+        de_lista = self.oyente.estaciones()[0]
+        anfitriona = self.oyente.anfitriona()
+        self.assertEqual(set(por_ip), set(de_lista))
+        self.assertEqual(set(anfitriona), set(de_lista))
+        for entrada in (por_ip, de_lista, anfitriona):
+            self.assertIn("edad_s", entrada)
+            self.assertIsInstance(entrada["edad_s"], float)
+
+    def test_resumen_expone_el_estado(self):
+        self.oyente._procesar(self._anuncio(), "192.168.1.42")
+        resumen = self.oyente.resumen()
+        self.assertTrue(resumen["listener_activo"])
+        self.assertEqual(resumen["anuncios_recibidos"], 1)
+        self.assertIsNotNone(resumen["anfitriona"])
 
 
 if __name__ == "__main__":

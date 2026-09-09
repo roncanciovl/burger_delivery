@@ -23,7 +23,13 @@ jobs:
         run: |
           apt-get update
           rosdep update
-          rosdep install --from-paths . --ignore-src --rosdistro jazzy -r -y
+          # kortex_bringup NO existe como paquete apt: lo aporta el stack ros2_kortex,
+          # que se clona en el workspace y se compila desde fuente. En el laboratorio
+          # `rosdep --ignore-src` lo salta porque está en src/; aquí sólo se clona este
+          # repositorio, así que hay que declararlo explícitamente como omitido o rosdep
+          # intenta `apt-get install ros-jazzy-kortex-bringup` y falla.
+          rosdep install --from-paths . --ignore-src --rosdistro jazzy -r -y \
+            --skip-keys "kortex_bringup"
 
       - name: Build
         shell: bash

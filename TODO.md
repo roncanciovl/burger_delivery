@@ -57,6 +57,36 @@ Este documento centraliza las tareas pendientes, oportunidades de mejora identif
 - [ ] **Inyección de Tráfico y Estrés de Red**:
   - [ ] Scripts para emular degradación de enlace WiFi (pérdida de paquetes, jitter, latencia artificial con `tc/netem`).
   - [ ] Evaluar estabilidad de trayectorias articulares del Kinova bajo congestión de red.
+- [x] **Experimento A/B del enlace de la estación del driver (WiFi vs Ethernet)**:
+  - [x] Instrumental reproducible: [`benchmark_enlace_kinova.sh`](file:///home/roncanciovl/ros2_ws/src/burger_delivery/burger_kinova_reference/scripts/benchmark_enlace_kinova.sh) y [`analizar_enlace.py`](file:///home/roncanciovl/ros2_ws/src/burger_delivery/burger_kinova_reference/scripts/analizar_enlace.py).
+  - [x] Medición insesgada sobre el robot real: por WiFi, `p99 = 60.12 ms`, intervalo máximo `3251 ms`, 132 overruns y **2 pérdidas de telemetría** en 120 s; por cable, `p99 = 10.61 ms`, máximo `20.63 ms`, 6 overruns y **0 pérdidas**.
+  - [x] Registro completo: [EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md](file:///home/roncanciovl/ros2_ws/src/burger_delivery/burger_kinova_reference/docs/EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md).
+
+---
+
+## 🩺 4.1 Deuda técnica de diagnóstico (hallazgos sin cerrar)
+
+- [ ] **⚠ Verificar si el parche de "movimiento suave" del Kortex sigue siendo necesario**
+      ([`apply_kinova_smooth_movement.py`](file:///home/roncanciovl/ros2_ws/src/burger_delivery/scripts/apply_kinova_smooth_movement.py)):
+  - **Origen:** proviene de un experimento previo **no documentado**, motivado por un temblor del brazo durante el movimiento. Se atribuyó a la latencia interna del router UDP de la API Kortex y se redujo su timeout a 200 ms.
+  - **Por qué hay que revisarlo:** el experimento A/B del enlace demostró que, **por WiFi**, la estación del driver introducía un `p99` de 60 ms y huecos de hasta 3.25 s en el ciclo de 100 Hz. Un jitter de esa magnitud sobre una sesión cíclica es una causa candidata del mismo temblor. Es posible que el parche estuviera tratando el síntoma de una causa distinta.
+  - [ ] **Confirmar primero que el parche siquiera se aplica.** Hoy **no hace nada**: busca `router_udp_realtime_.SetMessageTimeout(500);` en `kortex_driver/src/hardware_interface.cpp`, patrón que ya no existe en la versión clonada de `ros2_kortex`, y aun así imprime `[x] Parcheado`. Cualquier conclusión previa basada en "con parche / sin parche" puede estar comparando dos veces lo mismo.
+  - [ ] Corregir el script para que **falle ruidosamente** si el patrón no aparece, en lugar de reportar éxito.
+  - [ ] Reproducir el temblor de forma controlada **con la estación por cable**, ejecutando una trayectoria articular lenta y grabando `/joint_states` en MCAP.
+  - [ ] Comparar A/B con y sin parche, ya sobre enlace cableado, midiendo la desviación por articulación respecto de la trayectoria comandada (no a ojo).
+  - [ ] Según el resultado: retirar el parche, o documentarlo con evidencia en [`INSTALACION_KORTEX.md`](file:///home/roncanciovl/ros2_ws/src/burger_delivery/ros2_setup/INSTALACION_KORTEX.md) §3.4 explicando qué mide y qué corrige.
+- [x] **✅ RESUELTO: el Kinova es de 6 GDL con pinza Robotiq 2F-85** (2026-09-09):
+  - Confirmado por el propietario y por el driver (`Actuator count reported by robot is '6'`). Con `dof:=6` el brazo publica `joint_1..joint_6` más `robotiq_85_left_knuckle_joint`, todas reales, y se activan los tres controladores incluido el del gripper.
+  - Causa de que no se pudiera usar antes: el commit local `b4ae524` en `ros2_kortex` quitó los parámetros de simulación pero dejó los bloques `<xacro:if value="${}">` huérfanos, rompiendo la descripción de 6 GDL con `error: invalid syntax (<expression>, line 0)`. Corregido completando el refactor. Los estudiantes clonan `ros2_kortex` limpio, así que no les afectaba.
+  - Ajustada la configuración del package, el enunciado del proyecto y la guía de instalación. Documentado el paso obligatorio de `update_rate` sobre `6dof/config/ros2_controllers.yaml`, que antes sólo se había aplicado al 7dof.
+- [ ] **Revisar el resto de la documentación que aún declara 7 GDL** (descriptiva, no operativa): `docs/architecture/ros_burger_delivery.md`, `docs/research/`, `education/guias_laboratorio/GUIA_LAB_01`, `GUIA_LAB_02`, `education/talleres/TALLER_URDF_TF.md`, `education/evidencias_abet/INSTRUMENTO_ABET_*`, `conceptos_core/visor_web_urdf.md`, `burger_description/README.md`, `ros2_setup/MOVEIT_Y_ROS2_CONTROL.md`.
+- [ ] **Antiguo bloqueante de PA-08 (resuelto por lo anterior)**: quedaba pendiente determinar si el brazo era 6 o 7 GDL:
+  - El driver reporta `Actuator count reported by robot is '6'` de forma consistente, mientras todo el proyecto se configura con `dof:=7`. La séptima casilla nunca se escribe: se observó `joint_7 = 1.12e+277` en una sesión y `0.0` en otra, siempre bit-idéntica dentro de cada sesión mientras el resto muestra ruido de encoder.
+  - [ ] Consultar la interfaz web del robot (`http://192.168.1.10`, puerto 80 activo, requiere credenciales) para distinguir **Gen3 de 6 GDL** de **Gen3 de 7 GDL con el actuador 7 fuera de línea o en falla**.
+  - [ ] Según el resultado: corregir `dof`, `expected_joints`, `safe_joint_positions_rad`, `joint_min_rad` y `joint_max_rad` —todos dimensionados a 7—, o abrir la reparación del actuador.
+  - [ ] Revisar el enunciado del proyecto y el resto de la documentación, que declaran 7 GDL en todas partes.
+  - Detalle en [ANOMALIAS_HARDWARE.md](file:///home/roncanciovl/ros2_ws/src/burger_delivery/network_setup/ANOMALIAS_HARDWARE.md) §3.
+- [ ] **Cuantificar el residuo que aporta WSL2**: con el enlace ya por cable persisten 6 overruns en 120 s y el driver sigue avisando `Could not enable FIFO RT scheduling policy`. Repetir la rama `ethernet` en Linux nativo para separar la contribución de la capa WSL2 de la del enlace.
 
 ---
 
