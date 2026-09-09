@@ -4,7 +4,7 @@
 
 En la literatura actual de robótica colaborativa y manufactura flexible (*Industry 4.0 / 5.0*), la gran mayoría de algoritmos de manipulación y percepción son evaluados bajo el supuesto de una **red cableada ideal con ancho de banda infinito y latencia nula**. Sin embargo, las celdas robóticas del mundo real integran componentes inalámbricos heterogéneos:
 
-- Manipuladores industriales de 7-DOF con buses Ethernet/WiFi en tiempo real (**Kinova Gen3**).
+- Manipuladores industriales de 6-DOF con buses Ethernet/WiFi en tiempo real (**Kinova Gen3**).
 - Plataformas móviles autónomas (AMR) y microcontroladores basados en **micro-ROS** y ESP32 operando sobre canales WiFi (2.4 GHz / 5 GHz).
 - Nodos de razonamiento espacial multimodal (**VLM / Gemini Robotics**) que transmiten ráfagas masivas de datos y tensores.
 

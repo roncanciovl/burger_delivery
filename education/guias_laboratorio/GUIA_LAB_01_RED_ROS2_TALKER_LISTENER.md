@@ -33,7 +33,7 @@ ROS 2 (*Robot Operating System 2*) adopta como capa de transporte de datos el es
 
 ### 2.2. Importancia de la práctica
 
-Esta práctica experimental establece las bases operativas de la robótica distribuida. Aprender a configurar, diagnosticar e interconectar dos o más computadores para que compartan tópicos de ROS 2 de forma transparente es un requisito indispensable para el desarrollo de la Celda de Automatización Colaborativa —proyecto integrador del curso—, donde un robot manipulador de 7 DOF debe coordinar sus movimientos en tiempo real con robots móviles a través de la red.
+Esta práctica experimental establece las bases operativas de la robótica distribuida. Aprender a configurar, diagnosticar e interconectar dos o más computadores para que compartan tópicos de ROS 2 de forma transparente es un requisito indispensable para el desarrollo de la Celda de Automatización Colaborativa —proyecto integrador del curso—, donde un robot manipulador de 6 DOF debe coordinar sus movimientos en tiempo real con robots móviles a través de la red.
 
 ---
 

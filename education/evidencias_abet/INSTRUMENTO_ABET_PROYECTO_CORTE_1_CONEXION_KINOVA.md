@@ -57,7 +57,7 @@ Esta plantilla produce la **Nota Proyecto Corte 1**, denominada `E₁` en el syl
 |---|---|---|
 | E1 | Árbol del package, `package.xml`, configuración y resultado de `colcon build` y `colcon test`. |  |
 | E2 | Launch en modo fake y launch sobre hardware real, con parámetros visibles y sin editar código. |  |
-| E3 | `/joint_states` con `joint_1` a `joint_7`, frecuencia medida y edad del último mensaje. |  |
+| E3 | `/joint_states` con `joint_1` a `joint_6`, frecuencia medida y edad del último mensaje. |  |
 | E4 | Respuesta de `/controller_manager/list_controllers` y verificación de controladores activos. |  |
 | E5 | `/burger/kinova/diagnostics` en estados saludable, degradado y perdido. |  |
 | E6 | Prueba de pérdida y recuperación del driver o de la conexión DDS, con tiempos y diagnóstico. |  |
@@ -91,7 +91,7 @@ Marque con una **X** una sola banda en cada criterio y escriba el valor exacto q
 |:---:|---|---|
 | ☐ | N5 — 475–500 | Además de N4, la arquitectura separa correctamente driver y aplicación, admite operación local y distribuida, maneja todos los estados de error previstos y no requiere cambios en `ros2_kortex`. |
 | ☐ | N4 — 400–474 | Además de N3, el launch parametriza los modos fake, real y cliente DDS; el monitor y el action client tienen contratos claros y manejo consistente de errores. |
-| ☐ | N3 — 300–399 | El package compila, se instala y demuestra conexión real: recibe siete articulaciones, consulta controladores y envía una trayectoria autorizada mediante la acción estándar. |
+| ☐ | N3 — 300–399 | El package compila, se instala y demuestra conexión real: recibe seis articulaciones, consulta controladores y envía una trayectoria autorizada mediante la acción estándar. |
 | ☐ | N2 — 150–299 | Solo funciona en modo fake o requiere pasos manuales no documentados; falta alguna interfaz esencial o la ejecución real es intermitente. |
 | ☐ | N1 — 0–149 | Existen scripts o fragmentos, pero no un package instalable ni una comunicación funcional verificable con el Kinova; incluye ausencia de evidencia obligatoria. |
 

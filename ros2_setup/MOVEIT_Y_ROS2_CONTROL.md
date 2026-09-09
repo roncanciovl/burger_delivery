@@ -1,6 +1,6 @@
 # Arquitectura de Control Brazo Robótico (MoveIt 2 & ros2_control)
 
-Para entender cómo se mueve un robot articulado como el **Kinova Gen3 7DOF** en un entorno ROS 2 complejo (como el de este laboratorio de *Burger Delivery*), es esencial separar el control en **tres grandes cerebros**.
+Para entender cómo se mueve un robot articulado como el **Kinova Gen3 6DOF** en un entorno ROS 2 complejo (como el de este laboratorio de *Burger Delivery*), es esencial separar el control en **tres grandes cerebros**.
 
 A diferencia de un carro a RC donde envías voltajes a los motores directamente, los brazos robóticos operan mediante un ciclo estricto de **Planificación -> Ejecución -> Hardware**. Estos tres cerebros son:
 
