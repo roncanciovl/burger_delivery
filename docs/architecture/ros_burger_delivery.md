@@ -17,6 +17,27 @@ header-includes:
 
 # 1. Visión General
 
+> [!WARNING]
+> **Este modelo vendorizado es de 7 GDL; el robot del laboratorio es de 6.**
+>
+> Conviene no confundir dos modelos que coexisten en el workspace:
+>
+> | Modelo | Cadena cinemática | GDL |
+> | :--- | :--- | :---: |
+> | `kortex_description`, generado en vivo por el driver | `base_link → shoulder_link → **bicep_link** → forearm_link → …` | **6** |
+> | `burger_description` (este, vendorizado) | `gen3_base_link → … → **gen3_half_arm_1_link → gen3_half_arm_2_link** → …` | 7 |
+>
+> El RViz que abre `kinova_connection.launch.py` con `launch_rviz:=true` usa el **primero**,
+> generado por `kortex_bringup` con `dof:=6`, y **sí es fiel al robot**: refleja la
+> posición articular real. El modelo de `burger_description` sólo lo usa
+> `display.launch.py`, un visor sin robot, y tiene una articulación de más
+> (`half_arm_1`/`half_arm_2` en lugar de `bicep`) y todos sus frames bajo el prefijo
+> `gen3_`, así que no colisiona con los del driver pero tampoco corresponde al hardware.
+>
+> Úsalo para estudiar la estructura de un URDF, no como referencia cinemática del brazo.
+> La re-vendorización a 6 GDL está pendiente; ver `TODO.md`.
+
+
 Este documento describe cómo implementar, con **ROS 2 Jazzy**, una celda de entrega de hamburguesas donde un robot manipulador **Kinova Gen3** toma el producto desde una estación de armado y lo deposita en plataformas móviles diferenciales que funcionarán como repartidores terrestres. El mismo ecosistema integra visión artificial basada en AprilTags, nodos de coordinación de pedidos y control distribuido mediante micro-ROS para los robots del piso. El objetivo es contar con una referencia completa que cubra arquitectura de red, nodos requeridos y el uso de **tf2** para mantener coherencia espacial entre el brazo y los móviles.
 
 
@@ -301,6 +322,8 @@ Notas:
 ## 5.6. Frames internos del Kinova Gen3 (y gripper)
 
 Resumen de los links y joints más relevantes del Gen3 (7 DOF) según el URDF oficial vendorizado en `ROS/vendor/kortex_description/robots/gen3_2f85.urdf`. Nombres de joints: `gen3_joint_1` … `gen3_joint_7`.
+
+> ⚠ Esta tabla describe el **URDF vendorizado**, de 7 GDL. El brazo físico es de **6 GDL** y su cadena real, publicada por el driver, es `base_link → shoulder_link → bicep_link → forearm_link → …`, sin prefijo `gen3_` y sin los eslabones `half_arm`. Ver el aviso al inicio del documento.
 
 | Link | Joint (padre→hijo) | Tipo | Propósito |
 | :--- | :--- | :--- | :--- |

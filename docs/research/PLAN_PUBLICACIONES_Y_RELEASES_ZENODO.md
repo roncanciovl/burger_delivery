@@ -65,7 +65,7 @@ flowchart TD
 * **Fecha:** Agosto 2026
 * **DOI Inmutable:** [`10.5281/zenodo.21809950`](https://doi.org/10.5281/zenodo.21809950)
 * **Alcance:**
-  1. Definición completa del URDF cinemático de la celda colaborativa (Kinova Gen3 7-DOF + gripper Robotiq 2F-85 + carritos diferenciales).
+  1. Definición completa del URDF cinemático de la celda colaborativa (Kinova Gen3 6-DOF + gripper Robotiq 2F-85 + carritos diferenciales).
   2. Publicación de árboles de transformación dinámicos (`tf2`) acoplados por visión AprilTag.
   3. Dashboard Web interactivo (`network_setup/monitor_red/`) con métricas QoS de red en tiempo real.
   4. Protocolo de laboratorio y syllabus alineado a criterios ABET (Student Outcomes 1, 6 y 7).

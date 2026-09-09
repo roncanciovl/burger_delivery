@@ -28,7 +28,7 @@ La propuesta añade una nueva "Capa Cognitiva" por encima de la "Capa de Aplicac
 
 ### 2.1 Hardware Necesario
 1.  **Cámara de Visión Artificial:** Idealmente la cámara integrada en el Kinova Gen3 (Intel RealSense) o cualquier cámara USB montada en un soporte fijo mirando la escena (top-down view).
-2.  **Brazo Kinova Gen3 7DOF** (Ya operativo).
+2.  **Brazo Kinova Gen3 6DOF** (Ya operativo).
 3.  **Robots Móviles ESP32** (Ya operativos).
 
 ### 2.2 Software & Paquetes

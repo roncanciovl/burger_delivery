@@ -1,5 +1,26 @@
 # 🎓 Guía Paso a Paso: Descifrando URDF, `robot_description` y TF2 en Burger Delivery
 
+> [!WARNING]
+> **Este modelo vendorizado es de 7 GDL; el robot del laboratorio es de 6.**
+>
+> Conviene no confundir dos modelos que coexisten en el workspace:
+>
+> | Modelo | Cadena cinemática | GDL |
+> | :--- | :--- | :---: |
+> | `kortex_description`, generado en vivo por el driver | `base_link → shoulder_link → **bicep_link** → forearm_link → …` | **6** |
+> | `burger_description` (este, vendorizado) | `gen3_base_link → … → **gen3_half_arm_1_link → gen3_half_arm_2_link** → …` | 7 |
+>
+> El RViz que abre `kinova_connection.launch.py` con `launch_rviz:=true` usa el **primero**,
+> generado por `kortex_bringup` con `dof:=6`, y **sí es fiel al robot**: refleja la
+> posición articular real. El modelo de `burger_description` sólo lo usa
+> `display.launch.py`, un visor sin robot, y tiene una articulación de más
+> (`half_arm_1`/`half_arm_2` en lugar de `bicep`) y todos sus frames bajo el prefijo
+> `gen3_`, así que no colisiona con los del driver pero tampoco corresponde al hardware.
+>
+> Úsalo para estudiar la estructura de un URDF, no como referencia cinemática del brazo.
+> La re-vendorización a 6 GDL está pendiente; ver `TODO.md`.
+
+
 > [!IMPORTANT]
 > **Actualización del Repositorio Privado del Equipo:**
 > Antes de iniciar o continuar con este taller, asegúrese de haber sincronizado su repositorio privado de equipo con los últimos cambios de la base del curso. Consulte la [Guía Oficial de Sincronización y Actualizaciones](../proyectos_evaluables/ACTUALIZACIONES_BASE_CORTE_1.md) para realizar este proceso correctamente.
@@ -213,7 +234,9 @@ Tipos principales:
 
 > [!NOTE]
 > **Fundamento de Robótica: Grados de Libertad (DOF)**
-> Cada joint que no sea `fixed` añade un **Grado de Libertad** al robot. Nuestro Kinova Gen3 tiene 7 joints rotacionales, lo que significa que tiene **7-DOF**. En robótica, tener 6-DOF es el mínimo para alcanzar cualquier posición (XYZ) con cualquier orientación (RPY) en el espacio. ¡Tener 7-DOF nos da "redundancia", permitiendo al robot evitar obstáculos sin mover su pinza del objetivo!
+> Cada joint que no sea `fixed` añade un **Grado de Libertad** al robot. El modelo que estás inspeccionando tiene 7 joints rotacionales, es decir **7-DOF**. En robótica, 6-DOF es el mínimo para alcanzar cualquier posición (XYZ) con cualquier orientación (RPY) en el espacio; un séptimo eje añade **redundancia**, que permite esquivar un obstáculo sin mover la pinza del objetivo.
+>
+> ⚠ **El brazo del laboratorio es de 6-DOF**, así que **no** tiene esa redundancia: para cada pose alcanzable existe en general un número finito de soluciones de cinemática inversa, no un continuo. Es una diferencia real a la hora de planificar trayectorias, no un detalle de nomenclatura.
 
 ### 🔍 Revisión en el Proyecto
 Busca los joints del Kinova en `delivery_scene_fixed.urdf`:
