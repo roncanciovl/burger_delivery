@@ -66,32 +66,11 @@ Este documento centraliza las tareas pendientes, oportunidades de mejora identif
 
 ## 🩺 4.1 Deuda técnica de diagnóstico (hallazgos sin cerrar)
 
-- [ ] **⚠ Verificar si el parche de "movimiento suave" del Kortex sigue siendo necesario**
-      ([`apply_kinova_smooth_movement.py`](file:///home/roncanciovl/ros2_ws/src/burger_delivery/scripts/apply_kinova_smooth_movement.py)):
-  - **Origen:** proviene de un experimento previo **no documentado**, motivado por un temblor del brazo durante el movimiento. Se atribuyó a la latencia interna del router UDP de la API Kortex y se redujo su timeout a 200 ms.
-  - **Por qué hay que revisarlo:** el experimento A/B del enlace demostró que, **por WiFi**, la estación del driver introducía un `p99` de 60 ms y huecos de hasta 3.25 s en el ciclo de 100 Hz. Un jitter de esa magnitud sobre una sesión cíclica es una causa candidata del mismo temblor. Es posible que el parche estuviera tratando el síntoma de una causa distinta.
-  - [ ] **Confirmar primero que el parche siquiera se aplica.** Hoy **no hace nada**: busca `router_udp_realtime_.SetMessageTimeout(500);` en `kortex_driver/src/hardware_interface.cpp`, patrón que ya no existe en la versión clonada de `ros2_kortex`, y aun así imprime `[x] Parcheado`. Cualquier conclusión previa basada en "con parche / sin parche" puede estar comparando dos veces lo mismo.
-  - [ ] Corregir el script para que **falle ruidosamente** si el patrón no aparece, en lugar de reportar éxito.
-  - [ ] Reproducir el temblor de forma controlada **con la estación por cable**, ejecutando una trayectoria articular lenta y grabando `/joint_states` en MCAP.
-  - [ ] Comparar A/B con y sin parche, ya sobre enlace cableado, midiendo la desviación por articulación respecto de la trayectoria comandada (no a ojo).
-  - [ ] Según el resultado: retirar el parche, o documentarlo con evidencia en [`INSTALACION_KORTEX.md`](file:///home/roncanciovl/ros2_ws/src/burger_delivery/ros2_setup/INSTALACION_KORTEX.md) §3.4 explicando qué mide y qué corrige.
-- [x] **✅ RESUELTO: el Kinova es de 6 GDL con pinza Robotiq 2F-85** (2026-09-09):
-  - Confirmado por el propietario y por el driver (`Actuator count reported by robot is '6'`). Con `dof:=6` el brazo publica `joint_1..joint_6` más `robotiq_85_left_knuckle_joint`, todas reales, y se activan los tres controladores incluido el del gripper.
-  - Causa de que no se pudiera usar antes: el commit local `b4ae524` en `ros2_kortex` quitó los parámetros de simulación pero dejó los bloques `<xacro:if value="${}">` huérfanos, rompiendo la descripción de 6 GDL con `error: invalid syntax (<expression>, line 0)`. Corregido completando el refactor. Los estudiantes clonan `ros2_kortex` limpio, así que no les afectaba.
-  - Ajustada la configuración del package, el enunciado del proyecto y la guía de instalación. Documentado el paso obligatorio de `update_rate` sobre `6dof/config/ros2_controllers.yaml`, que antes sólo se había aplicado al 7dof.
-- [x] **Barrida de la documentación que declaraba 7 GDL** (2026-09-09): corregidos los documentos que describen la *plataforma* (guías de laboratorio, syllabus, instrumento ABET, docs de investigación, `MOVEIT_Y_ROS2_CONTROL`, `PROPUESTA_GEMINI_ER`) y los comandos copiables de `INSTALACION_KORTEX`, que enviaban siete `joint_names` y un `joint_3: 3.14` fuera del límite real de ±2.57.
-- [ ] **🟠 Re-vendorizar `burger_description` a 6 GDL**:
-  - El URDF vendorizado modela un Gen3 de **siete** articulaciones (`gen3_joint_1`…`gen3_joint_7`, cadena `gen3_half_arm_1_link`/`gen3_half_arm_2_link`, mallas de `arms/gen3/7dof/`), mientras el brazo real es de 6 GDL (cadena `bicep_link`).
-  - **No afecta al RViz que abre el driver**: ese usa `kortex_description` generado en vivo con `dof:=6` y sí refleja la posición real. El modelo vendorizado sólo lo consume `burger_description/launch/display.launch.py`, un visor sin robot.
-  - Mientras tanto, los cuatro documentos que lo describen (`burger_description/README.md`, `conceptos_core/visor_web_urdf.md`, `docs/architecture/ros_burger_delivery.md`, `education/talleres/TALLER_URDF_TF.md`) llevan un aviso explicando la diferencia entre los dos modelos.
-  - [ ] Sustituir descripción y mallas por las de `arms/gen3/6dof/`, y revisar los TF que dependan de la cadena (localización con AprilTag, pick & place).
-  - [ ] Revisar `TALLER_URDF_TF.md`: la explicación de redundancia ya está matizada, pero el taller se apoya en el modelo de 7 GDL.
-- [ ] **Antiguo bloqueante de PA-08 (resuelto por lo anterior)**: quedaba pendiente determinar si el brazo era 6 o 7 GDL:
-  - El driver reporta `Actuator count reported by robot is '6'` de forma consistente, mientras todo el proyecto se configura con `dof:=7`. La séptima casilla nunca se escribe: se observó `joint_7 = 1.12e+277` en una sesión y `0.0` en otra, siempre bit-idéntica dentro de cada sesión mientras el resto muestra ruido de encoder.
-  - [ ] Consultar la interfaz web del robot (`http://192.168.1.10`, puerto 80 activo, requiere credenciales) para distinguir **Gen3 de 6 GDL** de **Gen3 de 7 GDL con el actuador 7 fuera de línea o en falla**.
-  - [ ] Según el resultado: corregir `dof`, `expected_joints`, `safe_joint_positions_rad`, `joint_min_rad` y `joint_max_rad` —todos dimensionados a 7—, o abrir la reparación del actuador.
-  - [ ] Revisar el enunciado del proyecto y el resto de la documentación, que declaran 7 GDL en todas partes.
-  - Detalle en [ANOMALIAS_HARDWARE.md](file:///home/roncanciovl/ros2_ws/src/burger_delivery/network_setup/ANOMALIAS_HARDWARE.md) §3.
+- [x] **✅ RESUELTO: el parche de "movimiento suave" no era necesario** (2026-09-10):
+  - El temblor venía del enlace de red de la estación, no de la latencia del router UDP: con cable el p99 de `/joint_states` cae de 60.12 ms a 10.61 ms. La prueba de movimiento con el anfitrión por cable salió limpia.
+  - Aquel script además **no aplicaba nada**: buscaba un patrón que ya no existe e imprimía "Parcheado" igual.
+  - Reemplazado por [`aplicar_compatibilidad_kortex.py`](file:///home/roncanciovl/ros2_ws/src/burger_delivery/scripts/aplicar_compatibilidad_kortex.py), que sí hace lo necesario, **verifica el resultado** y falla ruidosamente. Validado sobre un clon prístino de upstream: deja los URDF generándose en 6 y 7 GDL, y es idempotente.
+  - Confirmado que **ninguno de estos ajustes toca el árbol TF**: con `use_internal_bus_gripper_comm` en true y en false, links y joints son idénticos.
 - [ ] **Cuantificar el residuo que aporta WSL2**: con el enlace ya por cable persisten 6 overruns en 120 s y el driver sigue avisando `Could not enable FIFO RT scheduling policy`. Repetir la rama `ethernet` en Linux nativo para separar la contribución de la capa WSL2 de la del enlace.
 
 ---

@@ -67,54 +67,49 @@ sudo apt install -y \
 
 ### 3.4 Ajustes obligatorios sobre `ros2_kortex` recién clonado
 
-`ros2_kortex` viene de Kinova sin adaptar a este laboratorio. Estos dos ajustes hay que
-aplicarlos **antes de compilar**, y son la causa de los fallos más frecuentes si se omiten.
-
-#### a) Bajar la frecuencia del `controller_manager` a 100 Hz
-
-El archivo que corresponde depende de los grados de libertad del brazo. **Este
-laboratorio usa el de 6 GDL**:
+`ros2_kortex` viene de Kinova sin adaptar a este laboratorio. **Antes de compilar**:
 
 ```bash
-cd ~/ros2_ws/src/ros2_kortex/kortex_description/arms/gen3
-sed -i 's/update_rate: 1000/update_rate: 100/' 6dof/config/ros2_controllers.yaml
-grep -n update_rate 6dof/config/ros2_controllers.yaml   # debe decir 100
+python3 ~/ros2_ws/src/burger_delivery/scripts/aplicar_compatibilidad_kortex.py
 ```
 
-Sin esto el `controller_manager` intenta ciclos de 1 ms. En WSL2 no los sostiene y
-aparece `Overrun detected! The controller manager missed its desired rate of 1000 Hz`
-de forma continua.
+Para comprobar sin modificar nada:
 
-> Si alguna vez trabajas con un brazo de 7 GDL, el archivo es `7dof/config/ros2_controllers.yaml`.
-> Cambiar sólo uno de los dos es un error silencioso: el otro sigue a 1000 Hz.
-
-#### b) Compatibilidad de la pinza con el `robotiq_description` de la distribución
-
-El `kortex_description` de Kinova pasa al macro de la pinza parámetros que el
-`robotiq_description` instalado por apt en Jazzy **no acepta**:
-
-```text
-error: Invalid parameter "mock_sensor_commands"
-  when instantiating macro: robotiq_gripper (/opt/ros/jazzy/share/robotiq_description/...)
-```
-
-El macro instalado admite `sim_ignition`, `sim_isaac`, `use_fake_hardware`,
-`fake_sensor_commands`, `include_ros2_control` y `com_port`; el de Kinova le envía además
-`mock_sensor_commands`, `sim_gazebo`, `isaac_joint_commands` e `isaac_joint_states`. Hay
-que eliminar esos argumentos de simulación en
-`kortex_description/grippers/robotiq_2f_85/urdf/robotiq_2f_85_macro.xacro`.
-
-> ⚠ Al hacerlo, **elimina también los bloques `<xacro:if>` que los usaban**. Si se borran
-> los parámetros pero se dejan los bloques, quedan expresiones `${}` vacías y el xacro
-> falla con `error: invalid syntax (<expression>, line 0)`, un mensaje que no señala la
-> causa. Ocurrió en este laboratorio y dejó inutilizable la descripción de 6 GDL.
-
-### 3.5 Optimización de Hardware (Script de Movimiento Suave)
-Antes de compilar, es vital inyectar los ajustes oficiales para suprimir lags de UDP (C++) y unificar el bus URDF de la pinza para así eliminar inercias.
 ```bash
-python3 ~/ros2_ws/src/burger_delivery/scripts/apply_kinova_smooth_movement.py
+python3 ~/ros2_ws/src/burger_delivery/scripts/aplicar_compatibilidad_kortex.py --check
 ```
-> Esto parcheará directamente tus archivos internos de `ros2_kortex`. Reduce el Timeout de red interno a `200ms` forzando un ciclo de control libre de micro vibraciones y habilitando MTC de forma segura.
+
+El script es idempotente —volver a ejecutarlo no rompe nada— y **verifica el resultado**:
+si algo no se pudo aplicar lo dice y devuelve código de error, en lugar de reportar éxito.
+
+#### Qué ajusta, y por qué
+
+| Ajuste | Si se omite |
+| :--- | :--- |
+| Retira los argumentos de simulación de los xacros | `error: Invalid parameter "mock_sensor_commands"` al instanciar el macro de la pinza: el `robotiq_description` que instala apt no acepta `mock_sensor_commands`, `sim_gazebo`, `isaac_joint_commands` ni `isaac_joint_states`. El xacro no se genera y **ningún nodo arranca** |
+| Elimina los bloques `<xacro:if>` que quedan condicionados a esos argumentos | `error: invalid syntax (<expression>, line 0)`, que no señala archivo ni variable. Es lo que inutilizó la descripción de **6 GDL** —la de este robot— y llevó a usar `dof:=7` sobre un brazo de seis actuadores |
+| Baja `update_rate` a 100 Hz en la configuración de controladores | `Overrun detected! The controller manager missed its desired rate of 1000 Hz`, de forma continua bajo WSL2 |
+| Activa el bus interno de la pinza | La pinza no responde por el bus del brazo |
+
+> **Sobre el árbol TF:** ninguno de estos ajustes lo modifica. Se comprobó generando el
+> URDF con `use_internal_bus_gripper_comm` en `true` y en `false`: links y joints quedan
+> **idénticos**, y sólo cambian las interfaces `ros2_control` del gripper. Lo que
+> determina el árbol TF es `dof` y `prefix`. Si buscas una discrepancia de TF, está en
+> otro sitio: `burger_description` vendoriza un modelo de **7 GDL** con prefijo `gen3_`
+> que no corresponde al brazo real — ver el aviso en su README.
+
+> #### Qué reemplazó a `apply_kinova_smooth_movement.py`
+>
+> Aquel script nació de un experimento no documentado: el brazo temblaba al moverse y se
+> atribuyó a la latencia del router UDP de la API Kortex. **La premisa quedó descartada**:
+> el temblor venía del enlace de red de la estación. Con la misma máquina y cambiando sólo
+> WiFi por cable, el intervalo p99 de `/joint_states` cayó de 60.12 ms a 10.61 ms y las
+> pérdidas de telemetría de 2 a 0
+> ([medición completa](../burger_kinova_reference/docs/EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md)).
+>
+> Además, aquel parche **no aplicaba nada**: buscaba `SetMessageTimeout(500)`, patrón que
+> ya no existe en `ros2_kortex`, y aun así imprimía `[x] Parcheado`. Cualquier conclusión
+> previa del tipo "con parche / sin parche" pudo estar comparando dos veces lo mismo.
 
 ---
 

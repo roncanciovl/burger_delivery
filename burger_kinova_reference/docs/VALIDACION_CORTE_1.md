@@ -397,7 +397,7 @@ repita de forma independiente sobre el robot real.
 | 7 | Por WiFi, la sesión Kortex se rompe: 132 overruns, `BaseCyclicClient::Refresh` timeout de 3.0 s y 2 pérdidas de telemetría en 120 s | Enlace de la estación | **Resuelto**: la estación del driver debe ir por cable. Experimento A/B documentado en [`EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md`](EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md) |
 | 8 | `ros2 bag record` ignora `SIGINT` dirigido a su PID fuera de una terminal | Instrumental de medición | **Corregido** en `benchmark_enlace_kinova.sh`: `setsid` + señal al grupo de procesos + verificación |
 | 10 | **`joint_7` fabricado**: el robot reporta 6 actuadores mientras el driver corre con `dof:=7`; esa casilla nunca se escribe y vale memoria sin inicializar (`1.12e+277` en una sesión, `0.0` en otra) | Configuración del proyecto vs. hardware | **RESUELTO** (2026-09-09): el brazo es de 6 GDL con pinza. Configuración, enunciado y guía de instalación corregidos. Ver [`ANOMALIAS_HARDWARE.md`](../../network_setup/ANOMALIAS_HARDWARE.md) §3 |
-| 9 | `apply_kinova_smooth_movement.py` no parchea nada: busca `SetMessageTimeout(500)`, que ya no existe en la versión clonada de `ros2_kortex`, e imprime "Parcheado" igual | Script del repositorio | **Pendiente**, fuera del alcance de este package |
+| 9 | `apply_kinova_smooth_movement.py` no parcheaba nada: buscaba `SetMessageTimeout(500)`, que ya no existe, e imprimía "Parcheado" igual | Script del repositorio | **RESUELTO** (2026-09-10): retirado. Su premisa —el temblor por latencia UDP— quedó descartada al demostrarse que venía del enlace de red. Sustituido por `aplicar_compatibilidad_kortex.py` |
 
 ---
 

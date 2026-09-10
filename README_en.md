@@ -169,7 +169,7 @@ burger_delivery/
 
 ## 🛠️ Hardware & Physical Debugging Scripts
 In `scripts/`:
-- `apply_kinova_smooth_movement.py`: Injects low-latency parameters into C++ drivers, suppressing inertial jittering.
+- `aplicar_compatibilidad_kortex.py`: Adapts a freshly cloned `ros2_kortex` so its URDFs build against the distribution's `robotiq_description`, and lowers the `controller_manager` update rate to 100 Hz. Verifies the outcome and fails loudly if anything could not be applied.
 - `test_kinova_pose.py`: Validates Cartesian [X,Y,Z] coordinates against kinematic limits prior to MoveIt execution.
 - `test_kinova_camera.py`: GStreamer/OpenCV extractor to evaluate RTSP camera feed without ROS overhead.
 
