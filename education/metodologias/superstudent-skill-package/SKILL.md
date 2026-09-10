@@ -70,12 +70,14 @@ T(tag_mesa → tag_carrito) = T(cam → tag_mesa)⁻¹ × T(cam → tag_carrito)
 
 ### 1.4 Automatizar el parcheo de drivers industriales
 
+> ⚠ **Corrección (2026-09-10).** La premisa de este caso quedó **refutada**. El temblor no venía de los timeouts UDP sino del **enlace de red de la estación**: con la misma máquina y cambiando sólo WiFi por cable, el intervalo p99 de `/joint_states` cayó de 60.12 ms a 10.61 ms y las pérdidas de telemetría de 2 a 0. Peor aún, aquel script **no aplicaba nada**: buscaba un patrón que ya no existía en `ros2_kortex` e imprimía "Parcheado" igual, así que las comparaciones "con parche / sin parche" pudieron estar comparando dos veces lo mismo. Se conserva el relato porque la lección que deja es otra: **un script idempotente que no verifica su resultado es peor que no tener script**. Lo reemplaza `aplicar_compatibilidad_kortex.py`, que sí comprueba y falla ruidosamente.
+
 **Qué hicimos:** Los drivers del Kinova (`ros2_kortex`) traían timeouts UDP de 500ms-1000ms y parámetros de simulación residuales que causaban jittering. Creamos `apply_kinova_smooth_movement.py` — un script que:
 - Reduce el timeout del router UDP a 200ms
 - Activa el bus interno del gripper
 - Limpia parámetros de simulación (`sim_gazebo`, `sim_isaac`)
 
-**Por qué funcionó:** En vez de que cada estudiante hiciera parches manuales (que se perdían al reinstalar), el script era idempotente y reproducible. Un `python3 apply_kinova_smooth_movement.py` + `colcon build` y listo.
+**Por qué funcionó:** En vez de que cada estudiante hiciera parches manuales (que se perdían al reinstalar), el script era idempotente y reproducible. Un `python3 apply_kinova_smooth_movement.py` + `colcon build` y listo. *(Hoy: `aplicar_compatibilidad_kortex.py`; ver la corrección al inicio de esta sección.)*
 
 **La filosofía:** *Nunca parches manuales. Siempre scripts. Si tienes que explicar un parche más de una vez, automatízalo.*
 
@@ -193,9 +195,9 @@ T(tag_mesa → tag_carrito) = T(cam → tag_mesa)⁻¹ × T(cam → tag_carrito)
 ### [2026-04] — Jittering del Kinova al mover brazo + gripper simultáneamente
 - **Problema:** El brazo vibraba violentamente cuando MoveIt enviaba trayectorias mientras el gripper se estaba cerrando.
 - **Causa raíz:** El gripper usaba un canal de comunicación UDP separado al brazo (`use_internal_bus_gripper_comm=false` por default), causando desincronización.
-- **Solución:** Script `apply_kinova_smooth_movement.py` que inyecta `use_internal_bus_gripper_comm=true` en los XACRO del driver.
+- **Solución:** Script `aplicar_compatibilidad_kortex.py` (antes `apply_kinova_smooth_movement.py`) que inyecta `use_internal_bus_gripper_comm=true` en los XACRO del driver. Ese ajuste sí era correcto y se conserva; lo descartado fue el del timeout UDP.
 - **Lección:** Los defaults de los fabricantes priorizan compatibilidad, no rendimiento. Siempre revisar la topología de comunicación interna.
-- **Archivos:** `scripts/apply_kinova_smooth_movement.py`, `docs/manipulation/MEJORAS_MOVIMIENTO_KINOVA.md`
+- **Archivos:** `scripts/aplicar_compatibilidad_kortex.py`, `docs/manipulation/MEJORAS_MOVIMIENTO_KINOVA.md`
 
 ---
 

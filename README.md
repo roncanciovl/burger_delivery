@@ -170,7 +170,7 @@ burger_delivery/
 
 ## 🛠️ Scripts de Depuración Física
 En `scripts/`:
-- `apply_kinova_smooth_movement.py`: Inyecta low-latency en drivers C++, suprimiendo vibraciones inerciales (jittering).
+- `aplicar_compatibilidad_kortex.py`: Ajusta `ros2_kortex` recién clonado para que sus URDF se generen con el `robotiq_description` de la distribución, y baja el `update_rate` del `controller_manager` a 100 Hz. Verifica el resultado y falla ruidosamente si algo no se aplica.
 - `test_kinova_pose.py`: Valida coordenadas cartesianas [X,Y,Z] contra límites cinemáticos antes de planificar en MoveIt 2.
 - `test_kinova_camera.py`: Extractor GStreamer/OpenCV para evaluar cámara RTSP sin sobrecarga de ROS.
 
