@@ -1,0 +1,104 @@
+diff --git a/src/vision.cpp b/src/vision.cpp
+index f152bf4..ce3f966 100644
+--- a/src/vision.cpp
++++ b/src/vision.cpp
+@@ -526,6 +526,12 @@ void Vision::run()
+     throw std::runtime_error("Failed to configure kinova vision node!");
+   }
+ 
++  // One executor for the whole loop. rclcpp::spin_some(node_) built a temporary executor on
++  // every iteration; if shutdown arrived in between, creating it threw RCLError
++  // ("failed to create guard condition") and the process aborted with exit code -6.
++  rclcpp::executors::SingleThreadedExecutor executor;
++  executor.add_node(node_);
++
+   while (rclcpp::ok() && !quit_requested_)
+   {
+     if (!is_started_)
+@@ -562,8 +568,26 @@ void Vision::run()
+         stop();
+       }
+     }
+-    rclcpp::spin_some(node_);
+-    max_pub_rate_->sleep();
++    // spin_some() and Rate::sleep() both throw once the context is shut down (RCLError
++    // "failed to create guard condition" / "context cannot be slept with because it's
++    // invalid"); RCLError derives from std::runtime_error. Only swallow them on shutdown.
++    try
++    {
++      executor.spin_some();
++      max_pub_rate_->sleep();
++    }
++    catch (const std::runtime_error&)
++    {
++      if (rclcpp::ok())
++      {
++        throw;
++      }
++      break;  // context shut down mid-iteration: leave the loop and tear down
++    }
+   }
++
++  // Take the pipeline to NULL so rtspsrc closes the RTSP session with the camera.
++  // Without this, the camera kept refusing new streams for several seconds after exit.
++  stop();
+ }
+ }  // namespace ros_kortex_vision
+diff --git a/src/vision_node.cpp b/src/vision_node.cpp
+index de89b1c..7bce252 100644
+--- a/src/vision_node.cpp
++++ b/src/vision_node.cpp
+@@ -2,31 +2,38 @@
+ #include <ros_kortex_vision/vision.h>
+ 
+ #include <rclcpp/rclcpp.hpp>
+-#include <signal.h>
+ 
+-std::shared_ptr<ros_kortex_vision::Vision> node;
+-
+-void sigintHandler(int signal)
+-{
+-  if (node)
+-  {
+-    node->quit();
+-  }
++#include <csignal>
+ 
+-  rclcpp::shutdown();
+-  exit(signal);
+-}
++std::shared_ptr<ros_kortex_vision::Vision> node;
+ 
+ int main(int argc, char** argv)
+ {
+-  // Override the default sigint handler.
+-  signal(SIGINT, sigintHandler);
+-
++  // rclcpp installs its own SIGINT/SIGTERM handling. The previous custom handler called
++  // quit(), rclcpp::shutdown() and exit() from inside the signal handler while run() was
++  // still using GStreamer, which segfaulted (-11), aborted (-6) or hung on Ctrl+C.
+   rclcpp::init(argc, argv);
+ 
++  // Closing the terminal sends SIGHUP, which rclcpp does not handle: the default action killed
++  // the process without closing the RTSP session and the camera refused new streams for >12 s.
++  // raise() is async-signal-safe; it routes SIGHUP through rclcpp's graceful SIGINT path.
++  std::signal(SIGHUP, [](int) { std::raise(SIGINT); });
++
+   auto opt = rclcpp::NodeOptions().use_intra_process_comms(true);
+   node = std::make_shared<ros_kortex_vision::Vision>(opt);
++
++  // Runs in rclcpp's signal-handling thread, not in the signal handler: unblocks a pending
++  // gst_app_sink_pull_sample() so run() can leave its loop and tear the stream down.
++  rclcpp::on_shutdown([]() {
++    if (node)
++    {
++      node->quit();
++    }
++  });
++
+   node->run();
++  node.reset();
++  rclcpp::shutdown();
+ 
+   return 0;
+ }

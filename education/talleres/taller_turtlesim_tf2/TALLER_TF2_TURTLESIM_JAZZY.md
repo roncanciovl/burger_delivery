@@ -32,6 +32,23 @@ Abre una terminal, asegúrate de haber inicializado ROS 2 Jazzy (`source /opt/ro
 sudo apt install ros-jazzy-turtle-tf2-py ros-jazzy-tf2-tools ros-jazzy-turtlesim
 ```
 
+> [!WARNING]
+> **Si varias estaciones hacen este taller a la vez, usa el `ROS_DOMAIN_ID` de tu equipo en todas
+> las terminales.** `/tf` es un único tópico compartido por todo el dominio: si otra estación de la
+> subred corre la misma demo, `tf2_echo world turtle1` alternará entre **su** tortuga y la tuya, y tus
+> cálculos no cuadrarán con nada. Este taller no usa el driver del robot, así que la convención de
+> estación anfitriona en el dominio `0` no aplica; en prácticas simuladas simultáneas cada equipo
+> aísla su dominio ([`TROUBLESHOOTING.md`](../../../TROUBLESHOOTING.md) §2.4 y §4.1), y al terminar
+> vuelve al `0` del curso:
+>
+> ```bash
+> export ROS_DOMAIN_ID=<11, 12, ... el de tu equipo>
+> timeout 5s ros2 daemon stop; ros2 daemon start
+> ```
+>
+> No uses `ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST` para esto. Si `ros2 run tf2_tools view_frames`
+> o `tf2_echo` se quedan colgados, revisa el daemon según [`TROUBLESHOOTING.md`](../../../TROUBLESHOOTING.md) §1.
+
 ---
 
 ## Actividad 1: Mapeando la Matriz Homogénea al Simulador
@@ -67,7 +84,7 @@ Vamos a ver de dónde salen estos valores de $x$, $y$, y $\theta$ en la práctic
 **Análisis Matemático:**
 Observa la salida en la terminal. Verás algo como esto:
 - **Translation:** `[x, y, 0.000]` -> Estos son los valores exactos del vector de traslación $\mathbf{t} = [x, y]^T$ de nuestra matriz. (En turtlesim, Z es 0).
-- **Rotation:** `in Quaternion [x: 0.000, y: 0.000, z: 0.382, w: 0.923]` -> ROS 2 no muestra la matriz de rotación $2 \times 2$ directamente para ahorrar cálculos, sino que usa **cuaterniones**. 
+- **Rotation:** `in Quaternion (xyzw) [0.000, 0.000, 0.382, 0.923]` -> ROS 2 no muestra la matriz de rotación $2 \times 2$ directamente para ahorrar cálculos, sino que usa **cuaterniones**. 
   - *Reto matemático:* El ángulo de giro de la tortuga (Yaw, $\theta$) se esconde en el cuaternión. Para un giro en 2D, el ángulo $\theta$ se calcula como: $\theta = 2 \cdot \text{atan2}(z, w)$. Si usas Python para calcularlo con los números que te arroja la terminal, obtendrás exactamente el ángulo $\theta$ que necesitas para armar tu matriz $T$.
 
 ---
@@ -96,7 +113,7 @@ $$T_{T1}^{T2} = \left(T_{W}^{T1}\right)^{-1} \cdot T_{W}^{T2}$$
    - Detén las tortugas (no uses el teclado).
    - Anota los valores de traslación de `world -> turtle1`.
    - Anota los valores de traslación de `world -> turtle2`.
-   - Reemplaza esos valores en la celda número 14 de tu Jupyter Notebook (`Ejemplo con dos tortugas`) para calcular teóricamente $T_{T1}^{T2}$ en Python usando `np.linalg.inv()`.
+   - Reemplaza esos valores en la celda de código de la sección `6) Ejemplo con dos tortugas y composición de transformaciones` de tu Jupyter Notebook ([`tf2_turtlesim_transformations.ipynb`](tf2_turtlesim_transformations.ipynb); la celda que define `T_W_T1` y `T_W_T2`) para calcular teóricamente $T_{T1}^{T2}$ en Python usando `np.linalg.inv()`.
    - Compara la traslación resultante en Python con la que te está imprimiendo `tf2_echo turtle1 turtle2`. ¡Deberían ser idénticas!
 
 ---

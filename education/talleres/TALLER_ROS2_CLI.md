@@ -34,7 +34,25 @@ Abre una terminal nueva y ejecuta:
 ```bash
 source /opt/ros/jazzy/setup.bash
 ```
-*(Nota: Si configuraste correctamente tu `~/.bashrc` en el taller de redes, este paso se hará automáticamente al abrir una terminal, pero siempre es bueno saber de dónde viene).*
+*(Nota: Si configuraste tu `~/.bashrc` según la [configuración de red del proyecto](../../network_setup/ROS2_NETWORK_CONFIG.md) §3, este paso se hará automáticamente al abrir una terminal, pero siempre es bueno saber de dónde viene).*
+
+> [!WARNING]
+> **Si varias estaciones hacen este taller a la vez, usa el `ROS_DOMAIN_ID` de tu equipo.** Todas
+> las estaciones comparten la subred, y ROS 2 descubre automáticamente los nodos del mismo dominio:
+> con todos en el mismo, verías los `/turtlesim` de tus compañeros en `ros2 node list`, y tu
+> `ros2 topic pub /turtle1/cmd_vel` movería **sus** tortugas. Este taller no usa el driver del robot,
+> así que la convención de estación anfitriona en el dominio `0` no aplica aquí; en prácticas
+> simuladas simultáneas cada equipo aísla su dominio
+> ([`TROUBLESHOOTING.md`](../../TROUBLESHOOTING.md) §2.4 y §4.1):
+>
+> ```bash
+> export ROS_DOMAIN_ID=<11, 12, ... el de tu equipo>   # en CADA terminal
+> timeout 5s ros2 daemon stop; ros2 daemon start       # TROUBLESHOOTING §1.6: tras cambiar el dominio
+> ```
+>
+> Aísla el **dominio**; no cambies `ROS_AUTOMATIC_DISCOVERY_RANGE` a `LOCALHOST`, que rompe el
+> trabajo distribuido de los talleres siguientes. Al terminar, vuelve al dominio `0` del curso antes
+> de un taller con el robot.
 
 ## 1. Turtlesim y rqt: Tu primer sistema robótico
 
@@ -188,7 +206,7 @@ Luego mueve la tortuga principal desde tu terminal de teleoperación. Documenta 
 
 ---
 
-## 11. Componente de Evaluación Final (Criterio RAE 1)
+## 7. Componente de Evaluación Final (Criterio RAE 1)
 
 Para aprobar este taller y validar tu adquisición del RAE 1 (Arquitectura Distribuida y Comunicación Técnica), debes consolidar las evidencias de los **Entregables 1 al 5** y sumarle esta **Prueba Integradora** final para presentarla al docente.
 
@@ -218,6 +236,12 @@ Para aprobar este taller y validar tu adquisición del RAE 1 (Arquitectura Distr
   - **Solución:** Los tópicos solo imprimen texto en la terminal cuando hay datos viajando. Tienes que mover la tortuga desde la terminal de teleop activa.
 - **Error de Sintaxis YAML:** Al usar `ros2 topic pub` o `ros2 service call`, la terminal te devuelve error de parseo.
   - **Solución:** ROS 2 usa formato YAML estricto. Revisa cuidadosamente los espacios después de los dos puntos `:`, las llaves `{}` y las comillas.
+- **Error:** `ros2 node list` o `ros2 topic list` se quedan colgados, tardan minutos o terminan en `TimeoutError`.
+  - **Solución:** Casi siempre es el daemon de la CLI bloqueado (muy frecuente en WSL), no tu sistema. Reinícialo siguiendo [`TROUBLESHOOTING.md`](../../TROUBLESHOOTING.md) §1.
+- **Error:** `ros2 node list` muestra varios `/turtlesim`, o la tortuga se mueve sola.
+  - **Solución:** Estás en el mismo `ROS_DOMAIN_ID` que otra estación. Usa el dominio de tu equipo (Sección 0) en todas las terminales y reinicia el daemon.
+- **Error:** Cambiaste `ROS_DOMAIN_ID` y `ros2 node list` no muestra tus nodos.
+  - **Solución:** Las terminales no comparten variables: el `export` sólo afecta a la terminal donde lo escribiste. Exporta el mismo dominio en todas (incluidas las que lanzan `turtlesim` y `teleop`) y reinicia el daemon ([`TROUBLESHOOTING.md`](../../TROUBLESHOOTING.md) §1.6).
 
 ## 🏆 Resultado Esperado (Lo que ahora sabes)
 Al terminar este taller, habrás validado tu conocimiento práctico sobre:

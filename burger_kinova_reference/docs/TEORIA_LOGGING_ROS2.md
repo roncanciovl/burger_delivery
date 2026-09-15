@@ -320,7 +320,7 @@ ros2 bag record -s mcap \
     --compression-mode file --compression-format zstd \
     --max-bag-duration 60 \
     -o dataset_conexion_kinova \
-    /joint_states /burger/kinova/diagnostics /rosout
+    --topics /joint_states /burger/kinova/diagnostics /rosout
 
 # Toda la telemetría del proyecto mediante regex:
 ros2 bag record -s mcap -e "/burger/kinova/.*" -o dataset_flota_completa
@@ -344,8 +344,9 @@ encapsula esta invocación con los valores recomendados.
 # Reproducción a mitad de velocidad, con controles interactivos de teclado:
 ros2 bag play dataset_conexion_kinova --rate 0.5
 #   Espacio         -> pausar / reanudar
-#   s o flecha der. -> avanzar mensaje a mensaje (single step) estando en pausa
-#   + / -           -> acelerar / ralentizar al vuelo
+#   Flecha derecha  -> avanzar mensaje a mensaje (single step) estando en pausa
+#   Flecha arriba / abajo -> subir / bajar la velocidad un 10 % al vuelo
+#   (son las teclas que el propio player anuncia al arrancar en Jazzy)
 
 # Reproducción con reloj simulado a 50 Hz:
 ros2 bag play dataset_conexion_kinova --clock 50
@@ -378,7 +379,10 @@ import rosbag2_py
 from rclpy.serialization import deserialize_message
 from rosidl_runtime_py.utilities import get_message
 
-reader = rosbag2_py.SequentialReader()
+# dataset_conexion_kinova se grabó con --compression-mode file (§8): SequentialReader no
+# abre el .mcap.zstd ("invalid magic bytes"). Para una bolsa sin compresión basta
+# rosbag2_py.SequentialReader(). Detección automática en scripts/analizar_enlace.py.
+reader = rosbag2_py.SequentialCompressionReader()
 reader.open(
     rosbag2_py.StorageOptions(uri='dataset_conexion_kinova', storage_id='mcap'),
     rosbag2_py.ConverterOptions(input_serialization_format='cdr',

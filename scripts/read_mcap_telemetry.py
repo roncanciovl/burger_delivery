@@ -19,6 +19,18 @@ from rosidl_runtime_py.utilities import get_message
 import rosbag2_py
 
 
+def is_compressed(bag_path: str) -> bool:
+    """True si metadata.yaml declara compresión (modo 'file' o 'message')."""
+    meta = os.path.join(bag_path, 'metadata.yaml')
+    if os.path.isfile(meta):
+        with open(meta, encoding='utf-8', errors='ignore') as f:
+            for line in f:
+                if 'compression_mode' in line:
+                    value = line.split(':', 1)[1].strip().strip('"\'').upper()
+                    return value not in ('', 'NONE')
+    return any(f.endswith('.zstd') for f in os.listdir(bag_path))
+
+
 def analyze_bag(bag_path: str):
     if not os.path.exists(bag_path):
         print(f"❌ Error: La ruta '{bag_path}' no existe.")
@@ -36,7 +48,10 @@ def analyze_bag(bag_path: str):
         output_serialization_format='cdr'
     )
 
-    reader = rosbag2_py.SequentialReader()
+    # Con compresión, SequentialReader no sirve: en modo 'file' no abre el .mcap.zstd
+    # ("invalid magic bytes") y en modo 'message' entrega los payloads aún comprimidos.
+    compressed = is_compressed(bag_path)
+    reader = rosbag2_py.SequentialCompressionReader() if compressed else rosbag2_py.SequentialReader()
     try:
         reader.open(storage_options, converter_options)
     except Exception as e:
@@ -49,7 +64,8 @@ def analyze_bag(bag_path: str):
 
     print("=" * 70)
     print(f"📦 ANÁLISIS PROGRAMÁTICO DE DATASET: {bag_path}")
-    print(f"🔌 Plugin de Almacenamiento: {storage_id.upper()}")
+    print(f"🔌 Plugin de Almacenamiento: {storage_id.upper()}"
+          f"{' (comprimida, lector SequentialCompressionReader)' if compressed else ''}")
     print("=" * 70)
     print(f"📌 Tópicos registrados ({len(type_map)}):")
     for topic_name, msg_type in type_map.items():
@@ -59,6 +75,7 @@ def analyze_bag(bag_path: str):
     msg_counts: Dict[str, int] = {topic: 0 for topic in type_map}
     jitter_values: List[float] = []
     fault_counter = 0
+    deserialize_errors = 0
 
     while reader.has_next():
         (topic, data, timestamp_ns) = reader.read_next()
@@ -79,10 +96,14 @@ def analyze_bag(bag_path: str):
                 if "FAULT" in str(msg.data):
                     fault_counter += 1
 
-        except Exception as err:
-            pass
+        except Exception:
+            # No se silencia: un mensaje que no deserializa invalida las métricas.
+            deserialize_errors += 1
 
     total_msgs = sum(msg_counts.values())
+    if deserialize_errors:
+        print(f"⚠️  {deserialize_errors} mensajes no se pudieron deserializar: "
+              f"las métricas de abajo NO son fiables.")
     print(f"📊 Desglose de Mensajes por Tópico:")
     for topic_name, count in msg_counts.items():
         print(f"   • {topic_name}: {count} mensajes")

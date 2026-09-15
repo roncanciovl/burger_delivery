@@ -1,7 +1,7 @@
 # 🎓 SuperStudent: A Troubleshooting and Methodology Skill for Collaborative Robotics Education
 
 > **Experimento:** Burger Delivery (UMNG) — Kinova Gen3 + TurtleBots + AprilTag + MoveIt 2  
-> **Última actualización:** 2026-05-14  
+> **Última actualización:** 2026-09-15  
 > **Estado:** Activa — crece con cada problema resuelto en el experimento
 
 ---
@@ -66,12 +66,14 @@ T(tag_mesa → tag_carrito) = T(cam → tag_mesa)⁻¹ × T(cam → tag_carrito)
 
 ### 1.4 Automatizar el parcheo de drivers industriales
 
+> ⚠ **Corrección (2026-09-10).** La premisa de este caso quedó **refutada**. El temblor no venía de los timeouts UDP sino del **enlace de red de la estación**: con la misma máquina y cambiando sólo WiFi por cable, el intervalo p99 de `/joint_states` cayó de 60.12 ms a 10.61 ms y las pérdidas de telemetría de 2 a 0. Peor aún, aquel script **no aplicaba nada**: buscaba un patrón que ya no existía en `ros2_kortex` e imprimía "Parcheado" igual, así que las comparaciones "con parche / sin parche" pudieron estar comparando dos veces lo mismo. Se conserva el relato porque la lección que deja es otra: **un script idempotente que no verifica su resultado es peor que no tener script**. Lo reemplaza `aplicar_compatibilidad_kortex.py`, que sí comprueba y falla ruidosamente.
+
 **Qué hicimos:** Los drivers del Kinova (`ros2_kortex`) traían timeouts UDP de 500ms-1000ms y parámetros de simulación residuales que causaban jittering. Creamos `apply_kinova_smooth_movement.py` — un script que:
 - Reduce el timeout del router UDP a 200ms
 - Activa el bus interno del gripper
 - Limpia parámetros de simulación (`sim_gazebo`, `sim_isaac`)
 
-**Por qué funcionó:** En vez de que cada estudiante hiciera parches manuales (que se perdían al reinstalar), el script era idempotente y reproducible. Un `python3 apply_kinova_smooth_movement.py` + `colcon build` y listo.
+**Por qué funcionó:** En vez de que cada estudiante hiciera parches manuales (que se perdían al reinstalar), el script era idempotente y reproducible. Un `python3 apply_kinova_smooth_movement.py` + `colcon build` y listo. *(Hoy: `aplicar_compatibilidad_kortex.py`; ver la corrección al inicio de esta sección.)*
 
 **La filosofía:** *Nunca parches manuales. Siempre scripts. Si tienes que explicar un parche más de una vez, automatízalo.*
 
@@ -136,6 +138,8 @@ T(tag_mesa → tag_carrito) = T(cam → tag_mesa)⁻¹ × T(cam → tag_carrito)
 - Verificar con `ros2 topic delay` la latencia end-to-end
 - Usar `DOMAIN_ID` único para cada grupo de trabajo
 
+> ⚠ **Precisión (2026-09-15).** El dominio por grupo vale sólo para **prácticas sin driver** que publican nombres fijos (turtlesim, emuladores, visores URDF) y se hacen a la vez en varias estaciones. Cuando se usa el **driver del robot**, ocurre lo contrario: todas las estaciones en `ROS_DOMAIN_ID=0`, con una única estación anfitriona conectada por Ethernet al router que ejecuta el driver, porque ese dominio común es el mecanismo para saber quién tiene el robot y evitar dos drivers (`TROUBLESHOOTING.md` §2.0). Los nodos con namespace propio (carritos micro-ROS) pueden compartir el `0` sin más (§4.1). En ningún caso se aísla recortando el descubrimiento a `LOCALHOST`.
+
 **La técnica de detección de conflictos:** `ss -ulnp | grep 74` para ver puertos DDS activos y calcular qué `DOMAIN_ID` están usando otros equipos en la misma red.
 
 **Aplicable cuando:** Cualquier sistema ROS 2 que transmita imágenes o pointclouds por WiFi.
@@ -170,6 +174,22 @@ T(tag_mesa → tag_carrito) = T(cam → tag_mesa)⁻¹ × T(cam → tag_carrito)
 
 ---
 
+### 1.11 Validar una guía ejecutándola: "no dio error" no es "funcionó"
+
+**Qué hicimos:** El taller de rosbag2 no corría, así que en lugar de corregir las líneas señaladas se re-ejecutaron **todos** los talleres paso a paso sobre Jazzy, en un dominio propio para no interferir con el laboratorio, comprobando el *efecto* de cada comando y no sólo su código de salida.
+
+**Por qué funcionó:** Casi ningún fallo encontrado producía un error. `ros2 param set … log_level` fallaba con código 0; `ros2 bag record` omitía en silencio un tópico inexistente; `ln -s` sobre un enlace existente creaba otro roto y salía con 0; el lector de bags imprimía un jitter de `0.00000` sobre datos que no había podido deserializar. Sólo verificar el artefacto (`metadata.yaml`, `Publisher count`, conteos de `ros2 bag info`, orden de magnitud del valor medido) los destapó.
+
+**Las reglas que salieron de ahí:**
+- Contrasta la guía con lo que **la herramienta anuncia**: el player de rosbag imprime sus teclas; si la guía dice otras, la guía está mal.
+- **Nunca** `except: pass` alrededor de una deserialización o una medida: un error silenciado se convierte en un dato falso con apariencia nominal.
+- Compila **desde cero** antes de afirmar que un paso de instalación basta: un `install/` antiguo ocultó durante meses que las mallas no se instalaban.
+- Cuando encuentres un error en una guía, **búscalo en el resto del repositorio**: suele estar copiado.
+
+**Aplicable cuando:** Publicas o heredas una guía, un script de laboratorio o un procedimiento que otros van a ejecutar sin ti.
+
+---
+
 ## Parte 2: Log de Aprendizaje (se actualiza con cada descubrimiento)
 
 > Cada vez que resolvemos un problema no trivial, se agrega una entrada aquí con fecha, problema, solución, y la lección extraída. Este log es el mecanismo por el cual la skill crece.
@@ -189,9 +209,9 @@ T(tag_mesa → tag_carrito) = T(cam → tag_mesa)⁻¹ × T(cam → tag_carrito)
 ### [2026-04] — Jittering del Kinova al mover brazo + gripper simultáneamente
 - **Problema:** El brazo vibraba violentamente cuando MoveIt enviaba trayectorias mientras el gripper se estaba cerrando.
 - **Causa raíz:** El gripper usaba un canal de comunicación UDP separado al brazo (`use_internal_bus_gripper_comm=false` por default), causando desincronización.
-- **Solución:** Script `apply_kinova_smooth_movement.py` que inyecta `use_internal_bus_gripper_comm=true` en los XACRO del driver.
+- **Solución:** Script `aplicar_compatibilidad_kortex.py` (antes `apply_kinova_smooth_movement.py`) que inyecta `use_internal_bus_gripper_comm=true` en los XACRO del driver. Ese ajuste sí era correcto y se conserva; lo descartado fue el del timeout UDP.
 - **Lección:** Los defaults de los fabricantes priorizan compatibilidad, no rendimiento. Siempre revisar la topología de comunicación interna.
-- **Archivos:** `scripts/apply_kinova_smooth_movement.py`, `docs/manipulation/MEJORAS_MOVIMIENTO_KINOVA.md`
+- **Archivos:** `scripts/aplicar_compatibilidad_kortex.py`, `docs/manipulation/MEJORAS_MOVIMIENTO_KINOVA.md`
 
 ---
 
@@ -237,6 +257,51 @@ T(tag_mesa → tag_carrito) = T(cam → tag_mesa)⁻¹ × T(cam → tag_carrito)
 - **Solución:** Medir con cinta métrica la posición exacta del AprilTag respecto al origen de la mesa y actualizar el URDF.
 - **Lección:** La regla "calibra de raíz a hojas" en acción. Un error de 5cm en `tag_mesa` se convierte en 5cm de error en TODOS los carritos.
 - **Archivos:** `burger_description/urdf/delivery_scene_fixed.urdf` (joint `table_to_tag_mesa`)
+
+---
+
+### [2026-09] — La cámara del Kinova usada desde varios computadores a la vez
+- **Problema:** En el Laboratorio 02 la mayoría de los grupos completó la práctica, pero el problema principal fue el conflicto al usar la cámara del Kinova desde varias estaciones simultáneamente.
+- **Causa raíz:** Cada grupo lanzaba su propio driver de visión contra el mismo robot, y la guía trabajaba en un dominio propio del laboratorio: nadie veía que otra estación ya publicaba la imagen. El recurso físico es único aunque la red permita a todos alcanzarlo.
+- **Solución:** Para los talleres siguientes que usan el driver del robot, una sola estación anfitriona por Ethernet ejecuta el driver y publica la imagen comprimida; todas las estaciones en `ROS_DOMAIN_ID=0` se suscriben. Antes de lanzar un driver se comprueba si ya existe (`ros2 node list | grep kinova_vision`). El localizador AprilTag pasó a consumir `/camera/color/image_raw/compressed` en lugar de abrir la cámara.
+- **Lección:** Que un recurso sea *alcanzable* por red no lo hace *compartible*. Un dispositivo físico necesita un único dueño en el grafo, y el resto, un tópico al que suscribirse.
+- **Archivos:** `TROUBLESHOOTING.md` §2.0, `education/talleres/TALLER_LOCALIZACION_APRILTAG_KINOVA_MICROROS.md`, `education/guias_laboratorio/GUIA_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.md`
+
+---
+
+### [2026-09-15] — Una sola regla de dominio aplicada a talleres que no la necesitaban por igual
+- **Problema:** Los talleres de CLI, TF2, URDF y rosbag2 se hacían todos a la vez con el `ROS_DOMAIN_ID=0` del `.bashrc` del curso: las tortugas de una estación se movían con los comandos de otra, `tf2_echo` alternaba entre demos ajenas y las grabaciones mezclaban emuladores. Al corregirlo se cometió el error inverso: prohibir el dominio `0` en todos los talleres, como si fuera "del robot".
+- **Causa raíz:** Se confundieron dos problemas. La convención de estación anfitriona (dominio `0`, un único driver por Ethernet) resuelve **quién tiene el robot** y sólo tiene sentido en talleres que usan el driver. Los talleres sin driver tienen otro problema: publican nombres fijos (`/turtle1/cmd_vel`, `/tf`, `/burger/kinova/*`, `/joint_states`) que chocan entre estaciones. De esa confusión salió también una afirmación falsa ("`/burger/kinova/diagnostics` no lo publica ningún nodo"): no lo publica el emulador, pero sí el `kinova_monitor` en una sesión con robot.
+- **Solución:** Clasificar cada taller. Con driver: dominio `0` y anfitriona (§2.0). Sin driver y con nombres fijos: dominio por equipo en práctica simultánea (§2.4). Sin driver y con namespace propio (micro-ROS): el `0` basta. Y comprobarlo siempre (`ros2 topic info` → `Publisher count: 1`).
+- **Lección:** Antes de extender una regla, pregunta qué problema resuelve y si ese problema existe en el nuevo caso. Aislar el dominio, nunca el descubrimiento.
+- **Archivos:** `TROUBLESHOOTING.md` §4.1, `education/talleres/*.md`
+
+---
+
+### [2026-09-15] — Una grabación que no se detenía y un análisis que devolvía ceros
+- **Problema:** En el taller de rosbag2, `kill -INT` no detenía una grabación lanzada desde un script, y el análisis de un bag comprimido por mensaje devolvía jitter `0.00000` con el conteo de mensajes correcto.
+- **Causa raíz:** (1) En shells no interactivas, los procesos en segundo plano heredan `SIGINT` ignorado; la guía lo atribuía a `rosbag2` y afirmaba que también ignoraba `SIGTERM`, lo que resultó falso al medirlo. (2) `rosbag2_py.SequentialReader` abre un bag con `--compression-mode message` pero entrega los payloads comprimidos; el script silenciaba los errores de deserialización con `except: pass`.
+- **Solución:** Parar con `kill -TERM "$PID"` y verificar `metadata.yaml`. En el lector, elegir `SequentialCompressionReader` según `compression_mode` en `metadata.yaml` (como ya hacía `analizar_enlace.py`) y contar y avisar los mensajes que no deserializan.
+- **Lección:** Antes de culpar a la herramienta, mide la hipótesis alternativa (aquí, la señal). Y un `except: pass` en un camino de medida es un generador de resultados falsos.
+- **Archivos:** `scripts/read_mcap_telemetry.py`, `education/talleres/TALLER_ROSBAG_LOGGING_DEBUGGING.md`, `TROUBLESHOOTING.md` §4.3–4.4
+
+---
+
+### [2026-09-15] — `log_level` que "no existe" y un flight recorder que no volcaba nada
+- **Problema:** `ros2 param set /flight_recorder_telemetry_demo log_level DEBUG`, recomendado por el propio nodo al arrancar, no hacía nada; y el volcado del flight recorder respondía `success=True` sin mostrar muestras.
+- **Causa raíz:** `log_level` no es un parámetro estándar de ROS 2: existe sólo si el nodo lo declara (lo hace `kinova_monitor`, no el emulador). El volcado se emite con `debug()`, y la guía proponía relanzar el nodo en DEBUG *después* de la falla, lo que borraba el buffer en RAM.
+- **Solución:** `--log-level <nodo>:=debug` desde el arranque (el global añade ≈ 400 líneas internas de `rcl`/`rmw` cada 5 s), o los servicios `set_logger_levels` con `enable_logger_service=True`. Corregido el mensaje del nodo.
+- **Lección:** La evidencia post-mortem no puede depender de haber previsto la verbosidad. Y un mensaje de ayuda dentro del código es documentación: también hay que probarlo.
+- **Archivos:** `scripts/flight_recorder_telemetry_demo.py`, `TROUBLESHOOTING.md` §4.2
+
+---
+
+### [2026-09-15] — Las mallas sólo existían en el `install/` del docente
+- **Problema:** Revisando el taller URDF, una compilación limpia de `burger_description` no instalaba `meshes`, a la que el URDF hace 55 referencias `package://`.
+- **Causa raíz:** `CMakeLists.txt` instalaba `visual`, no el enlace `meshes -> visual/meshes`. En la máquina del docente funcionaba por un `install/meshes` de noviembre de 2025. El taller además pedía crear el enlace, que ya viene versionado; repetir `ln -s` sobre él crea otro enlace roto y sale con 0.
+- **Solución:** Instalar `visual/meshes` como `meshes`; verificado con compilación limpia normal y `--symlink-install`, sin referencias sin resolver. El taller pasa a *verificar* el enlace.
+- **Lección:** Un entorno de desarrollo antiguo es el peor banco de pruebas de una guía de instalación. Valida en directorios de build e install temporales.
+- **Archivos:** `burger_description/CMakeLists.txt`, `education/talleres/TALLER_URDF_TF.md`, `TROUBLESHOOTING.md` §4.5
 
 ---
 

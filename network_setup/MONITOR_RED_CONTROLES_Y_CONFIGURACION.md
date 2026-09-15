@@ -207,6 +207,8 @@ Puede mostrar:
 
 El valor `DDS estimado` no proviene de captura completa de paquetes DDS. El backend reparte el tráfico global mediante proporciones fijas según detecte DDS o Micro-ROS. Debe usarse como indicador exploratorio, no como medición científica aislada.
 
+Además, el tráfico global se toma de `psutil.net_io_counters()`, que suma **todas** las interfaces, incluido el loopback (`lo`, y `loopback0` en WSL `mirrored`). Cuando dos nodos de la misma PC intercambian datos (por ejemplo, un suscriptor local de la imagen de la cámara), ese tráfico aparece como si recorriera la red: medido, 143 Mbps recibidos en el monitor frente a 83 Mbps reales en la interfaz WiFi. Ver [`TROUBLESHOOTING.md`](../TROUBLESHOOTING.md) §4.8 para medir por interfaz.
+
 Las métricas denominadas jitter y pérdida DDS se obtienen actualmente mediante `ping` al Kinova `192.168.1.10` cuando el gateway pertenece a `192.168.x.x`; fuera de esa red se usa el gateway. No son métricas tomadas del protocolo DDS ni de sus QoS.
 
 ### `Micro-ROS Agent (UDP 8888)`

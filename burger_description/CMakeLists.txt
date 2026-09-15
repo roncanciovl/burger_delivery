@@ -12,4 +12,11 @@ install(
   DESTINATION share/${PROJECT_NAME}
 )
 
+# Los URDF referencian package://burger_description/meshes/...; el enlace
+# simbólico meshes -> visual/meshes no se instala por sí solo.
+install(
+  DIRECTORY visual/meshes
+  DESTINATION share/${PROJECT_NAME}
+)
+
 ament_package()
