@@ -696,10 +696,48 @@ Sólo si los cinco salen limpios tiene sentido revisar la lógica de tu package.
 
 ## 4. Fallos silenciosos al ejecutar los talleres
 
-El taller de rosbag2 se reescribió porque su versión anterior no corría. Al volver a ejecutar
-paso a paso **todos** los talleres sobre ROS 2 Jazzy (2026-09-15, `rmw_cyclonedds_cpp`, WSL2)
-apareció un patrón común, más peligroso que un error: **el comando termina sin error, pero no
-hace lo que crees**. Lo que sigue son los casos medidos y la forma de detectarlos.
+**Origen.** El taller de rosbag2 tuvo que reescribirse porque su versión anterior no corría.
+Eso motivó revisar el resto de los talleres de `education/talleres/`, la Guía de Laboratorio
+02 y `TEORIA_LOGGING_ROS2.md` contra lo que realmente hacen el código y la instalación.
+
+**Entorno de la revisión (2026-09-15):**
+- ROS 2 Jazzy sobre Ubuntu 24.04 en WSL2 con red `mirrored`.
+- `rmw_cyclonedds_cpp` con `network_setup/cyclonedds.xml`.
+- OpenCV 4.6.0, el de `python3-opencv`.
+- Las prácticas simuladas se ejecutaron en un dominio aislado para no interferir con el
+  laboratorio.
+- Las partes de cámara se probaron sobre el Kinova real (`192.168.1.10`) desde una estación
+  por WiFi.
+
+**Qué se ejecutó y qué sólo se revisó.** No todos los talleres se pudieron correr de punta a punta:
+
+| Taller o documento | Cómo se verificó |
+| :--- | :--- |
+| rosbag2, logging y depuración | **Ejecutado completo**: nodo emulador, niveles de log, `ros2 param set`, servicios de logger, grabación con y sin compresión, parada desde scripts con cada señal, `ros2 bag play`, volcado del *flight recorder* y lectura con `rosbag2_py` |
+| URDF y TF2 | **Ejecutado en parte**: compilación limpia de `burger_description`, resolución de las mallas `package://` y comportamiento de `ln -s`. RViz y `display.launch.py` no se lanzaron |
+| Localización AprilTag | **Ejecutado**: localizador simulado, modo real con una escena sintética en perspectiva y, en la Guía 02, cámara y driver `kinova_vision` reales. **Sin tags físicos** en la mesa |
+| Guía de Laboratorio 02 | **Ejecutadas las Fases 1 a 3** sobre el robot real, con mediciones del monitor de red |
+| micro-ROS en ESP32 | **Revisado contra el código y la instalación**. Se comprobó el comportamiento de `ros2 topic pub --once`. El agente no estaba instalado y los firmwares **no se compilaron** (no hay toolchain de ESP32) |
+| CLI de ROS 2 y TF2 con turtlesim | **Revisados contra la instalación**: nombres de los plugins de `rqt`, formato de salida de `tf2_echo`. `turtle_tf2_py` no estaba instalado, así que la demo de TF2 no se ejecutó |
+
+**El patrón común.** Casi ningún fallo producía un error: **el comando termina, pero no hace
+lo que la guía promete**. Aparecieron cinco formas concretas:
+
+1. **Código de salida 0 fallando.** `ros2 param set … log_level` y `ln -s` sobre un enlace
+   existente no hacen lo pedido y aun así salen con 0 (4.2, 4.5).
+2. **Omisión silenciosa.** `ros2 bag record` ignora sin avisar un tópico que nadie publica, y
+   un `kill -INT` a una grabación en segundo plano no la detiene (4.3).
+3. **Datos falsos con apariencia normal.** El lector de bags reportaba jitter `0.00000`, el
+   monitor de red contaba el loopback como WiFi y `ros2 topic bw` daba 1.88 MB/s para un
+   video de ≈ 162 MB/s (4.4, 4.8).
+4. **Un entorno que oculta el fallo.** Las mallas funcionaban sólo porque existía un
+   `install/` antiguo, y las prácticas simuladas "funcionaban" mezclando datos de otras
+   estaciones del mismo dominio (4.1, 4.5).
+5. **La guía contradice a la herramienta.** Teclas de `ros2 bag play`, nombres de archivo y
+   patrones regex que ya no corresponden a Jazzy (4.6).
+
+Cada subsección da el síntoma exacto, la causa medida y cómo detectarlo. La 4.7 resume el
+método que evita repetir estos fallos al escribir o actualizar una guía.
 
 | Síntoma | Sección |
 | :--- | :--- |
