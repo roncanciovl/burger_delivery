@@ -300,7 +300,7 @@ def build():
     body.insert(body.index(sect_pr), cover_header)
     cover = doc.tables[-1]
     replace_text_preserving_cell(cover.cell(0, 1), "Fecha Emisión:\n2026/08/17", bold=True, size=8, align=WD_ALIGN_PARAGRAPH.CENTER)
-    replace_text_preserving_cell(cover.cell(1, 1), "Revisión No.:\n3", bold=True, size=8, align=WD_ALIGN_PARAGRAPH.CENTER)
+    replace_text_preserving_cell(cover.cell(1, 1), "Revisión No.:\n4", bold=True, size=8, align=WD_ALIGN_PARAGRAPH.CENTER)
     page_cell = cover.cell(1, 2)
     page_cell.text = ""
     page_p = page_cell.paragraphs[0]
@@ -346,13 +346,23 @@ def build():
     for row in changes.rows[1:]:
         for cell in row.cells:
             replace_text_preserving_cell(cell, "", size=8)
-    values = [
-        "Integración de Monitor de Red Híbrido y Grabación del Experimento",
-        "Diseño de práctica experimental con streaming RTSP, compresión image_transport, transporte distribuido con CycloneDDS en Wi-Fi, auditoría con Monitor de Red web (:8080) y grabación de video.",
-        "17/08/2026",
+    change_rows = [
+        [
+            "Integración de Monitor de Red Híbrido y Grabación del Experimento",
+            "Diseño de práctica experimental con streaming RTSP, compresión image_transport, transporte distribuido con CycloneDDS en Wi-Fi, auditoría con Monitor de Red web (:8080) y grabación de video.",
+            "17/08/2026",
+        ],
+        [
+            "Verificación de las Fases 2 y 3 sobre el robot real",
+            "Dependencias camera_calibration_parsers y camera_info_manager; parche de parada limpia del driver kinova_vision (no se detenía con Ctrl+C y bloqueaba la cámara); nombre real del parámetro JPEG; el video crudo se calcula porque ros2 topic bw no lo mide correctamente.",
+            "15/09/2026",
+        ],
     ]
-    for j, value in enumerate(values):
-        replace_text_preserving_cell(changes.cell(1, j), value, size=8)
+    for i, values in enumerate(change_rows, start=1):
+        if i >= len(changes.rows):
+            changes.add_row()
+        for j, value in enumerate(values):
+            replace_text_preserving_cell(changes.cell(i, j), value, size=8)
     set_repeat_header(changes.rows[0])
 
     add_page_break(doc)
@@ -455,7 +465,7 @@ def build():
         doc,
         [
             ["DESCRIPCIÓN (Material, instrumento, software, hardware o equipo)", "CANTIDAD", "UNIDAD DE MEDIDA"],
-            ["Brazo manipulador Kinova Gen3 (7-DOF) con módulo de visión integrado", "1", "Unidad por puesto"],
+            ["Brazo manipulador Kinova Gen3 (6-DOF) con módulo de visión integrado en la muñeca", "1", "Unidad por puesto"],
             ["Switch Gigabit Ethernet + Access Point Router Wi-Fi 6", "1", "Unidad por puesto"],
             ["Estación Dispositivo A (Gateway Kinova) con Ubuntu 24.04 LTS y ROS 2 Jazzy", "1", "Unidad por puesto"],
             ["Pulsador de parada de emergencia física y cableado de alimentación", "1", "Unidad por puesto"],
@@ -505,17 +515,21 @@ def build():
     add_list_item(doc, "Si aparece 'No URI handler implemented for rtsp' seguido de 'CAP_IMAGES: can't find starting number', faltan los plugins del paso 1: no es una falla del robot.", 5)
 
     add_subheading(doc, "Fase 3: Compresión de Video en ROS 2 (image_transport) y Ahorro de Ancho de Banda")
-    add_list_item(doc, "INSTALACIÓN PREVIA: el driver de visión está en un repositorio aparte de ros2_kortex. Instale dependencias y compile: sudo apt install -y gstreamer1.0-tools gstreamer1.0-libav libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-good1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good ros-jazzy-image-transport-plugins ros-jazzy-image-view ros-jazzy-depth-image-proc ; luego cd ~/ros2_ws/src && git clone -b ros2 https://github.com/Kinovarobotics/ros2_kortex_vision.git && cd ~/ros2_ws && colcon build --symlink-install", 1)
-    add_list_item(doc, "Sin ros-jazzy-image-transport-plugins el nodo solo publica el tópico crudo y /compressed nunca aparece. Verifique con: ros2 run image_transport list_transports", 2)
-    add_list_item(doc, "En Dispositivo A, lance el publicador de visión: ros2 launch kinova_vision kinova_vision.launch.py device:=192.168.1.10", 3)
-    add_list_item(doc, "Verifique los nodos /camera/kinova_vision_color y /camera/kinova_vision_depth con: ros2 node list | grep kinova_vision", 4)
-    add_list_item(doc, "Mida con ros2 topic bw el ancho de banda crudo vs comprimido (/camera/color/image_raw/compressed) y calcule el ahorro en la Tabla 3.", 5)
-    add_list_item(doc, "Descubra el nombre real del parámetro de calidad (depende del namespace del nodo): ros2 param list /camera/kinova_vision_color | grep -i jpeg ; y aplíquelo con ros2 param set usando ese nombre exacto, comparando q=80 vs q=30.", 6)
+    add_list_item(doc, "INSTALACIÓN PREVIA: el driver de visión está en un repositorio aparte de ros2_kortex. Instale dependencias: sudo apt install -y gstreamer1.0-tools gstreamer1.0-libav libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-good1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good ros-jazzy-image-transport-plugins ros-jazzy-image-view ros-jazzy-depth-image-proc ros-jazzy-camera-calibration-parsers ros-jazzy-camera-info-manager (sin los dos últimos kinova_vision no compila).", 1)
+    add_list_item(doc, "Clone el driver en el workspace, junto a ros2_kortex y NO dentro de burger_delivery: cd ~/ros2_ws/src && git clone -b ros2 https://github.com/Kinovarobotics/ros2_kortex_vision.git", 2)
+    add_list_item(doc, "Aplique el parche de parada limpia antes de compilar: cd ~/ros2_ws/src/ros2_kortex_vision && git apply ~/ros2_ws/src/burger_delivery/ros2_setup/parches/kinova_vision_parada_limpia.patch (si ya está aplicado, git apply --reverse --check lo confirma). Compile sólo este paquete: cd ~/ros2_ws && colcon build --packages-select kinova_vision --symlink-install. Sin el parche el driver no se detiene limpiamente con Ctrl+C y deja la cámara rechazando streams (TROUBLESHOOTING.md §3.4).", 3)
+    add_list_item(doc, "Sin ros-jazzy-image-transport-plugins el nodo solo publica el tópico crudo y /compressed nunca aparece. Verifique con: ros2 run image_transport list_transports", 4)
+    add_list_item(doc, "En Dispositivo A, lance el publicador de visión: ros2 launch kinova_vision kinova_vision.launch.py device:=192.168.1.10", 5)
+    add_list_item(doc, "Verifique los nodos /camera/kinova_vision_color y /camera/kinova_vision_depth con: ros2 node list | grep kinova_vision", 6)
+    add_list_item(doc, "NO mida el tópico crudo con ros2 topic bw: se suscribe en best effort y cada imagen de 6.22 MB viaja en miles de fragmentos (medido: 1.88 MB/s frente a ≈162 MB/s reales). Calcule el crudo como ancho × alto × 3 × FPS, tomando los FPS de ros2 topic hz sobre /camera/color/image_raw/compressed, y mida el comprimido con ros2 topic bw. Registre ambos y el ahorro en la Tabla 3.", 7)
+    add_list_item(doc, "Parámetro de calidad JPEG: ros2 param list /camera/kinova_vision_color | grep -i jpeg devuelve .image_raw.compressed.jpeg_quality (con punto inicial, valor inicial 95). Aplíquelo con ros2 param set /camera/kinova_vision_color .image_raw.compressed.jpeg_quality 30 y compare q=80 vs q=30.", 8)
+    add_list_item(doc, "Detenga el driver con Ctrl+C y verifique la parada limpia: ambos nodos con 'process has finished cleanly', pgrep -a -x kinova_vision_n vacío y sin líneas ESTAB en ss -tanp | grep 192.168.1.10:554. Un proceso huérfano mantiene la sesión RTSP y bloquea la cámara para las demás estaciones.", 9)
 
     add_subheading(doc, "Fase 4: Despliegue Distribuido sobre Wi-Fi con CycloneDDS")
     add_list_item(doc, "En ambos dispositivos exporte: export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp, el mismo ROS_DOMAIN_ID y la RUTA ABSOLUTA del perfil: export CYCLONEDDS_URI=file://$HOME/ros2_ws/src/burger_delivery/network_setup/cyclonedds.xml", 1)
     add_list_item(doc, "El perfil network_setup/cyclonedds.xml autodetecta la interfaz y no requiere edicion en equipos con una sola NIC. Solo en el Dispositivo A (dual-homed) comente el bloque autodetermine y fije su interfaz Wi-Fi real (ip -brief addr). En CycloneDDS 0.10 la interfaz se fija con Interfaces/NetworkInterface: el antiguo NetworkInterfaceAddress ya no existe. Compare MaxMessageSize 8192B (Wi-Fi) contra 65500B (Ethernet).", 2)
     add_list_item(doc, "Desde Dispositivo B (Wi-Fi), mida la frecuencia remota y visualice con la sintaxis ROS 2 (la de ROS 1 se ignora en silencio): ros2 run image_view image_view --ros-args -r image:=/camera/color/image_raw -p image_transport:=compressed", 3)
+    add_list_item(doc, "En el Monitor de Red, el RTT, el jitter y la pérdida son mediciones (ping); sus Mbps suman el loopback y reparten TCP/UDP/DDS con proporciones fijas. Para el tráfico real de la interfaz WiFi siga TROUBLESHOOTING.md §4.8. Si el monitor arranca en 8081, el 8080 estaba ocupado: use el puerto que anuncia.", 4)
 
     add_subheading(doc, "Fase 5: Protocolo de Diagnóstico Metódico ante Fallas Inducidas")
     add_body(doc, "Induzca y resuelva sistemáticamente las cinco fallas registrando el aislamiento en la Tabla 5:")
@@ -564,8 +578,8 @@ def build():
     add_data_table(
         doc,
         [
-            ["Formato de Video en ROS 2", "Nombre del Tópico", "Ancho de Banda (ros2 topic bw)", "Tasa de Cuadros (hz)", "Ahorro de BW (%)"],
-            ["Video Crudo (RGB8)", "/camera/color/image_raw", "", "", "0% (Referencia)"],
+            ["Formato de Video en ROS 2", "Nombre del Tópico", "Ancho de Banda (crudo: calculado · comprimido: ros2 topic bw)", "Tasa de Cuadros (hz del comprimido)", "Ahorro de BW (%)"],
+            ["Video Crudo (RGB8)", "/camera/color/image_raw", "ancho × alto × 3 × FPS =", "", "0% (Referencia)"],
             ["Comprimido JPEG (q=80)", "/camera/color/image_raw/compressed", "", "", ""],
             ["Comprimido JPEG (q=30)", "/camera/color/image_raw/compressed", "", "", ""],
         ],

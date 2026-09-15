@@ -4,7 +4,7 @@
 
 | FACULTAD | PROGRAMA | ASIGNATURA | SEMESTRE | CÓDIGO GUÍA | REVISIÓN |
 |:---|:---|:---|:---:|:---:|:---:|
-| Facultad de Ingeniería | Ingeniería Mecatrónica | ROBOT OPERATING SYSTEM - ROS | VIII – IX | GL-AA-F-1 / LAB-02 | 1.6 (2026-2) |
+| Facultad de Ingeniería | Ingeniería Mecatrónica | ROBOT OPERATING SYSTEM - ROS | VIII – IX | GL-AA-F-1 / LAB-02 | 1.7 (2026-2) |
 
 ---
 
@@ -12,6 +12,7 @@
 
 | Descripción del Cambio | Justificación | Fecha |
 |---|---|:---:|
+| Verificación de las Fases 2 y 3 sobre el robot real: dependencias, parada limpia del driver, parámetro JPEG y medición del video crudo | La instalación omitía `camera_calibration_parsers` y `camera_info_manager` (sin ellos `kinova_vision` no compila). El driver no se detenía limpiamente con `Ctrl+C` (segfault o bloqueo) y dejaba la cámara rechazando streams: se añade el parche versionado y la verificación de parada. Se documenta el nombre real del parámetro (`.image_raw.compressed.jpeg_quality`, valor inicial 95). `ros2 topic bw` no sirve para el tópico crudo (midió 1.88 MB/s frente a ≈ 162 MB/s reales): la Tabla 3 pasa a calcularlo. | 15/09/2026 |
 | Integración de Monitor de Red Híbrido y Grabación del Experimento | Incorporación del panel web de telemetría en tiempo real (`monitor_red`), exportación de logs CSV de QoS y protocolo de grabación audiovisual obligatoria del experimento distribuido. | 17/08/2026 |
 | Corrección del direccionamiento IP a la subred real del laboratorio | La guía usaba una subred Wi-Fi `192.168.50.0/24` inexistente en el proyecto. El laboratorio opera una LAN plana `192.168.1.0/24` (router TP-Link AX12 en `192.168.1.1`, Kinova en `192.168.1.10`, reserva `192.168.1.100`, DHCP `.101-.254`). Se corrigen diagrama, Fase 1, Fase 4, Tabla 1 y la Pregunta 3, y se reemplaza el rol de *Gateway* enrutador por el de **estación anfitriona**. | 09/09/2026 |
 | Corrección de los comandos ROS 2 de las Fases 3 y 4 | `ros2 launch burger_delivery robot.launch.py` no existe: `burger_delivery` no es un paquete ROS 2. Se documenta la instalación de `ros2_kortex_vision` e `image-transport-plugins`, el lanzamiento real (`kinova_vision.launch.py`), el descubrimiento del parámetro `jpeg_quality`, la sintaxis ROS 2 de `image_view` y el perfil versionado `network_setup/cyclonedds.xml`. | 02/09/2026 |
@@ -257,14 +258,30 @@ La práctica se estructura en seis fases:
 >     libgstreamer-plugins-good1.0-dev \
 >     gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
 >     ros-jazzy-image-transport-plugins ros-jazzy-image-view \
->     ros-jazzy-depth-image-proc
+>     ros-jazzy-depth-image-proc \
+>     ros-jazzy-camera-calibration-parsers ros-jazzy-camera-info-manager
 >
-> # 2. Clonar y compilar el driver de visión
+> # 2. Clonar el driver de visión en el workspace (junto a ros2_kortex, NO dentro de burger_delivery)
 > cd ~/ros2_ws/src
 > git clone -b ros2 https://github.com/Kinovarobotics/ros2_kortex_vision.git
-> cd ~/ros2_ws && colcon build --symlink-install
+>
+> # 3. Aplicar el parche de parada limpia (idempotente) y compilar sólo este paquete
+> cd ~/ros2_ws/src/ros2_kortex_vision
+> PARCHE=~/ros2_ws/src/burger_delivery/ros2_setup/parches/kinova_vision_parada_limpia.patch
+> if git apply --reverse --check "$PARCHE" 2>/dev/null; then
+>   echo "parche ya aplicado"
+> else
+>   git apply "$PARCHE" && echo "parche aplicado"
+> fi
+> cd ~/ros2_ws && colcon build --packages-select kinova_vision --symlink-install
 > source ~/ros2_ws/install/setup.bash
 > ```
+>
+> Sin `ros-jazzy-camera-calibration-parsers` y `ros-jazzy-camera-info-manager` la compilación
+> de `kinova_vision` falla. **Sin el parche**, el driver original no se detiene limpiamente con
+> `Ctrl+C` (segfault, aborto o bloqueo) y deja la cámara rechazando streams nuevos durante más
+> de 12 s: es la causa del conflicto al usar la cámara que se reportó en esta práctica. Detalle y
+> mediciones en [`TROUBLESHOOTING.md`](../../TROUBLESHOOTING.md) §3.4.
 >
 > Sin `ros-jazzy-image-transport-plugins` el nodo arranca, pero **solo publica
 > el tópico crudo**: `/camera/color/image_raw/compressed` nunca aparece y la
@@ -289,15 +306,31 @@ La práctica se estructura en seis fases:
    Debe ver los nodos `/camera/kinova_vision_color` y `/camera/kinova_vision_depth`,
    y los tópicos `/camera/color/image_raw` y `/camera/color/image_raw/compressed`.
 
-3. **Inspección y Comparativa de Ancho de Banda (`ros2 topic bw`):**
-   ```bash
-   # Flujo crudo:
-   ros2 topic bw /camera/color/image_raw
+3. **Comparativa de Ancho de Banda: crudo calculado, comprimido medido:**
 
-   # Flujo comprimido JPEG:
+   > [!WARNING]
+   > **No mida el tópico crudo con `ros2 topic bw`.** `bw` se suscribe siempre en modo
+   > *best effort*, y cada imagen cruda de 1920 × 1080 (6.22 MB) viaja en miles de
+   > fragmentos: basta perder uno para descartar la imagen. Medido sobre el robot: `bw`
+   > reportó **1.88 MB/s**, menos que el comprimido, mientras un suscriptor fiable recibía
+   > 26 imágenes/s, es decir **≈ 162 MB/s**. `ros2 topic hz` sobre el crudo tampoco llega
+   > a reportar.
+
+   ```bash
+   # Frecuencia de la cámara (tómela del comprimido: sale de la misma fuente):
+   ros2 topic hz /camera/color/image_raw/compressed
+
+   # Resolución y codificación del crudo (un solo mensaje):
+   ros2 topic echo /camera/color/image_raw --once --field width
+   ros2 topic echo /camera/color/image_raw --once --field height
+   ros2 topic echo /camera/color/image_raw --once --field encoding
+
+   # Flujo comprimido JPEG (sí es medible con bw):
    ros2 topic bw /camera/color/image_raw/compressed
    ```
-   - Calcule el ahorro porcentual ($> 90\%$) y anótelo en la **Tabla 3**.
+   - **Crudo (calculado):** ancho × alto × 3 bytes (RGB8) × FPS. Anótelo en la **Tabla 3**.
+   - **Comprimido (medido):** el valor de `bw`; contraste su media por mensaje con la frecuencia de `hz`.
+   - Calcule el ahorro porcentual respecto al crudo calculado.
 
 4. **Ajuste Dinámico de la Calidad JPEG:**
    El nombre del parámetro lo construye `image_transport` a partir del tópico y
@@ -306,11 +339,25 @@ La práctica se estructura en seis fases:
    ```bash
    ros2 param list /camera/kinova_vision_color | grep -i jpeg
    ```
-   Luego aplíquelo con el nombre exacto que le devolvió el comando anterior:
+   Con el driver de este laboratorio el comando devuelve `.image_raw.compressed.jpeg_quality`
+   (con el punto inicial) y `.image_raw.jpeg_quality`. El que controla el tópico
+   `/compressed` es el primero, y parte de **95**:
    ```bash
-   ros2 param set /camera/kinova_vision_color <nombre.exacto>.compressed.jpeg_quality 30
+   ros2 param get /camera/kinova_vision_color .image_raw.compressed.jpeg_quality
+   ros2 param set /camera/kinova_vision_color .image_raw.compressed.jpeg_quality 30
    ```
-   Repita la medición del paso 3 con $q=80$ y $q=30$ para completar la Tabla 3.
+   Repita la medición del comprimido con $q=80$ y $q=30$ para completar la Tabla 3.
+
+5. **Detención Limpia del Driver:**
+   Detenga el launch con `Ctrl+C` y confirme que **no quedó nada** abierto con la cámara:
+   ```bash
+   pgrep -a -x kinova_vision_n          # no debe devolver nada
+   ss -tanp | grep "192.168.1.10:554"   # no debe haber líneas ESTAB
+   ```
+   En la salida del launch, ambos nodos deben terminar con `process has finished cleanly`. Si
+   aparece `exit code -11`, `exit code -6` o `escalating to 'SIGTERM'`, el parche de parada
+   limpia no está aplicado: vuelva a la instalación previa. Un proceso `kinova_vision_n`
+   huérfano mantiene abierta la sesión RTSP y bloquea la cámara para las demás estaciones.
 
 ---
 
@@ -367,6 +414,14 @@ La práctica se estructura en seis fases:
 
    - Observe en el **Monitor de Red** cómo se comporta la tasa de paquetes y el jitter durante el streaming.
 
+   > [!NOTE]
+   > El RTT, el jitter y la pérdida del monitor son mediciones (`ping`). Sus Mbps, en cambio,
+   > **suman el loopback** y reparten TCP/UDP/DDS con proporciones fijas: si en la misma PC
+   > hay un nodo suscrito a la imagen, el monitor lo contará como tráfico de red. Para el
+   > tráfico real de la interfaz WiFi siga [`TROUBLESHOOTING.md`](../../TROUBLESHOOTING.md) §4.8.
+   > Si el monitor arranca en `8081` en lugar de `8080`, el puerto estaba ocupado: use el que
+   > anuncia al arrancar.
+
 ---
 
 ### Fase 5: Protocolo de Diagnóstico Metódico por Capas ante Fallas Inducidas
@@ -412,9 +467,9 @@ Induzca y resuelva las siguientes fallas sistemáticas registrando el aislamient
 | **Captura Guardada (PNG)** | Archivo: `kinova_capture_1.png` | Resolución: | Tamaño: ____ KB | |
 
 ### Tabla 3: Comparativa de Ancho de Banda: Video Crudo vs. Video Comprimido
-| Formato de Video en ROS 2 | Nombre del Tópico | Ancho de Banda Medido (`ros2 topic bw`) | Tasa de Cuadros (`ros2 topic hz`) | Ahorro de Ancho de Banda (%) |
+| Formato de Video en ROS 2 | Nombre del Tópico | Ancho de Banda (crudo: **calculado** · comprimido: `ros2 topic bw`) | Tasa de Cuadros (`ros2 topic hz` del comprimido) | Ahorro de Ancho de Banda (%) |
 |---|---|:---:|:---:|:---:|
-| **Video Crudo (RGB8)** | `/camera/color/image_raw` | | | $0\%$ (Referencia) |
+| **Video Crudo (RGB8)** | `/camera/color/image_raw` | ancho × alto × 3 × FPS = | | $0\%$ (Referencia) |
 | **Comprimido JPEG ($q=80$)** | `/camera/color/image_raw/compressed` | | | |
 | **Comprimido JPEG ($q=30$)** | `/camera/color/image_raw/compressed` | | | |
 
