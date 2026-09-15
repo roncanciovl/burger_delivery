@@ -167,41 +167,34 @@ burger_delivery/
 
 ---
 
-## 🛠️ Hardware & Physical Debugging Scripts
+## 🔧 Preparing the Kinova Packages Before Building
+
+Kinova's official packages do not work as-is in this lab. Each one is prepared with **a single
+command**, right after cloning it and before building. The commands are safe to re-run: if the
+adjustment is already in place they skip it, and if something fails they say so and stop.
+
+| Kinova package | Who prepares it | Command | What it fixes |
+| :--- | :--- | :--- | :--- |
+| `ros2_kortex` (arm) | Whoever installs the arm driver ([`INSTALACION_KORTEX.md`](ros2_setup/INSTALACION_KORTEX.md) §3.4) | `python3 ~/ros2_ws/src/burger_delivery/scripts/aplicar_compatibilidad_kortex.py` | The URDF with gripper does not build against Jazzy's `robotiq_description`, and the `controller_manager` overruns at 1000 Hz |
+| `ros2_kortex_vision` (camera) | **Only the host station** | `bash ~/ros2_ws/src/burger_delivery/scripts/aplicar_parche_kinova_vision.sh` | The driver does not stop cleanly on `Ctrl+C` and leaves the camera blocked for other stations ([`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) §3.4, Spanish) |
+
+To **check** without changing anything, add `--check` to the same command.
+
+The camera command does the whole job: it clones `ros2_kortex_vision` if missing, reports missing
+system packages (with the exact `sudo apt install`), applies
+[`ros2_setup/parches/kinova_vision_parada_limpia.patch`](ros2_setup/parches/kinova_vision_parada_limpia.patch),
+verifies it is applied and builds `kinova_vision`. Client stations do not need it: they subscribe
+to the image published by the host. The fix was submitted to Kinova
+([Kinovarobotics/ros2_kortex_vision#2](https://github.com/Kinovarobotics/ros2_kortex_vision/pull/2)):
+once merged, this step will no longer be needed.
+
+---
+
+## 🩺 Robot Diagnostic Tools
+
 In `scripts/`:
-- `aplicar_compatibilidad_kortex.py`: Adapts a freshly cloned `ros2_kortex` so its URDFs build against the distribution's `robotiq_description`, and lowers the `controller_manager` update rate to 100 Hz. Verifies the outcome and fails loudly if anything could not be applied.
-- `test_kinova_pose.py`: Validates Cartesian [X,Y,Z] coordinates against kinematic limits prior to MoveIt execution.
-- `test_kinova_camera.py`: GStreamer/OpenCV extractor to evaluate RTSP camera feed without ROS overhead.
-
-### Clean-shutdown patch for `kinova_vision`
-
-In `ros2_setup/parches/`, independent of the script above:
-
-- `kinova_vision_parada_limpia.patch`: fixes the Kinova vision driver ([`ros2_kortex_vision`](https://github.com/Kinovarobotics/ros2_kortex_vision), commit `d1d0213`), which does not shut down cleanly on `Ctrl+C`. The original segfaults, aborts or hangs, and leaves the camera refusing new streams for more than 12 s. With the patch, stops are clean in ≈ 1.5 s, also when the terminal is closed, and the driver relaunches without retries. Root causes and measurements (Spanish) in [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) §3.4.
-
-Only the **host station**, the single station that runs the vision driver, needs it. Client stations subscribe to the image and do not install `kinova_vision`.
-
-**How to apply it.** Clone the driver into the workspace, next to `ros2_kortex` and **not** inside this repository. The block is idempotent: if the patch is already applied, it is not applied again.
-
-```bash
-cd ~/ros2_ws/src
-git clone -b ros2 https://github.com/Kinovarobotics/ros2_kortex_vision.git   # if not cloned yet
-
-cd ~/ros2_ws/src/ros2_kortex_vision
-PATCH=~/ros2_ws/src/burger_delivery/ros2_setup/parches/kinova_vision_parada_limpia.patch
-if git apply --reverse --check "$PATCH" 2>/dev/null; then
-  echo "patch already applied"
-else
-  git apply "$PATCH" && echo "patch applied"
-fi
-
-cd ~/ros2_ws && colcon build --packages-select kinova_vision --symlink-install
-```
-
-- If `git apply` fails with `patch does not apply`, upstream has changed since `d1d0213`. Review the diff before forcing anything.
-- **Check that it works:** run `ros2 launch kinova_vision kinova_vision.launch.py device:=192.168.1.10`, wait until it publishes and stop it with `Ctrl+C`. Both nodes must end with `process has finished cleanly`, and `pgrep -a -x kinova_vision_n` must print nothing.
-- **Undo:** `git -C ~/ros2_ws/src/ros2_kortex_vision apply --reverse "$PATCH"` and rebuild.
-- The fix was submitted to Kinova as [Kinovarobotics/ros2_kortex_vision#2](https://github.com/Kinovarobotics/ros2_kortex_vision/pull/2). Once merged, this patch is no longer needed.
+- `test_kinova_pose.py`: validates Cartesian [X, Y, Z] coordinates against kinematic limits before planning with MoveIt 2.
+- `test_kinova_camera.py`: opens the Kinova camera RTSP stream with GStreamer/OpenCV to evaluate it without ROS 2 (Lab Guide 02, Phase 2).
 
 ---
 

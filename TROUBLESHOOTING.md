@@ -651,12 +651,24 @@ Si tras detener el launch queda algún `kinova_vision_n` o alguna línea `ESTAB`
 huérfano. Con el driver original **`SIGINT` no basta**: usa `kill -TERM <PID>`. No uses
 `pkill -f kinova_vision` desde un script (sección 4.3).
 
-**Qué hacer.** Aplicar en la estación anfitriona el parche
-[`ros2_setup/parches/kinova_vision_parada_limpia.patch`](ros2_setup/parches/kinova_vision_parada_limpia.patch).
-Es independiente de `aplicar_compatibilidad_kortex.py`: se aplica con `git apply` sobre el clon
-de `ros2_kortex_vision` y se recompila sólo `kinova_vision`. Los pasos, la verificación y cómo
-deshacerlo están en el
-[README, sección "Parche de parada limpia para `kinova_vision`"](README.md#parche-de-parada-limpia-para-kinova_vision).
+**Qué hacer.** En la estación anfitriona, un solo comando:
+
+```bash
+bash ~/ros2_ws/src/burger_delivery/scripts/aplicar_parche_kinova_vision.sh           # prepara y compila
+bash ~/ros2_ws/src/burger_delivery/scripts/aplicar_parche_kinova_vision.sh --check   # sólo comprueba
+```
+
+El script es independiente de `aplicar_compatibilidad_kortex.py`. Hace todo el proceso:
+- clona `ros2_kortex_vision` si falta;
+- avisa si faltan paquetes del sistema;
+- aplica el parche
+  [`ros2_setup/parches/kinova_vision_parada_limpia.patch`](ros2_setup/parches/kinova_vision_parada_limpia.patch)
+  sin repetirlo si ya está;
+- verifica el contenido de los fuentes y compila sólo `kinova_vision`.
+
+Si el parche no aplica (cambios locales en el clon, o un upstream distinto de `d1d0213`), se
+detiene y dice por qué, en lugar de forzarlo. Resumen para estudiantes en el
+[README](README.md#-preparar-los-paquetes-de-kinova-antes-de-compilar).
 
 Qué cambia el parche, uno por cada defecto descrito arriba:
 
