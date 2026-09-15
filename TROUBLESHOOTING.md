@@ -668,7 +668,10 @@ cd ~/ros2_ws && colcon build --packages-select kinova_vision --symlink-install
 ```
 
 El parche se verificó sobre un clon limpio del commit `d1d0213` (aplica y compila). Si
-`git apply` falla, el upstream cambió: revisa el diff a mano antes de forzarlo. Para
+`git apply` falla, el upstream cambió: revisa el diff a mano antes de forzarlo. La corrección,
+con estas mediciones, se envió a Kinova como
+[Kinovarobotics/ros2_kortex_vision#2](https://github.com/Kinovarobotics/ros2_kortex_vision/pull/2):
+si se integra, este parche deja de ser necesario. Para
 comprobar el resultado, lanza el driver, espera a que publique y detenlo con `Ctrl+C`:
 ambos nodos deben terminar con `process has finished cleanly` y `pgrep -x kinova_vision_n`
 no debe devolver nada.
