@@ -140,7 +140,7 @@ burger_delivery/
 - [**Controles y Configuración del Monitor de Red**](network_setup/MONITOR_RED_CONTROLES_Y_CONFIGURACION.md)
 - [**Diagnóstico de Red ROS 2**](network_setup/DIAGNOSTICO_RED.md)
 - [**Configuración de Red Recomendada**](network_setup/ROS2_NETWORK_CONFIG.md)
-- [**Troubleshooting: bloqueo del daemon de ROS 2 en WSL**](TROUBLESHOOTING.md)
+- [**Troubleshooting: daemon de la CLI en WSL, robot ocupado, fallos de plataforma y de los talleres**](TROUBLESHOOTING.md)
 - [**Guía TP-Link Archer AX12**](network_setup/router_tplink_ax12_config.md)
 
 ### 🎓 6. Ecosistema Docente y Formación (ABET)
@@ -148,6 +148,7 @@ burger_delivery/
 - [**Syllabus del Curso (Formato ABET)**](education/syllabus/SYLLABUS_ROS2_ROBOTICA.md)
 - [**Taller URDF y TF2**](education/talleres/TALLER_URDF_TF.md)
 - [**Taller CLI ROS 2**](education/talleres/TALLER_ROS2_CLI.md)
+- [**Taller rosbag2, Logging y Depuración**](education/talleres/TALLER_ROSBAG_LOGGING_DEBUGGING.md)
 - [**Proyecto Evaluable MoveIt 2 & Delivery**](education/proyectos_evaluables/PROYECTO_INTERMEDIO_MOVEIT2_DELIVERY.md)
 - [**Bitácora Metodológica SuperStudent**](education/metodologias/SKILL_SUPERSTUDENT.md)
 

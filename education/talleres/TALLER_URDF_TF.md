@@ -10,7 +10,7 @@
 > | `kortex_description`, generado en vivo por el driver | `base_link → shoulder_link → **bicep_link** → forearm_link → …` | **6** |
 > | `burger_description` (este, vendorizado) | `gen3_base_link → … → **gen3_half_arm_1_link → gen3_half_arm_2_link** → …` | 7 |
 >
-> El RViz que abre `kinova_connection.launch.py` con `launch_rviz:=true` usa el **primero**,
+> El RViz que abre `kinova_connection.launch.py` (package `burger_kinova_reference`) con `launch_rviz:=true` usa el **primero**,
 > generado por `kortex_bringup` con `dof:=6`, y **sí es fiel al robot**: refleja la
 > posición articular real. El modelo de `burger_description` sólo lo usa
 > `display.launch.py`, un visor sin robot, y tiene una articulación de más
@@ -18,7 +18,25 @@
 > `gen3_`, así que no colisiona con los del driver pero tampoco corresponde al hardware.
 >
 > Úsalo para estudiar la estructura de un URDF, no como referencia cinemática del brazo.
-> La re-vendorización a 6 GDL está pendiente; ver `TODO.md`.
+> La re-vendorización a 6 GDL está pendiente; ver [`TODO.md`](../../TODO.md) §4.1.
+
+> [!CAUTION]
+> **Este taller no usa el driver del robot: no aplica la convención de estación anfitriona, y
+> `display.launch.py` no debe compartir dominio con una sesión del robot ni con los visores de otras
+> estaciones.** El launch publica sin namespace `/joint_states` (desde `joint_state_publisher_gui`),
+> `/tf`, `/tf_static` y `/robot_description`: los mismos tópicos que el driver real. En el dominio `0`
+> durante una sesión con el robot, tus deslizadores se mezclarían con la telemetría del brazo, que es
+> el síntoma de "dos drivers en el mismo dominio" de [`TROUBLESHOOTING.md`](../../TROUBLESHOOTING.md) §2.1;
+> y con varias estaciones practicando a la vez, los modelos saltarían entre los deslizadores de
+> todos. Trabaja este taller en el dominio de tu equipo (§2.4 y §4.1), en **todas** las terminales,
+> y vuelve al `0` del curso al terminar:
+>
+> ```bash
+> export ROS_DOMAIN_ID=<11, 12, ... el de tu equipo>
+> timeout 5s ros2 daemon stop; ros2 daemon start
+> ```
+>
+> Aísla el dominio; no cambies `ROS_AUTOMATIC_DISCOVERY_RANGE` a `LOCALHOST`.
 
 
 > [!IMPORTANT]
@@ -75,12 +93,20 @@ Este archivo es el encargado de cargar:
 ### 🛠️ Tu primer reto: Construir y Validar
 Vamos a preparar tu entorno. Ejecuta estos comandos en tu terminal:
 
-1.  **Crea el enlace para los recursos (Meshes):**
-    Por un estándar de ROS, el URDF busca los modelos en una carpeta llamada `meshes`. En nuestro proyecto, estos archivos están dentro de `visual/meshes`. Ejecuta esto para crear el puente:
+1.  **Comprueba el enlace de los recursos (Meshes):**
+    El URDF busca los modelos en `package://burger_description/meshes/...`, pero en nuestro proyecto están dentro de `visual/meshes`. El puente es un enlace simbólico que **ya viene versionado en el repositorio**; sólo verifícalo:
     ```bash
     cd ~/ros2_ws/src/burger_delivery/burger_description
-    ln -s visual/meshes meshes
+    ls -l meshes
+    # Esperado: meshes -> visual/meshes
     ```
+    Sólo si no existe (por ejemplo, porque tu sistema de archivos no conservó el enlace), créalo con `ln -s visual/meshes meshes`.
+
+    > [!WARNING]
+    > No vuelvas a ejecutar `ln -s visual/meshes meshes` si el enlace ya existe: como `meshes` apunta a
+    > un directorio, `ln` no falla sino que crea **otro** enlace roto *dentro* de él
+    > (`visual/meshes/meshes`). Desde el `CMakeLists.txt` se instala `visual/meshes` como `meshes`, así
+    > que la compilación no depende del enlace.
 
 2.  **Compila y refresca tu espacio de trabajo:**
     ```bash
@@ -521,7 +547,8 @@ Antes de dar por válida tu configuración, asegúrate de haber hecho este recor
 
 ## ⚠️ ¡No caigas en la trampa! (Errores Comunes)
 - **Olvidar reconstruir:** Cambiar el URDF en `src` y esperar que se vea en RViz sin hacer `colcon build`.
-- **Meshes no encontrados:** No haber creado el enlace simbólico `meshes -> visual/meshes` en la carpeta `src`. Sin esto, la mesa y objetos fijos saldrán en rojo o serán invisibles.
+- **Meshes no encontrados:** `install/burger_description/share/burger_description/meshes` no existe. Sin esa carpeta, la mesa y objetos fijos saldrán en rojo o serán invisibles. Actualiza tu repositorio (versiones anteriores del `CMakeLists.txt` no instalaban `meshes`, y funcionaba sólo en equipos con un `install/` antiguo) y recompila. Un `install/` viejo puede ocultar el problema: ante la duda, borra `build/burger_description` e `install/burger_description` y compila de nuevo.
+- **Dominio compartido:** Lanzar `display.launch.py` en el mismo dominio que otras estaciones o que una sesión con el robot (el `0` del curso). Publica `/joint_states` y `/tf` sin namespace y se mezcla con sus datos (ver aviso al inicio).
 - **Doble publicación:** Usar `use_static_carts:=true` al mismo tiempo que el nodo real de AprilTags.
 - **Offsets mal ubicados:** Corregir un error de la mesa moviendo el carrito. Siempre calibra de la raíz hacia las hojas.
 - **Colisiones complejas:** Usar mallas CAD pesadas para detección de choques en lugar de cajas simples.
