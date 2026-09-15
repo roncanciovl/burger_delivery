@@ -6,7 +6,8 @@ basado en el entorno de Proyecto 1 (Kinova Gen3).
 
 Demuestra:
 1. Niveles de log en ROS 2 (DEBUG, INFO, WARN, ERROR, FATAL) con formateo y throttling.
-2. Cambio dinámico de nivel de log en tiempo de ejecución vía parámetros/servicios.
+2. Nivel de log por argumento de arranque (--log-level); el cambio en caliente requiere
+   habilitar el servicio de logger (enable_logger_service=True), ver el taller.
 3. Publicación de estados articulares (joint_states), telemetría de vibración y diagnóstico del Kinova.
 4. Inyección controlada de anomalías (jittering excesivo en articulaciones).
 5. Integración con rosbag2 (grabación continua o buffer post-mortem / flight recorder).
@@ -82,8 +83,11 @@ class FlightRecorderTelemetryDemo(Node):
         self.get_logger().info(
             f"🚀 [INIT] Nodo '{self.get_name()}' iniciado para namespace '{self.ns}' a {rate_hz} Hz."
         )
+        # Este nodo no declara un parámetro 'log_level': 'ros2 param set ... log_level'
+        # falla aquí (y devuelve código de salida 0). Ver Ejercicio 1.2 del taller.
         self.get_logger().info(
-            "💡 TIP: Usa 'ros2 param set /flight_recorder_telemetry_demo log_level DEBUG' para ver trazas profundas."
+            "💡 TIP: Para ver trazas profundas relanza con "
+            "'--ros-args --log-level flight_recorder_telemetry_demo:=debug'."
         )
 
     def trigger_anomaly_callback(self, request: SetBool.Request, response: SetBool.Response):
