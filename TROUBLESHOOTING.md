@@ -1,6 +1,6 @@
 # Troubleshooting del entorno ROS 2 del proyecto
 
-Esta guía cubre los dos fallos que más tiempo consumen en el laboratorio:
+Esta guía cubre los fallos que más tiempo consumen en el laboratorio:
 
 | Síntoma | Sección |
 | :--- | :--- |
@@ -8,6 +8,8 @@ Esta guía cubre los dos fallos que más tiempo consumen en el laboratorio:
 | El driver no arranca, o hay telemetría duplicada, porque **el robot ya está en uso** | [2. Hardware ocupado: un solo robot, varias estaciones](#2-hardware-ocupado-un-solo-robot-y-varias-estaciones) |
 | No sé quién tiene el robot ocupado | [2.0 La configuración recomendada](#20-la-configuración-recomendada-léela-antes-que-el-resto) |
 | Mi código parece correcto y aun así el driver no arranca, o publica datos absurdos | [3. Fallos de plataforma ajenos a tu código](#3-fallos-de-plataforma-ajenos-a-tu-código) |
+| La cámara del Kinova da `Failed to start stream`, o `kinova_vision` no se detiene con `Ctrl+C` | [3.4 El driver de visión no se detiene limpiamente](#34-el-driver-de-visión-no-se-detiene-limpiamente-y-deja-la-cámara-bloqueada) |
+| Un comando de un taller "funciona" (no da error) pero no produce lo que la guía promete | [4. Fallos silenciosos al ejecutar los talleres](#4-fallos-silenciosos-al-ejecutar-los-talleres) |
 
 ---
 
@@ -214,6 +216,15 @@ común, así que la base sigue siendo una **convención**:
 >    medido, no es una preferencia (sección 2.3, opción B).
 > 3. **Todos los demás usan el mismo `ROS_DOMAIN_ID`** que la estación anfitriona, y
 >    lanzan con `start_driver:=false`. Pueden ir por WiFi.
+
+La convención nació de la experiencia: en el Laboratorio 02 (cámara del Kinova) la mayoría
+de los grupos completó la práctica, pero el problema principal fue el **conflicto al usar la
+cámara desde varios computadores a la vez**, cada uno con su propio driver de visión, agravado
+porque ese driver no se detenía limpiamente y dejaba la cámara bloqueada (sección 3.4). Por eso
+los talleres posteriores que usan el driver del robot —como el de
+[localización con AprilTag](education/talleres/TALLER_LOCALIZACION_APRILTAG_KINOVA_MICROROS.md)—
+parten de una sola anfitriona que publica la imagen comprimida, y todas las estaciones en el
+mismo `ROS_DOMAIN_ID`.
 
 Esta convención es la que **hace desaparecer el cuello de botella**, y conviene ver por
 qué: si todos comparten el dominio, *"¿quién tiene el robot?"* deja de ser una pregunta
@@ -498,9 +509,10 @@ equipo se coordina alrededor de un único robot.
 
 ## 3. Fallos de plataforma ajenos a tu código
 
-Esta sección recoge tres problemas detectados el 2026-09-09 durante la validación sobre el
-robot real. Los tres hacen fallar **cualquier implementación correcta**, así que si tu
-proyecto del corte 1 no funcionó, empieza por descartarlos antes de revisar tu código.
+Esta sección recoge problemas detectados durante la validación sobre el robot real: los tres
+primeros el 2026-09-09 y el del driver de visión (3.4) el 2026-09-15. Todos hacen fallar
+**cualquier implementación correcta**, así que si tu proyecto o tu práctica no funcionó,
+empieza por descartarlos antes de revisar tu código.
 
 ### 3.1 El brazo es de 6 GDL, y el enunciado decía 7
 
@@ -580,7 +592,92 @@ La corrección es eliminar también esos bloques, no reponer las variables. Ocur
 máquina del docente y dejó inutilizable la descripción de 6 GDL, que es la de este robot;
 por eso se venía usando `dof:=7` y se llegó al problema 3.1.
 
-### 3.4 Si tu proyecto del corte 1 no funcionó
+### 3.4 El driver de visión no se detiene limpiamente y deja la cámara bloqueada
+
+Fue uno de los problemas más reportados en el Laboratorio 02. Al detener
+`kinova_vision.launch.py` con `Ctrl+C` el launch muestra:
+
+```text
+[kinova_vision_node-2] terminate called after throwing an instance of 'std::system_error'
+[ERROR] [kinova_vision_node-2]: process has died [pid …, exit code -11, cmd '…kinova_vision_node …']
+[ERROR] [kinova_vision_node-1]: process[kinova_vision_node-1] failed to terminate '5' seconds after receiving 'SIGINT', escalating to 'SIGTERM'
+```
+
+y, al volver a lanzarlo, la cámara **rechaza el stream** durante varios segundos:
+
+```text
+[camera.kinova_vision_color]: [color]: Failed to start stream
+[camera.kinova_vision_color]: [color]: Trying to connect... (attempt #1)
+```
+
+Medido sobre el robot real (driver `ros2_kortex_vision`, commit `d1d0213`, color y
+profundidad, relanzando 3 s después de cada parada):
+
+| Driver | Parada con `Ctrl+C` | Cerrar la terminal (`SIGHUP`) | Relanzar tras la parada |
+| :--- | :--- | :--- | :--- |
+| Original | **0 de 3 limpias**: segfault (`-11`), aborto (`-6`) o escalado a `SIGTERM`; 3–7 s | Muerte abrupta de todos los procesos | La cámara rechazó el stream **más de 12 s** (2 de 3 intentos) |
+| Con el parche | **11 de 11 limpias** (`process has finished cleanly`), ≈ 1.5 s | Parada limpia, ≈ 1.6 s | Conecta sin reintentos |
+
+**Por qué pasa.** Son tres defectos del driver, no de tu estación:
+
+1. `vision_node.cpp` instala su propio manejador de `SIGINT` que llama a `quit()`,
+   `rclcpp::shutdown()` y `exit()` **desde dentro de la señal**, mientras el hilo principal
+   sigue usando GStreamer. Ninguna de esas funciones es segura en un manejador de señal: de
+   ahí el segfault, el aborto o el bloqueo.
+2. Al salir, el pipeline de GStreamer nunca pasa a `NULL`, así que la sesión RTSP con la
+   cámara no se cierra de forma ordenada y la cámara tarda en aceptar otra.
+3. El lazo principal crea un ejecutor temporal y duerme con `Rate::sleep()` en cada
+   iteración; si el apagado llega en medio, ambas llamadas lanzan excepción
+   (`failed to create guard condition`, `context cannot be slept with because it's invalid`).
+
+`rclcpp` tampoco gestiona `SIGHUP`, que es lo que llega al **cerrar la ventana de la
+terminal**, así que ese gesto tan habitual mataba el driver sin cerrar la sesión RTSP.
+
+**La consecuencia en el laboratorio.** Un proceso `kinova_vision_node` huérfano (por ejemplo,
+si el launch muere antes que sus nodos) **sigue con la sesión RTSP abierta**: medido, con
+`ESTAB` hacia `192.168.1.10:554` e ignorando `SIGINT`. Si otra estación intenta usar la
+cámara, o la misma relanza el driver, se encuentra con `Failed to start stream`. Junto con la
+falta de una estación anfitriona única (sección 2.0), explica el conflicto al usar la cámara
+desde varios computadores.
+
+**Cómo detectarlo** en la estación que lanzó el driver:
+
+```bash
+pgrep -a -x kinova_vision_n          # el nombre del proceso se trunca a 15 caracteres
+ss -tanp | grep "192.168.1.10:554"   # sesiones RTSP abiertas desde esta estación
+```
+
+Si tras detener el launch queda algún `kinova_vision_n` o alguna línea `ESTAB`, hay un
+huérfano. Con el driver original **`SIGINT` no basta**: usa `kill -TERM <PID>`. No uses
+`pkill -f kinova_vision` desde un script (sección 4.3).
+
+**Qué hacer.** Aplicar el parche versionado en el repositorio,
+[`ros2_setup/parches/kinova_vision_parada_limpia.patch`](ros2_setup/parches/kinova_vision_parada_limpia.patch),
+y recompilar sólo ese paquete. El procedimiento es idempotente: si el parche ya está
+aplicado, no lo vuelve a aplicar.
+
+```bash
+cd ~/ros2_ws/src/ros2_kortex_vision
+PARCHE=~/ros2_ws/src/burger_delivery/ros2_setup/parches/kinova_vision_parada_limpia.patch
+if git apply --reverse --check "$PARCHE" 2>/dev/null; then
+  echo "parche ya aplicado"
+else
+  git apply "$PARCHE" && echo "parche aplicado"
+fi
+cd ~/ros2_ws && colcon build --packages-select kinova_vision --symlink-install
+```
+
+El parche se verificó sobre un clon limpio del commit `d1d0213` (aplica y compila). Si
+`git apply` falla, el upstream cambió: revisa el diff a mano antes de forzarlo. Para
+comprobar el resultado, lanza el driver, espera a que publique y detenlo con `Ctrl+C`:
+ambos nodos deben terminar con `process has finished cleanly` y `pgrep -x kinova_vision_n`
+no debe devolver nada.
+
+> Lo único que ningún código puede atender es `SIGKILL` o un corte de energía: en ese caso
+> la sesión RTSP queda sin cerrar y la cámara puede rechazar streams nuevos durante más de
+> 12 s. Espera antes de relanzar, o relanza y deja que el driver reintente.
+
+### 3.5 Si tu proyecto del corte 1 no funcionó
 
 Antes de dar por malo tu código, comprueba en este orden:
 
@@ -591,8 +688,240 @@ Antes de dar por malo tu código, comprueba en este orden:
    control se rompe: medido, 132 desbordamientos y 2 pérdidas de telemetría en 120 s
    ([`EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md`](burger_kinova_reference/docs/EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md)).
 4. ¿Había otra estación con el driver abierto? Ver la [sección 2](#2-hardware-ocupado-un-solo-robot-y-varias-estaciones).
+5. Si usabas la cámara: ¿el driver de visión tenía el parche de parada limpia, y no quedaban
+   procesos `kinova_vision_n` huérfanos? Ver el problema 3.4.
 
-Sólo si los cuatro salen limpios tiene sentido revisar la lógica de tu package.
+Sólo si los cinco salen limpios tiene sentido revisar la lógica de tu package.
+
+---
+
+## 4. Fallos silenciosos al ejecutar los talleres
+
+El taller de rosbag2 se reescribió porque su versión anterior no corría. Al volver a ejecutar
+paso a paso **todos** los talleres sobre ROS 2 Jazzy (2026-09-15, `rmw_cyclonedds_cpp`, WSL2)
+apareció un patrón común, más peligroso que un error: **el comando termina sin error, pero no
+hace lo que crees**. Lo que sigue son los casos medidos y la forma de detectarlos.
+
+| Síntoma | Sección |
+| :--- | :--- |
+| Ves nodos o tópicos que no lanzaste, o varios publicadores en un tópico de tu práctica | [4.1](#41-qué-dominio-usa-cada-taller) |
+| `ros2 param set <nodo> log_level DEBUG` no cambia nada | [4.2](#42-ros2-param-set--log_level-no-es-estándar-y-su-fallo-sale-con-código-0) |
+| `ros2 bag record` no se detiene desde un script, o el bag queda sin `metadata.yaml` | [4.3](#43-la-grabación-no-se-detiene-o-queda-sin-metadatos) |
+| El análisis de un bag comprimido no abre, o da métricas en cero | [4.4](#44-bags-comprimidos-leídos-con-el-lector-equivocado) |
+| La mesa sale roja o invisible en RViz en un equipo recién clonado | [4.5](#45-mallas-que-sólo-existen-en-un-install-antiguo) |
+| Teclas de `bag play`, regex o volumen de logs que no coinciden con la guía | [4.6](#46-desajustes-menores-con-jazzy) |
+| El monitor de red o `ros2 topic bw` dan un ancho de banda que no cuadra | [4.8](#48-mediciones-de-red-que-no-miden-lo-que-parecen) |
+
+### 4.1 Qué dominio usa cada taller
+
+La convención de la sección 2.0 —`ROS_DOMAIN_ID=0` compartido, **una** estación anfitriona
+conectada por Ethernet al router que ejecuta el driver, y las demás con `start_driver:=false`—
+existe para que nunca haya dos drivers compitiendo por el robot. Por eso aplica **sólo a los
+talleres que usan el driver del robot**. Los que trabajan con emuladores o simuladores no tienen
+driver que proteger y siguen la sección 2.4:
+
+| Tipo de taller | Talleres | Dominio | ¿Estación anfitriona? |
+| :--- | :--- | :--- | :--- |
+| **Usa el driver del robot** (brazo o módulo de visión del Kinova) | Localización AprilTag con la cámara real del Kinova | `0`, compartido con la anfitriona | **Sí**: sólo la anfitriona lanza el driver (§2.0) |
+| **Sin driver, con nombres fijos** (emulador o simulador) | CLI (turtlesim), TF2 turtlesim, URDF/TF (`display.launch.py`), rosbag2 (emulador) | Uno distinto por equipo cuando varias estaciones practican a la vez (§2.4) | No aplica |
+| **Sin driver, con namespace por robot** | micro-ROS en ESP32, AprilTag en modo simulado | `0` del curso: el namespace de cada carrito (`/burger_car_01`, …) ya evita las colisiones | No aplica |
+
+Por qué los talleres sin driver necesitan su propio dominio en clase: publican en los **mismos
+nombres** en todas las estaciones, y varios reproducen nombres del sistema real.
+
+| Taller | Publica sin namespace | Se mezcla con |
+| :--- | :--- | :--- |
+| rosbag2 (`flight_recorder_telemetry_demo.py`) | `/burger/kinova/*` y sus servicios | los emuladores de las demás estaciones y, en una sesión con robot, el `kinova_monitor` (`/burger/kinova/diagnostics`) |
+| URDF/TF (`display.launch.py`) | `/joint_states`, `/tf`, `/robot_description` | los visores de las demás estaciones y, en una sesión con robot, el driver |
+| TF2 turtlesim, CLI | `/tf`, `/turtle1/cmd_vel` | las demos de las demás estaciones |
+
+Nada de esto da error: las grabaciones mezclan datos de varias estaciones, `tf2_echo` alterna
+entre tortugas ajenas y un `trigger_anomaly` lo atienden todos los emuladores. Al cambiar de
+dominio, hazlo en todas las terminales y reinicia el daemon (sección 1.6). Se aísla el dominio; el
+rango de descubrimiento se deja en `SUBNET`, **nunca** `LOCALHOST`. Al terminar la práctica
+simulada, vuelve al dominio `0` del curso antes de un taller con el robot.
+
+Cómo detectarlo antes de grabar o medir:
+
+```bash
+ros2 topic info /burger/kinova/joint_states   # Publisher count: 1  → sólo tu emulador
+ros2 node list | grep controller_manager      # si aparece, compartes dominio con un driver
+```
+
+### 4.2 `ros2 param set … log_level` no es estándar, y su fallo sale con código 0
+
+```text
+Setting parameter failed: Invalid access to undeclared parameter(s): []
+```
+
+`log_level` **no es un parámetro de ROS 2**. Existe sólo si el nodo lo declara y le asocia un
+callback, como `kinova_monitor` ([`TEORIA_LOGGING_ROS2.md`](burger_kinova_reference/docs/TEORIA_LOGGING_ROS2.md)).
+El emulador del taller no lo declara, y aun así su mensaje de arranque recomendaba ese comando
+(corregido). Dos
+agravantes medidos: el comando **devuelve código de salida 0**, así que un script no detecta el
+fallo; y la explicación que circuló (`enable_logger_service=False`) es de otro mecanismo, los
+servicios `~/set_logger_levels`, que `rclpy` sólo crea con `enable_logger_service=True`.
+
+Caminos que sí funcionan, en orden de preferencia para depurar un nodo concreto:
+
+```bash
+# Al arrancar, sólo el logger del nodo:
+... --ros-args --log-level <nombre_del_nodo>:=debug
+
+# En caliente, si el nodo habilitó los servicios de logger (level 10 = DEBUG):
+ros2 service call /<nodo>/set_logger_levels rcl_interfaces/srv/SetLoggerLevels \
+  "{levels: [{name: '<nodo>', level: 10}]}"
+```
+
+Evita `--log-level DEBUG` a secas: sube también `rcl` y `rmw_cyclonedds_cpp`. Medido: ≈ 490
+líneas en 5 s, de ellas ≈ 400 internas, frente a ≈ 90 con el logger nombrado.
+
+Relacionado: un *flight recorder* que vuelca su buffer con `get_logger().debug()` responde
+`success=True` y no muestra nada si el nodo está en `INFO`. **Relanzarlo en DEBUG no lo arregla**:
+el buffer vive en RAM y se pierde con el proceso. Hay que arrancar en DEBUG antes de la falla.
+
+### 4.3 La grabación no se detiene, o queda sin metadatos
+
+`rosbag2` escribe `metadata.yaml` al recibir la señal de parada; sin él, `ros2 bag info` y
+`ros2 bag play` rechazan la carpeta. Medido en Jazzy, lanzando `ros2 bag record … &` desde un
+script:
+
+| Señal | Resultado |
+| :--- | :--- |
+| `SIGINT` (`kill -INT`) | **Ignorada**: sigue grabando |
+| `SIGTERM` (`kill -TERM`) | Parada limpia, con `metadata.yaml` |
+| `SIGINT` con `set -m` activo antes del `&` | Parada limpia |
+| `SIGKILL` | `.mcap` sin cerrar; `ros2 bag reindex` falla con `No storage could be initialized` |
+
+La causa no es `rosbag2`: en una shell **no interactiva**, los comandos en segundo plano heredan
+`SIGINT` y `SIGQUIT` ignorados cuando no hay control de trabajos (comportamiento documentado de
+bash). El aviso `stdin is not a terminal device. Keyboard handling disabled.` sólo informa de que
+se desactivaron los atajos de teclado; no explica el fallo.
+
+Dos trampas más, ambas vistas en esta revisión:
+
+- **`pkill -f 'ros2 bag record'` dentro de un script mata la propia shell**, porque su línea de
+  comandos contiene el patrón. Guarda el PID.
+- El recorder de Jazzy **no** expone un servicio de parada (`rosbag2_interfaces/srv/Stop` es del
+  player).
+
+```bash
+ros2 bag record -s mcap -o mi_bag --topics /t1 /t2 > record.log 2>&1 &
+REC_PID=$!
+# ... experimento ...
+kill -TERM "$REC_PID"; wait "$REC_PID"
+test -f mi_bag/metadata.yaml && echo "bag cerrado correctamente"
+```
+
+### 4.4 Bags comprimidos leídos con el lector equivocado
+
+La CLI (`info`, `play`) descomprime sola; la API de Python no. Hay que elegir el lector según los
+metadatos, y el error puede ser silencioso:
+
+| Bolsa | `SequentialReader` | `SequentialCompressionReader` |
+| :--- | :--- | :--- |
+| Sin compresión | ✅ | ❌ `should not be initialized with NONE compression mode` |
+| `--compression-mode file` (`.mcap.zstd`) | ❌ `invalid magic bytes in Header: 0x28B52FFD…` | ✅ |
+| `--compression-mode message` | ⚠️ **abre y entrega payloads comprimidos** | ✅ |
+
+La fila `message` es la grave: cada deserialización falla, y `read_mcap_telemetry.py` las atrapaba
+con `except: pass`, así que reportaba **el conteo de mensajes correcto y jitter `0.00000`**, un
+resultado falso con apariencia de sistema nominal. La guía anterior además afirmaba que ese modo
+"sigue siendo legible por la API", y proponía descomprimir a mano el `.mcap.zstd`, lo que deja un
+`metadata.yaml` que sigue declarando compresión.
+
+Solución aplicada en `scripts/read_mcap_telemetry.py`, la misma que ya usaba
+`burger_kinova_reference/scripts/analizar_enlace.py`: leer `compression_mode` en `metadata.yaml`,
+usar `SequentialCompressionReader` si no es `NONE`, y **contar y avisar** de los mensajes que no
+deserializan en lugar de silenciarlos.
+
+### 4.5 Mallas que sólo existen en un `install/` antiguo
+
+El URDF de `burger_description` referencia 55 veces `package://burger_description/meshes/...`,
+pero el `CMakeLists.txt` instalaba `visual` y no `meshes` (un enlace simbólico a `visual/meshes`).
+En una compilación limpia `install/.../share/burger_description/meshes` **no existía**. En el equipo
+del docente funcionaba porque su `install/` conservaba una carpeta `meshes` de noviembre de 2025.
+Corregido instalando `visual/meshes` como `meshes`; verificado con compilación limpia normal y con
+`--symlink-install`, sin ninguna referencia `package://` sin resolver.
+
+Dos lecciones: un `install/` viejo **oculta** errores de empaquetado, así que valida desde cero
+(`--build-base` e `--install-base` en un directorio temporal); y el taller pedía crear el enlace
+con `ln -s visual/meshes meshes` aunque ya viene versionado. Sobre un enlace existente, `ln` **no
+falla**: crea otro enlace roto dentro del directorio (`visual/meshes/meshes`).
+
+### 4.6 Desajustes menores con Jazzy
+
+| Guía decía | Realidad medida en Jazzy |
+| :--- | :--- |
+| En `bag play`, `s` avanza un mensaje y `+`/`-` cambian la velocidad | `Flecha Derecha` avanza; `Flecha Arriba`/`Abajo` cambian ±10 %. El player lo anuncia al arrancar (`Press CURSOR_RIGHT for Play Next Message`) |
+| El archivo comprimido se llama `ds_mcap_zstd_0.mcap.zstd` | `<carpeta de -o>_0.mcap.zstd` |
+| `-e "/burger/kinova/.*"` graba todos los brazos | Sólo `/burger/kinova/`; para `/burger/kinova_2/` hace falta `-e "/burger/kinova[^/]*/.*"` |
+| Pedir un tópico que nadie publica hace fallar la grabación | La grabación sigue y lo omite; sólo `ros2 bag info` lo revela |
+| Tópicos posicionales en `ros2 bag record` | Deprecados; usa `--topics` |
+
+### 4.7 Cómo validar una guía antes de entregarla
+
+La revisión dejó un método que evita repetir esto:
+
+1. **Ejecutar, no leer.** Cada bloque de comandos, en el orden de la guía. Si el taller no usa
+   el driver, en un dominio propio para no mezclarse con otras estaciones (§4.1).
+2. **Comprobar el efecto, no el código de salida.** `param set` y `ln -s` salen con 0 fallando;
+   `bag record` no avisa de tópicos ausentes; el lector de bags imprimía métricas plausibles.
+   Verifica el artefacto: que exista `metadata.yaml`, el `Publisher count`, los conteos de
+   `ros2 bag info`, que el valor medido tenga el orden de magnitud esperado.
+3. **Contrastar con lo que la herramienta anuncia.** El player imprime sus teclas; el nodo imprime
+   su nivel y su dominio. Si la guía contradice esa salida, la guía está mal.
+4. **Compilar desde cero** antes de afirmar que un paso de instalación basta.
+5. **Buscar el mismo error en el resto del repositorio**: las teclas de `bag play` y el lector sin
+   descompresión estaban también en `TEORIA_LOGGING_ROS2.md`.
+
+### 4.8 Mediciones de red que no miden lo que parecen
+
+Al repetir el Laboratorio 02 sobre el robot real (2026-09-15, estación por WiFi, WSL en modo
+`mirrored`) tres herramientas dieron cifras plausibles pero falsas. Se contrastaron contra los
+contadores de **cada interfaz** (`psutil.net_io_counters(pernic=True)`):
+
+| Herramienta | Qué reportó | Qué ocurría realmente | Por qué |
+| :--- | :--- | :--- | :--- |
+| Monitor de red: tráfico total, recibido y enviado | Driver de visión más un suscriptor local de la imagen comprimida: **143 Mbps recibidos y 60 Mbps enviados** | Por el WiFi (`eth1`): **83.1 Mbps recibidos y 0 enviados**. Los otros ≈ 59 Mbps en cada sentido iban por `lo` | `psutil.net_io_counters()` suma **todas** las interfaces, incluido el loopback (`lo`, y `loopback0` en WSL `mirrored`). El DDS entre nodos de la misma PC cuenta como tráfico de red |
+| Monitor de red: reparto TCP / UDP / DDS | Driver encendido y sin suscriptores: **65 Mbps "DDS"** | No salía DDS por la red (TX = 0). Eran los streams RTP de la cámara llegando por WiFi | El reparto no se mide: se aplican proporciones fijas según haya sockets DDS o micro-ROS ([`MONITOR_RED_CONTROLES_Y_CONFIGURACION.md`](network_setup/MONITOR_RED_CONTROLES_Y_CONFIGURACION.md)) |
+| `ros2 topic bw /camera/color/image_raw` | **1.88 MB/s** (menos que el comprimido a calidad 80) | Un suscriptor fiable recibió **26 imágenes/s de 6.22 MB ≈ 162 MB/s**; `ros2 topic hz` sobre el mismo tópico ni siquiera llegó a reportar | `bw` se suscribe siempre con `qos_profile_sensor_data` (*best effort*), sin opción para cambiarlo. Con `FragmentSize` de 1344 B, cada imagen cruda son miles de fragmentos, y perder uno descarta la imagen entera |
+
+**Cómo medir bien:**
+
+```bash
+# Tráfico real de UNA interfaz (sustituye eth1 por la NIC conectada a la red ros2)
+IF=eth1; R1=$(cat /sys/class/net/$IF/statistics/rx_bytes); sleep 10; \
+R2=$(cat /sys/class/net/$IF/statistics/rx_bytes); echo "RX: $(( (R2-R1)*8/10/1000000 )) Mbps"
+```
+
+- **Ancho de banda del video crudo:** calcúlalo en lugar de medirlo con `bw`:
+  ancho × alto × 3 bytes × FPS. Para 1920 × 1080 RGB8 son 6.22 MB por imagen; la frecuencia
+  tómala de `ros2 topic hz` sobre el tópico **comprimido**, que sale de la misma cámara.
+- **Tópicos comprimidos:** `ros2 topic bw` sí es utilizable, porque cada imagen pesa unos cientos
+  de KB. Contrasta su media por mensaje con `hz`.
+- **Monitor de red:** úsalo para el RTT, el jitter y la pérdida hacia el router y el robot,
+  que sí son mediciones (`ping`). No uses sus Mbps como tráfico de WiFi cuando hay nodos
+  comunicándose dentro de la misma PC.
+- Si el puerto 8080 está ocupado (en WSL `mirrored` puede estarlo del lado de Windows), el
+  monitor usa el siguiente libre y lo anuncia al arrancar (`Interfaz Web disponible en:
+  http://localhost:8081`).
+
+**Valores de referencia medidos** (driver `kinova_vision` en una estación por WiFi, 60 s por
+escenario):
+
+| Escenario | WiFi recibido (`eth1`) | RTT al router, medio / máx | Jitter | Pérdida |
+| :--- | ---: | :--- | ---: | ---: |
+| Driver apagado | 0 Mbps | 6.6 / 23 ms | 1.6 ms | 0 % |
+| Driver encendido, color y profundidad | **83.5 Mbps** | 11.1 / 61 ms | 4.5 ms | 0 % |
+| Driver sólo color (`launch_depth:=false`) | **20.9 Mbps** | — | — | — |
+| Driver más un suscriptor local de la imagen comprimida | 83.1 Mbps | 13.9 / 101 ms | 6.7 ms | 0 % |
+
+La profundidad viaja **sin comprimir** (≈ 62.6 Mbps de los 83.5) y la imagen comprimida con la
+calidad JPEG por defecto (95) pesa ≈ 295 KB, unos **61 Mbps por cada suscriptor remoto**. Son
+dos razones cuantitativas para la convención de la sección 2.0: la anfitriona por Ethernet, y
+el menor número posible de estaciones suscritas a la imagen. Los CSV del monitor de estas
+pruebas están en `network_setup/monitor_red/benchmark_logs/` (`lab02_A/B/C`).
 
 ## Fuentes técnicas
 
@@ -606,3 +935,5 @@ Sólo si los cuatro salen limpios tiene sentido revisar la lógica de tu package
 - [Documentación oficial de ROS 2: `ROS_DOMAIN_ID` y aislamiento del grafo](https://docs.ros.org/en/jazzy/Concepts/Intermediate/About-Domain-ID.html)
 - Medición propia del enlace sobre el robot real: [`EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md`](burger_kinova_reference/docs/EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md)
 - Regla de unicidad del driver y arquitectura distribuida: [`PROYECTO_CORTE_1_CONEXION_KINOVA.md`](education/proyectos_evaluables/PROYECTO_CORTE_1_CONEXION_KINOVA.md) §5
+- [GNU Bash Reference Manual: señales en comandos asíncronos sin control de trabajos](https://www.gnu.org/software/bash/manual/html_node/Signals.html)
+- Revisión de talleres ejecutada sobre ROS 2 Jazzy (2026-09-15): [`TALLER_ROSBAG_LOGGING_DEBUGGING.md`](education/talleres/TALLER_ROSBAG_LOGGING_DEBUGGING.md), §4 de esta guía
