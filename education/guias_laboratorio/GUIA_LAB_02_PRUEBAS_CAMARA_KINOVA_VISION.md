@@ -261,21 +261,15 @@ La práctica se estructura en seis fases:
 >     ros-jazzy-depth-image-proc \
 >     ros-jazzy-camera-calibration-parsers ros-jazzy-camera-info-manager
 >
-> # 2. Clonar el driver de visión en el workspace (junto a ros2_kortex, NO dentro de burger_delivery)
-> cd ~/ros2_ws/src
-> git clone -b ros2 https://github.com/Kinovarobotics/ros2_kortex_vision.git
->
-> # 3. Aplicar el parche de parada limpia (idempotente) y compilar sólo este paquete
-> cd ~/ros2_ws/src/ros2_kortex_vision
-> PARCHE=~/ros2_ws/src/burger_delivery/ros2_setup/parches/kinova_vision_parada_limpia.patch
-> if git apply --reverse --check "$PARCHE" 2>/dev/null; then
->   echo "parche ya aplicado"
-> else
->   git apply "$PARCHE" && echo "parche aplicado"
-> fi
-> cd ~/ros2_ws && colcon build --packages-select kinova_vision --symlink-install
+> # 2. Clonar el driver, aplicar el parche de parada limpia y compilar kinova_vision (un solo comando)
+> bash ~/ros2_ws/src/burger_delivery/scripts/aplicar_parche_kinova_vision.sh
 > source ~/ros2_ws/install/setup.bash
 > ```
+>
+> El script clona `ros2_kortex_vision` en `~/ros2_ws/src` si falta (junto a `ros2_kortex`, **no**
+> dentro de `burger_delivery`), avisa si falta algún paquete del paso 1, aplica el parche sin
+> repetirlo, verifica el resultado y compila. Para comprobar sin modificar nada:
+> `bash ~/ros2_ws/src/burger_delivery/scripts/aplicar_parche_kinova_vision.sh --check`.
 >
 > Sin `ros-jazzy-camera-calibration-parsers` y `ros-jazzy-camera-info-manager` la compilación
 > de `kinova_vision` falla. **Sin el parche**, el driver original no se detiene limpiamente con
@@ -356,7 +350,8 @@ La práctica se estructura en seis fases:
    ```
    En la salida del launch, ambos nodos deben terminar con `process has finished cleanly`. Si
    aparece `exit code -11`, `exit code -6` o `escalating to 'SIGTERM'`, el parche de parada
-   limpia no está aplicado: vuelva a la instalación previa. Un proceso `kinova_vision_n`
+   limpia no está aplicado: compruébelo con `bash ~/ros2_ws/src/burger_delivery/scripts/aplicar_parche_kinova_vision.sh --check`
+   y, si falla, ejecútelo sin `--check`. Un proceso `kinova_vision_n`
    huérfano mantiene abierta la sesión RTSP y bloquea la cámara para las demás estaciones.
 
 ---
