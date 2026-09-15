@@ -175,6 +175,36 @@ En `scripts/`:
 - `test_kinova_pose.py`: Valida coordenadas cartesianas [X,Y,Z] contra límites cinemáticos antes de planificar en MoveIt 2.
 - `test_kinova_camera.py`: Extractor GStreamer/OpenCV para evaluar cámara RTSP sin sobrecarga de ROS.
 
+### Parche de parada limpia para `kinova_vision`
+
+En `ros2_setup/parches/`, independiente del script anterior:
+
+- `kinova_vision_parada_limpia.patch`: corrige el driver de visión del Kinova ([`ros2_kortex_vision`](https://github.com/Kinovarobotics/ros2_kortex_vision), commit `d1d0213`), que no se detiene limpiamente con `Ctrl+C`. El original termina con segfault, aborto o bloqueo, y deja la cámara rechazando streams nuevos durante más de 12 s. Con el parche, las paradas son limpias en ≈ 1.5 s, también al cerrar la terminal, y el driver se relanza sin reintentos. Causas y mediciones en [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) §3.4.
+
+Sólo lo necesita la **estación anfitriona**, que es la única que ejecuta el driver de visión. Las estaciones cliente se suscriben a la imagen y no instalan `kinova_vision`.
+
+**Cómo se aplica.** El driver se clona en el workspace, junto a `ros2_kortex` y **no** dentro de este repositorio. El bloque es idempotente: si el parche ya está aplicado, no lo vuelve a aplicar.
+
+```bash
+cd ~/ros2_ws/src
+git clone -b ros2 https://github.com/Kinovarobotics/ros2_kortex_vision.git   # si aún no está
+
+cd ~/ros2_ws/src/ros2_kortex_vision
+PARCHE=~/ros2_ws/src/burger_delivery/ros2_setup/parches/kinova_vision_parada_limpia.patch
+if git apply --reverse --check "$PARCHE" 2>/dev/null; then
+  echo "parche ya aplicado"
+else
+  git apply "$PARCHE" && echo "parche aplicado"
+fi
+
+cd ~/ros2_ws && colcon build --packages-select kinova_vision --symlink-install
+```
+
+- Si `git apply` falla con `patch does not apply`, el upstream cambió desde `d1d0213`. Revisa el diff antes de forzar nada.
+- **Comprobar que funciona:** lanza `ros2 launch kinova_vision kinova_vision.launch.py device:=192.168.1.10`, espera a que publique y detenlo con `Ctrl+C`. Ambos nodos deben terminar con `process has finished cleanly`, y `pgrep -a -x kinova_vision_n` no debe devolver nada.
+- **Deshacerlo:** `git -C ~/ros2_ws/src/ros2_kortex_vision apply --reverse "$PARCHE"` y recompilar.
+- La corrección se envió a Kinova como [Kinovarobotics/ros2_kortex_vision#2](https://github.com/Kinovarobotics/ros2_kortex_vision/pull/2). Si se integra, este parche deja de ser necesario.
+
 ---
 
 ## 🖼️ Diagramas del Sistema

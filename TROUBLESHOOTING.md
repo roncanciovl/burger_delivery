@@ -651,30 +651,26 @@ Si tras detener el launch queda algún `kinova_vision_n` o alguna línea `ESTAB`
 huérfano. Con el driver original **`SIGINT` no basta**: usa `kill -TERM <PID>`. No uses
 `pkill -f kinova_vision` desde un script (sección 4.3).
 
-**Qué hacer.** Aplicar el parche versionado en el repositorio,
-[`ros2_setup/parches/kinova_vision_parada_limpia.patch`](ros2_setup/parches/kinova_vision_parada_limpia.patch),
-y recompilar sólo ese paquete. El procedimiento es idempotente: si el parche ya está
-aplicado, no lo vuelve a aplicar.
+**Qué hacer.** Aplicar en la estación anfitriona el parche
+[`ros2_setup/parches/kinova_vision_parada_limpia.patch`](ros2_setup/parches/kinova_vision_parada_limpia.patch).
+Es independiente de `aplicar_compatibilidad_kortex.py`: se aplica con `git apply` sobre el clon
+de `ros2_kortex_vision` y se recompila sólo `kinova_vision`. Los pasos, la verificación y cómo
+deshacerlo están en el
+[README, sección "Parche de parada limpia para `kinova_vision`"](README.md#parche-de-parada-limpia-para-kinova_vision).
 
-```bash
-cd ~/ros2_ws/src/ros2_kortex_vision
-PARCHE=~/ros2_ws/src/burger_delivery/ros2_setup/parches/kinova_vision_parada_limpia.patch
-if git apply --reverse --check "$PARCHE" 2>/dev/null; then
-  echo "parche ya aplicado"
-else
-  git apply "$PARCHE" && echo "parche aplicado"
-fi
-cd ~/ros2_ws && colcon build --packages-select kinova_vision --symlink-install
-```
+Qué cambia el parche, uno por cada defecto descrito arriba:
 
-El parche se verificó sobre un clon limpio del commit `d1d0213` (aplica y compila). Si
-`git apply` falla, el upstream cambió: revisa el diff a mano antes de forzarlo. La corrección,
-con estas mediciones, se envió a Kinova como
+| Defecto | Cambio en el driver |
+| :--- | :--- |
+| 1. Manejador de `SIGINT` inseguro | Se elimina. `rclcpp` gestiona `SIGINT` y `SIGTERM`, y `quit()` se llama desde un callback `rclcpp::on_shutdown()`, que corre fuera del manejador de señal y aun así desbloquea la espera de imagen de GStreamer |
+| 2. El pipeline nunca pasa a `NULL` | `run()` llama a `stop()` al salir del lazo, así `rtspsrc` cierra la sesión RTSP con la cámara |
+| 3. Excepciones durante el apagado | Un único `SingleThreadedExecutor` para todo el lazo. Si `spin_some()` o `sleep()` lanzan **porque el contexto ya se apagó**, se sale del lazo; cualquier otro error se relanza |
+| `SIGHUP` al cerrar la terminal | Se redirige a `SIGINT` con `raise()`, que es seguro dentro de un manejador de señal |
+
+El parche se verificó sobre un clon limpio del commit `d1d0213` (aplica y compila) y pasa los
+hooks de `pre-commit` del upstream. La corrección, con estas mediciones, se envió a Kinova como
 [Kinovarobotics/ros2_kortex_vision#2](https://github.com/Kinovarobotics/ros2_kortex_vision/pull/2):
-si se integra, este parche deja de ser necesario. Para
-comprobar el resultado, lanza el driver, espera a que publique y detenlo con `Ctrl+C`:
-ambos nodos deben terminar con `process has finished cleanly` y `pgrep -x kinova_vision_n`
-no debe devolver nada.
+si se integra, el parche deja de ser necesario.
 
 > Lo único que ningún código puede atender es `SIGKILL` o un corte de energía: en ese caso
 > la sesión RTSP queda sin cerrar y la cámara puede rechazar streams nuevos durante más de
