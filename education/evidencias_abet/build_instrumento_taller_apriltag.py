@@ -288,7 +288,7 @@ def build_instrument():
             ["Programa Académico", "Ingeniería Mecatrónica"],
             ["Asignatura", "ROBOT OPERATING SYSTEM - ROS"],
             ["Periodo Académico", "2026-2"],
-            ["Corte / Instrumento", "Primer Corte / Talleres y tareas"],
+            ["Corte / Instrumento", "Segundo Corte / Talleres y tareas"],
             ["Actividad Evaluada", "Taller — Localización Visual 2D con AprilTags (Kinova) y micro-ROS en ESP32"],
             ["Número de Grupo / Subgrupo", ""],
             ["Estudiante 1 (Nombre y Código)", ""],
@@ -296,7 +296,7 @@ def build_instrument():
             ["Estudiante 3 (si aplica)", ""],
             ["Namespace Asignado al Carrito", "/burger_car_"],
             ["Modos Evaluados", "Modo A (Simulado) ☐        Modo B (Real Kinova) ☐"],
-            ["Archivo de Entrega", "C1_T_APRILTAG_G<grupo>_<codigo1>_<codigo2>_v1.docx"],
+            ["Archivo de Entrega", "C2_T_APRILTAG_G<grupo>_<codigo1>_<codigo2>_v1.docx"],
             ["Fecha de Realización en Laboratorio", ""],
             ["Fecha de Entrega del Documento", ""],
             ["Docente Evaluador", "Ing. Henry Roncancio"],
@@ -313,7 +313,7 @@ def build_instrument():
         ["Parámetro", "Regla Institucional y Metodológica Adoptada"],
         [
             ["Población o cohorte", "Censo completo de estudiantes matriculados que presentan el taller en el periodo 2026-2."],
-            ["Momento de medición", "Primer corte, tras la ejecución de las fases de visión, homografía y lazo embebido."],
+            ["Momento de medición", "Segundo corte, tras la ejecución de las fases de visión, homografía y lazo embebido."],
             ["Evaluador", "Docente titular de la asignatura ROBOT OPERATING SYSTEM - ROS."],
             ["Umbral individual de logro", "Nivel N3 o superior (puntaje mínimo de 300 sobre 500) en cada indicador evaluado."],
             ["Meta de cohorte", "Al menos el 70% de los estudiantes evaluables debe alcanzar el nivel N3 o superior en cada indicador."],
@@ -536,7 +536,7 @@ def build_instrument():
     add_note(
         doc,
         "Nota Académica sobre 5,0 = Nota Consolidada sobre 500 ÷ 100. "
-        "Aporte a Talleres del Primer Corte: T₁ = Nota Académica sobre 5,0.",
+        "Aporte a Talleres del Segundo Corte: T₂ = Nota Académica sobre 5,0 (Componente T_C2).",
     )
 
     add_table(

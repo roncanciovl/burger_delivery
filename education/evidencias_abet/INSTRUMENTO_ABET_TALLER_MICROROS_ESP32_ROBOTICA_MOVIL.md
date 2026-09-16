@@ -12,7 +12,7 @@
 | **Programa Académico** | Ingeniería Mecatrónica |
 | **Asignatura** | ROBOT OPERATING SYSTEM - ROS |
 | **Periodo Académico** | 2026-2 |
-| **Corte / Instrumento** | Primer Corte / Talleres y tareas |
+| **Corte / Instrumento** | Segundo Corte / Talleres y tareas |
 | **Actividad Evaluada** | Taller — Integración de micro-ROS en ESP32 para Plataformas Móviles y Drones (Serial y WiFi UDP) |
 | **Número de Grupo / Subgrupo** | |
 | **Estudiante 1 (Nombre y Código)** | |
@@ -20,7 +20,7 @@
 | **Estudiante 3 (si aplica)** | |
 | **Namespace Asignado al Robot** | `/burger_car_` &nbsp;&nbsp;&nbsp;&nbsp; *(ej. `/burger_car_01`)* |
 | **Hardware Embebido Utilizado** | ESP32 NodeMCU ☐ &nbsp;&nbsp;&nbsp;&nbsp; ESP32-S3 ☐ &nbsp;&nbsp;&nbsp;&nbsp; ESP32-WROOM ☐ |
-| **Nombre del Archivo de Entrega** | `C1_T_MICROROS_ESP32_G<grupo>_<codigo1>_<codigo2>_v1.docx` |
+| **Nombre del Archivo de Entrega** | `C2_T_MICROROS_ESP32_G<grupo>_<codigo1>_<codigo2>_v1.docx` |
 | **Fecha de Realización en Laboratorio** | |
 | **Fecha de Entrega del Documento** | |
 | **Docente Evaluador** | Ing. Henry Roncancio |
@@ -34,7 +34,7 @@
 | Parámetro | Regla Institucional y Metodológica Adoptada |
 |---|---|
 | **Población o cohorte** | Censo completo de estudiantes matriculados que presentan el taller de micro-ROS en ESP32 en el periodo 2026-2. |
-| **Momento de medición** | Primer corte, tras la ejecución de las fases de transporte serial, WiFi UDP, teleoperación y diagnóstico de red. |
+| **Momento de medición** | Segundo corte, tras la ejecución de las fases de transporte serial, WiFi UDP, teleoperación y diagnóstico de red. |
 | **Evaluador** | Docente titular de la asignatura ROBOT OPERATING SYSTEM - ROS. |
 | **Umbral individual de logro** | Nivel **N3 o superior** (puntaje mínimo de 300 sobre 500) en cada uno de los indicadores evaluados. |
 | **Meta de cohorte** | Al menos el **70% de los estudiantes evaluables** debe alcanzar el nivel N3 o superior en cada indicador. |
@@ -328,7 +328,7 @@ Marque con una **X** una sola casilla por criterio y registre el valor entero (0
 
 ```text
 Nota Académica sobre 5,0 = Nota Consolidada sobre 500 ÷ 100
-Aporte a Talleres del Primer Corte: T₁ = Nota Académica sobre 5,0
+Aporte a Talleres del Segundo Corte: T₂ = Nota Académica sobre 5,0 (Componente T_C2)
 ```
 
 | Resultado Oficial de la Actividad | Registro |
