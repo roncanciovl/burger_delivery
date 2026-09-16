@@ -335,7 +335,7 @@ def main():
     )
     replace_text_preserving_cell(
         identification.cell(1, 0),
-        "Título de Laboratorio: Práctica 3. Operación distribuida del Kinova Gen3: "
+        "Título de Laboratorio: Práctica 3 (Segundo Corte). Operación distribuida del Kinova Gen3: "
         "Estación anfitriona, monitores, RQT y envío de trayectorias por turnos",
         bold=True, size=9,
     )
@@ -443,7 +443,12 @@ def main():
         "• Fase 4: Cierre ordenado de la sesión Kortex y registro de la transición de desconexión (OK -> ERROR) en las monitoras."
     )
 
-    add_subheading(doc, "4.2. Resultados de Aprendizaje Evaluables (RAE) y Ponderación")
+    add_subheading(doc, "4.2. Resultados de Aprendizaje Evaluables (RAE) y Ponderación — Corte 2 (L_C2: 42%)")
+    add_callout(
+        doc,
+        "ASIGNACIÓN ACADÉMICA OFICIAL (CORTE 2)",
+        "Este laboratorio corresponde a la evaluación experimental del Segundo Corte (Corte 2). Alimenta el componente agregado L_C2 (Laboratorios y evidencias experimentales, 42% del Corte 2), promediándose con el Laboratorio 02: L_2 = promedio(N_L02, N_L03), con escala 0–500 puntos (N_L03 = Puntos / 100 en escala 0.0–5.0). Entrega grupal única en documento C2_L03_G<grupo>_<cod1>_<cod2>_v1.docx."
+    )
     add_grid_table(doc,
         ["Criterio", "RAE / Indicador Oficial del Syllabus", "SO", "Ponderación"],
         [
@@ -587,7 +592,7 @@ def main():
         "ros2 run rqt_console rqt_console"
     ])
 
-    add_subheading(doc, "Fase 3: Envío de Trayectorias por Turnos")
+    add_subheading(doc, "Fase 3: Envío de Trayectorias por Turnos y Prueba Final Integradora")
     add_body(doc,
         "Análisis de ángulo en joint_6: joint_6 rota la pinza Robotiq sobre su eje longitudinal. "
         "Un delta de ±0.05 rad (2.86°) produce ~7.5 mm de arco en los dedos de la pinza. "
@@ -600,14 +605,25 @@ def main():
         "comprobando límites articulares, deltas de desplazamiento y vigencia temporal, pero INHIBIENDO el contacto con el servidor de acción. "
         "El robot permanece inmóvil y el cliente retorna código 0 en Linux ($? = 0). Es obligatorio antes de autorizar el envío físico."
     )
-    add_body(doc, "Paso 3.1: Leer pose actual y construir meta articular:")
-    add_code_box(doc, ["ros2 topic echo /joint_states --once"])
-    add_body(doc, "Paso 3.2: Ejecutar Modo Seco y verificar código de salida 0:")
+    add_callout(doc, "PREVENCIÓN DE BLOQUEO DE SEGURIDAD",
+        "Copiar valores numéricos de un ejemplo sin leer el robot real provocará que la meta sea BLOQUEADA inmediatamente "
+        "por superar max_joint_delta_rad (0.10 rad). Es estrictamente obligatorio descubrir la pose actual viva antes de formular la meta."
+    )
+    add_body(doc, "Paso 3.1: Descubrir la pose articular actual real del robot en la mesa:")
+    add_code_box(doc, [
+        "# Ver las 6 posiciones articulares actuales en radianes [j1, j2, j3, j4, j5, j6]",
+        "ros2 topic echo /joint_states --once --field position"
+    ])
+    add_body(doc,
+        "Construcción de la meta: Conserve los primeros 5 valores idénticos a los descubiertos en el robot, "
+        "y sume o reste entre 0.05 y 0.08 rad únicamente a joint_6 (ej. si joint_6 es -1.5982, la meta es -1.5382)."
+    )
+    add_body(doc, "Paso 3.2: Ejecutar Modo Seco en safe_trajectory_client y verificar código de salida 0:")
     add_code_box(doc, [
         "ros2 run burger_kinova_reference safe_trajectory_client --ros-args --params-file $CFG \\",
         "  -r __node:=safe_trajectory_client_eqNN \\",
         "  -p use_fake_hardware:=false -p enable_motion:=true -p dry_run:=true \\",
-        "  -p \"safe_joint_positions_rad:=[-3.0294,-0.2658,1.8683,0.6188,-0.7071,-2.0110]\"",
+        "  -p \"safe_joint_positions_rad:=[j1_actual, j2_actual, j3_actual, j4_actual, j5_actual, j6_meta]\"",
         "echo $?"
     ])
     add_body(doc, "Paso 3.3: Tras autorización verbal, enviar al Hardware Real confirmando con 'si':")
@@ -615,10 +631,31 @@ def main():
         "ros2 run burger_kinova_reference safe_trajectory_client --ros-args --params-file $CFG \\",
         "  -r __node:=safe_trajectory_client_eqNN \\",
         "  -p use_fake_hardware:=false -p enable_motion:=true -p dry_run:=false \\",
-        "  -p \"safe_joint_positions_rad:=[-3.0294,-0.2658,1.8683,0.6188,-0.7071,-2.0110]\""
+        "  -p \"safe_joint_positions_rad:=[j1_actual, j2_actual, j3_actual, j4_actual, j5_actual, j6_meta]\""
     ])
     add_body(doc, "Paso 3.4: Verificar pose final y liberar el turno:")
     add_code_box(doc, ["ros2 topic echo /joint_states --once"])
+
+    add_body(doc,
+        "Paso 3.5: PRUEBA FINAL INTEGRADORA — Secuencia Autónoma con Autodescubrimiento de Pose (safe_sequence_client)\n"
+        "A diferencia del cliente individual (que requiere formular coordenadas absolutas a mano), safe_sequence_client "
+        "implementa autodescubrimiento dinámico de la pose de origen: al arrancar, lee /joint_states, fija el punto actual "
+        "como origen y ejecuta una coreografía continua de 25 tramos relativos regresando al punto de inicio."
+    )
+    add_callout(doc, "ADVERTENCIA",
+        "La secuencia autónoma desplaza hombro (joint_2), base (joint_1) y muñeca (joint_6) hasta ±31°. "
+        "Exige despejar un radio de 1.2 m alrededor del robot y un operador con la mano en la parada de emergencia."
+    )
+    add_body(doc, "Ensayo en Modo Seco de la secuencia:")
+    add_code_box(doc, [
+        "ros2 run burger_kinova_reference safe_sequence_client --ros-args --params-file $CFG \\",
+        "  -r __node:=safe_sequence_client_eqNN -p dry_run:=true"
+    ])
+    add_body(doc, "Ejecución real de la Prueba Final en hardware:")
+    add_code_box(doc, [
+        "ros2 run burger_kinova_reference safe_sequence_client --ros-args --params-file $CFG \\",
+        "  -r __node:=safe_sequence_client_eqNN -p dry_run:=false -p enable_motion:=true"
+    ])
 
     add_subheading(doc, "Fase 4: Cierre Ordenado y Observación de Pérdida de Enlace")
     add_body(doc, "Paso 4.1: En anfitriona, detener driver con Ctrl+C y verificar liberación de socket Kortex:")
@@ -674,16 +711,17 @@ def main():
         model_table=model_table
     )
 
-    add_subheading(doc, "Tabla 4: Registro de Turnos (Fase 3)")
+    add_subheading(doc, "Tabla 4: Registro de Turnos y Prueba Final (Fase 3)")
     add_grid_table(doc,
-        ["Turno", "Grupo", "Inicio", "joint_6 inicial", "Meta joint_6", "Modo seco (código)", "Envío (código / error)", "joint_6 final", "Cierre"],
+        ["Turno / Prueba", "Grupo", "Inicio", "Pose / joint_6 inicial", "Meta solicitada", "Modo seco (código)", "Envío (código / error)", "Pose final (joint_6)", "Cierre"],
         [
             ["1", "", "", "", "(+0.05 a +0.08)", "", "", "", ""],
             ["2", "", "", "", "(-0.05 a -0.08)", "", "", "", ""],
             ["3", "", "", "", "(+0.05 a +0.08)", "", "", "", ""],
-            ["4", "", "", "", "(-0.05 a -0.08)", "", "", "", ""]
+            ["4", "", "", "", "(-0.05 a -0.08)", "", "", "", ""],
+            ["Prueba Final (Secuencia)", "", "", "Origen autodescubierto", "Coreografía 25 deltas", "Código 0", "SUCCESSFUL", "Retorno origen OK", ""]
         ],
-        widths=[1.2, 1.5, 1.8, 2.2, 2.4, 2.2, 2.5, 2.0, 1.2],
+        widths=[1.5, 1.3, 1.8, 2.2, 2.4, 2.2, 2.5, 2.0, 1.2],
         model_table=model_table
     )
 
@@ -707,7 +745,8 @@ def main():
         "4. Trazabilidad: Con el bag sesion_turnos_eqNN y la Tabla 4, reconstruya la cronología de un turno: qué nodo (por su nombre _eqNN) envió, cuándo se aceptó la meta y cuándo terminó.\n"
         "5. Garantía por software: El monitor publica 'habilitación de movimiento', pero el cliente no lo consulta antes de enviar. Proponga un diseño en el que el turno quede garantizado por software (por ejemplo, un servicio de concesión de turno en la anfitriona). ¿Qué nuevas fallas introduciría?\n"
         "6. Pérdida de enlace durante el movimiento: Si durante un turno se cae el Wi-Fi de la estación que envió la meta, ¿se detiene el robot? Razone con la arquitectura: dónde vive el controlador y dónde vive el cliente de acción.\n"
-        "7. Aislamiento vs. Colaboración en DDS: ¿Qué ocurriría si un grupo deja accidentalmente su ROS_DOMAIN_ID en 10? ¿Podría ver la telemetría del robot o participar en los turnos? ¿Por qué es fundamental acordar exactamente el mismo ROS_DOMAIN_ID=0?"
+        "7. Aislamiento vs. Colaboración en DDS: ¿Qué ocurriría si un grupo deja accidentalmente su ROS_DOMAIN_ID en 10? ¿Podría ver la telemetría del robot o participar en los turnos? ¿Por qué es fundamental acordar exactamente el mismo ROS_DOMAIN_ID=0?\n"
+        "8. Posicionamiento Absoluto vs. Deltas Relativos y Autodescubrimiento: Compare la operación de safe_trajectory_client frente a safe_sequence_client. ¿Por qué en el cliente individual fue estrictamente necesario descubrir las posiciones absolutas reales de /joint_states antes de formular la meta para evitar el bloqueo por max_joint_delta_rad, mientras que el cliente de secuencia pudo ejecutarse desde cualquier pose sin transcribir coordenadas a mano? ¿Qué riesgos y ventajas de seguridad introduce cada enfoque en entornos industriales colaborativos?"
     )
 
     # 10. REFERENCIAS

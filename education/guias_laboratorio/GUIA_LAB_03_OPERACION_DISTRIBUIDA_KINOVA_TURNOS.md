@@ -1,10 +1,10 @@
-# GUÍA DE LABORATORIO 03: OPERACIÓN DISTRIBUIDA DEL KINOVA GEN3 — CONVENCIÓN DE ESTACIÓN ANFITRIONA, MONITORES MULTI-DISPOSITIVO Y PROTOCOLO DE TURNOS DE TRAYECTORIAS ARTICULARES
+# GUÍA DE LABORATORIO 03 (CORTE 2): OPERACIÓN DISTRIBUIDA DEL KINOVA GEN3 — CONVENCIÓN DE ESTACIÓN ANFITRIONA, MONITORES MULTI-DISPOSITIVO Y PROTOCOLO DE TURNOS DE TRAYECTORIAS ARTICULARES
 
 ---
 
 | FACULTAD | PROGRAMA | ASIGNATURA | SEMESTRE | CÓDIGO GUÍA | REVISIÓN |
 |:---|:---|:---|:---:|:---:|:---:|
-| Facultad de Ingeniería | Ingeniería Mecatrónica | ROBOT OPERATING SYSTEM - ROS | VIII – IX | GL-AA-F-1 / LAB-03 | 1.0 (2026-2) |
+| Facultad de Ingeniería | Ingeniería Mecatrónica | ROBOT OPERATING SYSTEM - ROS | VIII – IX | GL-AA-F-1 / LAB-03 (Corte 2) | 1.0 (2026-2) |
 
 ---
 
@@ -101,7 +101,15 @@ Operar el robot manipulador Kinova Gen3 real desde múltiples estaciones de trab
   +---------------------------------------------------------------------------------------+
 ```
 
-### 4.2. Resultados de Aprendizaje Evaluables (RAE) y Ponderación
+### 4.2. Resultados de Aprendizaje Evaluables (RAE), Ponderación y Ubicación en el Corte 2
+
+> [!IMPORTANT]
+> **Asignación Académica Oficial — Corte 2:**  
+> Este laboratorio corresponde a la evaluación experimental del **Segundo Corte (Corte 2)**:
+> - **Componente Univex:** Alimenta el componente agregado `L_C2` (Laboratorios y evidencias experimentales), el cual tiene una ponderación del **42%** dentro de la nota del Corte 2.
+> - **Regla de calificación:** La nota del componente se consolida promediando los laboratorios del corte: $L_2 = \text{promedio}(N_{\text{L02}}, N_{\text{L03}})$, donde $N_j = \text{Puntaje}/100 \in [0.0, 5.0]$.
+> - **Escala:** 500 puntos (escala estándar Zubatronic / SGDE).
+> - **Modalidad de entrega:** Entrega grupal por equipo. Un solo integrante (el entregante designado) sube el archivo único `C2_L03_G<grupo>_<codigo1>_<codigo2>_v1.docx` con las 5 tablas llenas, preguntas respondidas y el Anexo A de comprobación individual.
 
 | Criterio | RAE / Indicador Oficial del Syllabus | Student Outcome | Ponderación |
 |---|---|:---:|:---:|
@@ -308,44 +316,115 @@ Filtre por nodo (`kinova_monitor_eqNN` o `kinova_monitor`) y observe los eventos
 
 ---
 
-### Fase 3: Envío de Trayectorias por Turnos
+### Fase 3: Envío de Trayectorias por Turnos y Prueba Final Integradora
 
-##### ¿Por qué se mueve únicamente `joint_6` y qué tan visible es el ángulo?
-- `joint_6` rota la pinza Robotiq 2F-85 sobre su propio eje. No cambia el alcance del brazo ni su centro de masa.
+#### 3.1. Fundamentos y Reglas de Seguridad en Envío de Trayectorias
+##### ¿Por qué se mueve únicamente `joint_6` en los turnos individuales?
+- `joint_6` rota la pinza Robotiq 2F-85 sobre su propio eje longitudinal. No cambia el alcance del brazo, no desplaza el codo ni altera el centro de masa del manipulador.
 - $\Delta = \pm 0.05\text{ rad}$ ($2.86^\circ$) produce un arco de $\sim 7.5\text{ mm}$ en las puntas de la pinza.
-- Para mayor visibilidad desde las mesas de trabajo, se puede usar hasta **`±0.08 rad`** ($4.58^\circ$, desplazamiento $\sim 12\text{ mm}$).
-- El techo estricto de software es `max_joint_delta_rad = 0.10 rad` ($5.73^\circ$).
+- Para mayor visibilidad desde las mesas de trabajo de los estudiantes, se puede usar hasta **`±0.08 rad`** ($4.58^\circ$, desplazamiento $\sim 12\text{ mm}$).
+- El techo estricto e infranqueable de software es `max_joint_delta_rad = 0.10 rad` ($5.73^\circ$).
 
-#### 🛠️ Protocolo de un turno
-1. **Solicitud:** El grupo solicita turno; el anfitrión lo concede y registra la hora de inicio en la Tabla 4.
-2. **Seguridad:** El anfitrión confirma área despejada y un integrante junto a la parada de emergencia.
-3. **Lectura de pose y meta:** El grupo lee la pose actual y prepara la meta cambiando **únicamente** `joint_6`:
-   ```bash
-   ros2 topic echo /joint_states --once
-   ```
-4. **Modo Seco Obligatorio:** El grupo ejecuta el cliente en modo seco:
+##### ¿Qué es el Modo Seco (`dry_run:=true`)?
+Consiste en ejecutar toda la validación matemática sobre la telemetría viva de `/joint_states` (límites de carrera, deltas por articulación, tasa de actualización y frescura temporal), pero **inhibiendo por software el envío de la meta al servidor de acción**. El robot físico permanece 100% inmóvil y el cliente retorna en Linux el código de éxito `0` (`echo $?` = 0). Es un requisito mandatorio de seguridad antes de autorizar cualquier movimiento en hardware real.
+
+---
+
+#### 3.2. Descubrimiento Obligatorio del Estado Actual del Robot (Telemetría Viva)
+
+> [!CAUTION]
+> **Error típico de seguridad:** Copiar valores numéricos de un ejemplo o guía sin leer el estado real del robot provocará que `safe_trajectory_client` **bloquee la meta inmediatamente** con el mensaje:
+> `[SEGURIDAD] Meta bloqueada: joint_N: desplazamiento X.XXXX rad supera max_joint_delta_rad=0.1000 rad`.  
+> Esto ocurre porque el cliente exige posiciones articulares absolutas y calcula la diferencia matemática contra la pose física viva del robot en ese instante.
+
+Para descubrir la pose actual exacta del manipulador en tu mesa:
+
+```bash
+# Opción 1: Extraer directamente el vector numérico de las 6 articulaciones
+ros2 topic echo /joint_states --once --field position
+
+# Opción 2: Ver el desglose completo de nombres y posiciones
+ros2 topic echo /joint_states --once
+```
+
+Al ejecutar la lectura, obtendrás las 6 posiciones vivas en radianes `[j1, j2, j3, j4, j5, j6]` (por ejemplo: `[-0.1944, -0.5010, -1.9547, -0.0058, -0.6803, -1.5982]`).
+
+**Construcción de la Meta Articular:**
+1. Mantén las primeras 5 articulaciones (`joint_1` a `joint_5`) **exactamente idénticas** a las leídas.
+2. Modifica **únicamente** la última articulación (`joint_6`), sumando o restando entre $+0.05$ y $+0.08\text{ rad}$.
+   - Ejemplo: si `joint_6` actual es `-1.5982`, la meta será `-1.5982 + 0.0600 = -1.5382`.
+   - Vector meta resultante: `[-0.1944, -0.5010, -1.9547, -0.0058, -0.6803, -1.5382]`.
+
+---
+
+#### 3.3. Protocolo de un Turno Individual (`safe_trajectory_client`)
+
+1. **Solicitud de Turno:** El grupo solicita turno; el grupo anfitrión lo concede y registra la hora de inicio en la Tabla 4.
+2. **Seguridad en Celda:** El anfitrión confirma que el área de operación esté despejada y que un integrante esté posicionado junto a la parada de emergencia física.
+3. **Lectura y Formulación:** El grupo descubre la pose viva actual y prepara la meta articular de `joint_6`.
+4. **Ensayo Obligatorio en Modo Seco:** El grupo ejecuta el cliente con `dry_run:=true`:
    ```bash
    ros2 run burger_kinova_reference safe_trajectory_client --ros-args --params-file $CFG \
      -r __node:=safe_trajectory_client_eqNN \
      -p use_fake_hardware:=false -p enable_motion:=true -p dry_run:=true \
-     -p "safe_joint_positions_rad:=[-3.0294,-0.2658,1.8683,0.6188,-0.7071,-2.0110]"
+     -p "safe_joint_positions_rad:=[j1_actual, j2_actual, j3_actual, j4_actual, j5_actual, j6_meta]"
    echo $?
    ```
-   Compruebe que el reporte ASCII muestre `✓ OK` en todas las filas y que `echo $?` retorne **`0`**. Muestre el resultado al anfitrión.
-5. **Autorización:** El anfitrión autoriza el envío en voz alta.
+   Compruebe en la consola que todas las filas reporten `✓ OK`, que el delta de `joint_6` esté entre 0.05 y 0.08 rad y que `echo $?` retorne **`0`**. Muestre el reporte al anfitrión.
+5. **Autorización Verbal:** El anfitrión autoriza en voz alta el envío físico.
 6. **Envío al Hardware Real:**
    ```bash
    ros2 run burger_kinova_reference safe_trajectory_client --ros-args --params-file $CFG \
      -r __node:=safe_trajectory_client_eqNN \
      -p use_fake_hardware:=false -p enable_motion:=true -p dry_run:=false \
-     -p "safe_joint_positions_rad:=[-3.0294,-0.2658,1.8683,0.6188,-0.7071,-2.0110]"
+     -p "safe_joint_positions_rad:=[j1_actual, j2_actual, j3_actual, j4_actual, j5_actual, j6_meta]"
    ```
-   Escriba `"si"` ante la confirmación interactiva.
-7. **Verificación:** Todos los grupos verifican la nueva pose en RViz y con:
-   ```bash
-   ros2 topic echo /joint_states --once
+   Escriba `"si"` ante la confirmación interactiva:
+   ```text
+   ¿Enviar meta al servidor de acción? [si/no]: si
    ```
-8. **Liberación:** El grupo libera el turno y el anfitrión anota el cierre en la Tabla 4.
+   Observe el movimiento físico de la pinza y el cierre con código `SUCCESSFUL`.
+7. **Verificación y Liberación:** Todos los grupos verifican la nueva pose en RViz y el anfitrión asienta el cierre del turno en la Tabla 4.
+
+---
+
+#### 3.4. Prueba Final Integradora: Secuencia Autónoma con Autodescubrimiento de Pose (`safe_sequence_client`)
+
+Como prueba final integradora de la práctica, se dispone del nodo autónomo `safe_sequence_client`.
+
+##### ¿En qué se diferencia de la prueba individual?
+A diferencia de `safe_trajectory_client` (que exige descubrir y transcribir coordenadas absolutas a mano), `safe_sequence_client` implementa el **autodescubrimiento dinámico del punto de origen**:
+- Al arrancar, se suscribe a `/joint_states` y audita la frecuencia y frescura del enlace durante 2 segundos.
+- Captura la pose en la que se encuentre el robot en ese instante y la fija como vector `origen` de referencia.
+- Ejecuta una coreografía articular fluida de **25 tramos relativos** preaprobados en `kinova_connection.yaml` (`sequence_deltas_rad`), coordinando base (`joint_1`), hombro (`joint_2`) y muñeca (`joint_6`).
+- Al terminar el ciclo, regresa automáticamente a la pose de origen exacta (`return_to_origin:=true`).
+
+> [!WARNING]
+> **Protocolo de Seguridad para la Secuencia Autónoma:**  
+> Debido a que la secuencia autónoma desplaza articulaciones mayores (base y hombro hasta $\pm 31^\circ$), es **estrictamente obligatorio**:
+> 1. Despejar un radio perimetral mínimo de **1.2 metros** alrededor de la base del robot.
+> 2. Mantener un operador con la **mano directamente sobre la parada de emergencia física**.
+
+##### Procedimiento de la Prueba Final:
+
+**Paso A: Ensayo de la Secuencia en Modo Seco**
+```bash
+ros2 run burger_kinova_reference safe_sequence_client --ros-args \
+  --params-file $CFG \
+  -r __node:=safe_sequence_client_eqNN \
+  -p dry_run:=true
+```
+Compruebe en la terminal que se capture la pose de origen a 100 Hz, que valide los 25 tramos punto por punto y finalice con éxito (`EXIT_OK = 0`).
+
+**Paso B: Ejecución Real de la Secuencia en el Robot Físico**
+Con el área despejada y parada de emergencia lista, ejecute:
+```bash
+ros2 run burger_kinova_reference safe_sequence_client --ros-args \
+  --params-file $CFG \
+  -r __node:=safe_sequence_client_eqNN \
+  -p dry_run:=false -p enable_motion:=true
+```
+Observe en el robot real y en RViz el ciclo continuo de movimientos de hombro y rotación de muñeca, finalizando con el retorno suave a la pose original. Registre el evento en la Tabla 4.
 
 ---
 
@@ -398,13 +477,14 @@ Anote el tiempo de reacción en la Tabla 3 y detenga su monitor con `Ctrl+C`.
 | | `kinova_monitor_eq__` | | | | | | | |
 | | `kinova_monitor_eq__` | | | | | | | |
 
-### Tabla 4: Registro de Turnos (Fase 3)
-| Turno | Grupo | Inicio | `joint_6` inicial | Meta `joint_6` | Modo seco (código) | Envío (código / `error_code`) | `joint_6` final | Cierre |
+### Tabla 4: Registro de Turnos y Prueba Final (Fase 3)
+| Turno / Prueba | Grupo | Inicio | Pose / `joint_6` inicial | Meta solicitada | Modo seco (código) | Envío (código / `error_code`) | Pose final (`joint_6`) | Cierre |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | 1 | | | | (+0.05 a +0.08) | | | | |
 | 2 | | | | (-0.05 a -0.08) | | | | |
 | 3 | | | | (+0.05 a +0.08) | | | | |
 | 4 | | | | (-0.05 a -0.08) | | | | |
+| **Prueba Final (Secuencia)** | | | Origen autodescubierto | Coreografía 25 deltas | Código 0 | SUCCESSFUL | Retorno a origen OK | |
 
 ### Tabla 5: Incidentes y Diagnóstico
 | Momento | Síntoma observado | Capa (red / DDS / driver / validación / protocolo) | Verificación realizada | Acción |
@@ -422,6 +502,7 @@ Anote el tiempo de reacción en la Tabla 3 y detenga su monitor con `Ctrl+C`.
 5. **Pregunta 5 (Garantía por software):** El monitor publica *"habilitación de movimiento"*, pero el cliente no lo consulta antes de enviar. Proponga un diseño en el que el turno quede **garantizado por software** (por ejemplo, un servicio de concesión de turno en la anfitriona). ¿Qué nuevas fallas introduciría?
 6. **Pregunta 6 (Pérdida de enlace durante el movimiento):** Si durante un turno se cae el WiFi de la estación que envió la meta, ¿se detiene el robot? Razone con la arquitectura: dónde vive el controlador y dónde vive el cliente de acción.
 7. **Pregunta 7 (Aislamiento vs. Colaboración en DDS):** ¿Qué ocurriría durante este laboratorio si un grupo deja accidentalmente su `ROS_DOMAIN_ID` en un valor distinto de `0` (por ejemplo `10`)? ¿Podría ver la telemetría del robot o participar en los turnos? ¿Por qué es fundamental que todas las estaciones acuerden exactamente el mismo `ROS_DOMAIN_ID=0`?
+8. **Pregunta 8 (Posicionamiento Absoluto vs. Deltas Relativos y Autodescubrimiento):** Compare la operación de `safe_trajectory_client` frente a `safe_sequence_client`. ¿Por qué en el cliente de trayectoria individual fue estrictamente necesario descubrir las posiciones absolutas reales de `/joint_states` antes de formular la meta para evitar el bloqueo por `max_joint_delta_rad`, mientras que el cliente de secuencia pudo ejecutarse desde cualquier pose sin transcribir coordenadas a mano? ¿Qué riesgos y ventajas de seguridad introduce cada enfoque en entornos industriales colaborativos?
 
 ---
 

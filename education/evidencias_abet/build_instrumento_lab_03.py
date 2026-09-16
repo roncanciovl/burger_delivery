@@ -419,7 +419,7 @@ def build_instrument():
         [1.5, 3.2, 2.5, 2.0, 2.2, 1.8, 1.8, 1.5, 1.0],
     )
 
-    p = doc.add_paragraph("Tabla 4: Registro de Turnos de Movimiento Articular en joint_6 (Fase 3)")
+    p = doc.add_paragraph("Tabla 4: Registro de Turnos de Movimiento Articular y Prueba Final (Fase 3)")
     p.runs[0].bold = True
     add_table(
         doc,
@@ -430,6 +430,7 @@ def build_instrument():
             ["3", "G03", "", "", "(+0.05 a +0.08)", "0 (Éxito)", "0 (Éxito)", "", "", ""],
             ["4", "G04", "", "", "(-0.05 a -0.08)", "0 (Éxito)", "0 (Éxito)", "", "", ""],
             ["5", "G05", "", "", "(+0.05 a +0.08)", "0 (Éxito)", "0 (Éxito)", "", "", ""],
+            ["Prueba Final", "Todos", "", "Origen autodescubierto", "Coreografía 25 deltas", "0 (Éxito)", "SUCCESSFUL", "Retorno origen", "0.000", "OK"],
         ],
         [1.2, 1.3, 1.4, 2.3, 2.4, 2.0, 2.0, 2.2, 1.7, 1.0],
     )
@@ -509,6 +510,16 @@ def build_instrument():
         "Pregunta 7: Aislamiento vs. Colaboración en DDS (Impacto del ROS_DOMAIN_ID)\n"
         "¿Qué ocurriría si un equipo olvida configurar el ROS_DOMAIN_ID=0 y ejecuta su monitor en el dominio por defecto (ROS_DOMAIN_ID=10)? "
         "¿Podría recibir telemetría o enviar trayectorias al Kinova? Explique por qué el dominio común es condición matemática necesaria.",
+        lines=4,
+    )
+
+    add_response_box(
+        doc,
+        "Pregunta 8: Posicionamiento Absoluto vs. Deltas Relativos y Autodescubrimiento de Pose\n"
+        "Compare la operación de safe_trajectory_client frente a safe_sequence_client. ¿Por qué en el cliente individual "
+        "fue estrictamente necesario descubrir las posiciones absolutas reales de /joint_states antes de formular la meta "
+        "para evitar el bloqueo por max_joint_delta_rad (0.10 rad), mientras que el cliente de secuencia pudo ejecutarse desde "
+        "cualquier pose sin transcribir coordenadas a mano? ¿Qué riesgos y ventajas de seguridad introduce cada enfoque en entornos industriales colaborativos?",
         lines=4,
     )
 

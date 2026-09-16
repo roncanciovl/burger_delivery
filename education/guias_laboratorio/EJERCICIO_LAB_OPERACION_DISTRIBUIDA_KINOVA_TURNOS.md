@@ -550,10 +550,13 @@ por orden de aparición. Ejemplo con la pose registrada en la validación del ro
 | `joint_5` | -0.7071 | -0.7071 | -0.7071 |
 | `joint_6` | -2.0610 | **-2.0110** | **-1.9810** |
 
-> [!IMPORTANT]
-> **Use las posiciones del momento del turno, con al menos 4 decimales.** La meta es
-> **absoluta**: si copia la pose de otro turno, o redondea `joint_1` a `-3.03`, el cliente
-> detecta un delta distinto al esperado o mueve articulaciones que no pretendía mover.
+> [!CAUTION]
+> **Peligro de bloqueo por delta:** Si copia valores numéricos de un ejemplo sin leer el robot real, `safe_trajectory_client` **bloqueará la meta de inmediato** al superar `max_joint_delta_rad` (0.10 rad).
+> Para descubrir el vector numérico exacto de 6 articulaciones en tiempo real:
+> ```bash
+> ros2 topic echo /joint_states --once --field position
+> ```
+> Use siempre las posiciones reales leídas en ese instante, con al menos 4 decimales. Mantenga las primeras 5 articulaciones idénticas y modifique únicamente `joint_6` sumando o restando entre $+0.05$ y $+0.08\text{ rad}$.
 
 #### 🛠️ Ejercicio 3.2: Modo seco — ¿Qué es y cómo funciona? (paso 4)
 
@@ -641,9 +644,44 @@ Cada grupo anota en la Tabla 4 la pose final de `joint_6` que ve desde **su** es
 Si tiene RViz abierto (Ejercicio 2.3), confirme también que el movimiento se vio en su pantalla.
 Todas deben coincidir con la meta en menos de `0.001` rad.
 
+#### 🛠️ Ejercicio 3.5: Prueba Final Integradora — Secuencia Autónoma con Autodescubrimiento de Pose (`safe_sequence_client`)
+
+Como demostración final de la práctica, se dispone del cliente autónomo `safe_sequence_client`.
+
+##### ¿En qué se diferencia conceptualmente de `safe_trajectory_client`?
+- `safe_trajectory_client` exige que el operador descubra manualmente las coordenadas absolutas actuales y construya una meta matemática punto por punto.
+- `safe_sequence_client` implementa el **autodescubrimiento dinámico del punto de origen**:
+  1. Al iniciar, se suscribe a `/joint_states` y verifica la salud del enlace.
+  2. Almacena automáticamente la pose viva del robot en ese instante como vector cero (`origen`).
+  3. Ejecuta una coreografía multi-articular de 25 tramos relativos (`sequence_deltas_rad`), moviendo hombro (`joint_2`), base (`joint_1`) y muñeca (`joint_6`).
+  4. Al finalizar el recorrido, regresa suavemente al origen exacto de arranque (`return_to_origin:=true`).
+
+> [!WARNING]
+> **Protocolo de Seguridad para la Secuencia Autónoma:**  
+> La secuencia desplaza articulaciones principales hasta $\pm 31^\circ$. Es obligatorio mantener un radio despejado de 1.2 m alrededor del robot y un integrante custodiando la parada de emergencia física.
+
+**1. Ensayo en Modo Seco (validación software punto por punto):**
+```bash
+ros2 run burger_kinova_reference safe_sequence_client --ros-args \
+  --params-file $CFG \
+  -r __node:=safe_sequence_client_eqNN \
+  -p dry_run:=true
+```
+Compruebe que capture el origen a 100 Hz, valide los 25 tramos y finalice con código de salida `0`.
+
+**2. Ejecución real de la Prueba Final en hardware:**
+```bash
+ros2 run burger_kinova_reference safe_sequence_client --ros-args \
+  --params-file $CFG \
+  -r __node:=safe_sequence_client_eqNN \
+  -p dry_run:=false -p enable_motion:=true
+```
+Observe el movimiento coordinado en el robot físico y en RViz, finalizando con el retorno al origen. Anote la prueba final en la Tabla 4.
+
 #### ✅ Criterios de éxito
 - La persona participante puede construir una meta absoluta a partir de la pose actual, cambiando sólo la articulación autorizada.
 - La persona participante puede validar en modo seco que el único `Δ` es el previsto y que el modo es `HARDWARE REAL`.
+- La persona participante puede contrastar el posicionamiento absoluto manual frente al autodescubrimiento dinámico de pose en la secuencia autónoma.
 - La persona participante puede ejecutar el protocolo completo sin enviar fuera de su turno.
 - La persona participante puede explicar qué protege el cliente (límites, delta, telemetría vigente, habilitación) y qué **no** protege (metas simultáneas de otras estaciones).
 
@@ -719,13 +757,14 @@ detenga su monitor con `Ctrl+C`.
 | | `kinova_monitor_eq__` | | | | | | | |
 | | `kinova_monitor_eq__` | | | | | | | |
 
-### Tabla 4: Registro de Turnos (Fase 3)
-| Turno | Grupo | Inicio | `joint_6` inicial | Meta `joint_6` | Modo seco (código) | Envío (código / `error_code`) | `joint_6` final | Cierre |
+### Tabla 4: Registro de Turnos y Prueba Final (Fase 3)
+| Turno / Prueba | Grupo | Inicio | Pose / `joint_6` inicial | Meta solicitada | Modo seco (código) | Envío (código / `error_code`) | Pose final (`joint_6`) | Cierre |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| 1 | | | | (+0.05) | | | | |
-| 2 | | | | (-0.05) | | | | |
-| 3 | | | | (+0.05) | | | | |
-| 4 | | | | (-0.05) | | | | |
+| 1 | | | | (+0.05 a +0.08) | | | | |
+| 2 | | | | (-0.05 a -0.08) | | | | |
+| 3 | | | | (+0.05 a +0.08) | | | | |
+| 4 | | | | (-0.05 a -0.08) | | | | |
+| **Prueba Final (Secuencia)** | Todos | | Origen autodescubierto | Coreografía 25 deltas | Código 0 | SUCCESSFUL | Retorno origen OK | |
 
 ### Tabla 5: Incidentes y Diagnóstico
 | Momento | Síntoma observado | Capa (red / DDS / driver / validación / protocolo) | Verificación realizada | Acción |
@@ -740,9 +779,10 @@ detenga su monitor con `Ctrl+C`.
 2. **Pregunta 2 (Emisores simultáneos y unicidad de acción):** En ROS 2 y `ros2_control`, el servidor de acción del controlador (`/joint_trajectory_controller/follow_joint_trajectory`) acepta metas de cualquier nodo que opere en el dominio `0`. Si dos estaciones envían una meta de trayectoria simultáneamente, ¿qué le ocurre a la primera meta y por qué? ¿Por qué el protocolo de turnos es indispensable cuando todos comparten el `ROS_DOMAIN_ID=0`?
 3. **Pregunta 3 (Enlace por cable y por WiFi):** Compare la frecuencia de `/joint_states` en la anfitriona y en las monitoras (Tablas 2 y 3). ¿Por qué la monitora puede ir por WiFi y la anfitriona no?
 4. **Pregunta 4 (Trazabilidad):** Con el bag `sesion_turnos_eqNN` y la Tabla 4, reconstruya la cronología de un turno: qué nodo (por su nombre `_eqNN`) envió, cuándo se aceptó la meta y cuándo terminó.
-5. **Pregunta 5:** El monitor publica *"habilitación de movimiento"*, pero el cliente no lo consulta antes de enviar. Proponga un diseño en el que el turno quede **garantizado por software** (por ejemplo, un servicio de concesión de turno en la anfitriona). ¿Qué nuevas fallas introduciría?
-6. **Pregunta 6:** Si durante un turno se cae el WiFi de la estación que envió la meta, ¿se detiene el robot? Razone con la arquitectura: dónde vive el controlador y dónde vive el cliente de acción.
+5. **Pregunta 5 (Garantía por software):** El monitor publica *"habilitación de movimiento"*, pero el cliente no lo consulta antes de enviar. Proponga un diseño en el que el turno quede **garantizado por software** (por ejemplo, un servicio de concesión de turno en la anfitriona). ¿Qué nuevas fallas introduciría?
+6. **Pregunta 6 (Pérdida de enlace durante el movimiento):** Si durante un turno se cae el WiFi de la estación que envió la meta, ¿se detiene el robot? Razone con la arquitectura: dónde vive el controlador y dónde vive el cliente de acción.
 7. **Pregunta 7 (Aislamiento vs. Colaboración en DDS):** ¿Qué ocurriría durante este laboratorio si un grupo deja accidentalmente su `ROS_DOMAIN_ID` en un valor distinto de `0` (por ejemplo `10`)? ¿Podría ver la telemetría del robot o participar en los turnos? ¿Por qué es fundamental que todas las estaciones acuerden exactamente el mismo `ROS_DOMAIN_ID=0`?
+8. **Pregunta 8 (Posicionamiento Absoluto vs. Deltas Relativos y Autodescubrimiento):** Compare la operación de `safe_trajectory_client` frente a `safe_sequence_client`. ¿Por qué en el cliente individual fue estrictamente necesario descubrir las posiciones absolutas reales de `/joint_states` antes de formular la meta para evitar el bloqueo por `max_joint_delta_rad`, mientras que el cliente de secuencia pudo ejecutarse desde cualquier pose sin transcribir coordenadas a mano? ¿Qué riesgos y ventajas de seguridad introduce cada enfoque en entornos industriales colaborativos?
 
 ---
 

@@ -127,15 +127,16 @@
 
 ---
 
-### Tabla 4: Registro de Turnos de Movimiento Articular en joint_6 (Fase 3)
+### Tabla 4: Registro de Turnos de Movimiento Articular y Prueba Final (Fase 3)
 
-| Turno # | Grupo | Hora Inicio | joint_6 Inicial (rad) | Meta joint_6 (rad) | Validación Modo Seco (Código de Salida) | Envío Real al Robot (Código / Resultado) | joint_6 Final (rad) | Diferencia Real vs Esperada | Hora Cierre Turno |
+| Turno # / Prueba | Grupo | Hora Inicio | Pose / joint_6 Inicial (rad) | Meta Solicitada | Validación Modo Seco (Código) | Envío Real al Robot (Resultado) | Pose Final (joint_6) | Diferencia Real vs Esp | Hora Cierre |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | **1** | | | | *(+0.05 a +0.08)* | Código: | | | | |
 | **2** | | | | *(-0.05 a -0.08)* | Código: | | | | |
 | **3** | | | | *(+0.05 a +0.08)* | Código: | | | | |
 | **4** | | | | *(-0.05 a -0.08)* | Código: | | | | |
 | **5** | | | | *(+0.05 a +0.08)* | Código: | | | | |
+| **Prueba Final** | Todos | | Origen autodescubierto | Coreografía 25 deltas | Código 0 | SUCCESSFUL | Retorno a origen | 0.000 rad | OK |
 
 ---
 
@@ -219,6 +220,17 @@
 
 ### Pregunta 7: Aislamiento vs. Colaboración en DDS (Impacto del ROS_DOMAIN_ID)
 *¿Qué ocurriría si un equipo olvida configurar el `ROS_DOMAIN_ID=0` y ejecuta su monitor en el dominio por defecto (`ROS_DOMAIN_ID=10`)? ¿Podría recibir telemetría o enviar trayectorias al Kinova? Explique por qué el dominio común es condición matemática necesaria para la operación distribuida.*
+
+> **Respuesta Técnica del Equipo:**  
+> ________________________________________________________________________________________________________________________  
+> ________________________________________________________________________________________________________________________  
+> ________________________________________________________________________________________________________________________  
+> ________________________________________________________________________________________________________________________  
+
+---
+
+### Pregunta 8: Posicionamiento Absoluto vs. Deltas Relativos y Autodescubrimiento de Pose
+*Compare la operación de `safe_trajectory_client` frente a `safe_sequence_client`. ¿Por qué en el cliente de trayectoria individual fue estrictamente necesario descubrir las posiciones absolutas reales de `/joint_states` antes de formular la meta para evitar el bloqueo por `max_joint_delta_rad` (0.10 rad), mientras que el cliente de secuencia pudo ejecutarse desde cualquier pose sin transcribir coordenadas a mano? ¿Qué riesgos y ventajas de seguridad introduce cada enfoque en entornos industriales colaborativos?*
 
 > **Respuesta Técnica del Equipo:**  
 > ________________________________________________________________________________________________________________________  
