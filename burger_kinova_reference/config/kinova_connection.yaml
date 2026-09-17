@@ -116,7 +116,18 @@ launch:
     diagnostic_rate_hz: 1.0        # frecuencia de publicación de /burger/kinova/diagnostics
 
     # ---- Límites de seguridad de la meta articular (RF-06 / §11) ---------------------
-    max_joint_delta_rad: 0.10      # cambio máximo permitido por articulación
+    # Cambio máximo permitido por articulación en UNA meta. No es un límite de carrera
+    # (ésos son joint_min_rad/joint_max_rad, tomados del URDF): acota cuánto puede saltar
+    # el brazo de una sola vez desde donde está.
+    #
+    # 17/09/2026: subido de 0.10 a 0.35 rad. Con 0.10 rad el turno individual del Lab 03
+    # movía joint_6 unos 12 mm en las puntas de la pinza y desde las mesas de trabajo no
+    # se distinguía del ruido. El turno pasó a mover joint_1 (giro de base) con 0.20 a
+    # 0.30 rad: el brazo barre 10 a 20 cm, visible desde cualquier punto del laboratorio.
+    # Con trajectory_duration_s = 5 s, 0.35 rad son 0.07 rad/s (4 °/s), muy por debajo de
+    # la velocidad nominal del Gen3. El valor por defecto de los nodos sigue siendo
+    # 0.10 rad: quien omita --params-file obtiene el límite más estricto, no el más laxo.
+    max_joint_delta_rad: 0.35      # cambio máximo permitido por articulación
     trajectory_duration_s: 5.0     # duración MÍNIMA de la trayectoria de prueba
 
     # Meta articular de la prueba controlada. Debe aprobarse en laboratorio antes de
@@ -156,6 +167,10 @@ launch:
     # de 0.08 rad (4.6°) hasta +0.24, vuelve pasando por -0.24 y regresa. Ningún tramo
     # supera max_joint_delta_rad, y ningún punto se aleja del origen más de
     # max_sequence_excursion_rad.
+    #
+    # La coreografía NO se amplió junto con max_joint_delta_rad: ya barre hasta 0.54 rad
+    # (31°) en joint_1, joint_2 y joint_6, y ese movimiento sí se ve. Quien la modifique
+    # debe revisar los 25 tramos y max_sequence_excursion_rad, no sólo el techo por tramo.
     #                    j1   j2   j3   j4   j5    j6
     sequence_deltas_rad: [ 0.09,  0.09,  0.0,  0.0,  0.0,  0.09,
                            0.18,  0.18,  0.0,  0.0,  0.0,  0.18,

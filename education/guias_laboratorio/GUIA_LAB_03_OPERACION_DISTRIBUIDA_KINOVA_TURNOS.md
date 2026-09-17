@@ -16,6 +16,7 @@
 | Reestructuración de la Fase 0 y eliminación de simulación en dominios separados | Se unifica a todos los grupos en `ROS_DOMAIN_ID=0` desde el inicio para interacción directa con el robot físico real en la IP `192.168.1.10`. | 16/09/2026 |
 | Integración de herramientas RQT y profundización en Modo Seco | Incorporación de `rqt_graph` para el grafo distribuido, `rqt_console` para logging centralizado y formalización del concepto de modo seco (*dry run*). | 16/09/2026 |
 | Guarda contra segundo driver y convención `eqNN` | Incidente del 16/09/2026: una estación monitora lanzó un segundo driver y le quitó el control a la anfitriona (`WRONG_SERVOING_MODE`, movimiento a tirones). Se corrige la explicación de la sesión Kortex, se documenta la comprobación automática del launch (`check_existing_driver`) con sus límites, se define cómo se configura el sufijo `eqNN` y se corrige la frecuencia del ciclo de control (100 Hz). | 17/09/2026 |
+| Ampliación del rango del turno individual: de `joint_6` a `joint_1` | En la sesión del 16/09/2026 el giro de pinza de `joint_6` acotado a 0.10 rad (~12 mm en las puntas) no era visible desde las mesas de trabajo y los grupos no podían verificar el efecto de su meta sobre el robot real. El turno pasa a mover `joint_1` (giro de base) con 0.20 a 0.30 rad —arco de ~150 mm a 4 °/s— y `max_joint_delta_rad` sube de 0.10 a 0.35 rad. Los límites de carrera (`joint_min_rad`/`joint_max_rad`, tomados del URDF) y la secuencia autónoma del 3.4 no se modifican. | 17/09/2026 |
 
 ---
 
@@ -56,7 +57,7 @@ Para resolver esta restricción física sin aislar a los grupos, se implementa l
 
 El paquete [`burger_kinova_reference`](../../burger_kinova_reference/README.md) implementa la capa de enlace y seguridad:
 - `kinova_monitor`: Valida la salud de `/joint_states` (> 20 Hz, latencia < 1.0 s), audita el estado de los controladores y publica en `/burger/kinova/diagnostics` la **identidad verificada de la estación** (`anfitriona` o `cliente`).
-- `safe_trajectory_client`: Cliente de acción seguro que valida límites articulares, velocidad, delta máximo de desplazamiento (`max_joint_delta_rad = 0.10 rad`), vigencia de telemetría y soporte de **Modo Seco (*Dry Run*)** antes de emitir cualquier trayectoria física.
+- `safe_trajectory_client`: Cliente de acción seguro que valida límites articulares, velocidad, delta máximo de desplazamiento (`max_joint_delta_rad = 0.35 rad`), vigencia de telemetría y soporte de **Modo Seco (*Dry Run*)** antes de emitir cualquier trayectoria física.
 - `kinova_connection.launch.py` con `start_driver:=true`: **antes** de incluir `kortex_bringup` busca durante hasta 6 s un driver ya activo para el mismo robot (`check_existing_driver`, activo por defecto). Si lo encuentra, emite `WARNING`, **no lanza el driver** y la estación continúa como cliente. Usa tres vías, cada una con su alcance:
 
 | Vía | Qué detecta | ¿Depende del dominio? |
@@ -162,7 +163,7 @@ Operar el robot manipulador Kinova Gen3 real desde múltiples estaciones de trab
 
 #### C4. Protocolo de turnos, modo seco y seguridad física — Peso: 20% (SO4 / SO6)
 - **N5 (475–500):** Explica en profundidad la necesidad del protocolo de turnos ante la preemptibilidad de acciones en ROS 2; valida la meta en Modo Seco interpretando el reporte de deltas, custodia la parada de emergencia y ejecuta el movimiento físico con exactitud milimétrica.
-- **N4 (400–474):** Construye la meta articular absoluta para `joint_6`, ejecuta el modo seco con código de salida `0`, solicita autorización y realiza el envío físico registrando la pose final.
+- **N4 (400–474):** Construye la meta articular absoluta para `joint_1`, ejecuta el modo seco con código de salida `0`, solicita autorización y realiza el envío físico registrando la pose final.
 - **N3 (300–399) [Umbral de Logro]:** Cumple el protocolo de turnos: modo seco previo aprobado, confirmación interactiva y verificación de la pose final.
 - **N2 (150–299):** Intenta enviar trayectorias sin modo seco previo, o redondea erróneamente las articulaciones generando advertencias de delta.
 - **N1 (0–149):** Envía trayectorias fuera de turno, viola los límites de seguridad o vulnera las normas de seguridad del laboratorio.
@@ -201,7 +202,7 @@ Operar el robot manipulador Kinova Gen3 real desde múltiples estaciones de trab
 > 1. **Un solo driver en hardware real.** Ninguna estación distinta de la anfitriona autorizada puede ejecutar `start_driver:=true` con el robot real, **ni en otro `ROS_DOMAIN_ID`, ni "para probar"**. Un segundo driver le quita el control a la anfitriona con el brazo en movimiento. Si el launch muestra `NO se lanza kortex_bringup`, no se reintenta ni se desactiva la guarda: se avisa al docente.
 > 2. **Custodia de Parada de Emergencia.** Un integrante del grupo anfitrión debe permanecer junto al pulsador físico de parada de emergencia durante **todo** turno de envío.
 > 3. **Área de Barrido de Seguridad.** Mantener un radio libre de 1.2 metros alrededor de la base del robot. Nadie debe ingresar al área de operación mientras haya un turno activo.
-> 4. **Movimiento seguro y acotado.** En este ejercicio sólo se mueve `joint_6` (muñeca), típicamente **±0.05 a ±0.08 rad (2.9° a 4.6°)** por turno y en **5 s**. El cliente rechaza estrictamente cualquier articulación que alcance o supere `max_joint_delta_rad = 0.10 rad` (5.7°) respecto a su posición actual; **no** se modifica ese límite.
+> 4. **Movimiento seguro y acotado.** En este ejercicio sólo se mueve `joint_1` (giro de base), típicamente **±0.20 a ±0.30 rad (11.5° a 17.2°)** por turno y en **5 s** (unos 4 °/s). El cliente rechaza estrictamente cualquier articulación que supere `max_joint_delta_rad = 0.35 rad` (20.1°) respecto a su posición actual; **no** se modifica ese límite durante la práctica. Como `joint_1` mueve el brazo completo, el radio libre de 1.2 m de la regla 3 es la condición que hace seguro el turno: verifíquelo **antes de cada envío**, no una sola vez al inicio.
 > 5. **Modo seco obligatorio.** Ningún envío real puede autorizarse sin una ejecución previa en modo seco con código de salida `0`.
 > 6. **No limpiar fallas a ciegas.** Ante cualquier error o paro de emergencia, se detiene la sesión y se informa de inmediato al docente.
 > 7. **Síntoma de un segundo driver.** Si el brazo se mueve a tirones o el log de la anfitriona muestra `WRONG_SERVOING_MODE`: parada de emergencia, cerrar el driver intruso con `Ctrl+C`, **reiniciar también el driver de la anfitriona** (no se recupera solo) y registrar el incidente en la Tabla 5 ([`TROUBLESHOOTING.md`](../../TROUBLESHOOTING.md) §2.6).
@@ -385,11 +386,17 @@ Filtre por nodo (`kinova_monitor_eqNN` o `kinova_monitor`) y observe los eventos
 ### Fase 3: Envío de Trayectorias por Turnos y Prueba Final Integradora
 
 #### 3.1. Fundamentos y Reglas de Seguridad en Envío de Trayectorias
-##### ¿Por qué se mueve únicamente `joint_6` en los turnos individuales?
-- `joint_6` rota la pinza Robotiq 2F-85 sobre su propio eje longitudinal. No cambia el alcance del brazo, no desplaza el codo ni altera el centro de masa del manipulador.
-- $\Delta = \pm 0.05\text{ rad}$ ($2.86^\circ$) produce un arco de $\sim 7.5\text{ mm}$ en las puntas de la pinza.
-- Para mayor visibilidad desde las mesas de trabajo de los estudiantes, se puede usar hasta **`±0.08 rad`** ($4.58^\circ$, desplazamiento $\sim 12\text{ mm}$).
-- El techo estricto e infranqueable de software es `max_joint_delta_rad = 0.10 rad` ($5.73^\circ$).
+##### ¿Por qué se mueve únicamente `joint_1` en los turnos individuales?
+- `joint_1` gira toda la estructura del brazo alrededor del eje vertical de la base. El movimiento es **horizontal**: no cambia la altura de la pinza, no flexiona el codo y no altera la carga que la gravedad impone sobre los actuadores. Por eso es la articulación de mayor recorrido visible con menor exigencia mecánica.
+- El brazo de palanca es lo que hace visible el movimiento. Con la pinza a $\sim 0.6\text{ m}$ del eje de la base, $\Delta = 0.25\text{ rad}$ ($14.3^\circ$) desplaza la pinza un arco de $\sim 150\text{ mm}$, visible desde cualquier mesa del laboratorio.
+- **Rango de trabajo de esta práctica: $\pm 0.20$ a $\pm 0.30\text{ rad}$** ($11.5^\circ$ a $17.2^\circ$) por turno, en **5 s**.
+- El techo estricto e infranqueable de software es `max_joint_delta_rad = 0.35 rad` ($20.1^\circ$). En 5 s eso equivale a $0.07\text{ rad/s}$ ($4^\circ/\text{s}$): muy por debajo de la velocidad nominal del Gen3.
+
+> [!NOTE]
+> **Por qué se cambió de `joint_6` a `joint_1` (17/09/2026).** Hasta la sesión del 16/09 el turno movía `joint_6`, que gira la pinza sobre su propio eje: con el techo anterior de `0.10 rad` el desplazamiento máximo en las puntas era de $\sim 12\text{ mm}$ y desde las mesas de trabajo no se distinguía del ruido. El límite no era incorrecto, sino invisible. Si necesita un ensayo de mínimo riesgo antes del turno real, `joint_6` con $0.10\text{ rad}$ sigue siendo válido: el brazo no se desplaza, solo rota la pinza.
+
+> [!WARNING]
+> **`joint_1` barre volumen; `joint_6` no.** Al girar la base, **todo** el brazo se desplaza lateralmente. El radio libre de 1.2 m de la regla 4 de seguridad (§6) deja de ser una formalidad: es la condición que hace seguro este ejercicio. Antes de cada turno, verifique que nadie ni nada (cables, portátiles, sillas, la mesa del anfitrión) esté dentro del arco que va a recorrer el brazo.
 
 ##### ¿Qué es el Modo Seco (`dry_run:=true`)?
 Consiste en ejecutar toda la validación matemática sobre la telemetría viva de `/joint_states` (límites de carrera, deltas por articulación, tasa de actualización y frescura temporal), pero **inhibiendo por software el envío de la meta al servidor de acción**. El robot físico permanece 100% inmóvil y el cliente retorna en Linux el código de éxito `0` (`echo $?` = 0). Es un requisito mandatorio de seguridad antes de autorizar cualquier movimiento en hardware real.
@@ -400,7 +407,7 @@ Consiste en ejecutar toda la validación matemática sobre la telemetría viva d
 
 > [!CAUTION]
 > **Error típico de seguridad:** Copiar valores numéricos de un ejemplo o guía sin leer el estado real del robot provocará que `safe_trajectory_client` **bloquee la meta inmediatamente** con el mensaje:
-> `[SEGURIDAD] Meta bloqueada: joint_N: desplazamiento X.XXXX rad supera max_joint_delta_rad=0.1000 rad`.  
+> `[SEGURIDAD] Meta bloqueada: joint_N: desplazamiento X.XXXX rad supera max_joint_delta_rad=0.3500 rad`.  
 > Esto ocurre porque el cliente exige posiciones articulares absolutas y calcula la diferencia matemática contra la pose física viva del robot en ese instante.
 
 Para descubrir la pose actual exacta del manipulador en tu mesa:
@@ -416,10 +423,44 @@ ros2 topic echo /joint_states --once
 Al ejecutar la lectura, obtendrás las 6 posiciones vivas en radianes `[j1, j2, j3, j4, j5, j6]` (por ejemplo: `[-0.1944, -0.5010, -1.9547, -0.0058, -0.6803, -1.5982]`).
 
 **Construcción de la Meta Articular:**
-1. Mantén las primeras 5 articulaciones (`joint_1` a `joint_5`) **exactamente idénticas** a las leídas.
-2. Modifica **únicamente** la última articulación (`joint_6`), sumando o restando entre $+0.05$ y $+0.08\text{ rad}$.
-   - Ejemplo: si `joint_6` actual es `-1.5982`, la meta será `-1.5982 + 0.0600 = -1.5382`.
-   - Vector meta resultante: `[-0.1944, -0.5010, -1.9547, -0.0058, -0.6803, -1.5382]`.
+1. Mantén las 5 articulaciones restantes (`joint_2` a `joint_6`) **exactamente idénticas** a las leídas, con todos sus decimales.
+2. Modifica **únicamente** la primera articulación (`joint_1`), sumando o restando entre $0.20$ y $0.30\text{ rad}$.
+3. Antes de enviar, anticipe **hacia qué lado** va a girar el brazo: un delta positivo en `joint_1` lo gira en sentido antihorario visto desde arriba. Confirme que ese lado esté despejado.
+
+**Ejemplo completo.** Supongamos que la lectura de SU robot fue:
+
+```text
+[-0.1944, -0.5010, -1.9547, -0.0058, -0.6803, -1.5982]
+```
+
+Se elige un delta de $+0.25\text{ rad}$ sobre `joint_1`: $-0.1944 + 0.2500 = 0.0556$.
+
+| Posición en el vector | Articulación | Valor leído | Valor en la meta | ¿Cambia? |
+|:---:|---|---:|---:|:---:|
+| 1.ª | `joint_1` | `-0.1944` | **`0.0556`** | **Sí, +0.25** |
+| 2.ª | `joint_2` | `-0.5010` | `-0.5010` | No |
+| 3.ª | `joint_3` | `-1.9547` | `-1.9547` | No |
+| 4.ª | `joint_4` | `-0.0058` | `-0.0058` | No |
+| 5.ª | `joint_5` | `-0.6803` | `-0.6803` | No |
+| 6.ª | `joint_6` | `-1.5982` | `-1.5982` | No |
+
+Vector meta resultante: `[0.0556, -0.5010, -1.9547, -0.0058, -0.6803, -1.5982]`
+
+> [!IMPORTANT]
+> **`j1_meta`, `j2_actual`… no son variables: son casillas que usted debe rellenar.**
+> En los comandos de la sección 3.3 esos nombres aparecen sólo para indicar **qué va en cada posición**. La terminal no los conoce y no los sustituye por nada: si copia el comando tal cual, envía texto donde el cliente espera seis números.
+>
+> Antes de pulsar Enter, el comando no puede contener ni una sola letra dentro de los corchetes. Compárelos:
+>
+> ```bash
+> # ✗ MAL — copiado tal cual de la guía
+> -p "safe_joint_positions_rad:=[j1_meta, j2_actual, j3_actual, j4_actual, j5_actual, j6_actual]"
+>
+> # ✓ BIEN — con los seis números de SU lectura
+> -p "safe_joint_positions_rad:=[0.0556, -0.5010, -1.9547, -0.0058, -0.6803, -1.5982]"
+> ```
+>
+> Los seis números son los de **su** robot en **ese** instante. Los del ejemplo son de otra lectura y provocarán el bloqueo por `max_joint_delta_rad`.
 
 ---
 
@@ -427,24 +468,33 @@ Al ejecutar la lectura, obtendrás las 6 posiciones vivas en radianes `[j1, j2, 
 
 1. **Solicitud de Turno:** El grupo solicita turno; el grupo anfitrión lo concede y registra la hora de inicio en la Tabla 4.
 2. **Seguridad en Celda:** El anfitrión confirma que el área de operación esté despejada y que un integrante esté posicionado junto a la parada de emergencia física.
-3. **Lectura y Formulación:** El grupo descubre la pose viva actual y prepara la meta articular de `joint_6`.
-4. **Ensayo Obligatorio en Modo Seco:** El grupo ejecuta el cliente con `dry_run:=true`:
+3. **Lectura y Formulación:** El grupo descubre la pose viva actual y prepara la meta articular de `joint_1`.
+4. **Ensayo Obligatorio en Modo Seco:** El grupo ejecuta el cliente con `dry_run:=true`. **Reemplace las seis casillas por los números de su lectura** (§3.2); `${EQ}` sí es una variable y se sustituye sola:
    ```bash
    ros2 run burger_kinova_reference safe_trajectory_client --ros-args --params-file $CFG \
      -r __node:=safe_trajectory_client_${EQ} \
      -p use_fake_hardware:=false -p enable_motion:=true -p dry_run:=true \
-     -p "safe_joint_positions_rad:=[j1_actual, j2_actual, j3_actual, j4_actual, j5_actual, j6_meta]"
+     -p "safe_joint_positions_rad:=[j1_meta, j2_actual, j3_actual, j4_actual, j5_actual, j6_actual]"
    echo $?
    ```
-   Compruebe en la consola que todas las filas reporten `✓ OK`, que el delta de `joint_6` esté entre 0.05 y 0.08 rad y que `echo $?` retorne **`0`**. Muestre el reporte al anfitrión.
+   Con los valores del ejemplo de §3.2, el comando quedaría así (los seis números serán **otros** en su mesa):
+   ```bash
+   ros2 run burger_kinova_reference safe_trajectory_client --ros-args --params-file $CFG \
+     -r __node:=safe_trajectory_client_${EQ} \
+     -p use_fake_hardware:=false -p enable_motion:=true -p dry_run:=true \
+     -p "safe_joint_positions_rad:=[0.0556, -0.5010, -1.9547, -0.0058, -0.6803, -1.5982]"
+   echo $?
+   ```
+   Compruebe en la consola que todas las filas reporten `✓ OK`, que el delta de `joint_1` esté entre 0.20 y 0.30 rad y que `echo $?` retorne **`0`**. Muestre el reporte al anfitrión.
 5. **Autorización Verbal:** El anfitrión autoriza en voz alta el envío físico.
 6. **Envío al Hardware Real:**
    ```bash
    ros2 run burger_kinova_reference safe_trajectory_client --ros-args --params-file $CFG \
      -r __node:=safe_trajectory_client_${EQ} \
      -p use_fake_hardware:=false -p enable_motion:=true -p dry_run:=false \
-     -p "safe_joint_positions_rad:=[j1_actual, j2_actual, j3_actual, j4_actual, j5_actual, j6_meta]"
+     -p "safe_joint_positions_rad:=[j1_meta, j2_actual, j3_actual, j4_actual, j5_actual, j6_actual]"
    ```
+   Es **el mismo vector numérico** que acaba de aprobar en modo seco: lo único que cambia respecto al paso 4 es `dry_run:=false`. Si vuelve a leer la pose y la transcribe otra vez, corre el riesgo de equivocarse; use el comando anterior con la flecha ↑ del historial y edite sólo `dry_run`.
    Escriba `"si"` ante la confirmación interactiva:
    ```text
    ¿Enviar meta al servidor de acción? [si/no]: si
@@ -547,12 +597,12 @@ Anote el tiempo de reacción en la Tabla 3 y detenga su monitor con `Ctrl+C`.
 | | `kinova_monitor_eq__` | | | | | | | |
 
 ### Tabla 4: Registro de Turnos y Prueba Final (Fase 3)
-| Turno / Prueba | Grupo | Inicio | Pose / `joint_6` inicial | Meta solicitada | Modo seco (código) | Envío (código / `error_code`) | Pose final (`joint_6`) | Cierre |
+| Turno / Prueba | Grupo | Inicio | Pose / `joint_1` inicial | Meta solicitada | Modo seco (código) | Envío (código / `error_code`) | Pose final (`joint_1`) | Cierre |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| 1 | | | | (+0.05 a +0.08) | | | | |
-| 2 | | | | (-0.05 a -0.08) | | | | |
-| 3 | | | | (+0.05 a +0.08) | | | | |
-| 4 | | | | (-0.05 a -0.08) | | | | |
+| 1 | | | | (+0.20 a +0.30) | | | | |
+| 2 | | | | (-0.20 a -0.30) | | | | |
+| 3 | | | | (+0.20 a +0.30) | | | | |
+| 4 | | | | (-0.20 a -0.30) | | | | |
 | **Prueba Final (Secuencia)** | | | Origen autodescubierto | Coreografía 25 deltas | Código 0 | SUCCESSFUL | Retorno a origen OK | |
 
 ### Tabla 5: Incidentes y Diagnóstico

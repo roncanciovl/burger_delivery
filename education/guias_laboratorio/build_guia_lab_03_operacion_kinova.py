@@ -366,6 +366,16 @@ def main():
             "16/09/2026",
         ],
         [
+            "Guarda contra segundo driver y convención eqNN",
+            "Incidente del 16/09/2026: una estación monitora lanzó un segundo driver y le quitó el control a la anfitriona (WRONG_SERVOING_MODE, movimiento a tirones). Se corrige la explicación de la sesión Kortex, se documenta la comprobación automática del launch (check_existing_driver) con sus límites, se define cómo se configura el sufijo eqNN y se corrige la frecuencia del ciclo de control (100 Hz).",
+            "17/09/2026",
+        ],
+        [
+            "Ampliación del rango del turno individual: de joint_6 a joint_1",
+            "Con joint_6 acotado a 0.10 rad el movimiento (~12 mm en las puntas de la pinza) no era visible desde las mesas de trabajo. El turno pasa a mover joint_1 (giro de base) con 0.20 a 0.30 rad, arco de ~150 mm a 4 °/s, y max_joint_delta_rad sube de 0.10 a 0.35 rad. Los límites de carrera del URDF y la secuencia autónoma no se modifican.",
+            "17/09/2026",
+        ],
+        [
             "Integración de RQT y formalización del Modo Seco",
             "Inclusión de rqt_graph para topología, rqt_console para logs /rosout y profundización de la validación matemática de trayectorias previas al envío físico.",
             "16/09/2026",
@@ -400,13 +410,16 @@ def main():
     add_body(doc,
         "En celdas de automatización colaborativa, un único robot manipulador de alta gama debe ser operado por múltiples estaciones de ingeniería. "
         "El laboratorio cuenta con un manipulador Kinova Gen3 de 6 GDL con pinza Robotiq 2F-85 y varios grupos de trabajo. "
-        "La controladora Kortex del robot admite una sola sesión de control en tiempo real (puerto TCP 10000 a 1 kHz). "
-        "Si dos computadores lanzan el driver kortex_bringup simultáneamente, compiten por el socket de control disparando Safety Faults y bloqueando la celda."
+        "La controladora Kortex (TCP 10000 y UDP 10001 de tiempo real) acepta varias sesiones a la vez y NO rechaza a un segundo driver. "
+        "Lo que es único es el modo de servo del brazo, y kortex_driver lo cambia al arrancar y al cerrarse sin coordinarse con nadie. "
+        "Si un segundo computador lanza kortex_bringup contra el mismo robot, le quita el control al driver que ya estaba trabajando: "
+        "sus comandos fallan con WRONG_SERVOING_MODE y el brazo se mueve a tirones mientras ambos envían consignas a 100 Hz (incidente del 16/09/2026). "
+        "El ROS_DOMAIN_ID no protege contra esto, porque el modo de servo vive por debajo de ROS 2."
     )
     add_body(doc,
         "Para operar el robot de forma segura y compartida, se implementa la convención de estación anfitriona:\n"
         "1. Dominio Común: Todas las estaciones operan estrictamente en ROS_DOMAIN_ID=0.\n"
-        "2. Estación Anfitriona Única: Una sola PC conectada por cable Ethernet ejecuta el driver del robot real (start_driver:=true robot_ip:=192.168.1.10).\n"
+        "2. Estación Anfitriona Única: Una sola PC conectada por cable Ethernet ejecuta el driver del robot real (start_driver:=true robot_ip:=192.168.1.10). Como respaldo, el launch del paquete busca durante hasta 6 s un driver ya activo (check_existing_driver) y, si lo encuentra, emite WARNING y NO lanza el driver.\n"
         "3. Estaciones Monitoras: Las computadoras de los estudiantes se conectan por Wi-Fi como monitoras (start_driver:=false), consumiendo /joint_states y publicando diagnóstico.\n"
         "4. Protocolo de Turnos: Como el controlador acepta metas de cualquier estación del dominio 0, el movimiento físico se disciplina mediante un protocolo colaborativo entre personas."
     )
@@ -425,7 +438,7 @@ def main():
     )
     add_subheading(doc, "3.2. Objetivos Específicos")
     add_list_item(doc, "Configurar el entorno de red y dominio común (ROS_DOMAIN_ID=0, CycloneDDS y conectividad IP con el Kinova real 192.168.1.10) en todos los equipos.", 1)
-    add_list_item(doc, "Poner en marcha la estación anfitriona con el driver del robot real, verificando la sesión TCP Kortex a 1 kHz y telemetría a 100 Hz.", 2)
+    add_list_item(doc, "Poner en marcha la estación anfitriona con el driver del robot real, verificando la sesión TCP Kortex, el ciclo del controlador a 100 Hz y un único publicador de /joint_states.", 2)
     add_list_item(doc, "Desplegar estaciones monitoras con identidad propia en el grafo, analizando la topología y logs mediante RQT (rqt_graph y rqt_console).", 3)
     add_list_item(doc, "Visualizar el robot real en RViz desde estaciones remotas sin ejecutar drivers locales, comprendiendo la durabilidad TRANSIENT_LOCAL en /robot_description.", 4)
     add_list_item(doc, "Ejecutar el protocolo de turnos aplicando validación previa en Modo Seco (dry_run:=true), autorización verbal y supervisión con parada de emergencia física.", 5)
@@ -439,7 +452,7 @@ def main():
         "• Fase 0: Configuración de red LAN (192.168.1.0/24), ping al Kinova (192.168.1.10) y exportación de ROS_DOMAIN_ID=0 en todos los equipos.\n"
         "• Fase 1: Puesta en marcha de la estación anfitriona por cable Ethernet con sesión Kortex y grabación de rosbag MCAP.\n"
         "• Fase 2: Despliegue de estaciones monitoras por Wi-Fi (kinova_monitor_eqNN), visualización en RViz e introspección gráfica con rqt_graph y rqt_console.\n"
-        "• Fase 3: Envío de trayectorias por turnos en joint_6 (±0.05 a ±0.08 rad), validación en modo seco (código 0) y envío supervisado al robot real.\n"
+        "• Fase 3: Envío de trayectorias por turnos en joint_1 (±0.20 a ±0.30 rad), validación en modo seco (código 0) y envío supervisado al robot real.\n"
         "• Fase 4: Cierre ordenado de la sesión Kortex y registro de la transición de desconexión (OK -> ERROR) en las monitoras."
     )
 
@@ -466,9 +479,9 @@ def main():
     add_subheading(doc, "4.3. Rúbrica Analítica por Niveles de Desempeño (SGDE)")
     rubric_rows = [
         ["C1 (25%) Red DDS y Dominio 0", "Configura y automatiza variables en todas las terminales; justifica mitigación de fragmentación UDP en Wi-Fi con CycloneDDS y explica la segmentación lógica por dominios.", "Configura correctamente ROS_DOMAIN_ID=0, CycloneDDS, perfil XML, reinicia daemon y demuestra conectividad fluida mediante ping a 192.168.1.10.", "Configura dominio 0 y middleware indicado; comprueba conectividad con robot real y estado del daemon sin errores.", "Presenta inconsistencias de dominio en alguna terminal, olvida reiniciar daemon o no comprueba conectividad IP previa.", "No logra conectividad con la red 192.168.1.0/24 o utiliza un dominio diferente quedando aislado."],
-        ["C2 (25%) Anfitriona y Kortex", "Demuestra unicidad del driver mediante ss -tanp, justifica conexión Ethernet determinista a 1 kHz vs Wi-Fi, y audita estabilidad de /joint_states a 100 Hz y controladores activos.", "Despliega anfitriona con hardware real (start_driver:=true), verifica sesión TCP Kortex en puerto 10000 y comprueba identidad anunciada como anfitriona.", "Ejecuta anfitriona con hardware real; verifica controladores activos y que /joint_states publique a frecuencia nominal.", "Lanza driver sin verificar si el robot estaba ocupado, o presenta inestabilidad en controladores.", "No logra establecer sesión Kortex o causa bloqueos por lanzar drivers duplicados."],
+        ["C2 (25%) Anfitriona y Kortex", "Demuestra unicidad del driver mediante ss -tanp, justifica conexión Ethernet determinista frente a Wi-Fi, explica qué detecta y qué NO detecta la comprobación del launch, y audita estabilidad de /joint_states a 100 Hz con un solo publicador y controladores activos.", "Despliega anfitriona con hardware real (start_driver:=true), verifica sesión TCP Kortex en puerto 10000 y comprueba identidad anunciada como anfitriona.", "Ejecuta anfitriona con hardware real; verifica controladores activos y que /joint_states publique a frecuencia nominal.", "Lanza driver sin verificar si el robot estaba ocupado, desactiva la comprobación del launch o continúa pese al WARNING.", "No logra establecer sesión Kortex o causa bloqueos por lanzar drivers duplicados."],
         ["C3 (20%) Monitores, RQT y RViz", "Justifica durabilidad TRANSIENT_LOCAL en /robot_description explicando por qué RViz visualiza la pose sin relanzar el modelo; analiza en rqt_graph y filtra logs en rqt_console diagnosticando la red.", "Lanza monitor con nombre único (kinova_monitor_eqNN), visualiza robot en RViz sin driver local, inspecciona topología en rqt_graph y filtra logs en rqt_console.", "Despliega monitor con identidad propia, abre RViz observando robot real e inspecciona nodos y logs en RQT.", "Ejecuta monitor sin renombrar causando nodos duplicados, o no logra visualizar el modelo en RViz.", "No despliega el nodo monitor o no realiza la introspección con herramientas gráficas."],
-        ["C4 (20%) Turnos y Modo Seco", "Explica en profundidad el protocolo de turnos ante preemptibilidad de acciones en ROS 2; valida en Modo Seco interpretando reporte de deltas, custodia parada de emergencia y ejecuta movimiento exacto.", "Construye meta absoluta en joint_6, ejecuta modo seco con código 0, solicita autorización y realiza envío físico registrando pose final.", "Cumple protocolo de turnos: modo seco previo aprobado, confirmación interactiva y verificación de pose final.", "Intenta enviar trayectorias sin modo seco previo, o redondea erróneamente articulaciones.", "Envía trayectorias fuera de turno, viola límites de seguridad o normas del laboratorio."],
+        ["C4 (20%) Turnos y Modo Seco", "Explica en profundidad el protocolo de turnos ante preemptibilidad de acciones en ROS 2; valida en Modo Seco interpretando reporte de deltas, custodia parada de emergencia y ejecuta movimiento exacto.", "Construye meta absoluta en joint_1, ejecuta modo seco con código 0, solicita autorización y realiza envío físico registrando pose final.", "Cumple protocolo de turnos: modo seco previo aprobado, confirmación interactiva y verificación de pose final.", "Intenta enviar trayectorias sin modo seco previo, o redondea erróneamente articulaciones.", "Envía trayectorias fuera de turno, viola límites de seguridad o normas del laboratorio."],
         ["C5 (10%) Rosbag y Trabajo Equipo", "Registra sesión en rosbag MCAP; analiza pérdida de enlace sincronizada al cerrar driver; completa tablas con rigor y Anexo A demuestra contribución sobresaliente de cada integrante.", "Graba evidencia en rosbag, observa transición OK -> ERROR al cerrar driver, completa tablas y responde preguntas de análisis con solvencia.", "Cierra limpiamente la sesión, verifica liberación del puerto Kortex, llena tablas y demuestra trabajo en equipo.", "Cierra driver de forma abrupta (kill -9) dejando sesión bloqueada, o anexo individual es insuficiente.", "No entrega documento con tablas llenas o no presenta evidencia de comprobación individual."]
     ]
     add_grid_table(doc,
@@ -507,12 +520,13 @@ def main():
     # 6. SEGURIDAD
     add_section_heading(doc, "6. SEGURIDAD EN EL LABORATORIO")
     add_callout(doc, "ADVERTENCIA DE SEGURIDAD FÍSICA Y OPERATIVA",
-        "1. Un solo driver en hardware real: Ninguna estación distinta de la anfitriona autorizada puede ejecutar start_driver:=true con el robot real.\n"
+        "1. Un solo driver en hardware real: Ninguna estación distinta de la anfitriona autorizada puede ejecutar start_driver:=true con el robot real, tampoco desde otro ROS_DOMAIN_ID.\n"
         "2. Custodia de Parada de Emergencia: Un integrante del grupo anfitrión debe permanecer junto al pulsador físico durante todo turno de envío.\n"
         "3. Área de Barrido: Mantener un radio libre de 1.2 m alrededor del robot. Nadie debe ingresar mientras haya un turno activo.\n"
-        "4. Movimiento seguro y acotado: En este ejercicio sólo se mueve joint_6 (muñeca), típicamente ±0.05 a ±0.08 rad (2.9° a 4.6°) por turno en 5 s. El cliente rechaza estrictamente cualquier articulación que alcance o supere max_joint_delta_rad = 0.10 rad (5.7°).\n"
+        "4. Movimiento seguro y acotado: En este ejercicio sólo se mueve joint_1 (giro de base), típicamente ±0.20 a ±0.30 rad (11.5° a 17.2°) por turno en 5 s, unos 4 °/s. El cliente rechaza estrictamente cualquier articulación que supere max_joint_delta_rad = 0.35 rad (20.1°). Como joint_1 mueve el brazo completo, el radio libre de 1.2 m debe verificarse antes de CADA envío.\n"
         "5. Modo seco obligatorio: Ningún envío real puede autorizarse sin una ejecución previa en modo seco con código de salida 0.\n"
-        "6. No limpiar fallas a ciegas: Ante cualquier anomalía, detener la sesión e informar de inmediato al docente."
+        "6. No limpiar fallas a ciegas: Ante cualquier anomalía, detener la sesión e informar de inmediato al docente.\n"
+        "7. Síntoma de un segundo driver: Si el brazo se mueve a tirones o aparece WRONG_SERVOING_MODE, parada de emergencia, cerrar el driver intruso y REINICIAR también el driver de la anfitriona, que no se recupera solo."
     )
 
     # 7. PROCEDIMIENTO EXPERIMENTAL
@@ -534,8 +548,20 @@ def main():
         "export ROS_DOMAIN_ID=0",
         "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp",
         "export CYCLONEDDS_URI=\"file://$HOME/ros2_ws/src/burger_delivery/network_setup/cyclonedds.xml\"",
-        "export CFG=$(ros2 pkg prefix burger_kinova_reference)/share/burger_kinova_reference/config/kinova_connection.yaml"
+        "export CFG=$(ros2 pkg prefix burger_kinova_reference)/share/burger_kinova_reference/config/kinova_connection.yaml",
+        "export EQ=eq03   # <-- sustituya 03 por SU numero de grupo, siempre con dos digitos",
+        "[[ \"$EQ\" =~ ^eq[0-9]{2}$ ]] && echo \"EQ valido: $EQ\" || echo \"EQ MAL ESCRITO\""
     ])
+    add_body(doc,
+        "Convención eqNN: NN es el número de grupo asignado por el docente, siempre con dos dígitos (eq03, no eq3), "
+        "en minúsculas y sin guiones, porque los nombres de nodo de ROS 2 sólo admiten letras, dígitos y guion bajo. "
+        "Todos los integrantes de un mismo grupo usan el mismo sufijo. Como todas las estaciones comparten el dominio 0, "
+        "dos nodos con el mismo nombre se mezclan en rqt y en el bag y deja de saberse qué grupo envió cada meta. "
+        "El grupo anfitrión también tiene su eqNN y lo usa en el nombre del bag y de sus clientes, pero su monitor se llama "
+        "kinova_monitor sin sufijo: eso es lo que identifica a la anfitriona. "
+        "Todos los comandos de las fases siguientes usan ${EQ}: con esta variable exportada se copian y pegan sin editar. "
+        "Para no repetirlo en cada terminal, añada la línea export EQ=eqNN al final de ~/.bashrc."
+    )
     add_body(doc, "Paso 0.4: Reiniciar limpiamente el daemon de ROS 2 y comprobar variables:")
     add_code_box(doc, [
         "timeout 5s ros2 daemon stop",
@@ -594,10 +620,14 @@ def main():
 
     add_subheading(doc, "Fase 3: Envío de Trayectorias por Turnos y Prueba Final Integradora")
     add_body(doc,
-        "Análisis de ángulo en joint_6: joint_6 rota la pinza Robotiq sobre su eje longitudinal. "
-        "Un delta de ±0.05 rad (2.86°) produce ~7.5 mm de arco en los dedos de la pinza. "
-        "Para mayor visibilidad a distancia se puede usar hasta ±0.08 rad (4.58°, ~12 mm de arco). "
-        "El límite estricto de seguridad es max_joint_delta_rad = 0.10 rad (5.73°)."
+        "Análisis de ángulo en joint_1: joint_1 gira toda la estructura del brazo alrededor del eje vertical de la base. "
+        "El movimiento es horizontal: no cambia la altura de la pinza, no flexiona el codo y no altera la carga por gravedad sobre los actuadores. "
+        "El brazo de palanca es lo que hace visible el movimiento: con la pinza a ~0.6 m del eje de la base, un delta de 0.25 rad (14.3°) "
+        "desplaza la pinza un arco de ~150 mm, visible desde cualquier mesa del laboratorio. "
+        "Rango de trabajo: ±0.20 a ±0.30 rad por turno en 5 s. El límite estricto de seguridad es max_joint_delta_rad = 0.35 rad (20.1°), "
+        "que en 5 s equivale a 0.07 rad/s (4 °/s), muy por debajo de la velocidad nominal del Gen3. "
+        "Hasta el 16/09/2026 el turno movía joint_6 (giro de pinza) acotado a 0.10 rad: ~12 mm en las puntas, indistinguible del ruido desde las mesas. "
+        "ATENCIÓN: joint_1 barre volumen y joint_6 no. Al girar la base, todo el brazo se desplaza lateralmente."
     )
     add_body(doc,
         "¿Qué es el Modo Seco (dry_run:=true)?\n"
@@ -607,7 +637,7 @@ def main():
     )
     add_callout(doc, "PREVENCIÓN DE BLOQUEO DE SEGURIDAD",
         "Copiar valores numéricos de un ejemplo sin leer el robot real provocará que la meta sea BLOQUEADA inmediatamente "
-        "por superar max_joint_delta_rad (0.10 rad). Es estrictamente obligatorio descubrir la pose actual viva antes de formular la meta."
+        "por superar max_joint_delta_rad (0.35 rad). Es estrictamente obligatorio descubrir la pose actual viva antes de formular la meta."
     )
     add_body(doc, "Paso 3.1: Descubrir la pose articular actual real del robot en la mesa:")
     add_code_box(doc, [
@@ -615,15 +645,38 @@ def main():
         "ros2 topic echo /joint_states --once --field position"
     ])
     add_body(doc,
-        "Construcción de la meta: Conserve los primeros 5 valores idénticos a los descubiertos en el robot, "
-        "y sume o reste entre 0.05 y 0.08 rad únicamente a joint_6 (ej. si joint_6 es -1.5982, la meta es -1.5382)."
+        "Construcción de la meta: Conserve los 5 valores restantes (joint_2 a joint_6) idénticos a los descubiertos en el robot, "
+        "con todos sus decimales, y sume o reste entre 0.20 y 0.30 rad únicamente a joint_1. "
+        "Antes de enviar, anticipe hacia qué lado va a girar el brazo y confirme que ese lado esté despejado."
     )
-    add_body(doc, "Paso 3.2: Ejecutar Modo Seco en safe_trajectory_client y verificar código de salida 0:")
+    add_body(doc,
+        "Ejemplo completo. Si la lectura de SU robot fue [-0.1944, -0.5010, -1.9547, -0.0058, -0.6803, -1.5982] "
+        "y se elige un delta de +0.25 rad sobre joint_1 (-0.1944 + 0.2500 = 0.0556), el vector meta es "
+        "[0.0556, -0.5010, -1.9547, -0.0058, -0.6803, -1.5982]: sólo cambia el primer número; los otros cinco se copian tal cual."
+    )
+    add_callout(doc, "j1_meta, j2_actual... NO SON VARIABLES: SON CASILLAS QUE USTED DEBE RELLENAR",
+        "En los comandos siguientes esos nombres aparecen sólo para indicar qué va en cada posición del vector. "
+        "La terminal no los conoce y no los sustituye por nada: si copia el comando tal cual, envía texto donde el cliente espera seis números. "
+        "Antes de pulsar Enter, dentro de los corchetes no puede quedar ni una sola letra. "
+        "MAL: safe_joint_positions_rad:=[j1_meta, j2_actual, j3_actual, j4_actual, j5_actual, j6_actual]   "
+        "BIEN: safe_joint_positions_rad:=[0.0556, -0.5010, -1.9547, -0.0058, -0.6803, -1.5982]   "
+        "Los seis números son los de SU robot en ESE instante: los del ejemplo provocarán el bloqueo por max_joint_delta_rad. "
+        "En cambio ${EQ} sí es una variable de entorno y se sustituye sola, siempre que la haya exportado en la Fase 0."
+    )
+    add_body(doc, "Paso 3.2: Ejecutar Modo Seco en safe_trajectory_client y verificar código de salida 0. Reemplace las seis casillas por los números de su lectura:")
     add_code_box(doc, [
         "ros2 run burger_kinova_reference safe_trajectory_client --ros-args --params-file $CFG \\",
         "  -r __node:=safe_trajectory_client_eqNN \\",
         "  -p use_fake_hardware:=false -p enable_motion:=true -p dry_run:=true \\",
-        "  -p \"safe_joint_positions_rad:=[j1_actual, j2_actual, j3_actual, j4_actual, j5_actual, j6_meta]\"",
+        "  -p \"safe_joint_positions_rad:=[j1_meta, j2_actual, j3_actual, j4_actual, j5_actual, j6_actual]\"",
+        "echo $?"
+    ])
+    add_body(doc, "Con los valores del ejemplo anterior el comando quedaría así (los seis números serán OTROS en su mesa):")
+    add_code_box(doc, [
+        "ros2 run burger_kinova_reference safe_trajectory_client --ros-args --params-file $CFG \\",
+        "  -r __node:=safe_trajectory_client_eqNN \\",
+        "  -p use_fake_hardware:=false -p enable_motion:=true -p dry_run:=true \\",
+        "  -p \"safe_joint_positions_rad:=[0.0556, -0.5010, -1.9547, -0.0058, -0.6803, -1.5982]\"",
         "echo $?"
     ])
     add_body(doc, "Paso 3.3: Tras autorización verbal, enviar al Hardware Real confirmando con 'si':")
@@ -631,7 +684,7 @@ def main():
         "ros2 run burger_kinova_reference safe_trajectory_client --ros-args --params-file $CFG \\",
         "  -r __node:=safe_trajectory_client_eqNN \\",
         "  -p use_fake_hardware:=false -p enable_motion:=true -p dry_run:=false \\",
-        "  -p \"safe_joint_positions_rad:=[j1_actual, j2_actual, j3_actual, j4_actual, j5_actual, j6_meta]\""
+        "  -p \"safe_joint_positions_rad:=[j1_meta, j2_actual, j3_actual, j4_actual, j5_actual, j6_actual]\""
     ])
     add_body(doc, "Paso 3.4: Verificar pose final y liberar el turno:")
     add_code_box(doc, ["ros2 topic echo /joint_states --once"])
@@ -678,6 +731,7 @@ def main():
             ["Ping al robot Kinova (192.168.1.10)", "ping -c 4 192.168.1.10", "0% packet loss, RTT < 5 ms", ""],
             ["Dominio común ROS 2", "echo $ROS_DOMAIN_ID", "0", ""],
             ["Middleware DDS optimizado", "echo $RMW_IMPLEMENTATION", "rmw_cyclonedds_cpp", ""],
+            ["Sufijo de grupo configurado", "echo $EQ", "eqNN con el numero del grupo (p. ej. eq03)", ""],
             ["Estado del Daemon de ROS 2", "ros2 daemon status", "The daemon is running", ""],
             ["Ejecutables de referencia listos", "ros2 pkg executables burger_kinova_reference", "3 ejecutables listados", ""]
         ],
@@ -713,12 +767,12 @@ def main():
 
     add_subheading(doc, "Tabla 4: Registro de Turnos y Prueba Final (Fase 3)")
     add_grid_table(doc,
-        ["Turno / Prueba", "Grupo", "Inicio", "Pose / joint_6 inicial", "Meta solicitada", "Modo seco (código)", "Envío (código / error)", "Pose final (joint_6)", "Cierre"],
+        ["Turno / Prueba", "Grupo", "Inicio", "Pose / joint_1 inicial", "Meta solicitada", "Modo seco (código)", "Envío (código / error)", "Pose final (joint_1)", "Cierre"],
         [
-            ["1", "", "", "", "(+0.05 a +0.08)", "", "", "", ""],
-            ["2", "", "", "", "(-0.05 a -0.08)", "", "", "", ""],
-            ["3", "", "", "", "(+0.05 a +0.08)", "", "", "", ""],
-            ["4", "", "", "", "(-0.05 a -0.08)", "", "", "", ""],
+            ["1", "", "", "", "(+0.20 a +0.30)", "", "", "", ""],
+            ["2", "", "", "", "(-0.20 a -0.30)", "", "", "", ""],
+            ["3", "", "", "", "(+0.20 a +0.30)", "", "", "", ""],
+            ["4", "", "", "", "(-0.20 a -0.30)", "", "", "", ""],
             ["Prueba Final (Secuencia)", "", "", "Origen autodescubierto", "Coreografía 25 deltas", "Código 0", "SUCCESSFUL", "Retorno origen OK", ""]
         ],
         widths=[1.5, 1.3, 1.8, 2.2, 2.4, 2.2, 2.5, 2.0, 1.2],

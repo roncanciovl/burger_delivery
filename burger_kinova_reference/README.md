@@ -199,7 +199,7 @@ sobrescriben desde el launch o con `--ros-args -p`.
 | `enable_motion` | bool | `false` | Habilitación explícita de comandos físicos |
 | `joint_state_timeout_s` | double | `1.0` | Edad máxima tolerada de `/joint_states` |
 | `min_joint_state_hz` | double | `20.0` | Frecuencia mínima aceptada |
-| `max_joint_delta_rad` | double | `0.10` | Cambio máximo permitido por articulación |
+| `max_joint_delta_rad` | double | `0.35` | Cambio máximo permitido por articulación en una meta (el valor por defecto de los nodos, sin `--params-file`, es el más estricto: `0.10`) |
 | `trajectory_duration_s` | double | `5.0` | Duración mínima de la trayectoria |
 | `diagnostic_rate_hz` | double | `1.0` | Frecuencia del diagnóstico |
 | `safe_joint_positions_rad` | double[7] | aprobada en laboratorio | Meta de la prueba controlada |
