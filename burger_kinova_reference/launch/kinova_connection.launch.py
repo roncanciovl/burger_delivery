@@ -36,9 +36,12 @@ Un único archivo cubre los tres modos de operación exigidos por la especificac
           start_driver:=false enable_motion:=false
 
 ⚠ Sólo la estación conectada físicamente al robot puede usar ``start_driver:=true``.
-Dos drivers apuntando al mismo Kinova compiten por la única sesión de control en tiempo
-real de la API Kortex y duplican ``/joint_states``, ``/controller_manager`` y el servidor
-de acción dentro del mismo ``ROS_DOMAIN_ID``.
+La controladora acepta un segundo driver sin protestar, pero ese driver cambia el modo de
+servo del brazo y le quita el control al primero (``WRONG_SERVOING_MODE``, movimiento a
+tirones). Por eso, antes de incluir ``kortex_bringup``, el launch busca un driver ya
+activo (:mod:`burger_kinova_reference.driver_guard`): si lo encuentra, emite un WARN, NO
+lanza el driver y continúa como estación cliente. ``check_existing_driver:=false`` omite
+la comprobación. Ver ``TROUBLESHOOTING.md`` §2.6.
 
 Los valores por defecto de cada argumento se leen de ``config/kinova_connection.yaml``,
 de modo que no hay constantes duplicadas entre la configuración y el launch.
@@ -57,6 +60,7 @@ from launch.actions import (
     Shutdown,
 )
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.logging import get_logger
 from launch.substitutions import LaunchConfiguration
 
 from launch_ros.actions import Node
@@ -166,6 +170,8 @@ def _setup(context, *args, **kwargs):
     start_trajectory_client = _as_bool(arg('start_trajectory_client'))
     dry_run = _as_bool(arg('dry_run'))
     log_level = arg('log_level')
+    check_existing_driver = _as_bool(arg('check_existing_driver'))
+    driver_check_timeout = float(arg('driver_check_timeout_s'))
     gripper, gripper_aviso = _resolve_gripper(
         arg('gripper'), use_fake_hardware, _as_bool(arg('force_gripper_in_fake')))
 
@@ -193,6 +199,32 @@ def _setup(context, *args, **kwargs):
             'Verifica espacio despejado, parada de emergencia accesible y autorización '
             'del responsable del laboratorio.'
         )))
+
+    # ------------------------------------------------- guarda: ¿ya hay un driver? --
+    driver_omitido = False
+    if start_driver and check_existing_driver:
+        from burger_kinova_reference.driver_guard import buscar_driver_activo
+        logger = get_logger('launch.user')
+        logger.info(
+            f'Comprobando que no haya otro driver activo para {robot_ip} '
+            f'(hasta {driver_check_timeout:.1f} s)...')
+        evidencias, avisos = buscar_driver_activo(
+            robot_ip, use_fake_hardware, driver_check_timeout)
+        for aviso in avisos:
+            logger.warning(f'Comprobación de driver incompleta: {aviso}')
+        if evidencias:
+            logger.warning(
+                'NO se lanza kortex_bringup: ya hay un driver activo para este robot. '
+                'Un segundo driver cambia el modo de servo del brazo y le quita el control '
+                'al primero (WRONG_SERVOING_MODE, movimiento a tirones).')
+            for evidencia in evidencias:
+                logger.warning(f'  evidencia: {evidencia}')
+            logger.warning(
+                'Esta estación continúa como CLIENTE (start_driver:=false). Si el driver '
+                'detectado es un huérfano tuyo, ciérralo con Ctrl+C / kill -INT y relanza. '
+                'Ver TROUBLESHOOTING.md §2.6.')
+            start_driver = False
+            driver_omitido = True
 
     # -------------------------------------------------------- driver oficial Kinova --
     if start_driver:
@@ -232,7 +264,7 @@ def _setup(context, *args, **kwargs):
             PythonLaunchDescriptionSource(kortex_launch),
             launch_arguments=bringup_args.items(),
         ))
-    else:
+    elif not driver_omitido:
         actions.append(LogInfo(msg=(
             'start_driver:=false — esta estación opera como CLIENTE. El driver debe estar '
             'corriendo en la estación conectada al robot, dentro del mismo ROS_DOMAIN_ID.'
@@ -292,6 +324,18 @@ def generate_launch_description() -> LaunchDescription:
             choices=['true', 'false'],
             description='Iniciar kortex_bringup en esta estación. Sólo la estación '
                         'conectada físicamente al robot puede usar true.'),
+        DeclareLaunchArgument(
+            'check_existing_driver',
+            default_value=str(defaults.get('check_existing_driver', True)).lower(),
+            choices=['true', 'false'],
+            description='Antes de lanzar el driver, buscar uno ya activo (sesión TCP '
+                        'local, grafo DDS y anuncio UDP de estación). Si existe, se emite '
+                        'un WARN y la estación continúa como cliente.'),
+        DeclareLaunchArgument(
+            'driver_check_timeout_s',
+            default_value=str(defaults.get('driver_check_timeout_s', 6.0)),
+            description='Ventana máxima de la comprobación. Cubre el descubrimiento DDS '
+                        'entre máquinas y un periodo del anuncio UDP (5 s).'),
         DeclareLaunchArgument(
             'robot_ip', default_value=str(defaults.get('robot_ip', '0.0.0.0')),
             description='IP del Kinova cuando el driver se inicia localmente.'),

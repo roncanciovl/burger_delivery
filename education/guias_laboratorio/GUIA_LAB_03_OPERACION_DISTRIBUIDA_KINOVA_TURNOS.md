@@ -15,6 +15,7 @@
 | Creación e implementación de la Guía de Laboratorio 03 | Diseño del protocolo de operación distribuida del robot manipulador Kinova Gen3 (6-DOF) en LAN única `192.168.1.0/24`, definiendo la convención de estación anfitriona por cable Ethernet y estaciones monitoras por Wi-Fi. | 16/09/2026 |
 | Reestructuración de la Fase 0 y eliminación de simulación en dominios separados | Se unifica a todos los grupos en `ROS_DOMAIN_ID=0` desde el inicio para interacción directa con el robot físico real en la IP `192.168.1.10`. | 16/09/2026 |
 | Integración de herramientas RQT y profundización en Modo Seco | Incorporación de `rqt_graph` para el grafo distribuido, `rqt_console` para logging centralizado y formalización del concepto de modo seco (*dry run*). | 16/09/2026 |
+| Guarda contra segundo driver y convención `eqNN` | Incidente del 16/09/2026: una estación monitora lanzó un segundo driver y le quitó el control a la anfitriona (`WRONG_SERVOING_MODE`, movimiento a tirones). Se corrige la explicación de la sesión Kortex, se documenta la comprobación automática del launch (`check_existing_driver`) con sus límites, se define cómo se configura el sufijo `eqNN` y se corrige la frecuencia del ciclo de control (100 Hz). | 17/09/2026 |
 
 ---
 
@@ -24,11 +25,14 @@
 
 En celdas de manufactura y robótica industrial colaborativa, un único robot manipulador de alta gama debe ser compartido y operado por múltiples estaciones de ingeniería. El laboratorio cuenta con **un robot manipulador Kinova Gen3 (6 GDL) con pinza Robotiq 2F-85** y varios equipos de trabajo estudiantiles.
 
-La controladora del Kinova Gen3 (API Kortex) admite **una sola sesión de control en tiempo real** a través del puerto TCP `10000` (ciclo a 1 kHz). Si dos o más computadores intentan lanzar el driver `kortex_bringup` simultáneamente, compiten por el socket TCP de tiempo real, provocando caídas de enlace y disparando paradas de seguridad (*Safety Faults*).
+La controladora del Kinova Gen3 (API Kortex, puerto TCP `10000` y UDP `10001` de tiempo real) **acepta varias sesiones a la vez y no rechaza a un segundo driver**. Lo que es único es el **modo de servo** del brazo, y `kortex_driver` lo cambia al arrancar (`SINGLE_LEVEL_SERVOING` → `ClearFaults` → `LOW_LEVEL_SERVOING`) y al cerrarse (`SINGLE_LEVEL_SERVOING`) sin coordinarse con nadie. Si un segundo computador lanza `kortex_bringup` contra el mismo robot, **le quita el control al driver que ya estaba trabajando**: este sigue vivo, pero sus comandos fallan con `WRONG_SERVOING_MODE`, y mientras ambos envían consignas a 100 Hz el brazo alterna entre las dos y se mueve a tirones. Esto ocurrió en la sesión del 16/09/2026 ([`TROUBLESHOOTING.md`](../../TROUBLESHOOTING.md) §2.6).
+
+> [!IMPORTANT]
+> El `ROS_DOMAIN_ID` **no protege** contra este fallo: el modo de servo vive en la capa Kortex, por debajo de ROS 2. Un driver lanzado desde otro dominio produce exactamente el mismo daño; sólo que no se ve en `ros2 node list`.
 
 Para resolver esta restricción física sin aislar a los grupos, se implementa la **convención de estación anfitriona** ([`TROUBLESHOOTING.md`](../../TROUBLESHOOTING.md) §2.0):
 1. **Dominio Común:** Todas las estaciones del laboratorio operan estrictamente en `ROS_DOMAIN_ID=0`.
-2. **Estación Anfitriona Única:** Un computador designado, conectado físicamente por **cable Ethernet** al router, es el **único** autorizado a ejecutar el driver del robot (`start_driver:=true robot_ip:=192.168.1.10`).
+2. **Estación Anfitriona Única:** Un computador designado, conectado físicamente por **cable Ethernet** al router, es el **único** autorizado a ejecutar el driver del robot (`start_driver:=true robot_ip:=192.168.1.10`). Como respaldo, el launch del paquete **se niega a lanzar un segundo driver** si detecta uno activo (§2.2).
 3. **Estaciones Monitoras:** Los computadores de los estudiantes se conectan por **Wi-Fi** al router y operan como monitoras: escuchan la telemetría `/joint_states` y publican su propio diagnóstico, sin driver local (`start_driver:=false`).
 4. **Protocolo de Turnos entre Personas:** Debido a que el servidor de acción del controlador de ROS 2 (`FollowJointTrajectory`) acepta metas de cualquier nodo en el dominio, el movimiento físico se gestiona mediante un estricto protocolo de turnos supervisado entre los integrantes del laboratorio.
 
@@ -39,7 +43,8 @@ Para resolver esta restricción física sin aislar a los grupos, se implementa l
      192.168.1.10          Ethernet, 1 sola estación          WiFi, N estaciones
           │                          │                                │
           │◄── sesión Kortex ────────┤  kortex_bringup (driver)       │
-          │    (TCP 10000, 1 kHz)    │  kinova_monitor                 │  kinova_monitor_eqNN
+          │  (TCP 10000 + UDP 10001, │  kinova_monitor                 │  kinova_monitor_eqNN
+          │   ciclo de 100 Hz)       │                                │
           │                          │                                │
           │                          ├── DDS: /joint_states ─────────►│
           │                          ├── DDS: /burger/kinova/diagnostics ►│
@@ -52,6 +57,16 @@ Para resolver esta restricción física sin aislar a los grupos, se implementa l
 El paquete [`burger_kinova_reference`](../../burger_kinova_reference/README.md) implementa la capa de enlace y seguridad:
 - `kinova_monitor`: Valida la salud de `/joint_states` (> 20 Hz, latencia < 1.0 s), audita el estado de los controladores y publica en `/burger/kinova/diagnostics` la **identidad verificada de la estación** (`anfitriona` o `cliente`).
 - `safe_trajectory_client`: Cliente de acción seguro que valida límites articulares, velocidad, delta máximo de desplazamiento (`max_joint_delta_rad = 0.10 rad`), vigencia de telemetría y soporte de **Modo Seco (*Dry Run*)** antes de emitir cualquier trayectoria física.
+- `kinova_connection.launch.py` con `start_driver:=true`: **antes** de incluir `kortex_bringup` busca durante hasta 6 s un driver ya activo para el mismo robot (`check_existing_driver`, activo por defecto). Si lo encuentra, emite `WARNING`, **no lanza el driver** y la estación continúa como cliente. Usa tres vías, cada una con su alcance:
+
+| Vía | Qué detecta | ¿Depende del dominio? |
+|---|---|:---:|
+| Sesión TCP local (`/proc/net/tcp`) | Un driver en **esta** máquina: otra terminal o un proceso huérfano | No |
+| Grafo DDS | `/controller_manager` o publicadores de `/joint_states` en cualquier estación del dominio | Sí |
+| Anuncio UDP `45455` | Un `kinova_monitor` que se declara anfitriona verificada del mismo robot | No (misma subred) |
+
+> [!WARNING]
+> **La guarda no es una garantía.** No detecta un driver en otro PC, en otro dominio y lanzado sin `kinova_monitor` (por ejemplo, `kortex_bringup` a mano); tampoco dos estaciones que lanzan en el mismo segundo, ni el anuncio UDP si el broadcast está bloqueado (WSL2 en modo NAT, aislamiento de clientes WiFi). Por eso la regla de seguridad §6.1 sigue siendo obligatoria: la guarda **complementa** la convención, no la reemplaza.
 
 ### 2.3. Lo que ninguna capa de software impide
 
@@ -75,7 +90,7 @@ Operar el robot manipulador Kinova Gen3 real desde múltiples estaciones de trab
 
 ### 3.2. Objetivos Específicos
 1. **Configurar el entorno de red y dominio común** (`ROS_DOMAIN_ID=0`, CycloneDDS y conectividad IP con el Kinova real `192.168.1.10`) en todos los equipos del laboratorio.
-2. **Poner en marcha la estación anfitriona** con el driver del robot real, verificando la sesión TCP Kortex a 1 kHz, los controladores activos y la telemetría a 100 Hz.
+2. **Poner en marcha la estación anfitriona** con el driver del robot real, comprobando que la guarda del launch no detecte otro driver, verificando la sesión TCP Kortex, los controladores activos y la telemetría a 100 Hz.
 3. **Desplegar estaciones monitoras con identidad propia** en el grafo, comprobando la identidad de la anfitriona y analizando la topología y logs mediante RQT (`rqt_graph` y `rqt_console`).
 4. **Visualizar el robot real en RViz** desde estaciones remotas sin ejecutar drivers locales, comprendiendo la durabilidad `TRANSIENT_LOCAL` en `/robot_description`.
 5. **Ejecutar el protocolo de turnos de trayectoria**, aplicando validación matemática previa en **Modo Seco** (`dry_run:=true`), autorización verbal y supervisión con parada de emergencia física.
@@ -132,17 +147,17 @@ Operar el robot manipulador Kinova Gen3 real desde múltiples estaciones de trab
 - **N1 (0–149):** No logra conectividad con la red `192.168.1.0/24` o utiliza un dominio diferente quedando aislado del sistema.
 
 #### C2. Estación anfitriona, sesión Kortex y telemetría — Peso: 25% (SO2 / SO6)
-- **N5 (475–500):** Demuestra la unicidad del driver mediante inspección de sockets TCP (`ss -tanp`), justifica por qué la anfitriona debe conectarse por cable Ethernet (1 kHz determinista) comparando con pérdidas en Wi-Fi, y audita la estabilidad de `/joint_states` a 100 Hz y controladores activos.
+- **N5 (475–500):** Demuestra la unicidad del driver combinando la guarda del launch, `ss -tanp` y el número de publicadores de `/joint_states`, explicando qué alcance tiene cada evidencia (máquina, dominio, subred) y qué casos ninguna detecta; justifica por qué la anfitriona debe conectarse por cable Ethernet (ciclo de control de 100 Hz sin huecos) comparando con pérdidas en Wi-Fi, y audita la estabilidad de `/joint_states` a 100 Hz y controladores activos.
 - **N4 (400–474):** Despliega el launch de la anfitriona con hardware real (`start_driver:=true`), verifica la sesión TCP Kortex en el puerto 10000 y comprueba la identidad anunciada como `anfitriona` en el diagnóstico.
 - **N3 (300–399) [Umbral de Logro]:** Ejecuta la estación anfitriona con hardware real; verifica que los controladores estén activos y que `/joint_states` publique a frecuencia nominal.
-- **N2 (150–299):** Lanza el driver sin verificar previamente si el robot estaba ocupado, o presenta inestabilidad en los controladores.
+- **N2 (150–299):** Lanza el driver sin verificar previamente si el robot estaba ocupado, desactiva la guarda (`check_existing_driver:=false`) o continúa pese a un `WARNING` de driver existente.
 - **N1 (0–149):** No logra establecer sesión Kortex o causa bloqueos por lanzar drivers duplicados en hardware real.
 
 #### C3. Monitoreo remoto e introspección gráfica (RQT / RViz) — Peso: 20% (SO6 / SO3)
 - **N5 (475–500):** Justifica la durabilidad `TRANSIENT_LOCAL` en `/robot_description` explicando por qué RViz visualiza la pose sin relanzar el modelo; analiza en `rqt_graph` las relaciones entre publicadores/suscriptores y filtra logs en `rqt_console` diagnosticando la salud global de la red.
 - **N4 (400–474):** Lanza el monitor del grupo con nombre único (`kinova_monitor_eqNN`), visualiza el robot en RViz en su PC sin driver local, inspecciona la topología en `rqt_graph` y filtra mensajes en `rqt_console`.
 - **N3 (300–399) [Umbral de Logro]:** Despliega el monitor con identidad propia, abre RViz observando el robot real e inspecciona nodos y logs en RQT.
-- **N2 (150–299):** Ejecuta el monitor sin renombrar causando advertencias de nodos duplicados, o no logra visualizar el modelo en RViz.
+- **N2 (150–299):** Ejecuta el monitor sin sufijo `eqNN` o con el de otro grupo, causando nodos duplicados, o no logra visualizar el modelo en RViz.
 - **N1 (0–149):** No despliega el nodo monitor o no realiza la introspección con herramientas gráficas.
 
 #### C4. Protocolo de turnos, modo seco y seguridad física — Peso: 20% (SO4 / SO6)
@@ -183,12 +198,13 @@ Operar el robot manipulador Kinova Gen3 real desde múltiples estaciones de trab
 ## 6. SEGURIDAD EN EL LABORATORIO
 
 > [!WARNING]
-> 1. **Un solo driver en hardware real.** Ninguna estación distinta de la anfitriona autorizada puede ejecutar `start_driver:=true` con el robot real.
+> 1. **Un solo driver en hardware real.** Ninguna estación distinta de la anfitriona autorizada puede ejecutar `start_driver:=true` con el robot real, **ni en otro `ROS_DOMAIN_ID`, ni "para probar"**. Un segundo driver le quita el control a la anfitriona con el brazo en movimiento. Si el launch muestra `NO se lanza kortex_bringup`, no se reintenta ni se desactiva la guarda: se avisa al docente.
 > 2. **Custodia de Parada de Emergencia.** Un integrante del grupo anfitrión debe permanecer junto al pulsador físico de parada de emergencia durante **todo** turno de envío.
 > 3. **Área de Barrido de Seguridad.** Mantener un radio libre de 1.2 metros alrededor de la base del robot. Nadie debe ingresar al área de operación mientras haya un turno activo.
 > 4. **Movimiento seguro y acotado.** En este ejercicio sólo se mueve `joint_6` (muñeca), típicamente **±0.05 a ±0.08 rad (2.9° a 4.6°)** por turno y en **5 s**. El cliente rechaza estrictamente cualquier articulación que alcance o supere `max_joint_delta_rad = 0.10 rad` (5.7°) respecto a su posición actual; **no** se modifica ese límite.
 > 5. **Modo seco obligatorio.** Ningún envío real puede autorizarse sin una ejecución previa en modo seco con código de salida `0`.
 > 6. **No limpiar fallas a ciegas.** Ante cualquier error o paro de emergencia, se detiene la sesión y se informa de inmediato al docente.
+> 7. **Síntoma de un segundo driver.** Si el brazo se mueve a tirones o el log de la anfitriona muestra `WRONG_SERVOING_MODE`: parada de emergencia, cerrar el driver intruso con `Ctrl+C`, **reiniciar también el driver de la anfitriona** (no se recupera solo) y registrar el incidente en la Tabla 5 ([`TROUBLESHOOTING.md`](../../TROUBLESHOOTING.md) §2.6).
 
 ---
 
@@ -201,7 +217,7 @@ Para que todas las estaciones puedan comunicarse e interactuar con la anfitriona
 
 - **Robot Kinova Gen3:** IP física **`192.168.1.10`** (puerto API Kortex: `10000`).
 - **Router del Laboratorio:** TP-Link AX12 (SSID Wi-Fi: `ros2`, subred: `192.168.1.0/24`).
-- **Estación Anfitriona:** Cable Ethernet al router (garantiza bucle de control determinista a 1 kHz).
+- **Estación Anfitriona:** Cable Ethernet al router (sostiene el ciclo de control de 100 Hz sin huecos).
 - **Estaciones Monitoras:** Conexión Wi-Fi al SSID `ros2`.
 
 #### 🛠️ Ejercicio 0.1: Conexión a la red y verificación de IP propia
@@ -216,8 +232,29 @@ ping -c 4 192.168.1.10
 ```
 Debe obtener `0% packet loss` y tiempos RTT típicos menores a 5 ms.
 
-#### 🛠️ Ejercicio 0.3: Configuración del entorno ROS 2 (`ROS_DOMAIN_ID=0`)
-En **todas** las terminales de trabajo:
+#### 🧩 Convención `eqNN`: la identidad de cada grupo en el grafo
+
+Todas las estaciones comparten `ROS_DOMAIN_ID=0`, así que **todos los nodos del laboratorio viven en un mismo grafo**. Si dos grupos lanzan un nodo con el mismo nombre (por ejemplo, dos `kinova_monitor`), ROS 2 advierte de nodos duplicados, `rqt_graph` y `rqt_console` mezclan sus mensajes y en el bag ya no se puede saber quién envió cada meta. El sufijo `eqNN` resuelve eso: **es el número de grupo con dos dígitos**.
+
+| Regla | Correcto | Incorrecto |
+|---|---|---|
+| `NN` = número de grupo asignado por el docente, **siempre con dos dígitos** | `eq03`, `eq12` | `eq3`, `eqNN` (sin sustituir) |
+| Letras minúsculas, sin espacios, tildes ni guiones (los nombres de nodo ROS 2 sólo admiten letras, dígitos y `_`) | `eq03` | `EQ-03`, `equipo 3` |
+| Un sufijo por grupo, **el mismo** en todos los integrantes y terminales del grupo | todo el grupo 3 usa `eq03` | cada integrante inventa el suyo |
+
+El grupo anfitrión **también** tiene su `eqNN`: lo usa en el nombre del bag y en cualquier cliente que ejecute. Su monitor, en cambio, lo lanza el launch con el nombre fijo `kinova_monitor`, que por eso identifica a la anfitriona.
+
+Dónde aparece el sufijo en esta guía:
+
+| Elemento | Nombre con `EQ=eq03` |
+|---|---|
+| Monitor del grupo (Fase 2) | `/kinova_monitor_eq03` |
+| Cliente de trayectoria (Fase 3) | `/safe_trajectory_client_eq03` |
+| Cliente de secuencia (Fase 3.4) | `/safe_sequence_client_eq03` |
+| Bag de la sesión (Fase 1, anfitrión) | `sesion_turnos_eq03/` |
+
+#### 🛠️ Ejercicio 0.3: Configuración del entorno ROS 2 (`ROS_DOMAIN_ID=0` y `EQ`)
+En **todas** las terminales de trabajo, sustituyendo `03` por el número de **su** grupo:
 ```bash
 source /opt/ros/jazzy/setup.bash
 source ~/ros2_ws/install/setup.bash
@@ -225,14 +262,25 @@ export ROS_DOMAIN_ID=0
 export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 export CYCLONEDDS_URI="file://$HOME/ros2_ws/src/burger_delivery/network_setup/cyclonedds.xml"
 export CFG=$(ros2 pkg prefix burger_kinova_reference)/share/burger_kinova_reference/config/kinova_connection.yaml
+export EQ=eq03          # ← número de SU grupo, dos dígitos
 ```
+
+Compruebe que el valor es válido antes de seguir. Si ve `EQ inválido`, corríjalo: un nombre de nodo mal formado hace fallar `ros2 run` o, peor, choca con el de otro grupo.
+```bash
+[[ "$EQ" =~ ^eq[0-9]{2}$ ]] && echo "EQ=$EQ correcto" || echo "EQ inválido: '$EQ'"
+```
+
+> [!TIP]
+> Para no repetir los `export` en cada terminal nueva, agréguelos al final de `~/.bashrc` durante la práctica y **retírelos al terminar**: la siguiente persona que use el portátil heredaría su dominio y su sufijo.
+
+Todos los comandos siguientes usan `${EQ}`. Si una terminal no tiene la variable, el nombre queda como `kinova_monitor_` y se nota de inmediato en `ros2 node list`.
 
 #### 🛠️ Ejercicio 0.4: Reinicio limpio del daemon de ROS 2
 ```bash
 timeout 5s ros2 daemon stop
 ros2 daemon start
 ros2 daemon status
-echo "ROS_DOMAIN_ID: $ROS_DOMAIN_ID | RMW: $RMW_IMPLEMENTATION"
+echo "ROS_DOMAIN_ID: $ROS_DOMAIN_ID | RMW: $RMW_IMPLEMENTATION | EQ: $EQ"
 ```
 
 #### 🛠️ Ejercicio 0.5: Verificación de ejecutables
@@ -252,12 +300,14 @@ ip -brief addr
 ping -c 4 192.168.1.10
 ss -tanp | grep 192.168.1.10                  # debe estar vacío
 timeout 15s ros2 node list | grep -E "controller_manager|kinova_vision"   # debe estar vacío
+timeout 15s ros2 topic info /joint_states     # "Publisher count: 0" o tópico inexistente
 ```
+Interprete cada comprobación **por su alcance**: `ss` sólo ve sus propias conexiones (no las de otros portátiles), y `ros2 node list` / `ros2 topic info` sólo ven el dominio `0`. Una salida vacía significa *"libre desde lo que esta estación puede ver"*, no *"libre"*. Por eso, además, **pregunte en voz alta** al laboratorio si alguien tiene un driver abierto. El launch del Ejercicio 1.2 repite estas comprobaciones de forma automática y añade la del anuncio UDP.
 
 #### 🛠️ Ejercicio 1.2: Lanzar el driver sin movimiento
 **Terminal A1 — Grabación de evidencia:**
 ```bash
-ros2 bag record -s mcap -o sesion_turnos_eqNN \
+ros2 bag record -s mcap -o sesion_turnos_${EQ} \
   --topics /joint_states /burger/kinova/diagnostics /rosout
 ```
 
@@ -267,14 +317,28 @@ ros2 launch burger_kinova_reference kinova_connection.launch.py \
   start_driver:=true robot_ip:=192.168.1.10 use_fake_hardware:=false \
   enable_motion:=false launch_rviz:=true
 ```
+El launch tarda hasta **6 s** antes de arrancar el driver: es la guarda buscando otro driver activo. Lea las primeras líneas y actúe según lo que aparezca:
+
+| Salida | Significado | Acción |
+|---|---|---|
+| `[INFO] [launch.user]: Comprobando que no haya otro driver activo para 192.168.1.10 (hasta 6.0 s)...` seguido de `Iniciando kortex_bringup en ESTA estación` | No se detectó ningún driver | Continúe con la Terminal A3 |
+| `[WARNING] [launch.user]: NO se lanza kortex_bringup: ya hay un driver activo para este robot.` y una o más líneas `evidencia: ...` | Hay otro driver para el robot. La estación quedó como **cliente** (sólo arrancó el monitor) | **Deténgase.** Lea las evidencias, detenga el launch con `Ctrl+C` y avise al docente. Si la evidencia es `esta máquina YA tiene una sesión TCP establecida`, es un driver huérfano suyo: ciérrelo con `kill -INT <PID>` ([`TROUBLESHOOTING.md`](../../TROUBLESHOOTING.md) §2.2) y relance |
+| `[WARNING] [launch.user]: Comprobación de driver incompleta: ...` | Una de las tres vías no pudo consultarse (por ejemplo, el puerto UDP) | Complete a mano el Ejercicio 1.1 antes de confiar en el arranque |
+
+> [!CAUTION]
+> Nunca "resuelva" un `WARNING` de driver existente con `check_existing_driver:=false`. Esa opción existe sólo para diagnóstico fuera del laboratorio.
 
 **Terminal A3 — Verificación de telemetría:**
 ```bash
 ss -tanp | grep 192.168.1.10
+ros2 topic info /joint_states
 ros2 topic hz /joint_states
 ros2 topic echo /burger/kinova/diagnostics --once | grep -A8 "identidad de la estación"
 ```
-Salida esperada: sesión TCP Kortex en estado `ESTAB`, `/joint_states` a ~99.96 Hz y `rol_estacion: anfitriona`.
+Salida esperada: sesión TCP Kortex en estado `ESTAB`, `Publisher count: 1`, `/joint_states` a ~99.96 Hz y `rol_estacion: anfitriona`.
+
+> [!WARNING]
+> Mantenga `ros2 topic hz /joint_states` visible durante toda la práctica. Un salto sostenido por encima de 100 Hz con `min: 0.000s` indica **dos publicadores**, y un `max` de varios segundos, huecos de telemetría: ambos son la huella de un segundo driver. Confírmelo con `ros2 topic info /joint_states` y aplique la regla de seguridad §6.7.
 
 ---
 
@@ -284,13 +348,15 @@ Salida esperada: sesión TCP Kortex en estado `ESTAB`, `/joint_states` a ~99.96 
 En la portátil del grupo monitor (Wi-Fi `ros2`, `ROS_DOMAIN_ID=0`):
 ```bash
 ros2 run burger_kinova_reference kinova_monitor --ros-args --params-file $CFG \
-  -r __node:=kinova_monitor_eqNN \
+  -r __node:=kinova_monitor_${EQ} \
   -p start_driver:=false -p use_fake_hardware:=false -p robot_ip:=192.168.1.10
 ```
+Las estaciones monitoras usan `ros2 run` y **no** lanzan `kinova_connection.launch.py` con `start_driver:=true`: la guarda de la anfitriona no las exime de la regla §6.1.
 
 #### 🛠️ Ejercicio 2.2: Auditar el estado del robot y roles anunciados
 ```bash
-ros2 node list | grep kinova_monitor
+ros2 node list | grep kinova_monitor          # /kinova_monitor (anfitriona) y /kinova_monitor_${EQ}, cada uno una sola vez
+ros2 topic info /joint_states                 # Publisher count: 1 (sólo la anfitriona)
 ros2 topic hz /joint_states
 ros2 topic echo /burger/kinova/diagnostics | grep -A8 "identidad de la estación"
 ```
@@ -365,7 +431,7 @@ Al ejecutar la lectura, obtendrás las 6 posiciones vivas en radianes `[j1, j2, 
 4. **Ensayo Obligatorio en Modo Seco:** El grupo ejecuta el cliente con `dry_run:=true`:
    ```bash
    ros2 run burger_kinova_reference safe_trajectory_client --ros-args --params-file $CFG \
-     -r __node:=safe_trajectory_client_eqNN \
+     -r __node:=safe_trajectory_client_${EQ} \
      -p use_fake_hardware:=false -p enable_motion:=true -p dry_run:=true \
      -p "safe_joint_positions_rad:=[j1_actual, j2_actual, j3_actual, j4_actual, j5_actual, j6_meta]"
    echo $?
@@ -375,7 +441,7 @@ Al ejecutar la lectura, obtendrás las 6 posiciones vivas en radianes `[j1, j2, 
 6. **Envío al Hardware Real:**
    ```bash
    ros2 run burger_kinova_reference safe_trajectory_client --ros-args --params-file $CFG \
-     -r __node:=safe_trajectory_client_eqNN \
+     -r __node:=safe_trajectory_client_${EQ} \
      -p use_fake_hardware:=false -p enable_motion:=true -p dry_run:=false \
      -p "safe_joint_positions_rad:=[j1_actual, j2_actual, j3_actual, j4_actual, j5_actual, j6_meta]"
    ```
@@ -411,7 +477,7 @@ A diferencia de `safe_trajectory_client` (que exige descubrir y transcribir coor
 ```bash
 ros2 run burger_kinova_reference safe_sequence_client --ros-args \
   --params-file $CFG \
-  -r __node:=safe_sequence_client_eqNN \
+  -r __node:=safe_sequence_client_${EQ} \
   -p dry_run:=true
 ```
 Compruebe en la terminal que se capture la pose de origen a 100 Hz, que valide los 25 tramos punto por punto y finalice con éxito (`EXIT_OK = 0`).
@@ -421,7 +487,7 @@ Con el área despejada y parada de emergencia lista, ejecute:
 ```bash
 ros2 run burger_kinova_reference safe_sequence_client --ros-args \
   --params-file $CFG \
-  -r __node:=safe_sequence_client_eqNN \
+  -r __node:=safe_sequence_client_${EQ} \
   -p dry_run:=false -p enable_motion:=true
 ```
 Observe en el robot real y en RViz el ciclo continuo de movimientos de hombro y rotación de muñeca, finalizando con el retorno suave a la pose original. Registre el evento en la Tabla 4.
@@ -437,11 +503,11 @@ ss -tanp | grep 192.168.1.10
 ```
 La sesión Kortex pasa a `TIME-WAIT` y desaparece limpiamente. Luego detiene la grabación en la Terminal A1 (`Ctrl+C`) y verifica el bag:
 ```bash
-ros2 bag info sesion_turnos_eqNN
+ros2 bag info sesion_turnos_${EQ}
 ```
 
 #### 🛠️ Ejercicio 4.2: La pérdida vista desde las monitoras
-Cada grupo monitor observa en la consola de su `kinova_monitor_eqNN` la transición:
+Cada grupo monitor observa en la consola de su `kinova_monitor_${EQ}` la transición:
 ```text
 [TRANSICIÓN] OK -> ERROR | telemetría vencida: ... s sin mensaje válido (límite 1.00 s)
 ```
@@ -457,6 +523,7 @@ Anote el tiempo de reacción en la Tabla 3 y detenga su monitor con `Ctrl+C`.
 | IP propia en subred `192.168.1.0/24` | `ip -brief addr` | IP asignada en `192.168.1.xx` | |
 | Ping al robot Kinova (`192.168.1.10`) | `ping -c 4 192.168.1.10` | 0% packet loss, RTT < 5 ms | |
 | Dominio común ROS 2 | `echo $ROS_DOMAIN_ID` | `0` | |
+| Sufijo del grupo | `echo $EQ` | `eqNN` con el número del grupo (p. ej. `eq03`) | |
 | Middleware DDS optimizado | `echo $RMW_IMPLEMENTATION` | `rmw_cyclonedds_cpp` | |
 | Estado del Daemon de ROS 2 | `ros2 daemon status` | `The daemon is running` | |
 | Ejecutables de referencia disponibles | `ros2 pkg executables burger_kinova_reference` | 3 ejecutables listados | |
@@ -464,8 +531,10 @@ Anote el tiempo de reacción en la Tabla 3 y detenga su monitor con `Ctrl+C`.
 ### Tabla 2: Verificación de la Estación Anfitriona (Fase 1)
 | Verificación | Comando | Resultado |
 |---|---|---|
-| Nadie tenía el robot antes | `ss -tanp`, `ros2 node list` | |
+| Nadie tenía el robot antes | `ss -tanp`, `ros2 node list`, `ros2 topic info /joint_states` | |
+| Guarda del launch sin evidencia | Primeras líneas de la Terminal A2 (`Comprobando...` → `Iniciando kortex_bringup`) | |
 | Sesión Kortex establecida | `ss -tanp \| grep 192.168.1.10` | |
+| Un único publicador de telemetría | `ros2 topic info /joint_states` | |
 | Identidad anunciada | `rol_estacion` / `rol_verificado` | |
 | Frecuencia `/joint_states` (cable) | `ros2 topic hz` | |
 | Controladores activos | `ros2 control list_controllers` | |
@@ -489,13 +558,14 @@ Anote el tiempo de reacción en la Tabla 3 y detenga su monitor con `Ctrl+C`.
 ### Tabla 5: Incidentes y Diagnóstico
 | Momento | Síntoma observado | Capa (red / DDS / driver / validación / protocolo) | Verificación realizada | Acción |
 |---|---|---|---|---|
+| *Ejemplo 16/09, 16:00* | *Brazo a tirones; `WRONG_SERVOING_MODE` en la anfitriona; `/joint_states` a ~105 Hz con `min: 0.000s`* | *Driver (modo de servo Kortex)* | *`ros2 topic info /joint_states` → 2 publicadores; otra estación había lanzado `start_driver:=true`* | *Parada de emergencia, cierre del driver intruso, reinicio del driver anfitrión* |
 | | | | | |
 
 ---
 
 ## 9. PREGUNTAS DE ANÁLISIS
 
-1. **Pregunta 1 (Unicidad del driver):** Con la Tabla 2 y la identidad publicada, argumente cómo la estación anfitriona única y el dominio compartido permiten responder *"¿quién tiene el robot?"* desde cualquier estación.
+1. **Pregunta 1 (Unicidad del driver):** Con la Tabla 2 y la identidad publicada, argumente cómo la estación anfitriona única y el dominio compartido permiten responder *"¿quién tiene el robot?"* desde cualquier estación. ¿Por qué la controladora no impide por sí misma un segundo driver, y qué le ocurre al primero cuando el segundo arranca?
 2. **Pregunta 2 (Emisores simultáneos y unicidad de acción):** En ROS 2 y `ros2_control`, el servidor de acción del controlador (`/joint_trajectory_controller/follow_joint_trajectory`) acepta metas de cualquier nodo que opere en el dominio `0`. Si dos estaciones envían una meta de trayectoria simultáneamente, ¿qué le ocurre a la primera meta y por qué? ¿Por qué el protocolo de turnos es indispensable cuando todos comparten el `ROS_DOMAIN_ID=0`?
 3. **Pregunta 3 (Enlace por cable y por WiFi):** Compare la frecuencia de `/joint_states` en la anfitriona y en las monitoras (Tablas 2 y 3). ¿Por qué la monitora puede ir por WiFi y la anfitriona no?
 4. **Pregunta 4 (Trazabilidad):** Con el bag `sesion_turnos_eqNN` y la Tabla 4, reconstruya la cronología de un turno: qué nodo (por su nombre `_eqNN`) envió, cuándo se aceptó la meta y cuándo terminó.
@@ -503,6 +573,7 @@ Anote el tiempo de reacción en la Tabla 3 y detenga su monitor con `Ctrl+C`.
 6. **Pregunta 6 (Pérdida de enlace durante el movimiento):** Si durante un turno se cae el WiFi de la estación que envió la meta, ¿se detiene el robot? Razone con la arquitectura: dónde vive el controlador y dónde vive el cliente de acción.
 7. **Pregunta 7 (Aislamiento vs. Colaboración en DDS):** ¿Qué ocurriría durante este laboratorio si un grupo deja accidentalmente su `ROS_DOMAIN_ID` en un valor distinto de `0` (por ejemplo `10`)? ¿Podría ver la telemetría del robot o participar en los turnos? ¿Por qué es fundamental que todas las estaciones acuerden exactamente el mismo `ROS_DOMAIN_ID=0`?
 8. **Pregunta 8 (Posicionamiento Absoluto vs. Deltas Relativos y Autodescubrimiento):** Compare la operación de `safe_trajectory_client` frente a `safe_sequence_client`. ¿Por qué en el cliente de trayectoria individual fue estrictamente necesario descubrir las posiciones absolutas reales de `/joint_states` antes de formular la meta para evitar el bloqueo por `max_joint_delta_rad`, mientras que el cliente de secuencia pudo ejecutarse desde cualquier pose sin transcribir coordenadas a mano? ¿Qué riesgos y ventajas de seguridad introduce cada enfoque en entornos industriales colaborativos?
+9. **Pregunta 9 (Límites de la guarda):** La guarda del launch combina sesión TCP local, grafo DDS y anuncio UDP. Para cada vía, indique qué situación detecta y cuál no. Describa un escenario concreto en el que las tres fallen y el segundo driver arranque igualmente. ¿Qué medida, fuera de ROS 2, lo impediría de verdad y qué costo operativo tendría?
 
 ---
 

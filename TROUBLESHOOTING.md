@@ -6,6 +6,7 @@ Esta guía cubre los fallos que más tiempo consumen en el laboratorio:
 | :--- | :--- |
 | `ros2 node list`, `topic list` o `param set` se bloquean o terminan en `TimeoutError` | [1. Bloqueo del daemon de la CLI](#1-bloqueo-del-daemon-de-ros-2-en-wsl) |
 | El driver no arranca, o hay telemetría duplicada, porque **el robot ya está en uso** | [2. Hardware ocupado: un solo robot, varias estaciones](#2-hardware-ocupado-un-solo-robot-y-varias-estaciones) |
+| El robot se mueve a tirones y el log del driver muestra `WRONG_SERVOING_MODE` o `Fault was not recognized ... combination of Control Mode and Active State` | [2.6 Otra estación lanzó un segundo driver](#26-otra-estación-lanzó-un-segundo-driver-y-le-quitó-el-control-al-primero) |
 | No sé quién tiene el robot ocupado | [2.0 La configuración recomendada](#20-la-configuración-recomendada-léela-antes-que-el-resto) |
 | Mi código parece correcto y aun así el driver no arranca, o publica datos absurdos | [3. Fallos de plataforma ajenos a tu código](#3-fallos-de-plataforma-ajenos-a-tu-código) |
 | La cámara del Kinova da `Failed to start stream`, o `kinova_vision` no se detiene con `Ctrl+C` | [3.4 El driver de visión no se detiene limpiamente](#34-el-driver-de-visión-no-se-detiene-limpiamente-y-deja-la-cámara-bloqueada) |
@@ -255,8 +256,8 @@ Lo que está ocupado **no es el driver: es el robot**. Y esa ocupación vive en 
 
 ```text
   Estación A ──── TCP/UDP Kortex (puerto 10000) ────> Kinova Gen3
-                  ▲ UNA sola sesión de control en tiempo real
-                  │ Esta capa NO sabe qué es ROS_DOMAIN_ID
+                  ▲ UN solo modo de servo del brazo, compartido por
+                  │ todas las sesiones. Esta capa NO sabe qué es ROS_DOMAIN_ID
 
   Estación A ◄─── DDS (aislado por ROS_DOMAIN_ID) ──► Estación B
                   Aquí sí manda el dominio
@@ -265,10 +266,11 @@ Lo que está ocupado **no es el driver: es el robot**. Y esa ocupación vive en 
 De ahí la regla que más confusión causa:
 
 > ⚠️ **Cambiar tu `ROS_DOMAIN_ID` NO libera el robot ni te habilita a lanzar tu propio
-> driver.** El dominio aísla el grafo ROS 2, no la sesión TCP con la controladora. Si otra
-> estación ya tiene la sesión, tu driver fallará igual —o peor: las dos competirán por
-> ella, provocando desconexiones por *timeout* de heartbeat y paradas de seguridad en el
-> robot.
+> driver.** El dominio aísla el grafo ROS 2, no la sesión con la controladora. Y la
+> controladora **no rechaza** a un segundo driver: lo acepta, ese driver cambia el modo de
+> servo del brazo y le quita el control al primero, que sigue corriendo sin enterarse.
+> Resultado: `WRONG_SERVOING_MODE`, movimiento a tirones y ambos drivers "vivos"
+> (sección 2.6).
 
 El aislamiento por dominio sólo sirve para el caso **simulado** (`use_fake_hardware:=true`),
 donde no hay robot físico que compartir.
@@ -277,7 +279,8 @@ Son, por tanto, dos síntomas distintos con causas distintas:
 
 | Síntoma | Capa | Qué significa |
 | :--- | :--- | :--- |
-| El driver no arranca; la conexión al robot no progresa | Kortex TCP/UDP | Alguien más tiene la sesión, o el robot no es alcanzable |
+| El driver no arranca; la conexión al robot no progresa | Kortex TCP/UDP | El robot no es alcanzable, o una sesión matada en duro aún no expira |
+| Ambos drivers arrancan, pero el primero registra `WRONG_SERVOING_MODE` y el brazo se mueve a tirones | Kortex (modo de servo) | Dos drivers sobre el mismo robot, **en cualquier dominio** (sección 2.6) |
 | Arranca, pero hay `/joint_states` duplicado, `/controller_manager` con respuestas erráticas o metas aceptadas y abortadas a la vez | Grafo ROS 2 / DDS | Hay **dos drivers en tu mismo dominio** |
 
 ### 2.2 Diagnóstico: tres preguntas en orden
@@ -486,11 +489,14 @@ Sólo entonces la siguiente estación lanza con `start_driver:=true`.
   robot?" en un comando en vez de una búsqueda.
 - Cierra siempre el driver con `Ctrl+C` / `SIGINT`. Un `kill -9` deja la sesión Kortex
   abierta y el siguiente arranque falla sin motivo aparente.
-- Antes de lanzar con `start_driver:=true`, comprueba en un solo paso que nadie lo tiene:
+- Lanza el driver **siempre** con `kinova_connection.launch.py` de
+  `burger_kinova_reference`: antes de incluir `kortex_bringup` busca un driver activo y, si
+  lo encuentra, emite un `WARNING` y no lo lanza (sección 2.6). Para comprobarlo a mano:
   ```bash
   ss -tanp | grep 192.168.1.10; timeout 15s ros2 node list | grep controller_manager
   ```
-  Si ambas salidas están vacías, el camino está libre desde tu punto de vista.
+  Si ambas salidas están vacías, el camino está libre **desde tu punto de vista**: `ss`
+  sólo ve tu máquina, y `ros2 node list` sólo tu dominio.
 - Anota el `ROS_DOMAIN_ID` acordado del equipo junto al robot. Es más barato que barrer
   dominios.
 - En modo simulado (`use_fake_hardware:=true`) sí conviene que **cada equipo use un
@@ -503,6 +509,131 @@ dominio no libera el robot, identifica con `ss` qué proceso tiene la sesión, y
 criterio entre conectarse como cliente o pedir que liberen el hardware. Y entiende por qué
 el dominio compartido no es un detalle de configuración sino el mecanismo con el que el
 equipo se coordina alrededor de un único robot.
+
+### 2.6 Otra estación lanzó un segundo driver y le quitó el control al primero
+
+Incidente real del [Laboratorio 03](education/guias_laboratorio/GUIA_LAB_03_OPERACION_DISTRIBUIDA_KINOVA_TURNOS.md)
+(16/09/2026): con la anfitriona operando, otro equipo lanzó `start_driver:=true` desde su
+portátil por WiFi. El robot empezó a moverse a tirones y la anfitriona perdió el control,
+aunque su driver **nunca se cayó**.
+
+#### Síntomas en el log de la estación que ya tenía el robot
+
+```text
+[KortexMultiInterfaceHardware]: Kortex exception: Device error, Error sub type=WRONG_SERVOING_MODE => <srv: 3, fct: 1, msgType: 3>
+description: Wrong servoing mode, must be low level servoing mode
+[KortexMultiInterfaceHardware]: Fault was not recognized on the robot but combination of Control Mode and Active State are not supported!   ← repetido a 100 Hz
+```
+
+Y en `ros2 topic hz /joint_states`, desde cualquier estación del dominio:
+
+```text
+average rate: 105.441
+        min: 0.000s max: 0.030s      ← ~105 Hz e intervalo 0.000 s: DOS publicadores intercalados
+average rate: 85.675
+        min: 0.002s max: 16.530s     ← hueco de 16 s sin telemetría
+```
+
+Las metas de trayectoria pueden seguir terminando en `Goal reached, success!`: el
+controlador de ROS 2 no sabe que el brazo obedeció a otro.
+
+#### Causa: el modo de servo es del robot, no de la sesión
+
+La controladora acepta varias sesiones Kortex a la vez. Lo que es único es el **modo de
+servo** del brazo, y el driver `kortex_driver` lo cambia sin coordinarse con nadie
+([`hardware_interface.cpp`](../ros2_kortex/kortex_driver/src/hardware_interface.cpp)):
+
+| Momento del segundo driver | Qué le hace al robot | Qué ve el primer driver |
+| :--- | :--- | :--- |
+| Al configurarse (líneas 204–225) | `SINGLE_LEVEL_SERVOING` → `ClearFaults` → `LOW_LEVEL_SERVOING` | Sus comandos fallan con `WRONG_SERVOING_MODE`; mientras el robot no está en bajo nivel entra en la rama de la línea 907 (`Fault was not recognized…`) y **no comanda nada** |
+| Mientras ambos corren | Los dos envían consignas de posición a 100 Hz | El brazo alterna entre las dos consignas: movimiento a tirones |
+| Al cerrarse (líneas 727–731) | `SINGLE_LEVEL_SERVOING` | El primero vuelve a quedar sin control, otra vez con `WRONG_SERVOING_MODE` |
+
+El primer driver guarda en memoria `arm_mode_ = LOW_LEVEL_SERVOING` y nunca lo vuelve a
+consultar, así que no se recupera solo ni se detiene.
+
+> ⚠ **El `ROS_DOMAIN_ID` no protege.** El modo de servo vive en la capa Kortex. Un driver
+> en *otro* dominio produce exactamente el mismo daño; la única diferencia es que no lo
+> verás en `ros2 node list` ni en `/joint_states`.
+
+#### Qué hace ahora el package: la guarda previa al driver
+
+`kinova_connection.launch.py` ejecuta
+[`driver_guard.py`](burger_kinova_reference/burger_kinova_reference/driver_guard.py) antes
+de incluir `kortex_bringup`, y combina tres vías porque ninguna sola ve todos los casos:
+
+| Vía | Detecta | Depende del dominio |
+| :--- | :--- | :---: |
+| Sesión TCP local (`/proc/net/tcp`) | Un driver en **esta** máquina: otra terminal o un huérfano | No |
+| Grafo DDS | `/controller_manager` o publicadores de `/joint_states` en cualquier máquina | Sí |
+| Anuncio UDP `45455` | Un `kinova_monitor` que se declara anfitriona verificada del mismo robot | No (misma subred) |
+
+Si encuentra evidencia, **no lanza el driver**, emite `WARNING` y la estación continúa como
+cliente (sólo el monitor):
+
+```text
+[INFO] [launch.user]: Comprobando que no haya otro driver activo para 192.168.1.10 (hasta 6.0 s)...
+[WARNING] [launch.user]: NO se lanza kortex_bringup: ya hay un driver activo para este robot. ...
+[WARNING] [launch.user]:   evidencia: ya existe el nodo /controller_manager en ROS_DOMAIN_ID=0: otra estación tiene el driver corriendo
+[WARNING] [launch.user]:   evidencia: la estación PC-LAB-01 (192.168.1.42) se anuncia como ANFITRIONA de 192.168.1.10: sesión TCP establecida con 192.168.1.10:10000
+[WARNING] [launch.user]: Esta estación continúa como CLIENTE (start_driver:=false). ...
+```
+
+| Argumento | Defecto | Uso |
+| :--- | :--- | :--- |
+| `check_existing_driver` | `true` | `false` omite la comprobación. Sólo para diagnóstico, nunca en el laboratorio |
+| `driver_check_timeout_s` | `6.0` | Ventana máxima: cubre el descubrimiento DDS entre máquinas y un periodo del anuncio (5 s). Si hay evidencia, termina antes |
+
+Si la evidencia es un driver **tuyo** (sesión TCP local), es un huérfano: ciérralo con
+`kill -INT <PID>` (sección 2.2, paso 1) y relanza.
+
+#### Límites de la guarda: lo que no puede ver
+
+- **Un driver en otro PC, en otro dominio y sin `kinova_monitor`** (por ejemplo,
+  `ros2 launch kortex_bringup gen3.launch.py` a mano). No deja rastro en tu dominio ni se
+  anuncia.
+- **Dos estaciones que lanzan a la vez**: ambas comprueban antes de que la otra exista.
+- **Broadcast bloqueado**: en WSL2 con red NAT, o si el router aísla los clientes WiFi, el
+  anuncio UDP no llega y sólo quedan las otras dos vías.
+- **Quien ignora la guarda** con `check_existing_driver:=false` o sin usar este launch.
+
+Por eso la guarda **complementa** la convención de la sección 2.0, no la reemplaza.
+
+#### Protección definitiva: en el robot, no en ROS
+
+La única barrera que ningún launch puede saltarse está en la controladora:
+
+1. **Crear un usuario Kortex exclusivo para la anfitriona.** Los drivers entran con
+   `admin`/`admin`, que viene fijo en
+   `kortex_description/arms/gen3/6dof/urdf/gen3_macro.xacro` (`password:=admin`) y
+   `gen3.launch.py` **no lo expone como argumento**. Si en la aplicación web del robot
+   (`http://192.168.1.10`) se cambia la contraseña de `admin`, cualquier driver con las
+   credenciales por defecto fallará al crear la sesión en vez de quitarle el control a
+   nadie. El costo: la anfitriona necesita esas credenciales en su URDF, lo que exige una
+   copia local del xacro o un parche en `ros2_kortex`, que este proyecto no modifica. Es
+   una decisión del responsable del laboratorio, no del estudiante.
+2. **Aislar el robot de la red compartida.** Conectarlo por cable directo a una segunda
+   tarjeta de red de la anfitriona, en otra subred. Las estaciones cliente siguen viendo
+   todo por DDS a través de la anfitriona, pero ningún otro PC alcanza el puerto `10000`.
+
+#### Si ya ocurrió
+
+1. **Pulsa la parada de emergencia** si el brazo se mueve de forma errática.
+2. En la estación intrusa: `Ctrl+C` sobre su launch. Verás de nuevo `WRONG_SERVOING_MODE` en
+   la anfitriona: su cierre devuelve el robot a `SINGLE_LEVEL_SERVOING`.
+3. En la anfitriona: **reinicia también su driver** (`Ctrl+C` y relanzar). Su modo en
+   memoria ya no coincide con el del robot y no se corrige solo.
+4. Confirma con `ros2 topic info /joint_states` que queda **un** publicador y registra el
+   incidente en la Tabla 5 de la guía.
+
+#### Otros mensajes del mismo log que NO son la causa
+
+| Mensaje | Qué es |
+| :--- | :--- |
+| `Could not enable FIFO RT scheduling` y `Overrun detected ... Write time : 10–38 ms` | Anfitriona en WSL2 sin planificación de tiempo real. Añade temblor al ciclo, pero no quita el control |
+| `Loader for controller 'twist_controller' / 'fault_controller' ... not found` | Faltan los plugins de PickNik. No afecta a los laboratorios con `joint_trajectory_controller` |
+| `Segmentation fault` en `~GripperCyclic::Command` al hacer `Ctrl+C` | Defecto de `kortex_driver` al destruirse, **después** de `successfully deactivated!`: la sesión ya se cerró bien |
+| `ddsi_udp_conn_write ... failed with retcode -1` | La estación perdió la interfaz de red (WSL, WiFi o cable). Es de la capa DDS, no del robot |
 
 
 ---

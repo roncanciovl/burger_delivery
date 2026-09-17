@@ -23,6 +23,13 @@ launch:
     # Incluir kortex_bringup/gen3.launch.py en ESTA estación.
     # ⚠ Sólo la estación conectada físicamente al robot puede usar true.
     start_driver: false
+    # Antes de lanzar el driver, buscar uno ya activo para el mismo robot (sesión TCP
+    # local, /controller_manager o /joint_states en el dominio, anuncio UDP de una
+    # anfitriona). Si existe: WARN, NO se lanza el driver y la estación queda de cliente.
+    # La controladora acepta un segundo driver, que le quita el control al primero.
+    # Ver TROUBLESHOOTING.md §2.6.
+    check_existing_driver: true
+    driver_check_timeout_s: 6.0
     # Dirección del robot cuando el driver se inicia localmente.
     # 0.0.0.0 es el valor seguro de modo fake; con hardware real se rechaza.
     robot_ip: "0.0.0.0"
