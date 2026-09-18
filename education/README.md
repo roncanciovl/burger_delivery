@@ -39,6 +39,7 @@ Para evitar versiones incompatibles, cada responsabilidad debe tener una sola fu
 | Taller rosbag2, logging y depuración | [`talleres/TALLER_ROSBAG_LOGGING_DEBUGGING.md`](talleres/TALLER_ROSBAG_LOGGING_DEBUGGING.md) | Instrumento ABET separado en `evidencias_abet/` |
 | Guía de laboratorio 01 | [`guias_laboratorio/GUIA_LAB_01_RED_ROS2_TALKER_LISTENER.docx`](guias_laboratorio/GUIA_LAB_01_RED_ROS2_TALKER_LISTENER.docx) | [`guias_laboratorio/rendered/GUIA_LAB_01_RED_ROS2_TALKER_LISTENER.pdf`](guias_laboratorio/rendered/GUIA_LAB_01_RED_ROS2_TALKER_LISTENER.pdf) |
 | Guía de laboratorio 02 | [`guias_laboratorio/GUIA_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.docx`](guias_laboratorio/GUIA_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.docx) | [`guias_laboratorio/GUIA_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.md`](guias_laboratorio/GUIA_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.md) |
+| Informe técnico experimental del Laboratorio 02 | [`guias_laboratorio/INFORME_TECNICO_EXPERIMENTOS_LAB_02_VISION_CYCLONEDDS.md`](guias_laboratorio/INFORME_TECNICO_EXPERIMENTOS_LAB_02_VISION_CYCLONEDDS.md) | Caracterización cuantitativa de ancho de banda, telemetría Wi-Fi 6, compresión JPEG y diagnóstico de fallas por capas |
 | Ejercicio de laboratorio: operación distribuida del Kinova | [`guias_laboratorio/EJERCICIO_LAB_OPERACION_DISTRIBUIDA_KINOVA_TURNOS.md`](guias_laboratorio/EJERCICIO_LAB_OPERACION_DISTRIBUIDA_KINOVA_TURNOS.md) | Sin calificación ni evidencia ABET; el Markdown es la fuente |
 | Evidencia y nota del Taller 01 | [`evidencias_abet/PLANTILLA_EVIDENCIA_ABET_TALLER_01_ROS2_CLI.docx`](evidencias_abet/PLANTILLA_EVIDENCIA_ABET_TALLER_01_ROS2_CLI.docx) | [`evidencias_abet/PLANTILLA_EVIDENCIA_ABET_TALLER_01_ROS2_CLI.md`](evidencias_abet/PLANTILLA_EVIDENCIA_ABET_TALLER_01_ROS2_CLI.md), representación auxiliar no normativa |
 | Evidencia y nota del Laboratorio 01 | [`evidencias_abet/INSTRUMENTO_ABET_LAB_01_RED_ROS2_DISTRIBUIDA.docx`](evidencias_abet/INSTRUMENTO_ABET_LAB_01_RED_ROS2_DISTRIBUIDA.docx) | [`evidencias_abet/INSTRUMENTO_ABET_LAB_01_RED_ROS2_DISTRIBUIDA.md`](evidencias_abet/INSTRUMENTO_ABET_LAB_01_RED_ROS2_DISTRIBUIDA.md), representación auxiliar no normativa |
@@ -69,6 +70,7 @@ Para evitar versiones incompatibles, cada responsabilidad debe tener una sola fu
 
 - [Guía 01 — Red ROS 2, DDS y comunicación talker/listener](guias_laboratorio/rendered/GUIA_LAB_01_RED_ROS2_TALKER_LISTENER.pdf).
 - [Guía 02 — Pruebas de conectividad, streaming RTSP y diagnóstico de la cámara Kinova](guias_laboratorio/GUIA_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.md).
+- [Informe Técnico Experimental — Laboratorio 02](guias_laboratorio/INFORME_TECNICO_EXPERIMENTOS_LAB_02_VISION_CYCLONEDDS.md): caracterización cuantitativa de ancho de banda, telemetría Wi-Fi 6 y diagnóstico de fallas por capas en la celda robótica distribuida.
 - [Ejercicio de laboratorio — Operación distribuida del Kinova: estación anfitriona, monitores y envío de trayectorias por turnos](guias_laboratorio/EJERCICIO_LAB_OPERACION_DISTRIBUIDA_KINOVA_TURNOS.md) (sin calificación).
 - [Plantilla institucional para nuevas guías](guias_laboratorio/templates/Formato_Guias_de_Laboratorio.docx).
 
