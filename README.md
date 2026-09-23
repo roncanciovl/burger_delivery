@@ -53,6 +53,17 @@ source install/setup.bash
 ```
 *(Alternativa: ejecutar `./build_burger.sh`).*
 
+### Arranque centralizado (`burger_bringup`)
+
+```bash
+colcon build --packages-up-to burger_bringup
+ros2 launch burger_bringup bringup.launch.py                       # escena + AprilTag simulado
+ros2 launch burger_bringup bringup.launch.py simulation:=false robot_ip:=192.168.1.10 \
+    use_fake_hardware:=false start_driver:=true                   # sólo en la anfitriona
+```
+
+Qué hace cada paquete y cómo se relacionan: [`docs/architecture/PAQUETES_ROS2.md`](docs/architecture/PAQUETES_ROS2.md).
+
 ### Ejecución y Visualización
 Lanza la escena base en RViz2:
 
@@ -85,6 +96,11 @@ burger_delivery/
 │   ├── urdf/                      # Escena fija y descripciones de carritos
 │   ├── launch/                    # display.launch.py con switch de modos
 │   └── rviz/                      # Configuraciones de visualización RViz2
+├── burger_perception/             # Localizador AprilTag (Pose2D + TF tag_mesa -> tag_carrito)
+├── burger_control/                # Pick & place con MoveIt Task Constructor (Gen3 6 GDL)
+├── burger_telemetry/              # Launch del monitor de red, agente micro-ROS y grabación MCAP
+├── burger_bringup/                # Launch central: simulation, use_apriltag, use_vlm, ...
+├── burger_kinova_reference/       # Conexión segura con el Kinova, monitor y flight recorder
 ├── scripts/                       # Herramientas Python de validación física y parcheo
 ├── network_setup/                 # Monitor de red híbrido, QoS DDS, telemetría y configs
 ├── vision_setup/                  # Pipeline visual RTSP y arquitectura AprilTag

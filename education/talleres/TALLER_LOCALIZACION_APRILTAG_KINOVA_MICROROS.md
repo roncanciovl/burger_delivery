@@ -126,10 +126,18 @@ carrito (`/burger_car_01`, …) basta para que varios equipos compartan el domin
 El nodo publica periódicamente `(x, y, θ)` en `/{robot_namespace}/pose2d`. El **namespace** permite
 que varios carritos compartan el dominio: `burger_car_01` publica en `/burger_car_01/pose2d`.
 
+> [!NOTE]
+> El código del localizador vive en el paquete `burger_perception`: el nodo en
+> `burger_perception/burger_perception/apriltag_localizer.py` y la geometría (homografía, pose)
+> en `tag_geometry.py`. `scripts/apriltag_fixed_camera_localizer.py` es un envoltorio que lo
+> ejecuta, así que los comandos `python3 scripts/apriltag_fixed_camera_localizer.py ...` de este
+> taller siguen funcionando. Compilado el paquete, también sirve
+> `ros2 run burger_perception apriltag_localizer`.
+
 ### 🔍 Revisión real obligatoria
 ```bash
 cd ~/ros2_ws/src/burger_delivery
-rg -n "declare_parameter|topic_name|simulated_mode|radius|sim_time \+=|math.pi" scripts/apriltag_fixed_camera_localizer.py
+rg -n "declare_parameter|topic_name|simulated_mode|radius|sim_time \+=|math.pi" burger_perception/burger_perception/
 ```
 
 Anota los ocho parámetros con sus valores por defecto, cómo se construye el nombre del tópico y la
@@ -187,7 +195,7 @@ en el Modo B, la frecuencia de la pose la fija la cámara, no un temporizador.
 
 ### 🔍 Revisión real obligatoria
 ```bash
-rg -n "image_topic|qos_profile_sensor_data|imdecode|_make_detector|ArucoDetector|DetectorParameters_create|Tags visibles|no visible" scripts/apriltag_fixed_camera_localizer.py
+rg -n "image_topic|qos_profile_sensor_data|imdecode|make_detector|ArucoDetector|DetectorParameters_create|Tags visibles|no visible" burger_perception/burger_perception/
 ```
 
 Identifica: la suscripción a `CompressedImage` con perfil de datos de sensor, la decodificación con
@@ -300,7 +308,7 @@ $k = \text{lado del tag\_mesa en píxeles} / s$. Es el caso que se calcula a man
 
 ### 🔍 Revisión real obligatoria
 ```bash
-rg -n "_to_reference_plane|reference_m|getPerspectiveTransform|perspectiveTransform|forward|_to_image_center" scripts/apriltag_fixed_camera_localizer.py
+rg -n "_to_reference_plane|reference_m|getPerspectiveTransform|perspectiveTransform|forward|_to_image_center" burger_perception/burger_perception/
 ros2 interface show geometry_msgs/msg/Pose2D
 ```
 
