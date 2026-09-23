@@ -26,6 +26,8 @@ Uso::
 
     python3 scripts/analizar_enlace.py benchmark_wifi_wsl2
     python3 scripts/analizar_enlace.py benchmark_wifi_wsl2 benchmark_ethernet_wsl2
+    python3 scripts/analizar_enlace.py benchmark_ethernet_wsl2 benchmark_ethernet_nativo \
+        benchmark_ethernet_nativo_rt
 """
 
 import os
@@ -188,6 +190,24 @@ def _ping(texto: str) -> List[str]:
     return re.findall(r'rtt min/avg/max/mdev = ([\d./]+) ms', texto)
 
 
+def _plataforma(entorno: str) -> str:
+    """Deducir la plataforma; las corridas anteriores a este campo sólo tenían ``wsl``."""
+    plataforma = _campo(entorno, 'plataforma')
+    if plataforma != '(desconocido)':
+        return plataforma
+    wsl = _campo(entorno, 'wsl')
+    if wsl == '(desconocido)':
+        return wsl
+    return 'linux_nativo' if 'no es WSL' in wsl else 'wsl2'
+
+
+def _fifo_texto(fifo: Optional[bool]) -> str:
+    """Describir si el driver obtuvo planificación de tiempo real."""
+    if fifo is None:
+        return '(sin driver.txt)'
+    return 'sí' if fifo else 'NO (el driver avisó "Could not enable FIFO")'
+
+
 def analizar(carpeta: str) -> Optional[Dict]:
     """
     Analizar una corrida completa.
@@ -224,6 +244,10 @@ def analizar(carpeta: str) -> Optional[Dict]:
         print("    pgrep -f 'bag record' que no queden grabadores entre ramas del "
               'experimento.')
     stamps = sesiones[0] if sesiones else []
+    driver_txt = ''
+    ruta_driver = os.path.join(carpeta, 'driver.txt')
+    if os.path.isfile(ruta_driver):
+        driver_txt = open(ruta_driver, encoding='utf-8', errors='ignore').read()
     intervalos = sorted((b - a) * 1000.0 for a, b in zip(stamps, stamps[1:]))
     duracion = (stamps[-1] - stamps[0]) if len(stamps) > 1 else 0.0
 
@@ -232,6 +256,12 @@ def analizar(carpeta: str) -> Optional[Dict]:
         'sesiones': len(sesiones),
         'etiqueta': _campo(entorno, 'etiqueta'),
         'rmw': _campo(entorno, 'RMW_IMPLEMENTATION'),
+        'plataforma': _plataforma(entorno),
+        'preempt': _campo(entorno, 'preempt'),
+        'rtprio_max': _campo(entorno, 'rtprio_max'),
+        # None = no hay log del driver para saberlo.
+        'fifo': (None if not driver_txt
+                 else 'Could not enable FIFO RT scheduling' not in driver_txt),
         'ping': _ping(ping_txt),
         'mensajes': len(stamps),
         'duracion': duracion,
@@ -250,6 +280,9 @@ def informe(m: Dict) -> None:
     print(f"  {m['etiqueta']}   ({m['carpeta']})")
     print(f"{'=' * 72}")
     print(f"  RMW                  : {m['rmw']}")
+    print(f"  plataforma           : {m['plataforma']} "
+          f"(preempt {m['preempt']}, rtprio_max {m['rtprio_max']})")
+    print(f"  planificación FIFO   : {_fifo_texto(m['fifo'])}")
     for i, rtt in enumerate(m['ping']):
         destino = 'robot  ' if i == 0 else 'gateway'
         print(f'  ping {destino}         : {rtt} ms (min/avg/max/mdev)')
@@ -274,6 +307,38 @@ def informe(m: Dict) -> None:
         print('  transiciones de estado del enlace:')
         for t in m['transiciones']:
             print(f'    {t}')
+
+
+def comparar_varias(corridas: List[Dict]) -> None:
+    """
+    Imprimir una tabla con una columna por corrida.
+
+    Pensada para separar el residuo de WSL2 del enlace: ``ethernet_wsl2`` frente a
+    ``ethernet_nativo`` (misma red, otra capa de SO) y ``ethernet_nativo_rt`` (además con
+    planificación FIFO). Cada columna cambia UNA condición respecto a la anterior.
+    """
+    print(f"\n{'=' * 72}")
+    print('  COMPARACIÓN: ' + '  vs  '.join(c['etiqueta'] for c in corridas))
+    print(f"{'=' * 72}")
+    filas = [
+        ('plataforma', lambda c: c['plataforma']),
+        ('planificación FIFO', lambda c: {None: '?', True: 'sí', False: 'no'}[c['fifo']]),
+        ('frecuencia media (Hz)', lambda c: f"{c['hz']:.2f}"),
+        ('intervalo p50 (ms)', lambda c: f"{percentil(c['intervalos'], 0.50):.2f}"),
+        ('intervalo p99 (ms)', lambda c: f"{percentil(c['intervalos'], 0.99):.2f}"),
+        ('intervalo máximo (ms)',
+         lambda c: f"{c['intervalos'][-1]:.2f}" if c['intervalos'] else '-'),
+        ('intervalos > 20 ms', lambda c: str(sum(1 for v in c['intervalos'] if v > 20.0))),
+        ('overruns', lambda c: str(c['overruns'])),
+        ('timeouts Kortex', lambda c: str(c['kortex_timeouts'])),
+    ]
+    ancho = max(18, *(len(c['etiqueta']) + 2 for c in corridas))
+    print('  ' + f"{'métrica':<24}" + ''.join(f"{c['etiqueta']:>{ancho}}" for c in corridas))
+    for nombre, valor in filas:
+        print('  ' + f'{nombre:<24}' + ''.join(f'{valor(c):>{ancho}}' for c in corridas))
+    print('\n  Si ethernet_nativo reduce los overruns frente a ethernet_wsl2 con la misma red,')
+    print('  ese residuo era de WSL2. Si además ethernet_nativo_rt los lleva a cero, lo que')
+    print('  faltaba era la planificación FIFO del lazo de control.')
 
 
 def comparar(a: Dict, b: Dict) -> None:
@@ -310,6 +375,8 @@ def main() -> int:
         informe(m)
     if len(metricas) == 2:
         comparar(metricas[0], metricas[1])
+    elif len(metricas) > 2:
+        comparar_varias(metricas)
     return 0 if metricas else 1
 
 

@@ -169,9 +169,48 @@ mantener fuera del repositorio los logs grandes y las bolsas ROS. Para regenerar
 python3 ./scripts/analizar_enlace.py benchmark_wifi_wsl2 benchmark_ethernet_wsl2
 ```
 
-## 8. Próximo paso sugerido
+## 8. Próximo paso: separar el residuo de WSL2 (pendiente de ejecutar)
 
-Repetir la rama `ethernet_wsl2` en **Linux nativo** para cuantificar el residuo que aporta
-WSL2 (los 6 desbordamientos y la ausencia de scheduling FIFO). Con el enlace ya
-descartado como causa dominante, esa comparación pasa a ser de afinamiento, no de
-viabilidad.
+Con el enlace descartado como causa dominante, quedan los 6 desbordamientos y los 2
+intervalos > 20 ms de la rama `ethernet_wsl2`, y el aviso `Could not enable FIFO RT
+scheduling policy`. Hay dos candidatos mezclados: la capa WSL2 y la falta de planificación
+de tiempo real. Se separan con dos ramas más, cada una cambiando **una** condición:
+
+| Rama | SO de la anfitriona | SCHED_FIFO | Qué aísla respecto a la anterior |
+|---|---|---|---|
+| `ethernet_wsl2` (ya medida) | WSL2 | no | — |
+| `ethernet_nativo` | Linux nativo (Ubuntu 24.04) | no (`ulimit -r` = 0) | La capa WSL2 |
+| `ethernet_nativo_rt` | Linux nativo | sí (`ulimit -r` = 99) | La planificación de tiempo real |
+
+Mismo cable, mismo puerto del router, mismo ROS 2 Jazzy y `rmw_cyclonedds_cpp`, mismo
+`ROS_DOMAIN_ID`, robot quieto, 120 s. `benchmark_enlace_kinova.sh` ahora registra en
+`entorno.txt` la plataforma, el tipo de *preempt* del kernel, `rtprio_max`, el gobernador de
+CPU y el número de núcleos, y al terminar dice si el driver obtuvo FIFO.
+
+```bash
+# En la anfitriona con Linux nativo, por cable
+./scripts/benchmark_enlace_kinova.sh ethernet_nativo 192.168.1.10 120
+sudo ./scripts/configurar_rt_linux.sh "$USER"     # cerrar sesión y volver a entrar
+ulimit -r                                          # 99
+./scripts/benchmark_enlace_kinova.sh ethernet_nativo_rt 192.168.1.10 120
+python3 ./scripts/analizar_enlace.py benchmark_ethernet_wsl2 benchmark_ethernet_nativo \
+    benchmark_ethernet_nativo_rt
+```
+
+Con tres o más carpetas el analizador imprime una tabla con una columna por rama.
+
+**Cómo leerlo.** Si `ethernet_nativo` baja los overruns frente a `ethernet_wsl2`, ese
+residuo era de WSL2. Si `ethernet_nativo_rt` los lleva a cero y ya no aparece el aviso de
+FIFO, lo que faltaba era la prioridad del lazo. Si ninguna de las dos mejora, el residuo
+está en el robot o en el router, y WSL2 queda exonerado.
+
+**Resultados:** pendientes.
+
+| Métrica | `ethernet_wsl2` | `ethernet_nativo` | `ethernet_nativo_rt` |
+|---|---:|---:|---:|
+| Frecuencia media | 99.96 Hz | | |
+| Intervalo p99 | 10.61 ms | | |
+| Intervalo máximo | 20.63 ms | | |
+| Intervalos > 20 ms | 2 | | |
+| Overruns | 6 | | |
+| Aviso de FIFO | sí | | |

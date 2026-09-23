@@ -13,6 +13,8 @@
 #
 #   ./benchmark_enlace_kinova.sh wifi_wsl2      192.168.1.10 120
 #   ./benchmark_enlace_kinova.sh ethernet_wsl2  192.168.1.10 120
+#   ./benchmark_enlace_kinova.sh ethernet_nativo    192.168.1.10 120   # Linux nativo, sin RT
+#   ./benchmark_enlace_kinova.sh ethernet_nativo_rt 192.168.1.10 120   # tras configurar_rt_linux.sh
 #
 # Produce en ./benchmark_<etiqueta>/:
 #   entorno.txt   condiciones exactas de la corrida (SO, RMW, dominio, ruta al robot)
@@ -45,6 +47,27 @@ echo "=== 1/4 Registrando condiciones de la corrida ==="
   echo "fecha             : $(date -Is)"
   echo "host              : $(uname -srm)"
   echo "wsl               : ${WSL_DISTRO_NAME:-(no es WSL)}"
+  # /proc/version delata WSL2 aunque WSL_DISTRO_NAME no llegue (p. ej. bajo sudo).
+  if grep -qi microsoft /proc/version 2>/dev/null; then
+    echo "plataforma        : wsl2"
+  else
+    echo "plataforma        : linux_nativo"
+  fi
+  echo "kernel            : $(uname -r)"
+  # PREEMPT_RT o PREEMPT_DYNAMIC: determina cuánto puede interrumpirse el lazo de control.
+  echo "kernel_build      : $(uname -v)"
+  if [ "$(cat /sys/kernel/realtime 2>/dev/null)" = "1" ]; then
+    echo "preempt           : PREEMPT_RT"
+  else
+    echo "preempt           : $(uname -v | grep -o 'PREEMPT[_A-Z]*' | head -1 || echo ninguno)"
+  fi
+  # Límite de prioridad de tiempo real del usuario: 0 = el driver NO puede usar SCHED_FIFO
+  # y avisará "Could not enable FIFO RT scheduling policy".
+  echo "rtprio_max        : $(ulimit -r)"
+  echo "memlock           : $(ulimit -l)"
+  echo "grupo_realtime    : $(id -nG | tr ' ' '\n' | grep -qx realtime && echo si || echo no)"
+  echo "cpu_governor      : $(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || echo '(no expuesto)')"
+  echo "nucleos           : $(nproc)"
   echo "ROS_DISTRO        : ${ROS_DISTRO}"
   echo "ROS_DOMAIN_ID     : ${ROS_DOMAIN_ID:-0 (por defecto)}"
   echo "RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-(por defecto)}"
@@ -134,6 +157,15 @@ else
 fi
 
 pkill -9 -g "${LAUNCH_PGID:-0}" 2>/dev/null
+
+echo
+FIFO_AVISOS=$(grep -c "Could not enable FIFO RT scheduling" driver.txt 2>/dev/null || true)
+if [ "${FIFO_AVISOS:-0}" -gt 0 ]; then
+  echo "  ⚠ el driver corrió SIN planificación FIFO (rtprio_max=$(ulimit -r)); ver"
+  echo "    scripts/configurar_rt_linux.sh para habilitarla en Linux nativo."
+else
+  echo "  ✓ el driver no avisó de falta de planificación FIFO"
+fi
 
 echo
 echo "=== 4/4 Listo ==="
