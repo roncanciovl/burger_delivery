@@ -72,6 +72,11 @@ Para evitar versiones incompatibles, cada responsabilidad debe tener una sola fu
 - [Guía 02 — Pruebas de conectividad, streaming RTSP y diagnóstico de la cámara Kinova](guias_laboratorio/GUIA_LAB_02_PRUEBAS_CAMARA_KINOVA_VISION.md).
 - [Informe Técnico Experimental — Laboratorio 02](guias_laboratorio/INFORME_TECNICO_EXPERIMENTOS_LAB_02_VISION_CYCLONEDDS.md): caracterización cuantitativa de ancho de banda, telemetría Wi-Fi 6 y diagnóstico de fallas por capas en la celda robótica distribuida.
 - [Ejercicio de laboratorio — Operación distribuida del Kinova: estación anfitriona, monitores y envío de trayectorias por turnos](guias_laboratorio/EJERCICIO_LAB_OPERACION_DISTRIBUIDA_KINOVA_TURNOS.md) (sin calificación).
+- Borradores, sin ejecutar con estudiantes todavía:
+  - [Guía 04 — Modelado de robots y árboles TF con URDF/XACRO](guias_laboratorio/GUIA_LAB_04_MODELADO_URDF_XACRO_TF.md).
+  - [Guía 05 — Localización visual con AprilTags y cancelación de perspectiva](guias_laboratorio/GUIA_LAB_05_LOCALIZACION_APRILTAG_PERSPECTIVA.md).
+  - [Guía 06 — Planificación de trayectorias con MoveIt 2 y MTC](guias_laboratorio/GUIA_LAB_06_PLANIFICACION_MOVEIT2.md).
+  - [Guía 07 — Razonamiento espacial con IA multimodal (Gemini)](guias_laboratorio/GUIA_LAB_07_RAZONAMIENTO_ESPACIAL_GEMINI.md).
 - [Plantilla institucional para nuevas guías](guias_laboratorio/templates/Formato_Guias_de_Laboratorio.docx).
 
 ### Proyectos y Control de Versiones
