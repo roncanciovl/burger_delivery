@@ -25,6 +25,7 @@ Este documento centraliza las tareas pendientes, oportunidades de mejora identif
 ## 📦 2. Modularización de Paquetes ROS 2
 
 - [ ] **Separación del Workspace en Paquetes Especializados**:
+  - [ ] `burger_kinova_reference` Convertir en el paquete principal para el movimiento del robot 
   - [ ] `burger_description`: Mantener exclusivamente URDFs, mallas 3D y configuraciones RViz.
   - [ ] `burger_perception`: Nodos de detección AprilTag y razonamiento espacial con IA.
   - [ ] `burger_control`: Scripts de MoveIt 2 Task Constructor (MTC) para pick & place colaborativo.
@@ -89,10 +90,10 @@ Este documento centraliza las tareas pendientes, oportunidades de mejora identif
 ## 🎓 5. Ecosistema Docente y Living Lab (ABET)
 
 - [ ] **Ampliación de Guías de Laboratorio (`education/guias_laboratorio/`)**:
-  - [ ] Guía Lab 02: Modelado de robots y árboles TF con URDF/XACRO.
-  - [ ] Guía Lab 03: Localización visual con AprilTags y cancelación de perspectiva.
-  - [ ] Guía Lab 04: Planificación de trayectorias con MoveIt 2.
-  - [ ] Guía Lab 05: Razonamiento espacial con IA multimodal (Gemini).
+  - [ ] Guía Lab 04: Modelado de robots y árboles TF con URDF/XACRO.
+  - [ ] Guía Lab 05: Localización visual con AprilTags y cancelación de perspectiva.
+  - [ ] Guía Lab 06: Planificación de trayectorias con MoveIt 2.
+  - [ ] Guía Lab 07: Razonamiento espacial con IA multimodal (Gemini).
 - [ ] **Integración Continua (CI/CD)**:
   - [ ] Configurar GitHub Actions para validación automática de URDFs (`xmllint`, `check_urdf`) en cada Pull Request.
   - [ ] Linteo automático de código Python y scripts bash.
