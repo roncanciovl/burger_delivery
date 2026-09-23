@@ -63,3 +63,31 @@ def pose_from_corners(points: np.ndarray) -> Tuple[float, float, float]:
     forward = (points[1] + points[2]) / 2.0
     theta = math.atan2(forward[1] - center[1], forward[0] - center[0])
     return float(center[0]), float(center[1]), float(theta)
+
+
+def tag_center_in_camera(corners_px: np.ndarray, tag_size_m: float, k: np.ndarray,
+                         dist: np.ndarray) -> Tuple[np.ndarray, Tuple[float, float]]:
+    """
+    Posición 3D del centro de un tag en el marco óptico de la cámara, por PnP.
+
+    Es la referencia (*ground truth*) del benchmark contra Gemini: un tag de tamaño
+    conocido pegado al centro de la cara superior de la caja.
+
+    :param corners_px: 4 esquinas del tag en píxeles, en el orden del detector.
+    :param tag_size_m: lado del cuadro negro del tag.
+    :param k: matriz intrínseca 3×3.
+    :param dist: coeficientes de distorsión (pueden ser ceros).
+    :returns: ``(xyz, (u, v))``: el centro en metros y su proyección en píxeles.
+    """
+    h = tag_size_m / 2.0
+    # Orden del detector: sup-izq, sup-der, inf-der, inf-izq (y del tag hacia arriba).
+    objeto = np.array([[-h, h, 0.0], [h, h, 0.0], [h, -h, 0.0], [-h, -h, 0.0]],
+                      dtype=np.float64)
+    imagen = corners_px.reshape(4, 2).astype(np.float64)
+    ok, rvec, tvec = cv2.solvePnP(objeto, imagen, k, dist, flags=cv2.SOLVEPNP_IPPE_SQUARE)
+    if not ok:
+        raise RuntimeError('solvePnP no convergió')
+    # Proyección del centro, no la media de las esquinas: en perspectiva no coinciden.
+    centro_px, _ = cv2.projectPoints(np.zeros((1, 3)), rvec, tvec, k, dist)
+    u, v = centro_px.ravel()
+    return tvec.ravel(), (float(u), float(v))

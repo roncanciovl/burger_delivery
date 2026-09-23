@@ -62,6 +62,49 @@ from tf2_ros import Buffer, TransformBroadcaster, TransformException, TransformL
 _DEPTH_DTYPES = {'16UC1': np.uint16, 'mono16': np.uint16, '32FC1': np.float32}
 
 
+def camera_model(info):
+    """Construir un PinholeCameraModel a partir de un CameraInfo."""
+    model = PinholeCameraModel()
+    model.fromCameraInfo(info)
+    return model
+
+
+def depth_array(msg):
+    """Convertir un sensor_msgs/Image de profundidad en un arreglo 2D de NumPy."""
+    dtype = _DEPTH_DTYPES.get(msg.encoding)
+    if dtype is None:
+        raise RuntimeError(f'codificación de profundidad no soportada: {msg.encoding}')
+    array = np.frombuffer(msg.data, dtype=dtype)
+    return array.reshape(msg.height, msg.step // np.dtype(dtype).itemsize)[:, :msg.width]
+
+
+def deproject_pixel(u, v, color_size, info, depth, depth_info, depth_mode,
+                    window=7, plane_distance_m=0.5):
+    """
+    Desproyectar el píxel (u, v) de la imagen de color a 3D en un marco óptico.
+
+    Compartida por el nodo y por el benchmark contra AprilTag, para que ambos midan
+    exactamente lo mismo.
+
+    :returns: ``((x, y, z), frame_id)`` o ``(None, None)`` si no hay profundidad válida.
+    """
+    if depth_mode == 'plane':
+        return (scale_ray_to_depth(camera_model(info).projectPixelTo3dRay((u, v)),
+                                   plane_distance_m), info.header.frame_id)
+    array = depth_array(depth)
+    du, dv = scale_pixel(u, v, color_size, (array.shape[1], array.shape[0]))
+    z = depth_at(array, du, dv, window, depth.encoding)
+    if z is None:
+        return None, None
+    if depth_mode == 'registered':
+        model, pu, pv, frame = camera_model(info), u, v, info.header.frame_id
+    else:
+        if depth_info is None:
+            return None, None
+        model, pu, pv, frame = camera_model(depth_info), du, dv, depth_info.header.frame_id
+    return scale_ray_to_depth(model.projectPixelTo3dRay((pu, pv)), z), frame
+
+
 class GeminiSpatialReasoningNode(Node):
     """Localiza un objeto descrito en lenguaje natural y publica su TF 3D."""
 
@@ -229,42 +272,10 @@ class GeminiSpatialReasoningNode(Node):
 
     def _deproject(self, u, v, color_size, info, depth, depth_info):
         """Devolver ((x, y, z), frame_id) en el marco óptico, o (None, None)."""
-        window = self.get_parameter('depth_window_px').value
-        if self.depth_mode == 'plane':
-            model, pu, pv = self._model(info), u, v
-            z = self.get_parameter('plane_distance_m').value
-            frame = info.header.frame_id
-        elif self.depth_mode == 'registered':
-            model, frame = self._model(info), info.header.frame_id
-            array = self._depth_array(depth)
-            pu, pv = scale_pixel(u, v, color_size, (array.shape[1], array.shape[0]))
-            z = depth_at(array, pu, pv, window, depth.encoding)
-            pu, pv = u, v
-        else:
-            if depth_info is None:
-                return None, None
-            model, frame = self._model(depth_info), depth_info.header.frame_id
-            array = self._depth_array(depth)
-            pu, pv = scale_pixel(u, v, color_size, (array.shape[1], array.shape[0]))
-            z = depth_at(array, pu, pv, window, depth.encoding)
-        if z is None:
-            return None, None
-        ray = model.projectPixelTo3dRay((pu, pv))
-        return scale_ray_to_depth(ray, z), frame
-
-    @staticmethod
-    def _model(info):
-        model = PinholeCameraModel()
-        model.fromCameraInfo(info)
-        return model
-
-    @staticmethod
-    def _depth_array(msg):
-        dtype = _DEPTH_DTYPES.get(msg.encoding)
-        if dtype is None:
-            raise RuntimeError(f'codificación de profundidad no soportada: {msg.encoding}')
-        array = np.frombuffer(msg.data, dtype=dtype)
-        return array.reshape(msg.height, msg.step // np.dtype(dtype).itemsize)[:, :msg.width]
+        return deproject_pixel(
+            u, v, color_size, info, depth, depth_info, self.depth_mode,
+            self.get_parameter('depth_window_px').value,
+            self.get_parameter('plane_distance_m').value)
 
     def _to_fixed_frame(self, point):
         """Expresar el punto en fixed_frame con el TF del instante de la imagen."""
