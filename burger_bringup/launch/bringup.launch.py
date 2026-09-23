@@ -9,8 +9,8 @@ Modos:
   la cámara real. Sólo la estación anfitriona usa ``start_driver:=true``
   (TROUBLESHOOTING.md §2.0); las demás se conectan al driver que ya corre.
 
-Módulos opcionales: ``use_apriltag`` (true), ``use_vlm`` (false), ``use_moveit`` (false,
-sólo planifica) y ``use_telemetry`` (false).
+Módulos opcionales: ``use_apriltag`` (true), ``use_vlm`` (false; nodo Gemini, necesita
+``GEMINI_API_KEY``), ``use_moveit`` (false, sólo planifica) y ``use_telemetry`` (false).
 
     ros2 launch burger_bringup bringup.launch.py
     ros2 launch burger_bringup bringup.launch.py simulation:=false robot_ip:=192.168.1.10 \
@@ -73,8 +73,8 @@ def _setup(context, *args, **kwargs):
                                         'apriltag_params:=<repo>/vision_setup/tags_fisicos.yaml'))
 
     if flag('use_vlm'):
-        acciones.append(LogInfo(msg='⚠ use_vlm:=true: el nodo Gemini aún no está en este '
-                                    'branch (ver claude/todo-gemini-vlm-node)'))
+        # Requiere GEMINI_API_KEY en el entorno y la cámara del Kinova publicando.
+        acciones.append(_include('burger_perception', 'gemini.launch.py'))
 
     if flag('use_moveit'):
         acciones.append(_include('burger_control', 'pick_place.launch.py',

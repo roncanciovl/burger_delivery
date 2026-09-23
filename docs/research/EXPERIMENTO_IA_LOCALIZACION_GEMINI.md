@@ -122,6 +122,21 @@ point_3d_camera_frame = (ray[0] * z_depth, ray[1] * z_depth, z_depth)
 
 ---
 
+### Implementación de referencia en el repositorio
+
+El nodo `burger_perception/gemini_spatial_reasoning_node.py` implementa las Fases 1 y 2:
+captura asíncrona de la imagen comprimida, `camera_info` y profundidad; inferencia en un hilo
+aparte, bajo demanda (`ros2 service call /gemini_spatial_reasoning/locate std_srvs/srv/Trigger`)
+o periódica; desproyección con `image_geometry`; y TF `base_link -> target_burger_box_frame`,
+que consume `burger_control`. Parámetros en `burger_perception/config/gemini.yaml`.
+
+> [!WARNING]
+> **Corrección a la Fase 2.** En ROS 2, `projectPixelTo3dRay` devuelve un rayo **unitario**.
+> Multiplicarlo por la profundidad (`ray[0] * z_depth`) acorta el punto fuera del eje óptico
+> y da una `z` menor que la medida. Lo correcto es escalar el rayo para que su componente z
+> valga la profundidad: `punto = ray * z_depth / ray[2]`. Con la cámara de 1920 × 1080 y un
+> objeto en el borde de la imagen, el error del cálculo ingenuo supera los 10 cm a 1 m.
+
 ## 7. Pruebas Prácticas: Entendimiento Semántico de la Escena (2D)
 
 Para que los estudiantes comprueben visual y numéricamente por qué Gemini supera a un detector de objetos clásico, pídeles que configuren las siguientes escenas físicas en el laboratorio usando sus objetos personales, y que analicen los resultados del modelo 2D antes de hacer la proyección 3D.

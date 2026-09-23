@@ -1,0 +1,23 @@
+# Parámetros del nodo de razonamiento espacial con Gemini (burger_perception).
+# La clave NO va aquí: export GEMINI_API_KEY=... en la terminal del nodo.
+gemini_spatial_reasoning:
+  ros__parameters:
+    image_topic: "/camera/color/image_raw/compressed"
+    camera_info_topic: "/camera/color/camera_info"
+    # registered: kinova_vision con depth_registration:=true (profundidad alineada al color)
+    # scaled: profundidad sin registrar (aproximado); plane: sin profundidad, z fija
+    depth_mode: "registered"
+    depth_topic: "/camera/depth_registered/image_rect"
+    depth_info_topic: "/camera/depth/camera_info"
+    plane_distance_m: 0.5
+    depth_window_px: 7
+    target: "cardboard burger box"
+    context: "It must be resting on the table, not held by a person."
+    model: "gemini-robotics-er-1.6-preview"
+    thinking_budget: 0
+    max_image_side: 1024      # la imagen se reduce antes de enviarla (latencia y costo)
+    jpeg_quality: 85
+    inference_period_s: 0.0   # 0 = sólo con: ros2 service call /gemini_spatial_reasoning/locate std_srvs/srv/Trigger
+    fixed_frame: "base_link"
+    target_frame: "target_burger_box_frame"
+    tf_rate_hz: 10.0
