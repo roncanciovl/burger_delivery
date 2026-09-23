@@ -42,7 +42,7 @@ if command -v ss &>/dev/null; then
         if [ "$port" -ge 7400 ] && [ "$port" -le 32000 ]; then
             # Fórmula inversa aproximada: (Port - 7400) / 250
             domain_id=$(( (port - 7400) / 250 ))
-            if [[ ! " ${active_domains[@]} " =~ " ${domain_id} " ]]; then
+            if [[ ! " ${active_domains[*]} " =~ " ${domain_id} " ]]; then
                 active_domains+=($domain_id)
             fi
         fi

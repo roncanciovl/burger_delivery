@@ -1,0 +1,13 @@
+# Linteo del repositorio (workflow .github/workflows/validacion-urdf-lint.yml).
+#
+# Dos niveles, para que el CI sea útil desde el primer día sin reescribir scripts viejos:
+#   * bloqueante  -> `ruff check .` con la selección de abajo: errores que rompen la
+#     ejecución (sintaxis, nombres indefinidos, comparaciones imposibles).
+#   * informativo -> `ruff check . --select E,W,F,B --exit-zero`: estilo y código muerto.
+# Los paquetes ROS 2 (burger_kinova_reference, ...) además pasan ament_flake8 en colcon test.
+line-length = 99
+target-version = "py312"
+extend-exclude = ["*.ipynb", "build", "install", "log"]
+
+[lint]
+select = ["E9", "F63", "F7", "F82"]

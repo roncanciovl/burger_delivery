@@ -1,0 +1,79 @@
+name: Validación URDF y linteo
+
+# Corre en cada Pull Request hacia main, en paralelo al build de ros2-ci.yml.
+# Es rápido (≈ 1 min) y no necesita ROS: falla antes de compilar si un URDF quedó
+# roto o si un script tiene un error de sintaxis.
+#
+# Qué es bloqueante y qué es informativo:
+#   * URDF del paquete burger_description (los que carga robot_state_publisher): BLOQUEANTE.
+#   * Copias para el visor web (visual/, vendor/): INFORMATIVO. Hoy tienen mallas con
+#     rutas rotas y no las usa ningún launch; se reportan sin frenar el PR.
+#   * Python: errores que rompen la ejecución, BLOQUEANTE; estilo, INFORMATIVO (ruff.toml).
+#   * Bash: severidad error de shellcheck, BLOQUEANTE; warnings, INFORMATIVO.
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  urdf:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Instalar xmllint y check_urdf
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libxml2-utils liburdfdom-tools
+
+      - name: XML bien formado (URDF, xacro, package.xml, launch XML)
+        run: |
+          git ls-files '*.urdf' '*.xacro' '*.launch.xml' 'package.xml' '*/package.xml' \
+            | xargs --no-run-if-empty xmllint --noout
+
+      - name: check_urdf sobre los URDF del paquete
+        run: |
+          set -e
+          for f in burger_description/urdf/*.urdf; do
+            echo "::group::check_urdf $f"
+            check_urdf "$f"
+            echo "::endgroup::"
+          done
+
+      - name: Estructura y mallas del paquete (bloqueante)
+        run: python3 scripts/ci/validar_urdf.py burger_description/urdf/*.urdf visual/burger_delivery_visual.urdf
+
+      - name: Copias del visor web (informativo)
+        continue-on-error: true
+        run: |
+          python3 scripts/ci/validar_urdf.py $(git ls-files '*.urdf' | grep -v '^burger_description/urdf/')
+
+  lint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Instalar ruff y shellcheck
+        # Ubuntu 24.04 marca el Python del sistema como externally-managed (PEP 668).
+        run: |
+          python3 -m venv "$RUNNER_TEMP/lint"
+          "$RUNNER_TEMP/lint/bin/pip" install --quiet ruff shellcheck-py
+          echo "$RUNNER_TEMP/lint/bin" >> "$GITHUB_PATH"
+
+      - name: Python — errores que rompen la ejecución (bloqueante)
+        run: ruff check . --output-format github
+
+      - name: Python — estilo y código muerto (informativo)
+        run: ruff check . --select E,W,F,B --exit-zero --statistics
+
+      - name: Bash — severidad error (bloqueante)
+        run: git ls-files '*.sh' | xargs --no-run-if-empty shellcheck -S error
+
+      - name: Bash — warnings (informativo)
+        run: git ls-files '*.sh' | xargs --no-run-if-empty shellcheck -S warning -f gcc || true
