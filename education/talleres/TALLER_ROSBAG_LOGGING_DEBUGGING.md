@@ -632,6 +632,12 @@ el lector del repositorio; `dataset_analisis` o `dataset_sqlite` son la alternat
 Valores obtenidos al ejecutar este taller completo en ROS 2 Jazzy (RMW CycloneDDS), con el nodo
 `flight_recorder_telemetry_demo.py` a 20 Hz. Sirven para saber si tu experimento está bien:
 
+> [!NOTE]
+> Estas cifras se midieron cuando el emulador publicaba **7** articulaciones. Desde que publica
+> **6**, como el brazo real, cadencia, jitter y conteos no cambian, pero el tamaño por mensaje de
+> los bags baja unos bytes. Para reproducir la tabla exacta lanza el nodo con
+> `--ros-args -p num_joints:=7`.
+
 | Magnitud | Valor de referencia |
 |---|---|
 | Cadencia del nodo (`ros2 topic hz`) | 19.997 – 20.005 Hz |
@@ -648,15 +654,15 @@ Valores obtenidos al ejecutar este taller completo en ROS 2 Jazzy (RMW CycloneDD
 | Volumen de log con `--log-level DEBUG` global | ≈ 490 líneas en 5 s (≈ 400 de `rcl` / `rmw_cyclonedds_cpp`) |
 
 > [!TIP]
-> Si tu jitter máximo nominal sale muy por encima de `0.002`, o tu `joint_states` no trae las 7
-> articulaciones simuladas `joint_1..joint_7`, revisa la configuración del nodo y tu `ROS_DOMAIN_ID`
+> Si tu jitter máximo nominal sale muy por encima de `0.002`, o tu `joint_states` no trae las 6
+> articulaciones simuladas `joint_1..joint_6`, revisa la configuración del nodo y tu `ROS_DOMAIN_ID`
 > antes de concluir nada: primero descarta la capa de transporte y de registro.
 
 > [!WARNING]
-> **Las 7 articulaciones son del emulador, no del robot.** El Kinova Gen3 del laboratorio es de
-> **6 GDL** y en `/joint_states` publica `joint_1..joint_6` más la articulación de la pinza
-> (`robotiq_85_left_knuckle_joint`). No uses este taller como referencia del número de
-> articulaciones reales: ver [`TROUBLESHOOTING.md`](../../TROUBLESHOOTING.md) §3.1.
+> **El emulador publica 6 articulaciones, como el robot, pero no la pinza.** El Kinova Gen3 del
+> laboratorio es de **6 GDL** y en `/joint_states` publica `joint_1..joint_6` más la articulación de
+> la pinza (`robotiq_85_left_knuckle_joint`), que el emulador no simula. El parámetro `num_joints`
+> (6 por defecto) existe sólo para reproducir los datos de referencia antiguos. Ver [`TROUBLESHOOTING.md`](../../TROUBLESHOOTING.md) §3.1.
 
 ---
 
@@ -698,7 +704,7 @@ Valores obtenidos al ejecutar este taller completo en ROS 2 Jazzy (RMW CycloneDD
 > (verás `Decompressing …` en el arranque). Para tener tiempo de inspeccionar, reproduce a la mitad de
 > velocidad: `ros2 bag play dataset_incidente_mcap --rate 0.5 --remap /burger/kinova/joint_states:=/burger/kinova/joint_states_replay`.
 > Entonces `ros2 topic list` debe mostrar `/burger/kinova/joint_states_replay` y `ros2 topic echo`
-> un `JointState` con `frame_id: base_link` y las 7 articulaciones simuladas del emulador.
+> un `JointState` con `frame_id: base_link` y las 6 articulaciones simuladas del emulador.
 >
 > Si el bag **ya terminó**, el tópico desaparece y `ros2 topic echo` responde
 > `topic [...] does not appear to be published yet`: vuelve a lanzar el `play` y verifica de inmediato.

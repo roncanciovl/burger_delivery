@@ -43,12 +43,20 @@ class FlightRecorderTelemetryDemo(Node):
         self.declare_parameter('telemetry_rate_hz', 20.0)
         self.declare_parameter('enable_flight_buffer', True)
         self.declare_parameter('buffer_max_samples', 200)
+        # El Kinova Gen3 del laboratorio es de 6 GDL (TROUBLESHOOTING.md §3.1). Con
+        # num_joints:=7 se reproducen los valores de referencia del taller medidos antes
+        # del cambio.
+        self.declare_parameter('num_joints', 6)
 
         # Lectura de parámetros
         self.ns = self.get_parameter('namespace').get_parameter_value().string_value
         rate_hz = self.get_parameter('telemetry_rate_hz').get_parameter_value().double_value
         self.enable_buffer = self.get_parameter('enable_flight_buffer').get_parameter_value().bool_value
         self.max_samples = self.get_parameter('buffer_max_samples').get_parameter_value().integer_value
+        self.num_joints = self.get_parameter('num_joints').get_parameter_value().integer_value
+        if self.num_joints < 4:
+            # La anomalía inyectada vive en joint_4.
+            raise ValueError(f'num_joints debe ser >= 4 (recibido {self.num_joints})')
 
         # Publicadores de telemetría
         self.pub_joint_states = self.create_publisher(JointState, f'/{self.ns}/joint_states', 10)
@@ -64,8 +72,8 @@ class FlightRecorderTelemetryDemo(Node):
         )
 
         # Estado cinemático interno del Kinova
-        self.joint_names = [f"joint_{i}" for i in range(1, 8)]
-        self.joint_positions = [0.0] * 7
+        self.joint_names = [f"joint_{i}" for i in range(1, self.num_joints + 1)]
+        self.joint_positions = [0.0] * self.num_joints
 
         # Control de anomalías
         self.anomaly_active = False
@@ -81,7 +89,8 @@ class FlightRecorderTelemetryDemo(Node):
         self.last_log_time = time.time()
 
         self.get_logger().info(
-            f"🚀 [INIT] Nodo '{self.get_name()}' iniciado para namespace '{self.ns}' a {rate_hz} Hz."
+            f"🚀 [INIT] Nodo '{self.get_name()}' iniciado para namespace '{self.ns}' a {rate_hz} Hz "
+            f"con {self.num_joints} articulaciones simuladas."
         )
         # Este nodo no declara un parámetro 'log_level': 'ros2 param set ... log_level'
         # falla aquí (y devuelve código de salida 0). Ver Ejercicio 1.2 del taller.
@@ -130,7 +139,7 @@ class FlightRecorderTelemetryDemo(Node):
 
         # 1. Simular movimiento articular (Kinova Gen3)
         # Movimiento sinusoidal normal
-        for i in range(7):
+        for i in range(self.num_joints):
             self.joint_positions[i] = math.sin(elapsed * (0.5 + i * 0.1))
 
         # Si hay anomalía activa, introducimos ruido no Gaussiano y vibración en joint_4
