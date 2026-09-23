@@ -912,7 +912,7 @@ nombres** en todas las estaciones, y varios reproducen nombres del sistema real.
 | Taller | Publica sin namespace | Se mezcla con |
 | :--- | :--- | :--- |
 | rosbag2 (`flight_recorder_telemetry_demo.py`) | `/burger/kinova/*` y sus servicios | los emuladores de las demás estaciones y, en una sesión con robot, el `kinova_monitor` (`/burger/kinova/diagnostics`) |
-| URDF/TF (`display.launch.py`) | `/joint_states`, `/tf`, `/robot_description` | los visores de las demás estaciones y, en una sesión con robot, el driver |
+| URDF/TF (`display.launch.py`) | `/joint_states`, `/tf`, `/robot_description` (salvo con `namespace:=<nombre>`, que los mueve todos bajo `/<nombre>/` y avisa al arrancar si no se usa en el dominio 0) | los visores de las demás estaciones y, en una sesión con robot, el driver |
 | TF2 turtlesim, CLI | `/tf`, `/turtle1/cmd_vel` | las demos de las demás estaciones |
 
 Nada de esto da error: las grabaciones mezclan datos de varias estaciones, `tf2_echo` alterna

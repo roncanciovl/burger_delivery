@@ -37,6 +37,15 @@
 > ```
 >
 > Aísla el dominio; no cambies `ROS_AUTOMATIC_DISCOVERY_RANGE` a `LOCALHOST`.
+>
+> Si no puedes cambiar de dominio, lanza el visor con un namespace propio: todo, incluidos
+> `/tf` y `/tf_static`, queda bajo `/<nombre>/` y RViz se remapea solo. En el dominio `0` sin
+> namespace, el launch lo avisa al arrancar.
+>
+> ```bash
+> ros2 launch burger_description display.launch.py use_static_carts:=true namespace:=visor_equipo07
+> ros2 run tf2_ros tf2_echo map tag_carrito1 --ros-args -r /tf:=/visor_equipo07/tf -r /tf_static:=/visor_equipo07/tf_static
+> ```
 
 
 > [!IMPORTANT]

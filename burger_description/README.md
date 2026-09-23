@@ -63,6 +63,11 @@ Esto lanza automáticamente:
 - `joint_state_publisher_gui` - GUI para mover articulaciones manualmente
 - `rviz2` - Visualización 3D
 
+Argumentos: `use_static_carts:=true` (TF temporales de los carritos) y `namespace:=<nombre>`,
+que mete todos los tópicos del visor, incluidos `/tf` y `/tf_static`, bajo `/<nombre>/` para
+no mezclarse con el driver del robot ni con otros visores del mismo dominio. Sin namespace y
+con `ROS_DOMAIN_ID` 0 el launch imprime un aviso (ver `TROUBLESHOOTING.md` §4.1).
+
 **Configuración en RViz:**
 - En el panel izquierdo "Global Options" → **Fixed Frame** → Selecciona `map`
 - Verifica que estén habilitados: ✓ RobotModel, ✓ TF
