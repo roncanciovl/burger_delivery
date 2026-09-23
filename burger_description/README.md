@@ -1,24 +1,21 @@
 # Burger Description Package
 
-> [!WARNING]
-> **Este modelo vendorizado es de 7 GDL; el robot del laboratorio es de 6.**
+> [!NOTE]
+> **El modelo vendorizado es de 6 GDL, como el robot del laboratorio** (re-vendorizado desde
+> `kortex_description/arms/gen3/6dof` con `scripts/revendorizar_gen3_6dof.py`).
 >
 > Conviene no confundir dos modelos que coexisten en el workspace:
 >
 > | Modelo | Cadena cinemática | GDL |
 > | :--- | :--- | :---: |
-> | `kortex_description`, generado en vivo por el driver | `base_link → shoulder_link → **bicep_link** → forearm_link → …` | **6** |
-> | `burger_description` (este, vendorizado) | `gen3_base_link → … → **gen3_half_arm_1_link → gen3_half_arm_2_link** → …` | 7 |
+> | `kortex_description`, generado en vivo por el driver | `base_link → shoulder_link → bicep_link → forearm_link → …` | 6 |
+> | `burger_description` (vendorizado) | `gen3_base_link → gen3_shoulder_link → gen3_bicep_link → gen3_forearm_link → …` | 6 |
 >
-> El RViz que abre `kinova_connection.launch.py` con `launch_rviz:=true` usa el **primero**,
-> generado por `kortex_bringup` con `dof:=6`, y **sí es fiel al robot**: refleja la
-> posición articular real. El modelo de `burger_description` sólo lo usa
-> `display.launch.py`, un visor sin robot, y tiene una articulación de más
-> (`half_arm_1`/`half_arm_2` en lugar de `bicep`) y todos sus frames bajo el prefijo
-> `gen3_`, así que no colisiona con los del driver pero tampoco corresponde al hardware.
->
-> Úsalo para estudiar la estructura de un URDF, no como referencia cinemática del brazo.
-> La re-vendorización a 6 GDL está pendiente; ver `TODO.md`.
+> Tienen la misma cinemática, pero el de `burger_description` lleva todos sus frames bajo el
+> prefijo `gen3_` y lo publica `display.launch.py`, un visor sin robot. El RViz que abre
+> `kinova_connection.launch.py` con `launch_rviz:=true` usa el del driver, que refleja la
+> posición articular real. Los URDF de referencia de Kinova en `vendor/robots/` siguen siendo
+> los originales de 7 GDL.
 
 
 This package contains the URDF description for the Burger Delivery Robot.
@@ -87,8 +84,8 @@ class SimpleArmController(Node):
         msg = JointState()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.name = ['gen3_joint_1', 'gen3_joint_2', 'gen3_joint_3', 
-                    'gen3_joint_4', 'gen3_joint_5', 'gen3_joint_6', 'gen3_joint_7']
-        msg.position = [0.0, 0.5, 0.0, 1.0, 0.0, 0.5, 0.0]
+                    'gen3_joint_4', 'gen3_joint_5', 'gen3_joint_6']
+        msg.position = [0.0, 0.5, 0.0, 1.0, 0.0, 0.5]
         self.pub.publish(msg)
 
 def main():
@@ -139,8 +136,7 @@ This will launch:
 ## Robot Components
 
 This URDF includes:
-- **Kinova Gen3 (7 DOF)** - Ultra-lightweight robotic arm
-  ⚠ El modelo vendorizado es de 7 GDL; el brazo del laboratorio es de **6**. Ver el aviso al inicio de este documento.
+- **Kinova Gen3 (6 DOF)** - Ultra-lightweight robotic arm, igual que el brazo del laboratorio
 - **2F Adapter** - Pinza simple
 - **Scene elements** - Table, staging area, delivery slots, mobile robot bases
 
@@ -195,8 +191,8 @@ class SimpleArmController(Node):
         msg = JointState()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.name = ['gen3_joint_1', 'gen3_joint_2', 'gen3_joint_3', 
-                    'gen3_joint_4', 'gen3_joint_5', 'gen3_joint_6', 'gen3_joint_7']
-        msg.position = [0.0, 0.5, 0.0, 1.0, 0.0, 0.5, 0.0]  # Ángulos en radianes
+                    'gen3_joint_4', 'gen3_joint_5', 'gen3_joint_6']
+        msg.position = [0.0, 0.5, 0.0, 1.0, 0.0, 0.5]  # Ángulos en radianes
         self.pub.publish(msg)
 
 def main():

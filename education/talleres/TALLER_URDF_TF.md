@@ -1,24 +1,21 @@
 # 🎓 Guía Paso a Paso: Descifrando URDF, `robot_description` y TF2 en Burger Delivery
 
-> [!WARNING]
-> **Este modelo vendorizado es de 7 GDL; el robot del laboratorio es de 6.**
+> [!NOTE]
+> **El modelo vendorizado es de 6 GDL, como el robot del laboratorio** (re-vendorizado desde
+> `kortex_description/arms/gen3/6dof` con `scripts/revendorizar_gen3_6dof.py`).
 >
 > Conviene no confundir dos modelos que coexisten en el workspace:
 >
 > | Modelo | Cadena cinemática | GDL |
 > | :--- | :--- | :---: |
-> | `kortex_description`, generado en vivo por el driver | `base_link → shoulder_link → **bicep_link** → forearm_link → …` | **6** |
-> | `burger_description` (este, vendorizado) | `gen3_base_link → … → **gen3_half_arm_1_link → gen3_half_arm_2_link** → …` | 7 |
+> | `kortex_description`, generado en vivo por el driver | `base_link → shoulder_link → bicep_link → forearm_link → …` | 6 |
+> | `burger_description` (vendorizado) | `gen3_base_link → gen3_shoulder_link → gen3_bicep_link → gen3_forearm_link → …` | 6 |
 >
-> El RViz que abre `kinova_connection.launch.py` (package `burger_kinova_reference`) con `launch_rviz:=true` usa el **primero**,
-> generado por `kortex_bringup` con `dof:=6`, y **sí es fiel al robot**: refleja la
-> posición articular real. El modelo de `burger_description` sólo lo usa
-> `display.launch.py`, un visor sin robot, y tiene una articulación de más
-> (`half_arm_1`/`half_arm_2` en lugar de `bicep`) y todos sus frames bajo el prefijo
-> `gen3_`, así que no colisiona con los del driver pero tampoco corresponde al hardware.
->
-> Úsalo para estudiar la estructura de un URDF, no como referencia cinemática del brazo.
-> La re-vendorización a 6 GDL está pendiente; ver [`TODO.md`](../../TODO.md) §4.1.
+> Tienen la misma cinemática, pero el de `burger_description` lleva todos sus frames bajo el
+> prefijo `gen3_` y lo publica `display.launch.py`, un visor sin robot. El RViz que abre
+> `kinova_connection.launch.py` con `launch_rviz:=true` usa el del driver, que refleja la
+> posición articular real. Los URDF de referencia de Kinova en `vendor/robots/` siguen siendo
+> los originales de 7 GDL.
 
 > [!CAUTION]
 > **Este taller no usa el driver del robot: no aplica la convención de estación anfitriona, y
@@ -260,22 +257,23 @@ Tipos principales:
 
 > [!NOTE]
 > **Fundamento de Robótica: Grados de Libertad (DOF)**
-> Cada joint que no sea `fixed` añade un **Grado de Libertad** al robot. El modelo que estás inspeccionando tiene 7 joints rotacionales, es decir **7-DOF**. En robótica, 6-DOF es el mínimo para alcanzar cualquier posición (XYZ) con cualquier orientación (RPY) en el espacio; un séptimo eje añade **redundancia**, que permite esquivar un obstáculo sin mover la pinza del objetivo.
+> Cada joint que no sea `fixed` añade un **Grado de Libertad** al robot. El modelo que estás inspeccionando tiene 6 joints rotacionales del brazo, es decir **6-DOF**, como el Gen3 del laboratorio. En robótica, 6-DOF es el mínimo para alcanzar cualquier posición (XYZ) con cualquier orientación (RPY) en el espacio; un séptimo eje (la versión de 7 GDL del Gen3) añadiría **redundancia**, que permite esquivar un obstáculo sin mover la pinza del objetivo.
 >
 > ⚠ **El brazo del laboratorio es de 6-DOF**, así que **no** tiene esa redundancia: para cada pose alcanzable existe en general un número finito de soluciones de cinemática inversa, no un continuo. Es una diferencia real a la hora de planificar trayectorias, no un detalle de nomenclatura.
 
 ### 🔍 Revisión en el Proyecto
 Busca los joints del Kinova en `delivery_scene_fixed.urdf`:
 ```bash
-rg -n 'gen3_joint_[1-7]|mimic|limit|axis' burger_description/urdf/delivery_scene_fixed.urdf
+rg -n 'gen3_joint_[1-6]|mimic|limit|axis' burger_description/urdf/delivery_scene_fixed.urdf
 ```
 
 Verifica en el archivo:
-- `gen3_joint_2` es `revolute`, usa `axis="0 0 1"` y tiene límites `lower="-2.41"` y `upper="2.41"`.
-- `gen3_joint_1`, `gen3_joint_3`, `gen3_joint_5` y `gen3_joint_7` son `continuous`.
+- `gen3_joint_2` es `revolute`, usa `axis="0 0 1"` y tiene límites `lower="-2.24"` y `upper="2.24"`.
+- `gen3_joint_3` (±2.57) y `gen3_joint_5` (±2.09) también son `revolute` con tope.
+- `gen3_joint_1`, `gen3_joint_4` y `gen3_joint_6` son `continuous`: giran sin límite en el modelo.
 - La pinza usa `mimic` con `multiplier="-1"` para que el dedo derecho imite al izquierdo en sentido opuesto.
 
-Nota de consistencia: se evaluó temporalmente convertir `gen3_joint_3` a `revolute` con límites `lower="-3.0"` y `upper="3.0"`, pero se descartó para conservar el comportamiento original del modelo Gen3. Por eso el URDF activo mantiene `gen3_joint_3` como `continuous`.
+Nota de consistencia: son los mismos límites que usa `burger_kinova_reference/config/kinova_connection.yaml` (`joint_min_rad`/`joint_max_rad`), tomados del macro oficial de 6 GDL.
 
 ### 🛠️ Ejercicio: ¡Mueve el robot!
 1.  Lanza: `ros2 launch burger_description display.launch.py use_static_carts:=true`
