@@ -1,0 +1,28 @@
+# Llevar un carrito a una pose de entrega junto al Kinova (TODO.md §3).
+#
+# Sustituye al servicio /car1/prepare_delivery_pose del proyecto intermedio
+# (PROYECTO_INTERMEDIO_MOVEIT2_DELIVERY.md §2.2) por una acción: el viaje dura segundos,
+# y el cliente (el orquestador del Kinova) necesita feedback y poder cancelar.
+
+# ---------- Goal ----------
+# Destino por nombre (clave de config/delivery_slots.yaml, p. ej. "slot_entrega_1")...
+string slot_id
+# ...o por pose explícita. Se usa target_pose si su header.frame_id no está vacío.
+geometry_msgs/PoseStamped target_pose
+# Tolerancias de llegada; <= 0 usa las del slot o las del servidor.
+float64 tolerance_xy
+float64 tolerance_yaw
+---
+# ---------- Result ----------
+bool success
+string status_message
+# Pose final del carrito medida por la cadena de TF (AprilTag), en el marco del destino.
+geometry_msgs/PoseStamped final_pose
+float64 error_xy
+float64 error_yaw
+---
+# ---------- Feedback ----------
+# NAVIGATING | VERIFYING
+string state
+float64 distance_remaining
+geometry_msgs/PoseStamped current_pose

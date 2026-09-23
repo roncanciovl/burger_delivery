@@ -1,0 +1,31 @@
+# Zonas de parada seguras (delivery slots) sincronizadas con el Kinova (TODO.md §3).
+#
+# Se expresan en tag_mesa porque es el marco donde el localizador AprilTag mide al carrito
+# y el que comparten el Equipo Kinova y el Equipo Carrito (PROYECTO_INTERMEDIO_MOVEIT2_
+# DELIVERY.md §2.1): no dependen de dónde quede el mapa de SLAM.
+#
+# x, y en metros; yaw_deg en grados (0 = eje x del tag_mesa). Tolerancias opcionales.
+# PENDIENTE: medir en el laboratorio el alcance cómodo del Gen3 sobre la bandeja del
+# carrito y ajustar. Los valores iniciales son los de use_static_carts en display.launch.py.
+delivery_slots:
+  slot_entrega_1:
+    frame: tag_mesa
+    x: 0.35
+    y: 0.10
+    yaw_deg: 0.0
+    tolerance_xy: 0.03
+    tolerance_yaw_deg: 8.0
+  slot_entrega_2:
+    frame: tag_mesa
+    x: 0.35
+    y: -0.10
+    yaw_deg: 0.0
+    tolerance_xy: 0.03
+    tolerance_yaw_deg: 8.0
+  slot_espera:
+    frame: tag_mesa
+    x: 0.60
+    y: 0.00
+    yaw_deg: 180.0
+    tolerance_xy: 0.08
+    tolerance_yaw_deg: 20.0
