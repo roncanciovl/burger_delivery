@@ -1,0 +1,40 @@
+# =====================================================================================
+# Registro de los AprilTags FÍSICOS de la celda Burger-Cell (TODO.md §4.1)
+# =====================================================================================
+# Hasta la verificación del 2026-09-15 no había tags instalados en la mesa y sus IDs y
+# tamaños no figuraban en el repositorio. Este archivo es ese registro y, a la vez, un
+# archivo de parámetros válido para el localizador:
+#
+#   python3 scripts/apriltag_fixed_camera_localizer.py --ros-args \
+#       --params-file vision_setup/tags_fisicos.yaml
+#
+# Mientras tag_size_m valga 0.0 el localizador se niega a arrancar en modo real
+# ("Con reference_tag_id >= 0 hay que indicar tag_size_m"): es a propósito, para que
+# nadie mida con un tamaño inventado. Rellena con valores MEDIDOS con calibrador sobre
+# el tag pegado (lado del cuadro negro, sin el margen blanco), no con el nominal.
+#
+# Para imprimirlos: scripts/generar_tags_apriltag.py. Procedimiento de validación y
+# tabla de resultados: vision_setup/VALIDACION_LOCALIZADOR_REAL.md.
+# =====================================================================================
+
+apriltag_fixed_camera_localizer:
+  ros__parameters:
+    simulated_mode: false
+    image_topic: "/camera/color/image_raw/compressed"
+    robot_namespace: "burger_car_01"
+    # --- PENDIENTE DE MEDIR EN EL LABORATORIO -------------------------------------
+    reference_tag_id: 1     # tag_mesa (familia 36h11). Confirmar con el modo 'imagen'.
+    tag_size_m: 0.0         # lado MEDIDO del cuadro negro del tag_mesa, en metros
+    tag_id: 5               # tag del carrito burger_car_01
+
+# Inventario completo. Va en comentarios porque el cargador de parámetros de ROS 2 no
+# admite listas de diccionarios. Una fila por tag físico instalado:
+#
+# | rol          | carrito        | ID 36h11  | lado medido (m) | altura sobre la mesa (m) | instalado |
+# |--------------|----------------|-----------|-----------------|--------------------------|-----------|
+# | tag_mesa     | -              | PENDIENTE | PENDIENTE       | 0 (pegado a la mesa)     |           |
+# | tag_carrito1 | burger_car_01  | PENDIENTE | PENDIENTE       | PENDIENTE (paralaje)     |           |
+# | tag_carrito2 | burger_car_02  | PENDIENTE | PENDIENTE       | PENDIENTE (paralaje)     |           |
+#
+# Ejes del tag_mesa: origen en su centro, x de la esquina 0 a la 1 del tag impreso,
+# y hacia la esquina 0 desde la 3 (ver TALLER_LOCALIZACION_APRILTAG_KINOVA_MICROROS.md §3).
