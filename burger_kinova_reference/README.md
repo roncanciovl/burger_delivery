@@ -346,6 +346,8 @@ ros2 launch burger_kinova_reference kinova_vision_compressed.launch.py \
 
 La validación y el visor compatible se explican en
 [`TROUBLESHOOTING.md` §3.5](../TROUBLESHOOTING.md#35-el-launch-estándar-anuncia-image_raw-lanzar-sólo-la-imagen-comprimida).
+Esa sección también conserva un comando de compatibilidad que usa únicamente el package
+oficial `kinova_vision`, para estaciones que todavía no tengan este launch actualizado.
 
 ---
 

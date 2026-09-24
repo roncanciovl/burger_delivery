@@ -863,6 +863,35 @@ ros2 launch burger_kinova_reference kinova_vision_compressed.launch.py \
   device:=<ip_del_kinova>
 ```
 
+<details>
+<summary><strong>Compatibilidad: estación sin el burger_kinova_reference actualizado</strong></summary>
+
+Si la estación sólo dispone del package oficial `kinova_vision`, ejecuta directamente el nodo
+de color con la misma lista exclusiva de publicadores. Este comando no depende de
+`burger_kinova_reference`:
+
+```bash
+ros2 run kinova_vision kinova_vision_node --ros-args \
+  -r __ns:=/camera \
+  -r __node:=kinova_vision_color \
+  -r image_raw:=color/image_raw \
+  -r image_raw/compressed:=color/image_raw/compressed \
+  -r camera_info:=color/camera_info \
+  -p camera_type:=color \
+  -p camera_name:=color \
+  -p frame_id:=camera_color_frame \
+  -p max_pub_rate:=30.0 \
+  -p 'camera_info_url_user:=""' \
+  -p camera_info_url_default:=package://kinova_vision/launch/calibration/default_color_calib_%ux%u.ini \
+  -p 'stream_config:=rtspsrc location=rtsp://192.168.1.10/color latency=30 ! rtph264depay ! avdec_h264 ! videoconvert' \
+  -p 'image_raw.enable_pub_plugins:=[image_transport/compressed]'
+```
+
+Cambia `192.168.1.10` dentro de `stream_config` si el robot utiliza otra IP. No ejecutes esta
+variante al mismo tiempo que el launch recomendado: ambos intentarían abrir el mismo RTSP.
+
+</details>
+
 El comando publica información de calibración, que no contiene píxeles, y un único tópico de
 imagen:
 
