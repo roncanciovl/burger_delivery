@@ -842,33 +842,26 @@ ros2 node list --no-daemon | grep kinova_vision
 ```
 
 Si cualquiera devuelve un driver activo, no lances otro. Si no hay ninguno, carga el entorno y
-ejecuta directamente **sólo el nodo de color**, limitando los plugins de publicación a
-`compressed`:
+usa el launch dedicado:
 
 ```bash
 source /opt/ros/jazzy/setup.bash
 source ~/ros2_ws/install/setup.bash
 
-ros2 run kinova_vision kinova_vision_node --ros-args \
-  -r __ns:=/camera \
-  -r __node:=kinova_vision_color \
-  -r image_raw:=color/image_raw \
-  -r image_raw/compressed:=color/image_raw/compressed \
-  -r camera_info:=color/camera_info \
-  -p camera_type:=color \
-  -p camera_name:=color \
-  -p frame_id:=camera_color_frame \
-  -p max_pub_rate:=30.0 \
-  -p 'camera_info_url_user:=""' \
-  -p camera_info_url_default:=package://kinova_vision/launch/calibration/default_color_calib_%ux%u.ini \
-  -p 'stream_config:=rtspsrc location=rtsp://192.168.1.10/color latency=30 ! rtph264depay ! avdec_h264 ! videoconvert' \
-  -p 'image_raw.enable_pub_plugins:=[image_transport/compressed]'
+ros2 launch burger_kinova_reference kinova_vision_compressed.launch.py
 ```
 
-La línea decisiva es `image_raw.enable_pub_plugins`: es la lista permitida de publicadores de
-`image_transport` en Jazzy. El valor vacío de `camera_info_url_user` también es obligatorio al
-ejecutar el binario directamente; si se omite, el nodo abre el RTSP y luego aborta con
-`UninitializedStaticallyTypedParameterException`.
+El launch
+[`kinova_vision_compressed.launch.py`](burger_kinova_reference/launch/kinova_vision_compressed.launch.py)
+encapsula los remapeos y la configuración RTSP. Internamente limita
+`image_raw.enable_pub_plugins` a `image_transport/compressed` e inicializa
+`camera_info_url_user`, evitando `UninitializedStaticallyTypedParameterException`.
+Si la IP del robot no es `192.168.1.10`, sólo cambia este argumento:
+
+```bash
+ros2 launch burger_kinova_reference kinova_vision_compressed.launch.py \
+  device:=<ip_del_kinova>
+```
 
 El comando publica información de calibración, que no contiene píxeles, y un único tópico de
 imagen:
@@ -923,7 +916,7 @@ what(): parameter 'camera_info_url_user' has already been declared
 
 El mensaje no significa que otro nodo publique la cámara: es un defecto del camino de
 reconexión del propio driver. Confirma que el proceso terminó, aplica las comprobaciones de la
-sección 3.4 y vuelve a lanzar el comando. No dejes dos procesos reintentando contra el mismo
+sección 3.4 y vuelve a lanzar el launch. No dejes dos procesos reintentando contra el mismo
 RTSP.
 
 **Criterio de resolución.** La persona participante puede demostrar simultáneamente un único

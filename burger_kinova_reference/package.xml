@@ -26,6 +26,10 @@
   <!-- Driver oficial de Kinova: sólo se necesita cuando start_driver:=true -->
   <exec_depend>kortex_bringup</exec_depend>
 
+  <!-- Cámara de color con publicación exclusiva mediante image_transport -->
+  <exec_depend>kinova_vision</exec_depend>
+  <exec_depend>compressed_image_transport</exec_depend>
+
   <!-- Herramientas de logging/registro usadas por el taller asociado -->
   <exec_depend>rosbag2_py</exec_depend>
   <exec_depend>rosbag2_storage_mcap</exec_depend>

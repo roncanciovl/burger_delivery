@@ -43,6 +43,7 @@ negra** descrito en [`docs/TEORIA_LOGGING_ROS2.md`](docs/TEORIA_LOGGING_ROS2.md)
 | `rcl_interfaces`, `std_srvs` | ROS 2 Jazzy | Parámetros en caliente y servicios de la caja negra |
 | `launch`, `launch_ros` | ROS 2 Jazzy | Launch unificado |
 | `kortex_bringup` | [`ros2_kortex`](https://github.com/Kinovarobotics/ros2_kortex) | Sólo cuando `start_driver:=true` |
+| `kinova_vision`, `compressed_image_transport` | Kinova / ROS 2 Jazzy | Cámara de color sin publicar `image_raw` |
 | `rosbag2_py`, `rosbag2_storage_mcap`, `rqt_console` | ROS 2 Jazzy | Evidencia y análisis post-mortem |
 
 MoveIt 2 **no** es dependencia de este package: la planeación cartesiana está fuera del
@@ -326,6 +327,25 @@ ros2 run burger_kinova_reference safe_trajectory_client --ros-args \
   --params-file $(ros2 pkg prefix burger_kinova_reference)/share/burger_kinova_reference/config/kinova_connection.yaml \
   -p dry_run:=true
 ```
+
+### 6.5. Cámara del Kinova: sólo imagen comprimida
+
+En la estación conectada al robot:
+
+```bash
+ros2 launch burger_kinova_reference kinova_vision_compressed.launch.py
+```
+
+El launch usa por defecto `device:=192.168.1.10` y publica únicamente
+`/camera/color/image_raw/compressed`; no anuncia `/camera/color/image_raw`. Para otra IP:
+
+```bash
+ros2 launch burger_kinova_reference kinova_vision_compressed.launch.py \
+  device:=<ip_del_kinova>
+```
+
+La validación y el visor compatible se explican en
+[`TROUBLESHOOTING.md` §3.5](../TROUBLESHOOTING.md#35-el-launch-estándar-anuncia-image_raw-lanzar-sólo-la-imagen-comprimida).
 
 ---
 
@@ -615,7 +635,9 @@ burger_kinova_reference/
 │   ├── safety.py                   # validación de metas y configuración (lógica pura)
 │   ├── logging_support.py          # niveles, throttling, nivel dinámico, transiciones
 │   └── flight_recorder.py          # caja negra: búfer circular y volcado post-mortem
-├── launch/kinova_connection.launch.py
+├── launch/
+│   ├── kinova_connection.launch.py
+│   └── kinova_vision_compressed.launch.py  # cámara sin publicador image_raw
 ├── config/kinova_connection.yaml
 ├── docs/
 │   ├── TEORIA_LOGGING_ROS2.md      # teoría del subsistema de logging de ROS 2
