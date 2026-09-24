@@ -10,6 +10,7 @@ Esta guía cubre los fallos que más tiempo consumen en el laboratorio:
 | No sé quién tiene el robot ocupado | [2.0 La configuración recomendada](#20-la-configuración-recomendada-léela-antes-que-el-resto) |
 | Mi código parece correcto y aun así el driver no arranca, o publica datos absurdos | [3. Fallos de plataforma ajenos a tu código](#3-fallos-de-plataforma-ajenos-a-tu-código) |
 | La cámara del Kinova da `Failed to start stream`, o `kinova_vision` no se detiene con `Ctrl+C` | [3.4 El driver de visión no se detiene limpiamente](#34-el-driver-de-visión-no-se-detiene-limpiamente-y-deja-la-cámara-bloqueada) |
+| Debe publicarse sólo la imagen comprimida, pero aparece `image_raw` o RViz no ofrece `/compressed` | [3.5 Lanzar sólo la imagen comprimida del Kinova](#35-el-launch-estándar-anuncia-image_raw-lanzar-sólo-la-imagen-comprimida) |
 | Un comando de un taller "funciona" (no da error) pero no produce lo que la guía promete | [4. Fallos silenciosos al ejecutar los talleres](#4-fallos-silenciosos-al-ejecutar-los-talleres) |
 
 ---
@@ -819,7 +820,118 @@ si se integra, el parche deja de ser necesario.
 > la sesión RTSP queda sin cerrar y la cámara puede rechazar streams nuevos durante más de
 > 12 s. Espera antes de relanzar, o relanza y deja que el driver reintente.
 
-### 3.5 Si tu proyecto del corte 1 no funcionó
+### 3.5 El launch estándar anuncia `image_raw`: lanzar sólo la imagen comprimida
+
+**Síntoma.** La práctica prohíbe publicar imágenes crudas, pero el comando habitual
+
+```bash
+ros2 launch kinova_vision kinova_vision.launch.py launch_depth:=false
+```
+
+crea un `image_transport::CameraPublisher`. De forma predeterminada éste registra todos los
+plugins instalados, incluido `raw`; desactivar profundidad no cambia ese comportamiento. Que
+nadie se suscriba al crudo evita transmitir sus píxeles, pero **no satisface** el criterio más
+estricto de que `/camera/color/image_raw` no tenga un publicador.
+
+**Regla de operación.** Sólo la estación anfitriona definida en la sección 2.0 abre el RTSP del
+Kinova. Antes de lanzar otro proceso, comprueba que no exista uno local ni uno visible por DDS:
+
+```bash
+pgrep -a -x kinova_vision_n
+ros2 node list --no-daemon | grep kinova_vision
+```
+
+Si cualquiera devuelve un driver activo, no lances otro. Si no hay ninguno, carga el entorno y
+ejecuta directamente **sólo el nodo de color**, limitando los plugins de publicación a
+`compressed`:
+
+```bash
+source /opt/ros/jazzy/setup.bash
+source ~/ros2_ws/install/setup.bash
+
+ros2 run kinova_vision kinova_vision_node --ros-args \
+  -r __ns:=/camera \
+  -r __node:=kinova_vision_color \
+  -r image_raw:=color/image_raw \
+  -r image_raw/compressed:=color/image_raw/compressed \
+  -r camera_info:=color/camera_info \
+  -p camera_type:=color \
+  -p camera_name:=color \
+  -p frame_id:=camera_color_frame \
+  -p max_pub_rate:=30.0 \
+  -p 'camera_info_url_user:=""' \
+  -p camera_info_url_default:=package://kinova_vision/launch/calibration/default_color_calib_%ux%u.ini \
+  -p 'stream_config:=rtspsrc location=rtsp://192.168.1.10/color latency=30 ! rtph264depay ! avdec_h264 ! videoconvert' \
+  -p 'image_raw.enable_pub_plugins:=[image_transport/compressed]'
+```
+
+La línea decisiva es `image_raw.enable_pub_plugins`: es la lista permitida de publicadores de
+`image_transport` en Jazzy. El valor vacío de `camera_info_url_user` también es obligatorio al
+ejecutar el binario directamente; si se omite, el nodo abre el RTSP y luego aborta con
+`UninitializedStaticallyTypedParameterException`.
+
+El comando publica información de calibración, que no contiene píxeles, y un único tópico de
+imagen:
+
+```text
+/camera/color/camera_info                 sensor_msgs/msg/CameraInfo
+/camera/color/image_raw/compressed        sensor_msgs/msg/CompressedImage
+```
+
+**Validación obligatoria.** Hazla desde otra terminal con el mismo `ROS_DOMAIN_ID`:
+
+```bash
+# Debe mostrar sensor_msgs/msg/CompressedImage y Publisher count: 1.
+ros2 topic info -v /camera/color/image_raw/compressed --no-daemon
+
+# Debe responder: Unknown topic '/camera/color/image_raw'.
+ros2 topic info -v /camera/color/image_raw --no-daemon
+
+# En el robot real se observaron aproximadamente 30 Hz.
+ros2 topic hz /camera/color/image_raw/compressed --window 30
+```
+
+No uses `ros2 topic echo` sin `--once` sobre la imagen: imprimiría continuamente cientos de
+kilobytes codificados. La ausencia de `/camera/color/image_raw` es tan importante como la
+existencia del tópico comprimido.
+
+**Visualización.** En la versión de RViz2 instalada con Jazzy, el desplegable del display
+`Image` filtra por `sensor_msgs/msg/Image`; por eso puede ocultar un tópico cuyo tipo en la red
+es `sensor_msgs/msg/CompressedImage`. No publiques el crudo para hacerlo aparecer. El visor
+aislado y reproducible es:
+
+```bash
+ros2 run image_view image_view --ros-args \
+  -r image:=/camera/color/image_raw \
+  -p image_transport:=compressed
+```
+
+`/camera/color/image_raw` es aquí sólo el nombre base que `image_transport` usa para construir
+la suscripción real a `/camera/color/image_raw/compressed`. En RViz también puede escribirse
+manualmente el nombre completo `/camera/color/image_raw/compressed` en la celda `Topic`; la
+descripción `sensor_msgs/msg/Image topic to subscribe to` se refiere a la imagen ya decodificada
+dentro del plugin, no a un tópico crudo en DDS.
+
+**Límite conocido al reconectar.** En la versión probada, una pérdida de cuadros puede hacer que
+el driver recupere el RTSP y luego aborte al cargar otra vez la calibración:
+
+```text
+terminate called after throwing an instance of
+'rclcpp::exceptions::ParameterAlreadyDeclaredException'
+what(): parameter 'camera_info_url_user' has already been declared
+```
+
+El mensaje no significa que otro nodo publique la cámara: es un defecto del camino de
+reconexión del propio driver. Confirma que el proceso terminó, aplica las comprobaciones de la
+sección 3.4 y vuelve a lanzar el comando. No dejes dos procesos reintentando contra el mismo
+RTSP.
+
+**Criterio de resolución.** La persona participante puede demostrar simultáneamente un único
+publicador `CompressedImage`, una frecuencia cercana a 30 Hz y la respuesta `Unknown topic`
+para `/camera/color/image_raw`; además, puede explicar que decodificar en el suscriptor no
+equivale a transmitir una imagen cruda por DDS.
+
+### 3.6 Si tu proyecto del corte 1 no funcionó
 
 Antes de dar por malo tu código, comprueba en este orden:
 
@@ -832,8 +944,10 @@ Antes de dar por malo tu código, comprueba en este orden:
 4. ¿Había otra estación con el driver abierto? Ver la [sección 2](#2-hardware-ocupado-un-solo-robot-y-varias-estaciones).
 5. Si usabas la cámara: ¿el driver de visión tenía el parche de parada limpia, y no quedaban
    procesos `kinova_vision_n` huérfanos? Ver el problema 3.4.
+6. Si el ejercicio prohibía publicar imágenes crudas: ¿`/camera/color/image_raw/compressed`
+   tenía un publicador y `/camera/color/image_raw` era desconocido? Ver el problema 3.5.
 
-Sólo si los cinco salen limpios tiene sentido revisar la lógica de tu package.
+Sólo si los seis salen limpios tiene sentido revisar la lógica de tu package.
 
 ---
 
@@ -1113,6 +1227,8 @@ pruebas están en `network_setup/monitor_red/benchmark_logs/` (`lab02_A/B/C`).
 - [Microsoft Learn: arquitectura de red NAT y modo reflejado de WSL](https://learn.microsoft.com/en-us/windows/wsl/networking)
 - [Microsoft Learn: reinicio de WSL con `wsl --shutdown`](https://learn.microsoft.com/en-us/windows/wsl/basic-commands#shutdown)
 - [Documentación oficial de ROS 2: `ROS_DOMAIN_ID` y aislamiento del grafo](https://docs.ros.org/en/jazzy/Concepts/Intermediate/About-Domain-ID.html)
+- [Código fuente oficial de `image_transport` Jazzy: lista `enable_pub_plugins`](https://github.com/ros-perception/image_common/blob/jazzy/image_transport/src/publisher.cpp)
+- [Código fuente oficial de RViz2 Jazzy: selección del transporte por el sufijo del tópico](https://github.com/ros2/rviz/blob/jazzy/rviz_default_plugins/include/rviz_default_plugins/displays/image/image_transport_display.hpp)
 - Medición propia del enlace sobre el robot real: [`EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md`](burger_kinova_reference/docs/EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md)
 - Regla de unicidad del driver y arquitectura distribuida: [`PROYECTO_CORTE_1_CONEXION_KINOVA.md`](education/proyectos_evaluables/PROYECTO_CORTE_1_CONEXION_KINOVA.md) §5
 - [GNU Bash Reference Manual: señales en comandos asíncronos sin control de trabajos](https://www.gnu.org/software/bash/manual/html_node/Signals.html)
