@@ -153,7 +153,7 @@ El SHA resultante es el identificador definitivo registrado en la evaluación.
 git push origin main:base-latest
 ```
 
-Cualquiera de las dos crea un tag anotado inmutable `base-2026-2-AAAAMMDD` (con sufijo `.2`, `.3`… si hay varias publicaciones el mismo día) y un GitHub Release marcado *latest*, mediante [`.github/workflows/publicar-base.yml`](../../.github/workflows/publicar-base.yml).
+Cualquiera de las dos mueve `base-latest` y crea un tag anotado inmutable `base-2026-2-AAAAMMDD` (con sufijo `.2`, `.3`… si hay varias publicaciones el mismo día), mediante [`.github/workflows/publicar-base.yml`](../../.github/workflows/publicar-base.yml). La actualización de los equipos depende de `upstream/base-latest`, no de GitHub Releases ni de Zenodo. Los Releases quedan reservados para versiones del software.
 
 * La acción `reestampar` vuelve a etiquetar la base ya publicada **sin mover la rama**: sirve para rehacer un tag, no para publicar material nuevo.
 * Si `base-latest` ya apunta al mismo commit que `main`, `publicar` no hace nada y lo informa: no estampa tags duplicados.

@@ -118,7 +118,7 @@ bash scripts/diagnostico_sync.sh --sincronizar  # fusiona la base en main y ofre
 
 El script verifica el entorno, se niega a operar si hay trabajo sin confirmar, ejecuta `git merge --no-ff` sobre `main` y se detiene con instrucciones si hay conflictos. Los demás integrantes actualizan con `git pull --ff-only origin main`.
 
-Cada publicación queda registrada con un tag anotado inmutable generado automáticamente (`base-2026-2-AAAAMMDD`) y un GitHub Release marcado como *latest*. Una base ya publicada no se reutiliza ni se mueve: los tags nunca se reasignan. La trazabilidad de la integración queda además en el commit de merge del equipo, que registra el SHA exacto de la versión incorporada.
+Cada publicación queda registrada con un tag anotado inmutable generado automáticamente (`base-2026-2-AAAAMMDD`). La rama `upstream/base-latest` avanza para que los equipos se actualicen; no necesitan un GitHub Release ni un DOI de Zenodo para hacerlo. Una base ya publicada no se reutiliza ni se mueve: los tags nunca se reasignan. La trazabilidad de la integración queda además en el commit de merge del equipo, que registra el SHA exacto de la versión incorporada.
 
 El procedimiento detallado, con diagnóstico previo y solución de errores, está en la [Guía Oficial de Sincronización y Actualizaciones](ACTUALIZACIONES_BASE_CORTE_1.md).
 
