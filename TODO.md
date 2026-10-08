@@ -93,7 +93,9 @@ Este documento centraliza las tareas pendientes, oportunidades de mejora identif
   - [ ] Guía Lab 04: Modelado de robots y árboles TF con URDF/XACRO.
   - [ ] Guía Lab 05: Localización visual con AprilTags y cancelación de perspectiva.
   - [ ] Guía Lab 06: Planificación de trayectorias con MoveIt 2.
-  - [ ] Guía Lab 07: Razonamiento espacial con IA multimodal (Gemini).
+  - [x] Guía Lab 07: Razonamiento espacial con IA multimodal (Gemini) → publicada como [Guía IA 01](education/guias_laboratorio/GUIA_LAB_IA_01_EMBODIED_AI_GEMINI_ER2_KINOVA.md) para la asignatura de IA, con `gemini-robotics-er-2-preview`, ruta sin ROS 2 y plantilla de código/informe.
+    - [ ] Validar en el robot real antes de la sesión: llamada a la API, `leer_calibracion_kortex.py` y el nodo ROS 2 contra `kinova_vision`.
+    - [ ] Corregir o reemplazar `default_color_calib_1920x1080.ini` de `kinova_vision` (declara `cy = 96.97 px`): afecta a todo nodo ROS que desproyecte con `/camera/color/camera_info` a 1080p.
 - [ ] **Integración Continua (CI/CD)**:
   - [ ] Configurar GitHub Actions para validación automática de URDFs (`xmllint`, `check_urdf`) en cada Pull Request.
   - [ ] Linteo automático de código Python y scripts bash.
