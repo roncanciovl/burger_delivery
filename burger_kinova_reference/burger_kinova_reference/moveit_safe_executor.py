@@ -590,6 +590,11 @@ class MoveItSafeExecutor(Node):
             self._active_goal = handle
         try:
             return self._seguir(nombre, handle, duracion)
+        except KeyboardInterrupt:
+            # Se cancela aquí, con la meta todavía a mano: el finally la olvida antes de
+            # que main() llegue a solicitar_parada().
+            self.solicitar_parada()
+            raise
         finally:
             with self._lock:
                 self._active_goal = None

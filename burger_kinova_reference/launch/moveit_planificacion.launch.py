@@ -111,11 +111,15 @@ def _setup(context, *args, **kwargs):
                 'esperado: el brazo se planifica igual y la pinza se modela abierta.'))
 
     if _as_bool(arg('launch_rviz')):
+        # Con el robot real, RViz comparte la CPU de la anfitriona con el ciclo de control
+        # del driver, que en WSL no obtiene prioridad de tiempo real
+        # (TROUBLESHOOTING.md §3.7).
         acciones.append(Node(
             package='rviz2',
             executable='rviz2',
             name='rviz2_moveit',
             output='log',
+            prefix=None if _as_bool(arg('use_fake_hardware')) else 'nice -n 19',
             arguments=['-d', os.path.join(get_package_share_directory(MOVEIT_CONFIG),
                                           'config', 'moveit.rviz')],
             parameters=[moveit_config.robot_description,
