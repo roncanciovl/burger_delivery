@@ -4,7 +4,7 @@
 
 | FACULTAD | PROGRAMA | ASIGNATURA | SEMESTRE | CÓDIGO GUÍA | REVISIÓN |
 |:---|:---|:---|:---:|:---:|:---:|
-| Facultad de Ingeniería | Ingeniería Mecatrónica | ROBOT OPERATING SYSTEM - ROS | VIII – IX | GL-AA-F-1 / LAB-04 (Corte 3) | 1.0 (2026-2) |
+| Facultad de Ingeniería | Ingeniería Mecatrónica | ROBOT OPERATING SYSTEM - ROS | VIII – IX | GL-AA-F-1 / LAB-04 (Corte 3) | 1.1 (2026-2) |
 
 > [!IMPORTANT]
 > **Actualización del Repositorio Privado del Equipo:**
@@ -20,6 +20,10 @@
 | Base del Gen3 apoyada sobre la cara superior de la mesa en `burger_description` | Al cargar la escena en MoveIt, la mesa invadía 25 mm la base del robot (`table_to_world` en z = 0 con la mesa centrada en `table_link`) y MoveIt declaraba en colisión el estado inicial. `table_to_world` pasa a z = 0.025 m, la misma altura de `tag_mesa`. La Fase 1 reproduce el fallo a propósito. | 19/10/2026 |
 | Instrumento ABET de entrega | Se crea `INSTRUMENTO_ABET_LAB_04_MOVEIT2_EJECUCION_SEGURA` (Markdown y Word) con las Tablas 1 a 6, las evidencias E1 a E9, el cuestionario, el Anexo A y las rúbricas de C1 a C5. Las secciones 5.2 y 8 lo citan como formato de entrega. | 21/10/2026 |
 | Aviso de sincronización con la base del curso | Igual que en los talleres, la guía empieza recordando sincronizar el repositorio privado del equipo con la base del curso (`base-latest`) antes del laboratorio. | 21/10/2026 |
+| Ctrl+C cancela la trayectoria en `moveit_safe_executor` | Al validar la guía, Ctrl+C terminaba el ejecutor pero no cancelaba la meta: el brazo completaba la trayectoria. Corregido en `burger_kinova_reference`. La prueba 4.7 indica ahora el mensaje esperado. | 22/10/2026 |
+| Anfitriona por cable, sin WiFi, y RViz con prioridad baja | Con el WiFi conectado junto al cable, o con RViz compitiendo por la CPU, el ciclo de control del driver se retrasa y el brazo vibra durante la trayectoria (`TROUBLESHOOTING.md` §3.7). La Fase 6 indica cómo dejar la anfitriona sólo por cable. `moveit_planificacion.launch.py` abre RViz con `nice -n 19` cuando el hardware es real. | 22/10/2026 |
+| Fase 6: llevar el brazo a Home antes del modo seco | Desde una pose con la muñeca girada media vuelta, la meta `home` exige recorrer ~3.1 rad en `joint_4` y `joint_6`, y `max_joint_travel_rad` (3.0) la bloquea. El modo seco sirve de comprobación. | 22/10/2026 |
+| Pruebas 4.1, 4.6 y 4.8 | Tras la Fase 3 el brazo ya está en `home`: la 4.1 lo advierte y la 4.6 se provoca durante `sobre_tag_mesa`. En la 4.8 el planificador es aleatorio y el resultado varía de una corrida a otra. Se pide repetirla y se explica qué demuestra cada resultado. | 22/10/2026 |
 
 ---
 
@@ -144,7 +148,7 @@ Cada criterio se califica en cinco niveles sobre la escala de 0 a 500. **N3 es e
 | DESCRIPCIÓN | CANTIDAD | UNIDAD DE MEDIDA |
 |---|:---:|:---:|
 | Brazo Kinova Gen3 (6 GDL) con pinza Robotiq 2F-85 (IP `192.168.1.10`) | 1 | Unidad |
-| Estación anfitriona con Ubuntu 24.04, ROS 2 Jazzy, MoveIt 2 y **cable Ethernet** al router | 1 | Unidad |
+| Estación anfitriona con Ubuntu 24.04, ROS 2 Jazzy, MoveIt 2 y **cable Ethernet** al router (WiFi desconectado durante la práctica) | 1 | Unidad |
 | Router TP-Link AX12 (SSID `ros2`, subred `192.168.1.0/24`) | 1 | Unidad |
 | Pulsador de parada de emergencia física, accesible desde la anfitriona | 1 | Unidad |
 | Mesa de la celda con `tag_mesa` instalado; cinta métrica | 1 | Juego |
@@ -166,7 +170,8 @@ Cada criterio se califica en cinco niveles sobre la escala de 0 a 500. **N3 es e
 > 3. **Modo seco primero, siempre.** Ninguna meta se ejecuta en el robot si antes no pasó en modo seco **con el robot en la misma pose** y el docente no revisó el informe.
 > 4. **Custodia de la parada de emergencia.** Un integrante de la anfitriona permanece junto al pulsador durante todo el turno. Radio libre de 1.2 m alrededor de la base.
 > 5. **No ampliar límites.** `joint_min_rad`, `joint_max_rad`, `max_velocity_rad_s` y `start_tolerance_rad` no se modifican para «hacer pasar» un plan. En la Fase 4 se **reducen** a propósito para provocar bloqueos; nunca se aumentan.
-> 6. **Ctrl+C cancela.** En el ejecutor, Ctrl+C cancela la trayectoria en curso y el controlador detiene el brazo. La parada de emergencia física sigue siendo la protección última.
+> 6. **Ctrl+C cancela.** En el ejecutor, Ctrl+C cancela la trayectoria en curso y el controlador detiene el brazo. El ejecutor lo confirma con `[SEGURIDAD] Cancelando la trayectoria en curso`. Si ese mensaje no aparece, la base del grupo está desactualizada: use la parada de emergencia y sincronice antes de seguir. La parada de emergencia física sigue siendo la protección última.
+> 7. **La anfitriona va sólo por cable.** El driver se lanza con el WiFi de la anfitriona desconectado. Si el WiFi sigue conectado en la misma subred, el ciclo de control del driver se retrasa aunque la ruta al robot salga por el cable, y el brazo vibra durante la trayectoria (`TROUBLESHOOTING.md` §3.7). Las estaciones de los grupos sí pueden ir por WiFi: sólo consumen telemetría.
 
 ---
 
@@ -261,17 +266,21 @@ mkdir -p $HOME/lab04_eqNN && cp $SHARE/config/metas_moveit.yaml $HOME/lab04_eqNN
 
 | N.º | Prueba | Cómo provocarla |
 |:---:|---|---|
-| 4.1 | Velocidad | `-p max_velocity_rad_s:=0.05` |
+| 4.1 | Velocidad | `-p max_velocity_rad_s:=0.05`. Si el brazo quedó en `home` tras la Fase 3, `home` pasa (el plan apenas se mueve) y el bloqueo aparece en `sobre_tag_mesa` |
 | 4.2 | Velocidad declarada por MoveIt | `-p velocity_scaling:=0.6` (deja `max_velocity_rad_s` en 0.35) |
 | 4.3 | Arranque desde otra pose | `-p source:=rviz -p dry_run:=false -p enable_motion:=true`; en RViz elija *Start State: random valid*, *Goal State: Home* y pulse **Plan** |
 | 4.4 | Meta inalcanzable | Añada `inalcanzable`: tipo `pose`, `marco: delivery_slot_1`, `posicion: [0, 0, 0.2]`, `rpy: [3.14159, 0, 0]`; ejecute con `-p sequence:="['home', 'inalcanzable']"` |
 | 4.5 | Meta dentro de la mesa | Añada `en_la_mesa`: tipo `pose`, `marco: tag_mesa`, `posicion: [0, 0, -0.05]`, `rpy: [3.14159, 0, 0]`; ejecute con `-p sequence:="['home', 'en_la_mesa']"` |
-| 4.6 | Telemetría perdida | Durante la ejecución de `home` (Fase 3), detenga el driver fake con Ctrl+C en la Terminal 1 |
-| 4.7 | Cancelación del operador | Durante la ejecución, pulse Ctrl+C en la Terminal 3 |
+| 4.6 | Telemetría perdida | Ejecute como en la Fase 3 con `-p "sequence:=['sobre_tag_mesa', 'home']"` y, mientras el brazo se mueve hacia `sobre_tag_mesa`, detenga el driver fake con Ctrl+C en la Terminal 1. Tras la Fase 3 el brazo ya está en `home`, por eso no sirve provocarla durante `home` |
+| 4.7 | Cancelación del operador | Durante la ejecución, pulse Ctrl+C en la Terminal 3. Debe aparecer `[SEGURIDAD] Cancelando la trayectoria en curso` y, en RViz, el brazo queda detenido a mitad de camino |
 | 4.8 | Sin la mesa en la escena | `ros2 run burger_kinova_reference escena_moveit --ros-args -p remove:=true` y repita 4.5 en modo seco |
 
 > [!IMPORTANT]
-> **La prueba 4.8 es la más importante de la práctica.** Sin la mesa, MoveIt encuentra un plan hacia un punto **dentro** de la mesa y el validador lo **permite**, porque no ve la geometría. Explique en el análisis qué capa protege de qué y vuelva a cargar la escena antes de continuar: `ros2 run burger_kinova_reference escena_moveit`.
+> **La prueba 4.8 es la más importante de la práctica.** Sin la mesa, MoveIt **encuentra** un plan hacia un punto **dentro** de la mesa, cuando en la 4.5 no lo encontraba, y el validador no tiene ninguna regla que mencione la mesa, porque no ve la geometría.
+>
+> El planificador (OMPL) es aleatorio, así que el resultado cambia de una corrida a otra. Al validar la guía, de 7 corridas 2 terminaron en `PERMITIDA` y las otras 5 las bloqueó otra regla: el recorrido acumulado (`max_joint_travel_rad`) o los límites de ±3.14 rad. Repita la prueba hasta obtener un `PERMITIDA`, con un máximo de 5 corridas, y anote en la Tabla 4 el resultado y la regla de cada una. Un bloqueo por recorrido no protege de la mesa: con otro plan, el mismo punto pasa.
+>
+> Explique en el análisis qué capa protege de qué y vuelva a cargar la escena antes de continuar: `ros2 run burger_kinova_reference escena_moveit`.
 
 ---
 
@@ -288,13 +297,29 @@ mkdir -p $HOME/lab04_eqNN && cp $SHARE/config/metas_moveit.yaml $HOME/lab04_eqNN
 
 ### Fase 6: Ejecución en el Robot Real por Turnos
 
-**Estación anfitriona** (docente o grupo anfitrión), dominio 0, por cable:
-```bash
-export ROS_DOMAIN_ID=0
-ros2 launch burger_kinova_reference kinova_connection.launch.py \
-    start_driver:=true robot_ip:=192.168.1.10 use_fake_hardware:=false
-ros2 launch burger_kinova_reference moveit_planificacion.launch.py use_fake_hardware:=false
-```
+**Estación anfitriona** (docente o grupo anfitrión), dominio 0, **sólo por cable**:
+
+1. **Antes de lanzar el driver**, desconecte el WiFi de la anfitriona y compruebe que sólo queda la interfaz del cable. En WSL, desconéctelo desde Windows (en PowerShell: `netsh wlan disconnect interface="<nombre del adaptador>"`).
+   ```bash
+   ip -brief -4 addr                  # sólo lo y la interfaz del cable
+   ip route get 192.168.1.10          # la ruta al robot sale por esa interfaz
+   ping -c 50 -i 0.05 -q 192.168.1.10 # mdev ≲ 0.5 ms; con WiFi activo rondaba 2.8 ms
+   ```
+   Si el driver, la escena o el daemon de ROS se lanzaron con el WiFi activo, relánzalos: la sesión del driver y Cyclone DDS quedan atados a la interfaz del WiFi (`TROUBLESHOOTING.md` §3.7).
+2. Lance el driver y MoveIt. Con `use_fake_hardware:=false`, `moveit_planificacion.launch.py` abre RViz con `nice -n 19` para que no retrase el ciclo de control del driver.
+   ```bash
+   export ROS_DOMAIN_ID=0
+   ros2 launch burger_kinova_reference kinova_connection.launch.py \
+       start_driver:=true robot_ip:=192.168.1.10 use_fake_hardware:=false
+   ros2 launch burger_kinova_reference moveit_planificacion.launch.py use_fake_hardware:=false
+   ss -tanp | grep 192.168.1.10       # la sesión sale desde la IP del cable
+   ```
+3. **Lleve el brazo a su posición Home** con la Web App de Kinova o con el mando, antes del primer turno y siempre que un grupo lo deje en otra pose. La secuencia empieza por `home`, y el validador limita el recorrido de cada articulación a `max_joint_travel_rad` = 3.0 rad. Desde una pose con la muñeca girada media vuelta, `home` exige ~3.1 rad en `joint_4` y `joint_6` y el modo seco la bloquea:
+   ```text
+   - joint_4: recorrido acumulado 3.094 rad supera max_joint_travel_rad=3.000
+   - joint_6: recorrido acumulado 3.128 rad supera max_joint_travel_rad=3.000
+   ```
+   Ese bloqueo es correcto: **no amplíe el límite**. Lleve el brazo a Home y repita el modo seco.
 
 **Grupo en turno**, dominio 0, en su portátil:
 1. Grabe la evidencia durante todo el turno:
@@ -412,7 +437,7 @@ Las tablas se diligencian en el instrumento de entrega, [`INSTRUMENTO_ABET_LAB_0
 2. Kinova Robotics. (2024). *ros2_kortex: ROS 2 driver and MoveIt configuration for Kinova Gen3.* https://github.com/Kinovarobotics/ros2_kortex
 3. Sucan, I. A., Moll, M., & Kavraki, L. E. (2012). The Open Motion Planning Library. *IEEE Robotics & Automation Magazine, 19*(4), 72–82.
 4. Lynch, K. M., & Park, F. C. (2017). *Modern Robotics: Mechanics, Planning, and Control.* Cambridge University Press.
-5. Proyecto `burger_delivery`. `burger_kinova_reference/README.md` §13, `burger_description/urdf/delivery_scene_fixed.urdf` y `TROUBLESHOOTING.md` §2.
+5. Proyecto `burger_delivery`. `burger_kinova_reference/README.md` §13, `burger_description/urdf/delivery_scene_fixed.urdf` y `TROUBLESHOOTING.md` §2 y §3.7.
 
 ---
 

@@ -1002,8 +1002,9 @@ mensajes, no los avisos de overrun; ver
 `netsh wlan disconnect interface="<nombre del adaptador>"`). Comprueba con
 `ip -brief -4 addr` que sólo queda la interfaz del cable. Si la escena o el daemon se
 lanzaron antes con el WiFi activo, relánzalos, porque Cyclone DDS los ató a esa interfaz.
-`display.launch.py robot_real:=true` ya abre RViz con `nice -n 19`. Si usas otro RViz
-junto al driver, lánzalo con `nice -n 19 rviz2 ...`.
+`display.launch.py robot_real:=true` y `moveit_planificacion.launch.py use_fake_hardware:=false`
+ya abren RViz con `nice -n 19`. Si usas otro RViz junto al driver, lánzalo con
+`nice -n 19 rviz2 ...`.
 
 **Lo que queda.** Con las dos medidas aplicadas, el mismo barrido de `joint_1` (±0.60 rad)
 se vio a simple vista con menos vibración que con el WiFi activo y RViz con prioridad
