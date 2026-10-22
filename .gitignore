@@ -50,3 +50,6 @@ education/administracion/
 
 # Trazas generadas por CycloneDDS en el directorio de trabajo
 cyclonedds.log
+
+# Configuración local de Claude Code
+.claude/settings.local.json
