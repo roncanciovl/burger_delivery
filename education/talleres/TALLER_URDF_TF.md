@@ -547,7 +547,7 @@ Dos convenciones de ejes conviven en ROS (REP 103):
 | **Cuerpo** (body) | adelante | izquierda | arriba | `gen3_base_link`, `table_link`, `map` |
 | **Óptico** | derecha en la imagen | abajo en la imagen | hacia donde mira la cámara | marcos de imagen: `*_optical_frame` y los de `kinova_vision` |
 
-El paso de uno a otro es la rotación `rpy="-1.5708 0 -1.5708"`. Búscala en las juntas `wrist_mounted_camera_*_optical_joint` del URDF.
+El paso de uno a otro es la rotación `rpy="-1.5708 0 -1.5708"`. Búscala en las juntas `wrist_mounted_camera_*_optical_joint` del URDF de referencia de Kinova, `burger_description/vendor/kortex_description/robots/gen3_2f85.urdf`. El módulo de visión integrado del Gen3 **no** tiene un `*_optical_frame` aparte: Kinova usa `camera_color_frame` directamente como marco óptico.
 
 El módulo de visión integrado del Gen3 añade tres marcos fijos, tomados del macro oficial de Kinova y colgados de `gen3_end_effector_link`:
 
@@ -557,14 +557,17 @@ El módulo de visión integrado del Gen3 añade tres marcos fijos, tomados del m
 | `gen3_camera_color_frame` | `0 0.05639 -0.00305` | `π π 0` | Imágenes de color: aquí queda el punto 3D del Lab IA 01 |
 | `gen3_camera_depth_frame` | `0.0275 0.066 -0.00305` | `π π 0` | Sensor de profundidad (RealSense D410) |
 
-`rpy = π π 0` equivale a girar 180° alrededor de Z: el eje Z del marco de la cámara coincide con el de la herramienta, que es hacia donde mira la cámara.
+`rpy = π π 0` equivale a girar 180° alrededor de Z: el eje Z del marco de la cámara coincide con el de la herramienta, que es hacia donde mira la cámara, y X e Y quedan invertidos respecto a los de la herramienta. Con esa orientación, las puntas de los dedos de la pinza quedan en `(±0.068, +0.056, +0.101)` m dentro de `gen3_camera_color_frame`: delante de la cámara (Z > 0) y abajo en la imagen (Y > 0). Es lo que se espera de un marco óptico montado sobre la pinza. Kinova no lo documenta explícitamente; el Ejercicio 3 lo comprueba en el robot.
 
 > [!NOTE]
-> Los frames `wrist_mounted_camera_*` que cuelgan de `gen3_bracelet_link` modelan una cámara RealSense externa genérica. **No son** el módulo de visión integrado. Sirven aquí para ver la convención óptica.
+> Los frames `wrist_mounted_camera_*` del URDF de referencia de Kinova modelan una cámara RealSense externa genérica. **No son** el módulo de visión integrado y ya no forman parte de la escena del proyecto: se retiraron de `burger_description` el 21/10/2026. Sirven aquí sólo para ver la convención óptica.
 
 ### 🔍 Revisión en el Proyecto
 ```bash
-rg -n 'gen3_camera|_module"|optical_joint' burger_description/urdf/delivery_scene_fixed.urdf
+# El módulo de visión integrado, en la escena del proyecto
+rg -n 'gen3_camera|_module"' burger_description/urdf/delivery_scene_fixed.urdf
+# La rotación cuerpo -> óptico, en el URDF de referencia de Kinova
+rg -n -A1 'optical_joint' burger_description/vendor/kortex_description/robots/gen3_2f85.urdf
 ```
 
 ### 🛠️ Ejercicio 1: El punto de Gemini en la base, sin robot
@@ -596,6 +599,11 @@ rg -n 'gen3_camera|_module"|optical_joint' burger_description/urdf/delivery_scen
             break
     ```
 5.  Mueve `gen3_joint_6` y repite el paso 2. **Predice antes:** ¿cambia solo la rotación o también la traslación? Pista: la cámara no está sobre el eje de la junta, sino desplazada 5.6 cm.
+6.  ¿Dónde ve la cámara la pinza? Con los deslizadores de nuevo en 0, **predice el signo** de X, Y y Z de la punta del dedo izquierdo en el marco de la cámara y compruébalo:
+    ```bash
+    ros2 run tf2_ros tf2_echo gen3_camera_color_frame gen3_robotiq_85_left_finger_tip_link
+    ```
+    **Valor esperado:** traslación `[-0.068, 0.056, 0.101]` m. Z > 0: la punta está delante de la cámara; Y > 0: está hacia abajo en la imagen.
 
 ### 🛠️ Ejercicio 2: El árbol del robot real (Ruta B del Lab IA 01)
 Con el robot, los nombres son los del driver, sin prefijo `gen3_`. El árbol tiene un hueco que debes conocer antes de usar TF en el Lab IA 01:
@@ -626,10 +634,36 @@ Con el robot, los nombres son los del driver, sin prefijo `gen3_`. El árbol tie
 > [!NOTE]
 > **Dos fuentes de Kinova no coinciden.** El macro oficial ubica el sensor de profundidad 27.5 mm y 9.6 mm del de color. El `kinova_vision.launch.py` usa 19.5 mm y 5 mm. El Lab IA 01 no depende de esa TF: registra la profundidad con los extrínsecos de `config_camara_kinova.json`, que se leen del robot con la Kortex API.
 
+### 🛠️ Ejercicio 3: Comprobar en el robot los ejes de `camera_color_frame` (con el docente)
+Que `camera_color_frame` sea un marco óptico se deduce del URDF, pero no está documentado por Kinova. Esta prueba lo comprueba con el robot y sin Gemini: predice con TF2 en qué píxel debe aparecer un marcador y compáralo con la imagen. Si los ejes estuvieran mal, el marcador aparecería en el cuadrante opuesto, no a unos píxeles.
+
+1.  **Prepara**, en la estación anfitriona: driver, `kinova_vision.launch.py` y el eslabón del Ejercicio 2. La anfitriona lleva el brazo a una pose de observación con la cámara mirando la mesa, con el protocolo de turnos del Laboratorio 03.
+2.  **Coloca un marcador** pequeño sobre la mesa, dentro de la imagen y lejos del centro, y mide con cinta su posición `(x_m, y_m)` respecto a la base del robot (X hacia delante, Y hacia la izquierda). La cara superior de la mesa está en `z = 0` de `base_link`, porque la base del brazo se apoya sobre ella.
+3.  **Publica el marcador** con un nombre único y obtenlo en el marco de la cámara:
+    ```bash
+    # Terminal 1 (queda publicando)
+    ros2 run tf2_ros static_transform_publisher --x <x_m> --y <y_m> --z 0 \
+        --frame-id base_link --child-frame-id marcador_eqNN
+    # Terminal 2
+    ros2 run tf2_ros tf2_echo camera_color_frame marcador_eqNN
+    ```
+4.  **Predice el píxel** con los intrínsecos de la imagen que estás viendo (`ros2 topic echo /camera/color/camera_info --once --field k`): `u = fx·X/Z + cx` y `v = fy·Y/Z + cy`. Si la imagen es de 1920×1080, el archivo de calibración por defecto de esa resolución trae un `cy` erróneo (≈ 97 px, pendiente en `TODO.md`): calcula sólo `u` y, para `v`, comprueba únicamente si el marcador queda arriba o abajo del centro de la imagen.
+5.  **Compara** con el píxel donde aparece el marcador en una imagen guardada (léelo en GIMP, como en el Lab IA 01).
+
+| Resultado | Interpretación |
+|---|---|
+| Mismo cuadrante y a menos de unos 40 px | Los ejes son correctos; la diferencia viene de la calibración nominal y de la cinta |
+| Reflejado de izquierda a derecha | El signo de X está invertido |
+| Reflejado de arriba abajo | El signo de Y está invertido |
+| `Z < 0` en el paso 3 | La cámara no mira hacia donde dice el árbol: revisa el eslabón del Ejercicio 2 |
+
+Al terminar, detén el `static_transform_publisher` del marcador y avisa al docente del resultado: es la validación que figura como pendiente en `TODO.md`.
+
 ### ✅ Criterios de Éxito
 - Explicas la diferencia entre un marco de cuerpo y un marco óptico, y ubicas la rotación que los relaciona.
 - Obtienes con `tf2_echo` la pose de `gen3_camera_color_frame` en la pose cero y transformas un punto a `gen3_base_link`, a mano y con TF2, con el mismo resultado.
 - Explicas por qué en el robot real hace falta el eslabón `end_effector_link → camera_link` y por qué debe publicarlo una sola estación.
+- Predices con TF2 dónde ve la cámara la pinza y explicas cómo el Ejercicio 3 distingue un marco óptico de uno con los ejes invertidos.
 
 ## 12. Lista de Chequeo Final (Checklist)
 

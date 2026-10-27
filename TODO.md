@@ -79,7 +79,7 @@ Este documento centraliza las tareas pendientes, oportunidades de mejora identif
   - Mientras tanto, los cuatro documentos que lo describen (`burger_description/README.md`, `conceptos_core/visor_web_urdf.md`, `docs/architecture/ros_burger_delivery.md`, `education/talleres/TALLER_URDF_TF.md`) llevan un aviso explicando la diferencia entre los dos modelos.
   - [x] Sustituir descripción y mallas por las de `arms/gen3/6dof/`. La escena (mesa, tags, `burger_grip_frame`) no cambia: cuelga de frames que siguen existiendo.
   - [x] Revisar `TALLER_URDF_TF.md` y su formato ABET (v1.1, evidencia E7 de la cámara).
-  - [ ] Validar en el robot real el eslabón `end_effector_link → camera_link` (el driver no carga `vision:=true`) y el sentido de los ejes de `camera_color_frame` frente a la imagen.
+  - [ ] Validar en el robot real el eslabón `end_effector_link → camera_link` (el driver no carga `vision:=true`) y el sentido de los ejes de `camera_color_frame` frente a la imagen. Procedimiento: `TALLER_URDF_TF.md` §11, Ejercicio 3 (predecir con TF2 el píxel de un marcador medido sobre la mesa y compararlo con la imagen). Según el URDF de Kinova el marco es óptico (Z hacia donde mira, X a la derecha, Y hacia abajo); falta confirmarlo.
 - [ ] **Pendientes de la revisión de talleres (2026-09-15)**, documentados en `TROUBLESHOOTING.md` §4:
   - [x] `scripts/flight_recorder_telemetry_demo.py` publica ahora los mismos nombres que el robot real: `joint_1..joint_6` y `robotiq_85_left_knuckle_joint` (2026-10-14). Cada `JointState` crece 24 bytes; el taller de rosbag explica el efecto estimado en sus tamaños de referencia.
   - [ ] Volver a medir con ROS 2 Jazzy los tamaños de referencia del taller de rosbag (MCAP+Zstd y SQLite3) con el emulador nuevo.
