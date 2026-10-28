@@ -53,10 +53,17 @@ def latex_a_texto(texto: str) -> str:
         num, den = (x if re.fullmatch(r"[\w.]+", x) else f"({x})" for x in (m.group(1), m.group(2)))
         return f"{num}/{den}"
 
+    t = t.replace(r"\tfrac", r"\frac")
     for _ in range(3):
         t = re.sub(r"\\frac\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}\{([^{}]*)\}", fraccion, t)
+    t = re.sub(r"\\operatorname\{([^{}]*)\}", r"\1", t)
+    t = re.sub(r"\\sqrt\{([^{}]*)\}", r"√(\1)", t)
     reemplazos = {r"\qquad": "     ", r"\,": " ", r"\mid": "|", r"\sim": "~", r"\approx": "≈",
-                  r"\cdot": "·", "^{-1}": "⁻¹", r"\{": "{", r"\}": "}"}
+                  r"\cdot": "·", "^{-1}": "⁻¹", r"\{": "{", r"\}": "}",
+                  r"\big": "", r"\lvert": "|", r"\rvert": "|", r"\le": "≤", r"\ge": "≥",
+                  r"\pm": "±", r"\mp": "∓", r"\theta": "θ", r"\alpha": "α", r"\rho": "ρ",
+                  r"\omega": "ω", r"\Delta": "Δ", r"\pi": "π", r"\sin": "sin", r"\cos": "cos",
+                  r"\max": "max", "^2": "²", "\\ ": " "}
     for a, b in reemplazos.items():
         t = t.replace(a, b)
     t = re.sub(r"_\{([^{}]*)\}", r"_\1", t)
@@ -87,7 +94,7 @@ def bloques(md: str):
             j = i + 1
             while not lineas[j].strip().startswith("```"):
                 j += 1
-            yield "codigo", [latex_a_texto(x) for x in lineas[i + 1:j]]
+            yield "codigo", lineas[i + 1:j]       # el código va literal: «$HOME» no es LaTeX
             i = j + 1
         elif s.startswith("$$"):
             j = i if s.endswith("$$") and len(s) > 2 else i + 1
