@@ -38,7 +38,7 @@ CONSTRUCTOR = Path(__file__).name
 
 
 def plano(texto: str) -> str:
-    return clean(texto.replace("&nbsp;", " "))
+    return clean(md.latex_a_texto(texto.replace("&nbsp;", " ")))
 
 
 def parrafo(doc, texto: str, *, size: float = 9, italic: bool = False):
