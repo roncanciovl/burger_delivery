@@ -132,7 +132,9 @@ cd ~/ros2_ws/src/burger_delivery
 rg -n "declare_parameter|topic_name|simulated_mode|radius|sim_time \+=|math.pi" scripts/apriltag_fixed_camera_localizer.py
 ```
 
-Anota los ocho parámetros con sus valores por defecto, cómo se construye el nombre del tópico y la
+Anota los ocho primeros parámetros con sus valores por defecto (los cinco siguientes, de `publish_pose2d` a
+`tag_height_m`, eligen la salida como `Pose2D` o como TF y se usan en el [Laboratorio 05](../guias_laboratorio/GUIA_LAB_05_TF_DRON_CARRITO_MICROROS.md)),
+cómo se construye el nombre del tópico y la
 trayectoria simulada: radio `0.35` m, `0.05` rad por mensaje, `θ` tangente al círculo.
 
 ### 🛠️ Ejercicio

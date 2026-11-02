@@ -79,7 +79,7 @@ Este documento centraliza las tareas pendientes, oportunidades de mejora identif
   - Mientras tanto, los cuatro documentos que lo describen (`burger_description/README.md`, `conceptos_core/visor_web_urdf.md`, `docs/architecture/ros_burger_delivery.md`, `education/talleres/TALLER_URDF_TF.md`) llevan un aviso explicando la diferencia entre los dos modelos.
   - [x] Sustituir descripción y mallas por las de `arms/gen3/6dof/`. La escena (mesa, tags, `burger_grip_frame`) no cambia: cuelga de frames que siguen existiendo.
   - [x] Revisar `TALLER_URDF_TF.md` y su formato ABET (v1.1, evidencia E7 de la cámara).
-  - [ ] Validar en el robot real el eslabón `end_effector_link → camera_link` (el driver no carga `vision:=true`) y el sentido de los ejes de `camera_color_frame` frente a la imagen.
+  - [ ] Validar en el robot real el eslabón `end_effector_link → camera_link` (el driver no carga `vision:=true`) y el sentido de los ejes de `camera_color_frame` frente a la imagen. Procedimiento: `TALLER_URDF_TF.md` §11, Ejercicio 3 (predecir con TF2 el píxel de un marcador medido sobre la mesa y compararlo con la imagen). Según el URDF de Kinova el marco es óptico (Z hacia donde mira, X a la derecha, Y hacia abajo); falta confirmarlo.
 - [ ] **Pendientes de la revisión de talleres (2026-09-15)**, documentados en `TROUBLESHOOTING.md` §4:
   - [x] `scripts/flight_recorder_telemetry_demo.py` publica ahora los mismos nombres que el robot real: `joint_1..joint_6` y `robotiq_85_left_knuckle_joint` (2026-10-14). Cada `JointState` crece 24 bytes; el taller de rosbag explica el efecto estimado en sus tamaños de referencia.
   - [ ] Volver a medir con ROS 2 Jazzy los tamaños de referencia del taller de rosbag (MCAP+Zstd y SQLite3) con el emulador nuevo.
@@ -93,7 +93,10 @@ Este documento centraliza las tareas pendientes, oportunidades de mejora identif
 
 - [ ] **Ampliación de Guías de Laboratorio (`education/guias_laboratorio/`)**:
   - [ ] Guía Lab 04: Modelado de robots y árboles TF con URDF/XACRO.
-  - [ ] Guía Lab 05: Localización visual con AprilTags y cancelación de perspectiva.
+  - [x] Guía Lab 05: Localización visual con AprilTags y cancelación de perspectiva → publicada como [Guía 05](education/guias_laboratorio/GUIA_LAB_05_TF_DRON_CARRITO_MICROROS.md) (2026-10-28): el dron publica `tag_mesa → tag_carrito1` con `apriltag_fixed_camera_localizer.py --ros-args -p publish_tf:=true` y el carrito la usa en un ESP32 con micro-ROS (relevo tf2 y `/tf` directo), con su instrumento ABET.
+    - [ ] Compilar `carrito_tf_control.ino` para el ESP32 con `micro_ros_arduino` (jazzy) y probarlo con un carrito: sólo se revisó contra las cabeceras de micro-ROS y se simuló la ley de control en la PC.
+    - [ ] Regenerar `micro_ros_arduino` con `tf2_msgs` (la biblioteca precompilada no lo trae) y comprobar la Fase B; dejar la biblioteca regenerada disponible para los estudiantes.
+    - [ ] Probar `ros2 run image_transport republish` con `in_transport`/`out_transport` en Jazzy y llevar a ROS 2 la cámara de cada dron del curso.
   - [ ] Guía Lab 06: Planificación de trayectorias con MoveIt 2.
   - [x] Guía Lab 07: Razonamiento espacial con IA multimodal (Gemini) → publicada como [Guía IA 01](education/guias_laboratorio/GUIA_LAB_IA_01_EMBODIED_AI_GEMINI_ER2_KINOVA.md) para la asignatura de IA, con `gemini-robotics-er-2-preview`, ruta sin ROS 2 y plantilla de código/informe.
     - [ ] Validar en el robot real antes de la sesión: llamada a la API, `leer_calibracion_kortex.py` y el nodo ROS 2 contra `kinova_vision`.
