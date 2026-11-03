@@ -427,6 +427,26 @@ def dibujar(color_bgr: np.ndarray, localizados: list[dict]) -> np.ndarray:
     return salida
 
 
+def profundidad_a_color(depth_mm: np.ndarray) -> tuple[np.ndarray, int, int]:
+    """Imagen de profundidad de 16 bits (mm) -> imagen BGR en falso color para el informe.
+
+    La de 16 bits se ve negra en un visor común: sus valores (cientos o miles de mm) son
+    pequeños frente a 65535. Aquí cada distancia se lleva a un color, cerca = rojo y
+    lejos = azul, con el rango de los percentiles 2 a 98 de los píxeles válidos para que
+    un reflejo aislado no comprima la escala. Los píxeles sin dato (0) quedan en negro.
+    Devuelve la imagen y el rango (mín., máx.) en mm.
+    """
+    validos = depth_mm[depth_mm > 0]
+    if validos.size == 0:
+        return np.zeros((*depth_mm.shape, 3), np.uint8), 0, 0
+    z_min, z_max = (int(x) for x in np.percentile(validos, [2, 98]))
+    z_max = max(z_max, z_min + 1)
+    escala = np.clip((depth_mm.astype(np.float32) - z_min) / (z_max - z_min), 0.0, 1.0)
+    salida = cv2.applyColorMap((255 * (1.0 - escala)).astype(np.uint8), cv2.COLORMAP_JET)
+    salida[depth_mm == 0] = 0
+    return salida, z_min, z_max
+
+
 COLUMNAS_CSV = ["fecha", "grupo", "opcion", "escena", "tarea", "objeto", "modelo", "thinking",
                 "registro", "latencia_s", "tokens_entrada", "tokens_salida", "tokens_pensamiento",
                 "label", "punto_yx", "u", "v", "z_m", "x_m", "y_m", "rango_m", "respuesta"]

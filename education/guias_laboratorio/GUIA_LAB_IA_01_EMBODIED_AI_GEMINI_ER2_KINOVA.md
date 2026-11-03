@@ -12,6 +12,7 @@
 
 | Descripción del Cambio | Justificación | Fecha |
 |---|---|:---:|
+| Evidencia de las escenas semánticas con imagen RGB, profundidad y prompt | Cada escena del Experimento 1 debe documentarse con la imagen RGB, la profundidad en falso color, el prompt completo enviado y la imagen anotada (Fase 4, paso 5; evidencia E4). La plantilla agrega el subcomando `profundidad` y `consultar` guarda el prompt en `capturas/<escena>_<tarea>_prompt.txt`. | 04/11/2026 |
 | Explicación de las tablas de resultados y del diseño experimental | Antes de cada tabla se describe qué significa cada columna y cada fila propuesta, y una subsección resume factor, niveles, unidad experimental, repeticiones y variable de respuesta de cada experimento. El instrumento recibe el mismo texto y dos preguntas que estaban sólo en la guía: el punto en el borde del objeto y las conclusiones. El error relativo de la Tabla 5 se anota en la fila de la media. | 03/11/2026 |
 | Eslabón TF de la cámara en la Ruta B | El driver carga el brazo sin `vision:=true` y el árbol del robot no conecta `camera_link` con `end_effector_link`. La Ruta B remite al Taller URDF y TF2 §11, que explica cómo publicar ese eslabón desde la anfitriona para expresar el objetivo en `base_link`. | 14/10/2026 |
 | Ubicación de la práctica en el Tercer Corte | La práctica se evalúa en el tercer corte: el instrumento ABET registra "Tercer Corte", el aporte L₃ y el nombre de archivo `C3_LIA01_G<grupo>_<codigo1>_<codigo2>_v1.docx`. | 13/10/2026 |
@@ -330,6 +331,17 @@ Monte (o use las capturas de) las escenas de la **Tabla 4**, tomadas de `docs/re
    ```
 3. Una respuesta es **correcta** si el punto cae dentro del objeto esperado en la imagen anotada. Cuente también las respuestas con JSON inválido.
 4. **TODO 1:** escriba en `PROMPTS["propio"]` un prompt para la escena *Burger Delivery* que exija razonamiento relacional (p. ej. "la caja más cercana a la bandeja del carrito") y conserve el formato de salida. Compárelo con una versión ingenua ("señala la caja").
+5. **Evidencia de cada escena (E4).** Para cada fila de la **Tabla 4** reúna en el instrumento cuatro elementos:
+   - la **imagen RGB**, `capturas/<escena>_color.png`;
+   - la **imagen de profundidad en falso color**: la `_depth.png` es de 16 bits y en un visor común se ve negra, así que genérela con
+     ```bash
+     python3 embodied_sin_ros.py profundidad --escena semantica1   # escribe capturas/semantica1_depth_vis.png
+     ```
+     (rojo = cerca, azul = lejos, negro = sin dato);
+   - el **prompt completo enviado**, con la instrucción ya insertada, que `consultar` guarda en `capturas/<escena>_<tarea>_prompt.txt`;
+   - la **imagen anotada**, `capturas/<escena>_<tarea>_resultado.png`, indicando si fue acierto o fallo.
+
+   Cada consulta sobrescribe el prompt y la imagen anotada de esa escena y tarea: copie los de la repetición que va a mostrar antes de hacer la siguiente.
 
 ---
 
@@ -482,7 +494,7 @@ La columna **Fuente** indica de dónde sale cada valor: la Kortex API (calibraci
 Cada fila es una escena; el experimento compara qué tan bien razona el modelo en cada tipo de pregunta (ver el diseño experimental al inicio de esta sección).
 
 - **Escena:** la captura usada (Tabla 2). `burger` aparece dos veces porque se consulta con el prompt ingenuo y con el prompt propio del grupo.
-- **Instrucción (resumen):** la pregunta en pocas palabras; la instrucción completa queda en el CSV, columna `objeto`.
+- **Instrucción (resumen):** la pregunta en pocas palabras; la instrucción completa queda en el CSV (columna `objeto`) y el prompt completo enviado, en `capturas/<escena>_<tarea>_prompt.txt` (evidencia E4).
 - **Respuesta esperada:** el objeto correcto, decidido por el grupo **antes** de consultar (verdad de terreno).
 - **Aciertos / 3:** cuántas de las 3 repeticiones pusieron el punto dentro del objeto esperado en la imagen anotada.
 - **JSON inválidos:** cuántas respuestas no se pudieron interpretar como la lista de puntos pedida.
