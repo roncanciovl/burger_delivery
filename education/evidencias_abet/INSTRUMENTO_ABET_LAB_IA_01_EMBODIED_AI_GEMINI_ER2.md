@@ -64,8 +64,8 @@
 |---|:---:|:---:|---|---|
 | **C1. Implementación del pipeline percepción → razonamiento → geometría** | 30% | **SO1** | **1.1.** Aplica principios matemáticos (matrices de transformación homogénea, rotaciones y cuaterniones) para resolver problemas espaciales en robótica. | TODO 2 a 4 (y 5 en la Ruta B) implementados, `python3 -m pytest tests -q` con 15 aprobadas, commit identificado por SHA y `resultados.csv` generado por el código del equipo (E1, E5). |
 | **C2. Diseño experimental y medición** | 25% | **SO6** | **6.1.** Diseña y ejecuta pruebas experimentales con verdad de terreno medida, repeticiones y variables controladas para cuantificar exactitud, latencia y repetibilidad. | Escenas registradas (Tabla 2), calibración verificada con error < 5% (Tabla 3), 3 repeticiones por escena semántica, 5 configuraciones de distancia y 5 repeticiones por nivel de razonamiento (Tablas 4 a 6). |
-| **C3. Análisis crítico del modelo** | 20% | **SO6** | **6.4.** Interpreta fallas y diagnósticos experimentales aplicando protocolos por capas para aislar errores en hardware y software. | Descomposición del error 3D por fuentes (señalamiento, calibración, profundidad, registro), ablación con y sin registro (Tabla 5), análisis de fallas semánticas del VLM y compromiso latencia-exactitud (Preguntas 1 a 5). |
-| **C4. Informe técnico y comunicación de resultados** | 15% | **SO3** | **3.1 - 3.3.** Elabora documentación técnica reproducible y comunica resultados experimentales con métricas y demostraciones. | Instrumento completo, imágenes anotadas de aciertos y fallos (E4), tablas con media y desviación estándar, conclusiones sustentadas en datos y anexos trazables. |
+| **C3. Análisis crítico del modelo** | 20% | **SO6** | **6.4.** Interpreta fallas y diagnósticos experimentales aplicando protocolos por capas para aislar errores en hardware y software. | Descomposición del error 3D por fuentes (señalamiento, calibración, profundidad, registro), ablación con y sin registro (Tabla 5), análisis de fallas semánticas del VLM y compromiso latencia-exactitud (Preguntas 1 a 5 y 9). |
+| **C4. Informe técnico y comunicación de resultados** | 15% | **SO3** | **3.1 - 3.3.** Elabora documentación técnica reproducible y comunica resultados experimentales con métricas y demostraciones. | Instrumento completo, imágenes anotadas de aciertos y fallos (E4), tablas con media y desviación estándar, conclusiones sustentadas en datos (Pregunta 10) y anexos trazables. |
 | **C5. Uso responsable de IA, seguridad y trabajo en equipo** | 10% | **SO4 / SO5** | **4.3.** Aplica buenas prácticas en el uso de datos de cámara, operación segura y roles de equipo.<br>**5.1.** Define roles técnicos y coordina la ejecución colaborativa en equipo. | Clave de API fuera del repositorio, escenas sin personas ni documentos, respeto de la zona del robot y de los turnos RTSP, Tabla 8 (declaración de IA generativa) y Anexo A individual. |
 | **TOTAL** | **100%** | | | |
 
@@ -219,7 +219,7 @@ Cada fila es una **configuración**: una disposición de dos objetos (`dist1` a 
 - **d_est sin registro (m):** la misma consulta con `--sin-registro`.
 - **Error (mm):** |d_est − d_real| × 1000 para cada caso.
 - **Observación:** por ejemplo, si un objeto quedó en el borde de la imagen o sobre una superficie brillante.
-- **Media ± σ:** promedio y desviación estándar de cada columna sobre las 5 configuraciones.
+- **Media ± σ:** promedio y desviación estándar de cada columna sobre las 5 configuraciones. En la columna **Observación** de esta fila anote el **error relativo medio** con y sin registro: el promedio de error / d_real, en %.
 
 
 | Configuración | d real (m) | d estimada con registro (m) | Error (mm) | d estimada sin registro (m) | Error (mm) | Observación |
@@ -358,6 +358,26 @@ Cada fila es una **prueba** del ciclo corporizado con su resultado esperado ya e
 
 ### Pregunta 8: Ética y Privacidad de los Datos Enviados
 *¿Qué información de la escena podría revelar una imagen enviada a un servicio externo aunque no aparezcan personas? ¿Qué alternativa técnica permitiría no enviar imágenes fuera del laboratorio y qué se perdería con ella?*
+
+> **Respuesta Técnica del Equipo:**
+> ________________________________________________________________________________________________________________________
+> ________________________________________________________________________________________________________________________
+> ________________________________________________________________________________________________________________________
+
+---
+
+### Pregunta 9: Punto en el Borde del Objeto
+*¿Qué pasa con el punto 3D si Gemini señala el borde de la caja en lugar de su centro? ¿Cómo lo detectaría automáticamente con la imagen de profundidad?*
+
+> **Respuesta Técnica del Equipo:**
+> ________________________________________________________________________________________________________________________
+> ________________________________________________________________________________________________________________________
+> ________________________________________________________________________________________________________________________
+
+---
+
+### Pregunta 10: Conclusiones del Equipo
+*Redacte tres conclusiones, cada una sustentada en sus datos: (1) la capacidad de razonamiento espacial *zero-shot* del modelo frente a un detector clásico (Tabla 4); (2) el error 3D alcanzable con la cámara del Kinova y el papel del registro y la calibración (Tablas 3 y 5); y (3) el compromiso latencia-exactitud del nivel de razonamiento y sus implicaciones de arquitectura (Tabla 6).*
 
 > **Respuesta Técnica del Equipo:**
 > ________________________________________________________________________________________________________________________

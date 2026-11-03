@@ -12,6 +12,7 @@
 
 | Descripción del Cambio | Justificación | Fecha |
 |---|---|:---:|
+| Explicación de las tablas de resultados y del diseño experimental | Antes de cada tabla se describe qué significa cada columna y cada fila propuesta, y una subsección resume factor, niveles, unidad experimental, repeticiones y variable de respuesta de cada experimento. El instrumento recibe el mismo texto y dos preguntas que estaban sólo en la guía: el punto en el borde del objeto y las conclusiones. El error relativo de la Tabla 5 se anota en la fila de la media. | 03/11/2026 |
 | Eslabón TF de la cámara en la Ruta B | El driver carga el brazo sin `vision:=true` y el árbol del robot no conecta `camera_link` con `end_effector_link`. La Ruta B remite al Taller URDF y TF2 §11, que explica cómo publicar ese eslabón desde la anfitriona para expresar el objetivo en `base_link`. | 14/10/2026 |
 | Ubicación de la práctica en el Tercer Corte | La práctica se evalúa en el tercer corte: el instrumento ABET registra "Tercer Corte", el aporte L₃ y el nombre de archivo `C3_LIA01_G<grupo>_<codigo1>_<codigo2>_v1.docx`. | 13/10/2026 |
 | Entrega mediante instrumento ABET único con criterios, indicadores y niveles N1–N5 | La plantilla de informe libre no seguía la convención de las demás prácticas. Se reemplaza por `INSTRUMENTO_ABET_LAB_IA_01_EMBODIED_AI_GEMINI_ER2.docx`, que reúne evidencias E1–E9, tablas, cuestionario, Anexo A individual, rúbricas por criterio en escala 0–500 y consolidación ABET. La tabla de RAE de esta guía muestra ahora los indicadores de desempeño. | 13/10/2026 |
@@ -346,7 +347,7 @@ La posición absoluta de la cámara es difícil de medir con cinta, pero **dos m
        --objeto "el centro de la tapa del termo y el centro de la tapa de la caja"
    ```
 3. Repita **la misma escena** con `--sin-registro` (ablación: la profundidad se reescala sin registrar).
-4. Complete la **Tabla 5** con el error absoluto $|d_{est} - d_{real}|$ y el error relativo, con y sin registro.
+4. Complete la **Tabla 5** con el error absoluto $|d_{est} - d_{real}|$ con y sin registro. En la fila **Media ± σ** anote además el error relativo medio ($|d_{est} - d_{real}| / d_{real}$, en %) de cada caso.
 
 ---
 
@@ -507,7 +508,7 @@ Cada fila es una **configuración**: una disposición de dos objetos (`dist1` a 
 - **d_est sin registro (m):** la misma consulta con `--sin-registro`.
 - **Error (mm):** |d_est − d_real| × 1000 para cada caso.
 - **Observación:** por ejemplo, si un objeto quedó en el borde de la imagen o sobre una superficie brillante.
-- **Media ± σ:** promedio y desviación estándar de cada columna sobre las 5 configuraciones.
+- **Media ± σ:** promedio y desviación estándar de cada columna sobre las 5 configuraciones. En la columna **Observación** de esta fila anote el **error relativo medio** con y sin registro: el promedio de error / d_real, en %.
 
 | Config. | $d_{real}$ (m) | $d_{est}$ con registro (m) | Error (mm) | $d_{est}$ sin registro (m) | Error (mm) | Observación |
 |:---:|:---:|:---:|:---:|:---:|:---:|---|
