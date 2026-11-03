@@ -64,8 +64,8 @@
 |---|:---:|:---:|---|---|
 | **C1. Implementación del pipeline percepción → razonamiento → geometría** | 30% | **SO1** | **1.1.** Aplica principios matemáticos (matrices de transformación homogénea, rotaciones y cuaterniones) para resolver problemas espaciales en robótica. | TODO 2 a 4 (y 5 en la Ruta B) implementados, `python3 -m pytest tests -q` con 15 aprobadas, commit identificado por SHA y `resultados.csv` generado por el código del equipo (E1, E5). |
 | **C2. Diseño experimental y medición** | 25% | **SO6** | **6.1.** Diseña y ejecuta pruebas experimentales con verdad de terreno medida, repeticiones y variables controladas para cuantificar exactitud, latencia y repetibilidad. | Escenas registradas (Tabla 2), calibración verificada con error < 5% (Tabla 3), 3 repeticiones por escena semántica, 5 configuraciones de distancia y 5 repeticiones por nivel de razonamiento (Tablas 4 a 6). |
-| **C3. Análisis crítico del modelo** | 20% | **SO6** | **6.4.** Interpreta fallas y diagnósticos experimentales aplicando protocolos por capas para aislar errores en hardware y software. | Descomposición del error 3D por fuentes (señalamiento, calibración, profundidad, registro), ablación con y sin registro (Tabla 5), análisis de fallas semánticas del VLM y compromiso latencia-exactitud (Preguntas 1 a 5). |
-| **C4. Informe técnico y comunicación de resultados** | 15% | **SO3** | **3.1 - 3.3.** Elabora documentación técnica reproducible y comunica resultados experimentales con métricas y demostraciones. | Instrumento completo, imágenes anotadas de aciertos y fallos (E4), tablas con media y desviación estándar, conclusiones sustentadas en datos y anexos trazables. |
+| **C3. Análisis crítico del modelo** | 20% | **SO6** | **6.4.** Interpreta fallas y diagnósticos experimentales aplicando protocolos por capas para aislar errores en hardware y software. | Descomposición del error 3D por fuentes (señalamiento, calibración, profundidad, registro), ablación con y sin registro (Tabla 5), análisis de fallas semánticas del VLM y compromiso latencia-exactitud (Preguntas 1 a 5 y 9). |
+| **C4. Informe técnico y comunicación de resultados** | 15% | **SO3** | **3.1 - 3.3.** Elabora documentación técnica reproducible y comunica resultados experimentales con métricas y demostraciones. | Instrumento completo, imágenes anotadas de aciertos y fallos (E4), tablas con media y desviación estándar, conclusiones sustentadas en datos (Pregunta 10) y anexos trazables. |
 | **C5. Uso responsable de IA, seguridad y trabajo en equipo** | 10% | **SO4 / SO5** | **4.3.** Aplica buenas prácticas en el uso de datos de cámara, operación segura y roles de equipo.<br>**5.1.** Define roles técnicos y coordina la ejecución colaborativa en equipo. | Clave de API fuera del repositorio, escenas sin personas ni documentos, respeto de la zona del robot y de los turnos RTSP, Tabla 8 (declaración de IA generativa) y Anexo A individual. |
 | **TOTAL** | **100%** | | | |
 
@@ -93,7 +93,35 @@
 
 > **Instrucciones para el equipo:** Diligencie de forma completa y precisa cada una de las siguientes tablas con los datos reales obtenidos. Toda cifra debe coincidir con `resultados.csv` o con una medición física anotada en la sesión.
 
+#### Diseño experimental: qué se varía y qué se mide
+
+Las Tablas 1 a 3 registran el entorno, las capturas y la calibración: no son experimentos, pero los experimentos dependen de ellas. Las Tablas 4 a 7 son los cuatro experimentos. Para leerlas conviene saber qué cambia el grupo a propósito en cada uno y qué mide:
+
+- **Factor:** la condición que el grupo cambia a propósito para observar su efecto.
+- **Niveles:** los valores que toma el factor en el experimento.
+- **Unidad experimental:** sobre qué se hace cada medición: una escena capturada o una configuración de objetos.
+- **Repeticiones:** cuántas veces se consulta el modelo con el mismo nivel sobre la misma unidad. Gemini no responde siempre igual a la misma pregunta; por eso se repite y se reporta el número de aciertos, no un solo intento.
+- **Variable de respuesta:** lo que se mide y se anota en la tabla.
+- **Se mantiene fijo:** lo que no debe cambiar entre mediciones para que la comparación sea justa.
+
+| Experimento (tabla) | Factor | Niveles | Unidad experimental | Repeticiones | Variable de respuesta | Se mantiene fijo |
+|---|---|---|---|:---:|---|---|
+| 1. Razonamiento semántico-espacial (Tabla 4) | La escena y su instrucción; en `burger`, la redacción del prompt | 4 escenas `semantica1` a `semantica4`; `burger` con el prompt ingenuo y con el prompt propio (TODO 1) | Una escena capturada | 3 por escena | Aciertos de 3, respuestas con JSON inválido, latencia | `--thinking low` y la misma captura en las 3 repeticiones |
+| 2. Exactitud 3D y ablación (Tabla 5) | El registro de la profundidad al marco de color | Con registro (por defecto) y sin registro (`--sin-registro`) | Una configuración de dos objetos: `dist1` a `dist5` | 1 por nivel y configuración | Error \|d_est − d_real\| en mm | La misma captura y la misma instrucción en los dos niveles |
+| 3. Costo del razonamiento (Tabla 6) | El nivel de razonamiento `thinking_level` | `low` y `high` (obligatorios); `minimal` y `medium` (opcionales) | La escena con peor resultado en la Tabla 4 | 5 por nivel | Aciertos de 5, latencia media ± σ, tokens | La escena y la instrucción |
+| 4. Ciclo corporizado (Tabla 7) | El tipo de prueba | Agarre en escena segura e insegura, las 3 reglas del plan, éxito con la tarea bien y mal hecha | Una escena por prueba | 1 | ¿Correcto? (sí o no) | La instrucción de cada prueba y el nivel de razonamiento |
+
+
 ### Tabla 1: Entorno y Autoevaluación
+
+Registra con qué se hizo la práctica, para que otro grupo pueda reproducirla. Cada fila es un dato:
+
+- **Ruta elegida:** A, si capturó con `embodied_sin_ros.py`; B, si usó el nodo ROS 2.
+- **Versiones:** salida de `pip show google-genai` (línea `Version`) y de `python3 --version`.
+- **Modelo y fecha:** el modelo está en *preview*: con la fecha se sabe con qué versión se obtuvieron los resultados.
+- **Resultado de `pytest`:** la línea final, por ejemplo `15 passed`. Con algún `failed`, indique cuál prueba falla.
+- **Commit (SHA):** salida de `git rev-parse --short HEAD` en el repositorio del grupo, con los TODO ya resueltos.
+
 
 | Ítem | Valor Registrado |
 |---|---|
@@ -104,6 +132,26 @@
 | **Commit del repositorio del equipo con los TODO resueltos (SHA)** | |
 
 ### Tabla 2: Registro de Escenas Capturadas
+
+Una **escena** es una captura con nombre: la imagen de color, la de profundidad de 16 bits y un archivo `_meta.json`, guardados en `capturas/` con ese nombre. Es el nombre que después se pasa a `--escena`. Cada fila propuesta es una escena que necesitará más adelante; capture todas en su turno de cámara.
+
+- **Escena:** el nombre exacto de la captura. Use los propuestos: el CSV y las demás tablas se cruzan por ese nombre.
+- **Fase:** la fase de esta guía en la que se usa la escena: 2 (calibración), 4 (razonamiento), 5 (exactitud 3D) o 7 (ciclo corporizado).
+- **Descripción:** qué objetos hay y cómo están dispuestos. Respete la disposición propuesta: cada escena pone a prueba una capacidad distinta del modelo (lista de abajo).
+- **% píxeles de profundidad válidos:** `pixeles_validos_pct` del `_meta.json`: porcentaje de píxeles con profundidad distinta de 0. Por debajo de 60 % la escena se repite; las superficies negras o brillantes devuelven 0.
+- **Desfase color-profundidad (ms):** `desfase_color_profundidad_ms` del `_meta.json`: tiempo entre la toma de color y la de profundidad. Si algo se movió en ese intervalo, las dos imágenes no muestran lo mismo.
+
+Qué pone a prueba cada escena propuesta:
+
+- `regla`: una hoja A4 (0.297 m de ancho) a una distancia Z medida con cinta, para calibrar la cámara (Fase 2).
+- `semantica1`: el **estado físico**: una caja tiene algo encima y no se puede tomar desde arriba.
+- `semantica2`: una **relación** entre objetos: de quién es el celular según dónde están las llaves.
+- `semantica3`: el **estado** de un objeto: abierto o cerrado.
+- `semantica4`: la **contención**: dentro o fuera del estuche.
+- `burger`: la escena real de la celda, con la bandeja del carrito; es la del prompt propio (TODO 1).
+- `dist1` a `dist5`: cinco disposiciones de dos objetos con la distancia entre ellos medida con cinta; alterne posiciones cerca y lejos del centro de la imagen.
+- `exito_antes` y `exito_despues`: la misma escena antes y después de hacer la tarea a mano.
+
 
 | Escena | Fase | Descripción | % Píxeles de Profundidad Válidos | Desfase Color-Profundidad (ms) |
 |---|:---:|---|:---:|:---:|
@@ -118,6 +166,18 @@
 
 ### Tabla 3: Calibración de la Cámara de Color
 
+Registra los parámetros de la cámara de color con los que se desproyectan todos los puntos 3D, y la prueba que los valida. Cada fila es un parámetro:
+
+- **Resolución de color:** ancho × alto en píxeles de las capturas (en el `_meta.json`).
+- **f_x / f_y (px):** distancias focales en píxeles. Con la calibración rápida, f_y se toma igual a f_x.
+- **c_x / c_y (px):** el punto principal, donde el eje óptico corta la imagen. En la calibración rápida es el centro de la imagen.
+- **Campo de visión horizontal (°):** lo informa el comando `calibrar`; sirve para comprobar que f_x es razonable.
+- **Distancia 3D entre esquinas de la hoja (m):** la que calcula `consultar --escena regla` con los puntos de Gemini.
+- **Error de verificación (%):** |distancia − 0.297| / 0.297 × 100. Por encima de 5 %, repita la calibración antes de seguir.
+
+La columna **Fuente** indica de dónde sale cada valor: la Kortex API (calibración oficial del docente), la calibración rápida del grupo o la salida de un comando.
+
+
 | Parámetro | Valor | Fuente |
 |---|:---:|---|
 | **Resolución de color** | | `capturas/regla_meta.json` |
@@ -129,6 +189,17 @@
 
 ### Tabla 4: Experimento 1 — Razonamiento Semántico-Espacial (`thinking = low`, 3 repeticiones)
 
+Cada fila es una escena; el experimento compara qué tan bien razona el modelo en cada tipo de pregunta (ver el diseño experimental al inicio de esta sección).
+
+- **Escena:** la captura usada (Tabla 2). `burger` aparece dos veces porque se consulta con el prompt ingenuo y con el prompt propio del grupo.
+- **Instrucción (resumen):** la pregunta en pocas palabras; la instrucción completa queda en el CSV, columna `objeto`.
+- **Respuesta esperada:** el objeto correcto, decidido por el grupo **antes** de consultar (verdad de terreno).
+- **Aciertos / 3:** cuántas de las 3 repeticiones pusieron el punto dentro del objeto esperado en la imagen anotada.
+- **JSON inválidos:** cuántas respuestas no se pudieron interpretar como la lista de puntos pedida.
+- **Latencia media (s):** promedio de la columna `latencia_s` del CSV para esas 3 consultas.
+- **Observación del error:** qué señaló el modelo cuando falló y una hipótesis del porqué.
+
+
 | Escena | Instrucción (resumen) | Respuesta Esperada | Aciertos / 3 | JSON Inválidos | Latencia Media (s) | Observación del Error |
 |---|---|---|:---:|:---:|:---:|---|
 | `semantica1` | Caja libre, segura para agarre superior | | | | | |
@@ -139,6 +210,17 @@
 | `burger` (TODO 1) | Prompt propio del equipo | | | | | |
 
 ### Tabla 5: Experimento 2 — Exactitud 3D y Ablación del Registro de Profundidad
+
+Cada fila es una **configuración**: una disposición de dos objetos (`dist1` a `dist5`) con la distancia real entre ellos medida con cinta. Cada configuración se consulta dos veces sobre la **misma captura**: con registro de la profundidad y sin él (la ablación). Comparar las dos columnas de error muestra cuánto aporta el registro.
+
+- **Config.:** el número de la configuración (1 = `dist1`, etc.).
+- **d_real (m):** distancia medida con cinta entre los centros de las caras superiores de los dos objetos.
+- **d_est con registro (m):** la `Distancia 3D` que imprime `consultar`, con el registro activo (por defecto).
+- **d_est sin registro (m):** la misma consulta con `--sin-registro`.
+- **Error (mm):** |d_est − d_real| × 1000 para cada caso.
+- **Observación:** por ejemplo, si un objeto quedó en el borde de la imagen o sobre una superficie brillante.
+- **Media ± σ:** promedio y desviación estándar de cada columna sobre las 5 configuraciones. En la columna **Observación** de esta fila anote el **error relativo medio** con y sin registro: el promedio de error / d_real, en %.
+
 
 | Configuración | d real (m) | d estimada con registro (m) | Error (mm) | d estimada sin registro (m) | Error (mm) | Observación |
 |:---:|:---:|:---:|:---:|:---:|:---:|---|
@@ -153,6 +235,16 @@ Altura de un objeto sobre la mesa: real ______ m · estimada (Z mesa − Z objet
 
 ### Tabla 6: Experimento 3 — Costo del Razonamiento (5 repeticiones por nivel)
 
+Cada fila es un **nivel** del factor `thinking_level` aplicado a la misma escena y la misma instrucción, 5 veces. El experimento mide qué se gana en aciertos y qué se paga en tiempo y tokens al dejar razonar más al modelo.
+
+- **`thinking_level`:** el nivel pasado con `--thinking`. `low` y `high` son obligatorios; `minimal` y `medium`, opcionales.
+- **Aciertos / 5:** cuántas de las 5 respuestas señalaron el objeto correcto.
+- **Latencia media ± σ (s):** promedio y desviación estándar de `latencia_s` en el CSV.
+- **Tokens de pensamiento (media):** promedio de `tokens_pensamiento`: lo que el modelo "pensó" antes de responder.
+- **Tokens totales (media):** promedio de `tokens_entrada + tokens_salida + tokens_pensamiento`.
+- **¿El modelo aceptó el nivel?:** «no» si la API devolvió un error para ese nivel; ese error también es un resultado.
+
+
 | `thinking_level` | Aciertos / 5 | Latencia Media ± σ (s) | Tokens de Pensamiento (media) | Tokens Totales (media) | ¿El Modelo Aceptó el Nivel? |
 |:---:|:---:|:---:|:---:|:---:|:---:|
 | `low` | | | | | |
@@ -161,6 +253,16 @@ Altura de un objeto sobre la mesa: real ______ m · estimada (Z mesa − Z objet
 | `medium` (opcional) | | | | | |
 
 ### Tabla 7: Experimento 4 — Ciclo Corporizado
+
+Cada fila es una **prueba** del ciclo corporizado con su resultado esperado ya escrito: el grupo compara lo que respondió el modelo con ese resultado.
+
+- **Prueba:** qué se evalúa. Las de agarre miden si el modelo reconoce cuándo **no** es seguro tomar un objeto. Las del plan aplican las tres reglas de la Fase 7. Las de éxito comparan una captura de antes con una de después.
+- **Escena:** la captura usada (Tabla 2).
+- **Resultado del modelo:** lo que devolvió: un punto, una lista vacía, los pasos del plan o el valor de `exito`.
+- **Resultado esperado:** ya propuesto en cada fila. «Lista vacía» significa que el modelo se abstiene de proponer un agarre inseguro.
+- **¿Correcto?:** sí, si el resultado del modelo coincide con el esperado.
+- **Comentario:** la causa de un error, o el volumen de trabajo usado para la regla del punto dentro de los límites.
+
 
 | Prueba | Escena | Resultado del Modelo | Resultado Esperado | ¿Correcto? | Comentario |
 |---|---|---|---|:---:|---|
@@ -256,6 +358,26 @@ Altura de un objeto sobre la mesa: real ______ m · estimada (Z mesa − Z objet
 
 ### Pregunta 8: Ética y Privacidad de los Datos Enviados
 *¿Qué información de la escena podría revelar una imagen enviada a un servicio externo aunque no aparezcan personas? ¿Qué alternativa técnica permitiría no enviar imágenes fuera del laboratorio y qué se perdería con ella?*
+
+> **Respuesta Técnica del Equipo:**
+> ________________________________________________________________________________________________________________________
+> ________________________________________________________________________________________________________________________
+> ________________________________________________________________________________________________________________________
+
+---
+
+### Pregunta 9: Punto en el Borde del Objeto
+*¿Qué pasa con el punto 3D si Gemini señala el borde de la caja en lugar de su centro? ¿Cómo lo detectaría automáticamente con la imagen de profundidad?*
+
+> **Respuesta Técnica del Equipo:**
+> ________________________________________________________________________________________________________________________
+> ________________________________________________________________________________________________________________________
+> ________________________________________________________________________________________________________________________
+
+---
+
+### Pregunta 10: Conclusiones del Equipo
+*Redacte tres conclusiones, cada una sustentada en sus datos: (1) la capacidad de razonamiento espacial *zero-shot* del modelo frente a un detector clásico (Tabla 4); (2) el error 3D alcanzable con la cámara del Kinova y el papel del registro y la calibración (Tablas 3 y 5); y (3) el compromiso latencia-exactitud del nivel de razonamiento y sus implicaciones de arquitectura (Tabla 6).*
 
 > **Respuesta Técnica del Equipo:**
 > ________________________________________________________________________________________________________________________
