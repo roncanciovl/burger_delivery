@@ -65,7 +65,7 @@
 | **C1. Implementación del pipeline percepción → razonamiento → geometría** | 30% | **SO1** | **1.1.** Aplica principios matemáticos (matrices de transformación homogénea, rotaciones y cuaterniones) para resolver problemas espaciales en robótica. | TODO 2 a 4 (y 5 en la Ruta B) implementados, `python3 -m pytest tests -q` con 15 aprobadas, commit identificado por SHA y `resultados.csv` generado por el código del equipo (E1, E5). |
 | **C2. Diseño experimental y medición** | 25% | **SO6** | **6.1.** Diseña y ejecuta pruebas experimentales con verdad de terreno medida, repeticiones y variables controladas para cuantificar exactitud, latencia y repetibilidad. | Escenas registradas (Tabla 2), calibración verificada con error < 5% (Tabla 3), 3 repeticiones por escena semántica, 5 configuraciones de distancia y 5 repeticiones por nivel de razonamiento (Tablas 4 a 6). |
 | **C3. Análisis crítico del modelo** | 20% | **SO6** | **6.4.** Interpreta fallas y diagnósticos experimentales aplicando protocolos por capas para aislar errores en hardware y software. | Descomposición del error 3D por fuentes (señalamiento, calibración, profundidad, registro), ablación con y sin registro (Tabla 5), análisis de fallas semánticas del VLM y compromiso latencia-exactitud (Preguntas 1 a 5 y 9). |
-| **C4. Informe técnico y comunicación de resultados** | 15% | **SO3** | **3.1 - 3.3.** Elabora documentación técnica reproducible y comunica resultados experimentales con métricas y demostraciones. | Instrumento completo, imágenes anotadas de aciertos y fallos (E4), tablas con media y desviación estándar, conclusiones sustentadas en datos (Pregunta 10) y anexos trazables. |
+| **C4. Informe técnico y comunicación de resultados** | 15% | **SO3** | **3.1 - 3.3.** Elabora documentación técnica reproducible y comunica resultados experimentales con métricas y demostraciones. | Instrumento completo, fichas de las escenas semánticas con imagen RGB, profundidad, prompt e imagen anotada (E4), tablas con media y desviación estándar, conclusiones sustentadas en datos (Pregunta 10) y anexos trazables. |
 | **C5. Uso responsable de IA, seguridad y trabajo en equipo** | 10% | **SO4 / SO5** | **4.3.** Aplica buenas prácticas en el uso de datos de cámara, operación segura y roles de equipo.<br>**5.1.** Define roles técnicos y coordina la ejecución colaborativa en equipo. | Clave de API fuera del repositorio, escenas sin personas ni documentos, respeto de la zona del robot y de los turnos RTSP, Tabla 8 (declaración de IA generativa) y Anexo A individual. |
 | **TOTAL** | **100%** | | | |
 
@@ -80,12 +80,26 @@
 | **E1** | Captura de `python3 -m pytest tests -q` con **15 passed** y enlace al commit (SHA) del repositorio del equipo con los TODO resueltos. | |
 | **E2** | Archivos `capturas/<escena>_meta.json` de todas las escenas (Ruta A) o salida de `ros2 topic hz` de color y profundidad más las escenas guardadas con la tarea `guardar` (Ruta B). | |
 | **E3** | Salida del comando `calibrar` (o JSON leído con la Kortex API) y salida de `consultar --escena regla` con la distancia 3D entre las esquinas de la hoja. | |
-| **E4** | Imágenes anotadas `capturas/*_resultado.png` de las escenas semánticas: como mínimo un acierto y un fallo del modelo. | |
+| **E4** | Ficha de **cada** escena semántica de la Tabla 4 (`semantica1` a `semantica4` y `burger` con el prompt ingenuo y con el propio), con cuatro elementos: imagen RGB (`capturas/<escena>_color.png`), imagen de profundidad en falso color (`capturas/<escena>_depth_vis.png`, subcomando `profundidad`), prompt completo enviado (`capturas/<escena>_<tarea>_prompt.txt`) e imagen anotada (`capturas/<escena>_<tarea>_resultado.png`), indicando si fue acierto o fallo. Use el formato de la ficha que sigue a esta tabla. | |
 | **E5** | Archivo `resultados.csv` completo generado por la plantilla (columnas de latencia, tokens, píxel y punto 3D). | |
 | **E6** | Imágenes anotadas de una misma escena de distancia con registro y sin registro (`--sin-registro`). | |
 | **E7** | Filas del CSV de las 5 repeticiones por nivel de razonamiento (`thinking = low` y `high`, como mínimo). | |
 | **E8** | Salida de la tarea `plan` (pasos impresos sin ejecutar), imágenes de agarre seguro e inseguro, y capturas antes/después con la respuesta de `exito` para un caso exitoso y uno fallido. | |
 | **E9** | Texto del prompt propio (`PROMPTS["propio"]`, TODO 1) y de la versión ingenua con la que se comparó. | |
+
+
+### Ficha de Evidencia E4 (una fila por escena semántica)
+
+Pegue en cada celda la imagen o el texto indicado. El prompt es el contenido completo de `_prompt.txt`, no el resumen de la Tabla 4.
+
+| Escena | Imagen RGB (`_color.png`) | Profundidad en falso color (`_depth_vis.png`) | Prompt completo enviado (`_prompt.txt`) | Imagen anotada (`_resultado.png`) | ¿Acierto o fallo? |
+|---|---|---|---|---|:---:|
+| `semantica1` | | | | | |
+| `semantica2` | | | | | |
+| `semantica3` | | | | | |
+| `semantica4` | | | | | |
+| `burger` (ingenuo) | | | | | |
+| `burger` (TODO 1) | | | | | |
 
 ---
 
@@ -192,7 +206,7 @@ La columna **Fuente** indica de dónde sale cada valor: la Kortex API (calibraci
 Cada fila es una escena; el experimento compara qué tan bien razona el modelo en cada tipo de pregunta (ver el diseño experimental al inicio de esta sección).
 
 - **Escena:** la captura usada (Tabla 2). `burger` aparece dos veces porque se consulta con el prompt ingenuo y con el prompt propio del grupo.
-- **Instrucción (resumen):** la pregunta en pocas palabras; la instrucción completa queda en el CSV, columna `objeto`.
+- **Instrucción (resumen):** la pregunta en pocas palabras; la instrucción completa queda en el CSV (columna `objeto`) y el prompt completo enviado, en `capturas/<escena>_<tarea>_prompt.txt` (evidencia E4).
 - **Respuesta esperada:** el objeto correcto, decidido por el grupo **antes** de consultar (verdad de terreno).
 - **Aciertos / 3:** cuántas de las 3 repeticiones pusieron el punto dentro del objeto esperado en la imagen anotada.
 - **JSON inválidos:** cuántas respuestas no se pudieron interpretar como la lista de puntos pedida.
@@ -489,7 +503,7 @@ Marque con una **X** una sola casilla por criterio y registre el valor entero (0
 | Marque | Nivel | Evidencia Observable del Nivel |
 |:---:|---|---|
 | ☐ | **N5 — 475–500** | Además de N4, presenta figuras de calidad de publicación (p. ej. error frente a posición en la imagen o latencia por nivel) y un documento que otro equipo podría reproducir sin ayuda. |
-| ☐ | **N4 — 400–474** | Instrumento completo, evidencias E1–E9 localizadas, imágenes anotadas de aciertos y fallos, unidades correctas y conclusiones sustentadas en los datos. |
+| ☐ | **N4 — 400–474** | Instrumento completo, evidencias E1–E9 localizadas, fichas E4 completas (imagen RGB, profundidad, prompt e imagen anotada) de todas las escenas semánticas, unidades correctas y conclusiones sustentadas en los datos. |
 | ☐ | **N3 — 300–399** | Instrumento completo con las evidencias obligatorias y conclusiones coherentes con los datos. |
 | ☐ | **N2 — 150–299** | Documento incompleto, evidencias no localizables, tablas sin unidades o conclusiones sin sustento. |
 | ☐ | **N1 — 0–149** | No entrega el documento o entrega evidencia fragmentaria. |

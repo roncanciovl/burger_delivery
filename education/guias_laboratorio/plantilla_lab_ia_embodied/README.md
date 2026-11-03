@@ -7,7 +7,7 @@ las evidencias y el CSV; usted completa las piezas de **IA y geometría** marcad
 | Archivo | Para qué sirve | ¿Lo modifica? |
 |---|---|---|
 | `embodied_comun.py` | Núcleo común: calibración, prompts, llamada a Gemini, registro de profundidad, desproyección | **Sí: TODO 1 a 4** |
-| `embodied_sin_ros.py` | **Opción A (sin ROS 2)**: RTSP directo + OpenCV. Subcomandos `calibrar`, `capturar`, `consultar`, `exito` | No |
+| `embodied_sin_ros.py` | **Opción A (sin ROS 2)**: RTSP directo + OpenCV. Subcomandos `calibrar`, `capturar`, `consultar`, `exito`, `profundidad` | No |
 | `embodied_ros2_nodo.py` | **Opción B (con ROS 2)**: nodo que consume `kinova_vision` y publica punto 3D y TF | **Sí: TODO 5** |
 | `config_camara_kinova.json` | Intrínsecos de color y profundidad y extrínsecos entre ambos sensores | Sí, al calibrar |
 | `leer_calibracion_kortex.py` | Lee la calibración real del robot con la Kortex API (lo ejecuta el docente una vez) | No |

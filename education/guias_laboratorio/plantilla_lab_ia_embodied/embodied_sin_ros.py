@@ -3,7 +3,7 @@
 Opción A — Embodied AI SIN ROS 2: cámara del Kinova por RTSP + Gemini Robotics-ER 2.
 
 Para quienes todavía no han visto ROS 2. Solo necesita Python, OpenCV con GStreamer,
-numpy y el SDK google-genai. Cuatro subcomandos:
+numpy y el SDK google-genai. Cinco subcomandos:
 
     # 0) Una vez por resolución: calibración rápida de la cámara de color
     #    (antes, capture la escena 'regla' con el subcomando 1)
@@ -20,6 +20,9 @@ numpy y el SDK google-genai. Cuatro subcomandos:
     # 3) Detección de éxito con dos capturas (antes / después)
     python3 embodied_sin_ros.py exito --antes escena01 --despues escena02 \\
         --objeto "la caja quedó dentro de la bandeja"
+
+    # 4) Para el informe: la profundidad de una escena en falso color
+    python3 embodied_sin_ros.py profundidad --escena escena01
 
 Sin clave de API o sin cuota puede probar toda la geometría pasando la respuesta
 a mano:  --respuesta '[{"point": [500, 500], "label": "centro"}]'
@@ -174,6 +177,10 @@ def cmd_consultar(args) -> None:
     salida = ruta_color.with_name(ruta_color.name.replace("_color.png", f"_{args.tarea}_resultado.png"))
     cv2.imwrite(str(salida), ec.dibujar(color, localizados))
     print(f"[OK] Imagen anotada: {salida}")
+    # El prompt completo (con la instrucción insertada) es parte de la evidencia del informe
+    ruta_prompt = salida.with_name(salida.name.replace("_resultado.png", "_prompt.txt"))
+    ruta_prompt.write_text(prompt + "\n", encoding="utf-8")
+    print(f"[OK] Prompt enviado: {ruta_prompt}")
 
     comunes = {
         "fecha": datetime.now().isoformat(timespec="seconds"), "grupo": args.grupo, "opcion": "A-sin-ROS",
@@ -229,6 +236,18 @@ def cmd_calibrar(args) -> None:
     print(f"[OK] Campo de visión horizontal resultante: {fov:.1f}°. Guardado en {ruta}")
 
 
+def cmd_profundidad(args) -> None:
+    ruta_color, _, depth = cargar_escena(args.escena)
+    if depth is None:
+        sys.exit(f"[ERROR] La escena {args.escena} no tiene imagen de profundidad.")
+    vista, z_min, z_max = ec.profundidad_a_color(depth)
+    cv2.putText(vista, f"rojo {z_min} mm - azul {z_max} mm  (negro: sin dato)", (10, 25),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+    salida = ruta_color.with_name(ruta_color.name.replace("_color.png", "_depth_vis.png"))
+    cv2.imwrite(str(salida), vista)
+    print(f"[OK] Profundidad en falso color ({z_min} a {z_max} mm): {salida}")
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -274,6 +293,10 @@ def main() -> None:
     k.add_argument("--distancia-m", type=float, required=True, help="Distancia cámara-objeto medida")
     k.add_argument("--config", default=str(ec.CONFIG_POR_DEFECTO))
     k.set_defaults(func=cmd_calibrar)
+
+    v = sub.add_parser("profundidad", help="Guardar la profundidad de una escena en falso color (informe)")
+    v.add_argument("--escena", required=True, help="Nombre en capturas/ o ruta a *_color.png")
+    v.set_defaults(func=cmd_profundidad)
 
     args = p.parse_args()
     args.func(args)
