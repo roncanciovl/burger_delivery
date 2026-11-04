@@ -7,7 +7,7 @@
     <visual name="table_top">
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="1.2 0.8 0.05"/>
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="2.0 0.9 0.05"/>
       </geometry>
       <material name="table_brown">
         <color rgba="0.45 0.25 0.10 1.0"/>
@@ -783,7 +783,7 @@
     <parent link="map"/>
     <!-- table thickness = 0.05, top at z=1.0 -> center at 0.975 -->
     <child link="table_link"/>
-    <origin xyz="0.80 -1.00 0.80" rpy="0 0 0"/>
+    <origin xyz="1.94 -0.70 0.895" rpy="0 0 0"/>
   </joint>
 
   <joint name="map_to_staging" type="fixed">
@@ -801,7 +801,7 @@
   <joint name="table_to_kinova_base" type="fixed">
     <parent link="table_link"/>
     <child link="kinova_base_link"/>
-    <origin xyz="1.20 0.30 0.5" rpy="0 0 0"/>
+    <origin xyz="0.06 0.00 0.5" rpy="0 0 0"/>
   </joint>
 
   <!-- Use fixed for visualization to ensure it's visible in viewer -->
@@ -850,10 +850,9 @@
   <joint name="table_to_world" type="fixed">
     <parent link="table_link"/>
     <child link="world"/>
-    <!-- z = 0.025: la base del Gen3 se apoya en la cara SUPERIOR de la mesa (caja de 0.05 m
-         centrada en table_link). Con z = 0 quedaba 25 mm dentro de la mesa y MoveIt declaraba
+    <!-- z = 0.025: la base del Gen3 se apoya en la cara SUPERIOR de la mesa (tablero de 0.05 m centrado en table_link). Con z = 0 quedaba 25 mm dentro de la mesa y MoveIt declaraba
          en colisión el estado inicial. Misma altura que tag_mesa. -->
-    <origin xyz="0.20 0.30 0.025" rpy="0 0 0"/>
+    <origin xyz="-0.94 0.00 0.025" rpy="0 0 0"/>
   </joint>
   <!-- create link fixed to the "world" -->
   <link name="world"/>

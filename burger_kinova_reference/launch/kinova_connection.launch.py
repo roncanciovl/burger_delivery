@@ -299,7 +299,8 @@ def _setup(context, *args, **kwargs):
             PythonLaunchDescriptionSource(os.path.join(
                 get_package_share_directory('burger_description'), 'launch',
                 'display.launch.py')),
-            launch_arguments={'robot_real': 'true', 'use_static_carts': 'true'}.items(),
+            launch_arguments={'robot_real': 'true', 'use_static_carts': 'true',
+                              'use_fake_hardware': str(use_fake_hardware).lower()}.items(),
         ))
 
     # -------------------------------------------------- cliente de trayectoria -----

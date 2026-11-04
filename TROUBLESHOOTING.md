@@ -8,6 +8,7 @@ Esta guía cubre los fallos que más tiempo consumen en el laboratorio:
 | El driver no arranca, o hay telemetría duplicada, porque **el robot ya está en uso** | [2. Hardware ocupado: un solo robot, varias estaciones](#2-hardware-ocupado-un-solo-robot-y-varias-estaciones) |
 | El robot se mueve a tirones y el log del driver muestra `WRONG_SERVOING_MODE` o `Fault was not recognized ... combination of Control Mode and Active State` | [2.6 Otra estación lanzó un segundo driver](#26-otra-estación-lanzó-un-segundo-driver-y-le-quitó-el-control-al-primero) |
 | No sé quién tiene el robot ocupado | [2.0 La configuración recomendada](#20-la-configuración-recomendada-léela-antes-que-el-resto) |
+| RViz marca `Status: Error` en `RobotModel` con el driver fake | Falta `use_fake_hardware:=true` en `display.launch.py`: [`burger_description/README.md`](burger_description/README.md) |
 | El brazo vibra al moverse, sin `WRONG_SERVOING_MODE` y con la estación por cable | [3.7 Ciclo de control retrasado por el WiFi o por RViz](#37-el-brazo-vibra-al-moverse-aunque-la-estación-va-por-cable) |
 | Mi código parece correcto y aun así el driver no arranca, o publica datos absurdos | [3. Fallos de plataforma ajenos a tu código](#3-fallos-de-plataforma-ajenos-a-tu-código) |
 | La cámara del Kinova da `Failed to start stream`, o `kinova_vision` no se detiene con `Ctrl+C` | [3.4 El driver de visión no se detiene limpiamente](#34-el-driver-de-visión-no-se-detiene-limpiamente-y-deja-la-cámara-bloqueada) |

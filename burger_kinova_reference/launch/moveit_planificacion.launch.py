@@ -120,8 +120,10 @@ def _setup(context, *args, **kwargs):
             name='rviz2_moveit',
             output='log',
             prefix=None if _as_bool(arg('use_fake_hardware')) else 'nice -n 19',
-            arguments=['-d', os.path.join(get_package_share_directory(MOVEIT_CONFIG),
-                                          'config', 'moveit.rviz')],
+            # La de MOVEIT_CONFIG con la escena translúcida: el brazo se ve al otro lado
+            # de la mesa, que es lo que hay que detectar en un plan.
+            arguments=['-d', os.path.join(get_package_share_directory(PACKAGE_NAME),
+                                          'rviz', 'moveit_planificacion.rviz')],
             parameters=[moveit_config.robot_description,
                         moveit_config.robot_description_semantic,
                         moveit_config.robot_description_kinematics,

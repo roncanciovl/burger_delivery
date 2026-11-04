@@ -155,11 +155,11 @@ El branch `world → gen3_*` corresponde al URDF oficial del Gen3 (articulacione
 
 ```bash
 ros2 run tf2_ros static_transform_publisher \
-  0.80 -1.00 0.80 0 0 0 \
+  1.94 -0.70 0.895 0 0 0 \
   map table_link
 
 ros2 run tf2_ros static_transform_publisher \
-  1.20 0.30 0.50 0 0 0 \
+  0.06 0.00 0.50 0 0 0 \
   table_link kinova_base_link
 
 ros2 run tf2_ros static_transform_publisher \
@@ -175,7 +175,7 @@ ros2 run tf2_ros static_transform_publisher \
   robot_X/base_link robot_X/tray_frame
 
 ros2 run tf2_ros static_transform_publisher \
-  0.20 0.30 0.025 0 0 0 \
+  -0.94 0.00 0.025 0 0 0 \
   table_link world
 ```
 
@@ -216,7 +216,7 @@ Un URDF mínimo que codifica este árbol de transformaciones puede lucir así (t
   <joint name="map_to_table" type="fixed">
     <parent link="map"/>
     <child link="table_link"/>
-    <origin xyz="0.80 -1.00 0.80" rpy="0 0 0"/>
+    <origin xyz="1.94 -0.70 0.895" rpy="0 0 0"/>
   </joint>
 
   <joint name="map_to_staging" type="fixed">
@@ -228,7 +228,7 @@ Un URDF mínimo que codifica este árbol de transformaciones puede lucir así (t
   <joint name="table_to_kinova_base" type="fixed">
     <parent link="table_link"/>
     <child link="kinova_base_link"/>
-    <origin xyz="1.20 0.30 0.50" rpy="0 0 0"/>
+    <origin xyz="0.06 0.00 0.50" rpy="0 0 0"/>
   </joint>
 
   <joint name="map_to_robot_a_base" type="fixed">
@@ -282,7 +282,7 @@ Un URDF mínimo que codifica este árbol de transformaciones puede lucir así (t
   <joint name="table_to_world" type="fixed">
     <parent link="table_link"/>
     <child link="world"/>
-    <origin xyz="0.20 0.30 0.025" rpy="0 0 0"/>
+    <origin xyz="-0.94 0.00 0.025" rpy="0 0 0"/>
   </joint>
 </robot>
 ```
