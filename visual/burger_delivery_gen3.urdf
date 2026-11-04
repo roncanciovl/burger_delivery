@@ -7,7 +7,7 @@
     <visual name="table_top">
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="meshes/cube_1m.stl" scale="1.2 0.8 0.05"/>
+        <mesh filename="meshes/cube_1m.stl" scale="2.0 0.9 0.05"/>
       </geometry>
       <material name="table_brown">
         <color rgba="0.45 0.25 0.10 1.0"/>
@@ -783,7 +783,7 @@
     <parent link="map"/>
     <!-- table thickness = 0.05, top at z=1.0 -> center at 0.975 -->
     <child link="table_link"/>
-    <origin xyz="0.80 -1.00 0.80" rpy="0 0 0"/>
+    <origin xyz="1.94 -0.70 0.895" rpy="0 0 0"/>
   </joint>
 
   <joint name="map_to_staging" type="fixed">
@@ -801,7 +801,7 @@
   <joint name="table_to_kinova_base" type="fixed">
     <parent link="table_link"/>
     <child link="kinova_base_link"/>
-    <origin xyz="1.20 0.30 0.5" rpy="0 0 0"/>
+    <origin xyz="0.06 0.00 0.5" rpy="0 0 0"/>
   </joint>
 
   <!-- Use fixed for visualization to ensure it's visible in viewer -->
@@ -850,7 +850,9 @@
   <joint name="table_to_world" type="fixed">
     <parent link="table_link"/>
     <child link="world"/>
-    <origin xyz="0.20 0.30 0.00" rpy="0 0 0"/>
+    <!-- z = 0.025: la base del Gen3 se apoya en la cara SUPERIOR de la mesa (tablero de 0.05 m centrado en table_link). Con z = 0 quedaba 25 mm dentro de la mesa y MoveIt declaraba
+         en colisión el estado inicial. Misma altura que tag_mesa. -->
+    <origin xyz="-0.94 0.00 0.025" rpy="0 0 0"/>
   </joint>
   <!-- create link fixed to the "world" -->
   <link name="world"/>
@@ -1437,122 +1439,5 @@
     <axis xyz="0 -1 0"/>
     <origin rpy="0 0 0" xyz="-0.00563134 0.0 0.04718515"/>
     <mimic joint="gen3_robotiq_85_left_knuckle_joint"/>
-  </joint>
-  <link name="wrist_camera_link"/>
-  <joint name="wrist_camera_joint" type="fixed">
-    <parent link="gen3_bracelet_link"/>
-    <child link="wrist_camera_link"/>
-    <origin rpy="0 1.7444444444444447 -1.5708" xyz="0 -0.06841 -0.05044"/>
-  </joint>
-  <!-- camera body, with origin at bottom screw mount -->
-  <joint name="wrist_mounted_camera_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0 0 0"/>
-    <parent link="wrist_camera_link"/>
-    <child link="wrist_mounted_camera_bottom_screw_frame"/>
-  </joint>
-  <link name="wrist_mounted_camera_bottom_screw_frame"/>
-  <joint name="wrist_mounted_camera_link_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0 0.02 0.0115"/>
-    <parent link="wrist_mounted_camera_bottom_screw_frame"/>
-    <child link="wrist_mounted_camera_link"/>
-  </joint>
-  <link name="wrist_mounted_camera_link">
-    <visual>
-      <origin rpy="0 0 0" xyz="0.00987 -0.02 0"/>
-      <geometry>
-        <box size="0.020 0.099 0.023"/>
-      </geometry>
-      <material name="aluminum"/>
-    </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 -0.02 0"/>
-      <geometry>
-        <box size="0.02005 0.099 0.023"/>
-      </geometry>
-    </collision>
-    <inertial>
-      <mass value="0.072"/>
-      <!-- The following are not reliable values, and should not be used for modeling -->
-      <origin xyz="0 0 0"/>
-      <inertia ixx="0.003881243" ixy="0.0" ixz="0.0" iyy="0.000498940" iyz="0.0" izz="0.003879257"/>
-    </inertial>
-  </link>
-  <!-- camera depth joints and links -->
-  <joint name="wrist_mounted_camera_depth_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0 0 0"/>
-    <parent link="wrist_mounted_camera_link"/>
-    <child link="wrist_mounted_camera_depth_frame"/>
-  </joint>
-  <link name="wrist_mounted_camera_depth_frame"/>
-  <joint name="wrist_mounted_camera_depth_optical_joint" type="fixed">
-    <origin rpy="-1.5707963267948966 0 -1.5707963267948966" xyz="0 0 0"/>
-    <parent link="wrist_mounted_camera_depth_frame"/>
-    <child link="wrist_mounted_camera_depth_optical_frame"/>
-  </joint>
-  <link name="wrist_mounted_camera_depth_optical_frame"/>
-  <!-- camera left IR joints and links -->
-  <joint name="wrist_mounted_camera_infra1_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0 0.0 0"/>
-    <parent link="wrist_mounted_camera_link"/>
-    <child link="wrist_mounted_camera_infra1_frame"/>
-  </joint>
-  <link name="wrist_mounted_camera_infra1_frame"/>
-  <joint name="wrist_mounted_camera_infra1_optical_joint" type="fixed">
-    <origin rpy="-1.5707963267948966 0 -1.5707963267948966" xyz="0 0 0"/>
-    <parent link="wrist_mounted_camera_infra1_frame"/>
-    <child link="wrist_mounted_camera_infra1_optical_frame"/>
-  </joint>
-  <link name="wrist_mounted_camera_infra1_optical_frame"/>
-  <!-- camera right IR joints and links -->
-  <joint name="wrist_mounted_camera_infra2_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0 -0.055 0"/>
-    <parent link="wrist_mounted_camera_link"/>
-    <child link="wrist_mounted_camera_infra2_frame"/>
-  </joint>
-  <link name="wrist_mounted_camera_infra2_frame"/>
-  <joint name="wrist_mounted_camera_infra2_optical_joint" type="fixed">
-    <origin rpy="-1.5707963267948966 0 -1.5707963267948966" xyz="0 0 0"/>
-    <parent link="wrist_mounted_camera_infra2_frame"/>
-    <child link="wrist_mounted_camera_infra2_optical_frame"/>
-  </joint>
-  <link name="wrist_mounted_camera_infra2_optical_frame"/>
-  <!-- camera color joints and links -->
-  <joint name="wrist_mounted_camera_color_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0 0.015 0"/>
-    <parent link="wrist_mounted_camera_link"/>
-    <child link="wrist_mounted_camera_color_frame"/>
-  </joint>
-  <link name="wrist_mounted_camera_color_frame"/>
-  <joint name="wrist_mounted_camera_color_optical_joint" type="fixed">
-    <origin rpy="-1.5707963267948966 0 -1.5707963267948966" xyz="0 0 0"/>
-    <parent link="wrist_mounted_camera_color_frame"/>
-    <child link="wrist_mounted_camera_color_optical_frame"/>
-  </joint>
-  <link name="wrist_mounted_camera_color_optical_frame"/>
-  <!-- Wrist Camera Bracket (simplified - using box instead of missing mesh) -->
-  <link name="wrist_camera_mount_link">
-    <inertial>
-      <origin rpy="0 0 0" xyz="0.000281 0.011402 -0.029798"/>
-      <mass value="0.5"/>
-      <inertia ixx="0.000587" ixy="3E-06" ixz="3E-06" iyy="0.000369" iyz="-0.000118" izz="0.000609"/>
-    </inertial>
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 -0.03"/>
-      <geometry>
-        <box size="0.04 0.08 0.06"/>
-      </geometry>
-      <material name="aluminum"/>
-    </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 -0.03"/>
-      <geometry>
-        <box size="0.04 0.08 0.06"/>
-      </geometry>
-    </collision>
-  </link>
-  <joint name="wrist_camera_mount_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0 0 0.0"/>
-    <parent link="gen3_bracelet_link"/>
-    <child link="wrist_camera_mount_link"/>
   </joint>
 </robot>

@@ -5,11 +5,13 @@ from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch.conditions import IfCondition, UnlessCondition
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
     use_static_carts = LaunchConfiguration('use_static_carts', default='false')
     robot_real = LaunchConfiguration('robot_real', default='false')
+    use_fake_hardware = LaunchConfiguration('use_fake_hardware', default='false')
     urdf_file_name = 'delivery_scene_fixed.urdf'
 
     urdf = os.path.join(
@@ -61,6 +63,12 @@ def generate_launch_description():
             default_value='false',
             description='Mover el brazo con /joint_states del driver del Kinova en lugar del deslizador'),
 
+        # El driver fake no lanza la pinza: sin esto, RViz marca sus eslabones sin TF.
+        DeclareLaunchArgument(
+            'use_fake_hardware',
+            default_value='false',
+            description='Con robot_real:=true, el driver es fake: publicar la pinza abierta en la escena'),
+
         Node(
             package='robot_state_publisher',
             executable='robot_state_publisher',
@@ -84,6 +92,7 @@ def generate_launch_description():
             executable='scene_joint_relay.py',
             name='scene_joint_relay',
             output='screen',
+            parameters=[{'fill_gripper': ParameterValue(use_fake_hardware, value_type=bool)}],
             condition=IfCondition(robot_real)),
 
         Node(
@@ -94,6 +103,13 @@ def generate_launch_description():
             output='screen',
             parameters=[{'use_sim_time': use_sim_time, 'robot_description': robot_desc}],
             condition=IfCondition(robot_real)),
+
+        Node(
+            package='burger_description',
+            executable='scene_collision_markers.py',
+            name='scene_collision_markers',
+            output='screen',
+            parameters=[{'scene_urdf': urdf}]),
 
         Node(
             package='robot_state_publisher',

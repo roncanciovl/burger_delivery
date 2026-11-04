@@ -113,4 +113,16 @@ def test_escena_real_de_burger_description():
     modelo = SceneModel.from_file(ESCENA_REAL)
     assert base_interference({'table_link': modelo.collision_boxes('world', 'table_link')}) == []
     xyz, _ = to_pose(modelo.transform('world', 'tag_mesa'))
-    assert xyz[2] == pytest.approx(0.0)
+    assert xyz == pytest.approx((0.30, 0.0, 0.0))
+
+
+@pytest.mark.skipif(not os.path.isfile(ESCENA_REAL), reason='burger_description no está al lado')
+def test_base_al_borde_del_lado_corto_de_la_mesa():
+    """La base va al centro del lado de 0.9 m y la mesa de 2 m se extiende hacia +x."""
+    modelo = SceneModel.from_file(ESCENA_REAL)
+    (tamano, pose), = modelo.collision_boxes('world', 'table_link')
+    (x, y, z), _ = to_pose(pose)
+    assert tamano == pytest.approx([2.0, 0.9, 0.92])
+    assert x - tamano[0] / 2.0 == pytest.approx(-0.06)
+    assert y == pytest.approx(0.0)
+    assert z + tamano[2] / 2.0 == pytest.approx(0.0)

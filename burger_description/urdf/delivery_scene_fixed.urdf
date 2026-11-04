@@ -4,16 +4,19 @@
     <visual name="table_top">
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="1.2 0.8 0.05" />
+        <mesh filename="package://burger_description/meshes/cube_1m.stl" scale="2.0 0.9 0.05" />
       </geometry>
       <material name="table_brown">
-        <color rgba="0.45 0.25 0.10 1.0" />
+        <color rgba="0.45 0.25 0.10 0.35" />
       </material>
     </visual>
+    <!-- Mesa real: 2.0 x 0.9 m y 0.92 m de alto. Más alta que el tablero visual: baja desde
+         la cara superior (z = +0.025) hasta el piso, para que MoveIt tampoco planifique por
+         debajo de la mesa, donde están las patas. -->
     <collision name="table_collision">
-      <origin xyz="0 0 0" rpy="0 0 0" />
+      <origin xyz="0 0 -0.435" rpy="0 0 0" />
       <geometry>
-        <box size="1.2 0.8 0.05" />
+        <box size="2.0 0.9 0.92" />
       </geometry>
     </collision>
     <inertial>
@@ -586,7 +589,7 @@
   <joint name="map_to_table" type="fixed">
     <parent link="map" />
     <child link="table_link" />
-    <origin xyz="0.80 -1.00 0.80" rpy="0 0 0" />
+    <origin xyz="1.94 -0.70 0.895" rpy="0 0 0" />
   </joint>
   <joint name="map_to_staging" type="fixed">
     <parent link="map" />
@@ -601,7 +604,7 @@
   <joint name="table_to_kinova_base" type="fixed">
     <parent link="table_link" />
     <child link="kinova_base_link" />
-    <origin xyz="1.20 0.30 0.5" rpy="0 0 0" />
+    <origin xyz="0.06 0.00 0.5" rpy="0 0 0" />
   </joint>
   <joint name="kinova_base_to_tool" type="fixed">
     <parent link="kinova_base_link" />
@@ -624,10 +627,9 @@
   <joint name="table_to_world" type="fixed">
     <parent link="table_link" />
     <child link="world" />
-    <!-- z = 0.025: la base del Gen3 se apoya en la cara SUPERIOR de la mesa (caja de 0.05 m
-         centrada en table_link). Con z = 0 quedaba 25 mm dentro de la mesa y MoveIt declaraba
+    <!-- z = 0.025: la base del Gen3 se apoya en la cara SUPERIOR de la mesa (tablero de 0.05 m centrado en table_link). Con z = 0 quedaba 25 mm dentro de la mesa y MoveIt declaraba
          en colisión el estado inicial. Misma altura que tag_mesa. -->
-    <origin xyz="0.20 0.30 0.025" rpy="0 0 0" />
+    <origin xyz="-0.94 0.00 0.025" rpy="0 0 0" />
   </joint>
   <link name="world" />
   <material name="aluminum">
@@ -1236,7 +1238,7 @@
   <joint name="table_to_tag_mesa" type="fixed">
     <parent link="table_link" />
     <child link="tag_mesa" />
-    <origin xyz="0.5 0.3 0.025" rpy="0 0 0" /> <!-- Esquina de la mesa (ajustado) -->
+    <origin xyz="-0.64 0.00 0.025" rpy="0 0 0" /> <!-- 0.30 m delante de la base del brazo -->
   </joint>
 
   <!-- Los carritos se describen en URDFs separados:                      -->

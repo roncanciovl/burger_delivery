@@ -86,6 +86,17 @@ driver a `/scene/joint_states` con el prefijo `gen3_`, y la escena se publica en
 en una estación cliente. Con `use_static_carts:=false`, los TF `tag_mesa → tag_carrito{1,2}`
 quedan a cargo del localizador AprilTag.
 
+Con el driver fake, añade `use_fake_hardware:=true`. Ese driver se lanza sin la pinza, y sin
+este argumento RViz marca `Status: Error` porque sus eslabones no tienen TF. El relé la publica
+abierta en la escena. No lo uses con el robot real: ocultaría una pinza que no publica su estado.
+
+En los dos modos, el display `ColisionMesa` de RViz dibuja en rojo la caja de colisión de la
+mesa, tal como la lee `scene_collision_markers.py` del URDF de la escena. Es la misma caja que
+`escena_moveit` carga en MoveIt, y se oculta con su casilla. Tiene las medidas de la mesa real
+(2.0 × 0.9 m y 0.92 m de alto) y baja hasta el piso para cubrir las patas, aunque el tablero
+visible mida 5 cm. La base del brazo va al borde del lado de 0.9 m, aproximadamente en la mitad.
+Fuera de esa caja, MoveIt puede planificar por debajo de la superficie.
+
 ### Lanzar Tu Nodo de Control (Nodo 2: Controlador)
 
 **Opción A: Nodo Python simple**

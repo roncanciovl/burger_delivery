@@ -370,10 +370,10 @@ rg -n 'table_to_tag_mesa' burger_description/urdf/delivery_scene_fixed.urdf
 El patrón típico es:
 ```xml
 <joint name="table_to_tag_mesa" type="fixed">
-  <origin xyz="0.5 0.3 0.025" rpy="0 0 0" />
+  <origin xyz="-0.64 0.00 0.025" rpy="0 0 0" />
 </joint>
 ```
-*Interpretación:* 50cm en X, 30cm en Y respecto al centro de la mesa, y 2.5cm elevado sobre la superficie.
+*Interpretación:* -64cm en X, 0cm en Y respecto al centro de la mesa, y 2.5cm sobre su centro (cara superior).
 
 ### 🛠️ Tu Reto: Calibración Real
 1.  Identifica el origen de `table_link` en RViz.
@@ -390,7 +390,7 @@ El patrón típico es:
 ### 🛠️ Mini-Reto de Validación: El Desafío del Offset
 
 1.  Busca el joint `map_to_table` en el URDF de la escena.
-2.  **Predicción:** Si cambiamos el valor de `xyz="0.80 -1.00 0.80"` a `xyz="0.90 -1.00 0.80"`, ¿hacia dónde se moverá la mesa en RViz? (¿Adelante, atrás, izquierda o derecha?).
+2.  **Predicción:** Si cambiamos el valor de `xyz="1.94 -0.70 0.895"` a `xyz="2.04 -0.70 0.895"`, ¿hacia dónde se moverá la mesa en RViz? (¿Adelante, atrás, izquierda o derecha?).
 3.  **Prueba de fuego:** Haz el cambio, compila (`colcon build`), relanza RViz y verifica si tu predicción fue correcta. ¡No olvides dejarlo como estaba después!
 
 ## 6. Carritos como URDFs Separados

@@ -106,7 +106,7 @@ Cómo verlo solo:
 ## Escena compuesta (burger + Gen3)
 - Ruta: `ROS/visual/burger_delivery_gen3.urdf`
 - Es una copia del URDF de `burger_description` (Gen3 de 6 GDL, pinza 2F-85 y módulo de visión) con rutas de malla relativas a `visual/`. No se edita a mano: la regenera `scripts/revendorizar_gen3_6dof.py --vision`.
-- Contiene la escena de `burger_delivery_visual` y el robot Gen3 (2F-85) en la posición: `map -> world` a `xyz="1.20 0.30 1.00"` y de ahí `world -> gen3_base_link`.
+- Contiene la escena de `burger_delivery_visual` y el robot Gen3 (2F-85) en la posición: `map -> table_link` a `xyz="1.94 -0.70 0.895"`, `table_link -> world` a `xyz="-0.94 0.00 0.025"` y de ahí `world -> gen3_base_link`.
  - Las bases de `robot_a_base_link` y `robot_b_base_link` son joints `planar` (movimiento en XY y yaw sobre Z). Posición inicial al mismo lado (Y positivo) de la base del Kinova: `robot_a` en `xyz="1.20 0.80 0.00"`, `robot_b` en `xyz="1.20 1.30 0.00"`.
 
 Para cargarla en el visor:

@@ -16,6 +16,8 @@
   <exec_depend>xacro</exec_depend>
   <exec_depend>rclpy</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>visualization_msgs</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
 
   <test_depend>ament_cmake_pytest</test_depend>
 

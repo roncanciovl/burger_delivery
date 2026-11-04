@@ -24,6 +24,7 @@
 | Anfitriona por cable, sin WiFi, y RViz con prioridad baja | Con el WiFi conectado junto al cable, o con RViz compitiendo por la CPU, el ciclo de control del driver se retrasa y el brazo vibra durante la trayectoria (`TROUBLESHOOTING.md` §3.7). La Fase 6 indica cómo dejar la anfitriona sólo por cable. `moveit_planificacion.launch.py` abre RViz con `nice -n 19` cuando el hardware es real. | 22/10/2026 |
 | Fase 6: llevar el brazo a Home antes del modo seco | Desde una pose con la muñeca girada media vuelta, la meta `home` exige recorrer ~3.1 rad en `joint_4` y `joint_6`, y `max_joint_travel_rad` (3.0) la bloquea. El modo seco sirve de comprobación. | 22/10/2026 |
 | Pruebas 4.1, 4.6 y 4.8 | Tras la Fase 3 el brazo ya está en `home`: la 4.1 lo advierte y la 4.6 se provoca durante `sobre_tag_mesa`. En la 4.8 el planificador es aleatorio y el resultado varía de una corrida a otra. Se pide repetirla y se explica qué demuestra cada resultado. | 22/10/2026 |
+| Mesa con sus medidas reales en `burger_description` | La mesa mide 2.0 × 0.9 m y 0.92 m de alto, y la base del brazo va al borde del lado de 0.9 m, aproximadamente en la mitad. La caja de colisión baja hasta el piso, porque con 5 cm MoveIt podía planificar bajo el tablero, donde están las patas. `tag_mesa` sigue 0.30 m delante de la base y la cara superior sigue en z = 0. | 04/11/2026 |
 
 ---
 
@@ -78,9 +79,9 @@ En `delivery_scene_fixed.urdf` el eslabón `world` es donde se monta la base del
 
 | Elemento de la escena | Pose en `base_link` (m) | Uso en la práctica |
 |---|---|---|
-| `table_link` (caja 1.2 × 0.8 × 0.05) | centro en (−0.20, −0.30, −0.025) | Obstáculo de MoveIt |
+| `table_link` (caja de colisión 2.0 × 0.9 × 0.92) | centro en (0.94, 0.00, −0.46); cara superior en z = 0 | Obstáculo de MoveIt. Baja hasta el piso para cubrir las patas: el tablero visible mide 5 cm |
 | `tag_mesa` | (0.30, 0.00, 0.00) | Marco de las metas tipo `pose` |
-| `delivery_slot_1` | (−0.20, 1.10, −0.30) | Fuera del alcance; ejemplo de meta inalcanzable |
+| `delivery_slot_1` | (−0.20, 1.10, −0.42) | Fuera del alcance; ejemplo de meta inalcanzable |
 
 Una meta de tipo `pose` se escribe **en un marco de la escena**. Por ejemplo, «0.30 m sobre `tag_mesa`, con la pinza hacia abajo» se escribe `marco: tag_mesa`, `posicion: [0, 0, 0.30]`, `rpy: [π, 0, 0]`. Si mañana se corrige la posición de la mesa en el URDF, la meta se corrige sola.
 
@@ -207,12 +208,12 @@ Cada criterio se califica en cinco niveles sobre la escala de 0 a 500. **N3 es e
    ```bash
    ros2 launch burger_kinova_reference moveit_planificacion.launch.py
    ```
-   En el log de `escena_moveit` debe aparecer `table_link: caja [1.2, 0.8, 0.05] en base_link (-0.200, -0.300, -0.025) m` y `1 obstáculo(s) cargados`. En RViz, la mesa aparece como objeto de colisión bajo el robot.
+   En el log de `escena_moveit` debe aparecer `table_link: caja [2.0, 0.9, 0.92] en base_link (+0.940, +0.000, -0.460) m` y `1 obstáculo(s) cargados`. En RViz, la mesa aparece como objeto de colisión bajo el robot.
 3. **Compruebe que MoveIt no puede ejecutar.** En el panel MotionPlanning elija *Goal State: Home*, pulse **Plan** y luego **Execute**. Copie en la **Tabla 2** el aviso de `move_group` y explique por qué es deseable.
 4. **Reproduzca el error de modelado** que motivó el cambio de `burger_description` (ver Control de Cambios):
    ```bash
    cp $(ros2 pkg prefix burger_description)/share/burger_description/urdf/delivery_scene_fixed.urdf /tmp/escena_z0.urdf
-   sed -i '/name="table_to_world"/,/<\/joint>/s/0.20 0.30 0.025/0.20 0.30 0.00/' /tmp/escena_z0.urdf
+   sed -i '/name="table_to_world"/,/<\/joint>/s/-0.94 0.00 0.025/-0.94 0.00 0.00/' /tmp/escena_z0.urdf
    ros2 run burger_kinova_reference escena_moveit --ros-args -p scene_urdf:=/tmp/escena_z0.urdf
    echo "código de salida: $?"
    ```
