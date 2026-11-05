@@ -17,7 +17,7 @@
 
 El Kinova Gen3 debe **entregar una caja de hamburguesa en el carrito**, sin que nadie le diga dónde está el carrito.
 
-**Todo ocurre sobre la mesa.** La caja y el carrito están sobre el tablero, en el mismo plano que el `tag_mesa`. El brazo está montado sobre la mesa y no alcanza el piso, 0.92 m más abajo. Que todo esté en un plano conocido es lo que permite localizar el carrito con una **corrección de perspectiva al plano de la mesa** (sección 6.3).
+**Todo ocurre sobre la mesa.** La caja y el carrito están sobre el tablero, en el mismo plano que el `tag_mesa`. El brazo está montado sobre la mesa y no alcanza el piso, 0.92 m más abajo. Por eso la pose del carrito se expresa **en el marco de la mesa** (el del `tag_mesa`), y esa corrección de la perspectiva de la cámara al marco de la mesa se hace con la **imagen RGB-D** (color y profundidad) y **tf2** (sección 6.3).
 
 La misión tiene cinco pasos:
 
@@ -40,8 +40,8 @@ Todo lo de la columna izquierda ya existe en el repositorio y se usó en los lab
 | Driver del Kinova y MoveIt en modo sólo planificación: `kinova_connection.launch.py` y `moveit_planificacion.launch.py` ([Laboratorio 04](../guias_laboratorio/GUIA_LAB_04_MOVEIT2_EJECUCION_SEGURA.md)) | La **pose de observación** desde la que la cámara ve los dos tags |
 | `moveit_safe_executor`: metas articulares, de pose, cartesianas y de pinza, con modo seco, confirmación y validación de cada trayectoria | Un **nodo de misión** que calcula las metas a partir de las TF y las ejecuta en orden a través de `moveit_safe_executor` |
 | Escena de colisión de `burger_description` (mesa con sus medidas reales y `tag_mesa`) cargada por `escena_moveit` | La **caja** como objeto de colisión en la escena de MoveIt, unida a la pinza al agarrarla y separada al soltarla |
-| Localizador AprilTag con `publish_tf:=true`: corrige la perspectiva con una homografía al plano del `tag_mesa` y publica `tag_mesa → tag_carrito1` ([Laboratorio 05](../guias_laboratorio/GUIA_LAB_05_TF_DRON_CARRITO_MICROROS.md)) | La **verificación del `tag_mesa`**: su pose medida con la cámara frente a la del URDF |
-| | La **corrección de paralaje** por la altura del tag del carrito sobre la mesa (sección 6.3), que el localizador no hace |
+| Driver `kinova_vision` con `depth_registration:=true`: imagen de color y **profundidad registrada al marco de color** (transformada del marco del sensor de profundidad al de la cámara de color), con sus `camera_info`. El modelo pinhole para pasar de un píxel con profundidad a un punto 3D está en el [Laboratorio IA 01](../guias_laboratorio/GUIA_LAB_IA_01_EMBODIED_AI_GEMINI_ER2_KINOVA.md) §2.4 | El **nodo de percepción RGB-D con tf2**: pose 3D de cada tag a partir de sus esquinas en la imagen y de la profundidad, publicada como TF desde la cámara, y la transformación al marco de la mesa calculada con tf2 (sección 6.3) |
+| | La **verificación del `tag_mesa`**: su pose medida con la cámara frente a la del URDF, también con tf2 (sección 6.2) |
 | URDF del carrito: `tag_carrito1 → car1_base_link → car1_delivery_tray_frame` (`car1_apriltag.urdf`) | El **launch de la misión**, el registro de las pruebas y el `README.md` del paquete |
 | Cadena de la cámara de muñeca y su eslabón con el brazo ([`TALLER_URDF_TF.md`](../talleres/TALLER_URDF_TF.md) §11) | |
 
@@ -53,16 +53,19 @@ El grupo trabaja en un paquete ROS 2 propio dentro de su repositorio privado, `b
 
 ```text
 base_link (= world de la escena)
- ├── … ── end_effector_link ── camera_link ── camera_color_frame        (driver + eslabón del Taller URDF §11)
+ ├── … ── end_effector_link ── camera_link ── camera_depth_frame        (driver kinova_vision: sensor de profundidad)
+ │                                         └── camera_color_frame        (driver + eslabón del Taller URDF §11)
+ │                                                 ├── tag_mesa_detectado       (VISIÓN RGB-D, nodo del grupo)
+ │                                                 └── tag_carrito1_detectado   (VISIÓN RGB-D, nodo del grupo)
  └── table_link ── tag_mesa                                              (URDF, medido en la mesa real)
                       ├── zona_recogida      (fija: la define el grupo en el marco del tag_mesa)
-                      └── tag_carrito1       (VISIÓN: localizador AprilTag, dinámica)
+                      └── tag_carrito1       (nodo del grupo, con tf2: tag_mesa_detectado → tag_carrito1_detectado)
                             └── car1_base_link ── car1_delivery_tray_frame   (URDF del carrito)
 ```
 
 - La **meta de agarre** se expresa en el marco del `tag_mesa` (zona de recogida).
 - La **meta de entrega** se calcula en cada ensayo leyendo con tf2 la pose de `car1_delivery_tray_frame` en `base_link`.
-- El localizador mide el carrito **respecto al `tag_mesa`**, no respecto a la cámara: la pose del carrito no depende de dónde esté el brazo al observar. Por eso es crítico que el `tag_mesa` del URDF coincida con el sticker real: un error ahí se traslada entero a la entrega. La verificación de la sección 6.2 lo comprueba antes de mover el brazo.
+- El carrito se mide **respecto al `tag_mesa`**, no respecto a la cámara: tf2 compone las dos detecciones y la pose de la cámara se cancela, así que la pose del carrito no depende de dónde esté el brazo al observar. Por eso es crítico que el `tag_mesa` del URDF coincida con el sticker real: un error ahí se traslada entero a la entrega. La verificación de la sección 6.2 lo comprueba antes de mover el brazo.
 
 ---
 
@@ -76,7 +79,7 @@ base_link (= world de la escena)
 | **Carrito** | Detenido y con los motores apagados durante la misión; AprilTag 36h11 en el techo | El carrito es el destino, no participa del movimiento |
 | **Alturas** | La caja se suelta con su base a no más de 3 cm de la bandeja | Una caída mayor puede volcarla fuera de la bandeja |
 
-El grupo mide con cinta y calibrador las dimensiones de la caja, la altura del tag del carrito sobre la mesa (`tag_height_m`) y la de la bandeja, y las registra en la Tabla 1 del instrumento.
+El grupo mide con cinta y calibrador las dimensiones de la caja, el lado del cuadro negro de cada tag, la altura del tag del carrito sobre la mesa (`tag_height_m`) y la de la bandeja, y las registra en la Tabla 1 del instrumento.
 
 ---
 
@@ -115,38 +118,70 @@ El nodo de misión ejecuta esta secuencia. **Cada movimiento pasa por `moveit_sa
 - Una pose **articular** desde la que la cámara de color ve completos el `tag_mesa` y el tag del carrito en cualquier punto de la zona de entrega. Se documenta con las seis posiciones articulares y una imagen de la cámara.
 
 ### 6.2. Verificación del `tag_mesa`
-- Con la cámara, los intrínsecos de color y el tamaño del tag, estimar la pose del `tag_mesa` en `camera_color_frame` (por ejemplo con `cv2.solvePnP` y `SOLVEPNP_IPPE_SQUARE`) y llevarla a `base_link` con tf2. Esto exige el eslabón `end_effector_link → camera_link` del [Taller URDF](../talleres/TALLER_URDF_TF.md) §11 y unos ejes de cámara correctos (Ejercicio 3 de ese taller).
-- Compararla con la pose de `tag_mesa` del URDF. Si difieren en más de **2 cm**, la misión no arranca: se mide la mesa y se corrige `table_to_tag_mesa` en el URDF, no se compensa en el código.
+- Con la detección `camera_color_frame → tag_mesa_detectado` de la sección 6.3, pedir a tf2 la pose de `tag_mesa_detectado` en `base_link`. Esto exige el eslabón `end_effector_link → camera_link` del [Taller URDF](../talleres/TALLER_URDF_TF.md) §11 y unos ejes de cámara correctos (Ejercicio 3 de ese taller).
+- Compararla con la pose de `tag_mesa` del URDF (`base_link → tag_mesa`, también con tf2). Si difieren en más de **2 cm**, la misión no arranca: se mide la mesa y se corrige `table_to_tag_mesa` en el URDF, no se compensa en el código.
 
-### 6.3. Localización del carrito: corrección de perspectiva al plano de la mesa
+### 6.3. Localización del carrito: corrección de perspectiva al marco de la mesa con RGB-D y tf2
 
-**El problema.** En la pose de observación la cámara mira la mesa **inclinada**, no desde arriba. En la imagen, el `tag_mesa`, que es un cuadrado, se ve como un trapecio, y un centímetro de mesa ocupa más píxeles cerca de la cámara que lejos. Por eso no se puede pasar de píxeles a metros con una escala fija: hay que **corregir la perspectiva**, es decir, llevar la imagen al plano de la mesa, como si se mirara desde arriba.
+**El problema.** En la pose de observación la cámara mira la mesa **inclinada**, no desde arriba. En la imagen, el `tag_mesa`, que es un cuadrado, se ve como un trapecio, y un centímetro de mesa ocupa más píxeles cerca de la cámara que lejos. Por eso no se puede pasar de píxeles a metros con una escala fija: hay que **corregir la perspectiva**, es decir, expresar lo que ve la cámara en el marco de la mesa. Aquí se hace en dos partes: la **profundidad** convierte cada tag en una pose 3D en la cámara, y **tf2** lleva el carrito al marco de la mesa.
 
-**Paso 1 — Homografía al plano del `tag_mesa`.** El `tag_mesa` es un cuadrado de lado $s$ conocido, pegado sobre la mesa. Sus cuatro esquinas se conocen en dos sistemas: en píxeles (las da el detector) y en metros, en su propio marco:
+**Paso 0 — Llevar la profundidad al marco de la cámara de color (registro).** El módulo de visión del Gen3 tiene **dos cámaras**: la de color, con su marco `camera_color_frame`, y el sensor de profundidad D410, con su marco `camera_depth_frame`, montado a unos 3 cm de la de color (en el URDF de la escena, `gen3_camera_depth_frame` está 2.75 cm a un lado y 1 cm más arriba en la imagen que `gen3_camera_color_frame`, con la misma orientación). Cada una tiene sus propios intrínsecos y su propia resolución. Por eso un píxel $(u, v)$ de la imagen RGB **no** es el mismo píxel en la imagen de profundidad cruda, y las esquinas del tag, que salen del RGB, no se pueden usar directamente sobre ella. Antes de todo hay que transformar la profundidad del marco del sensor de profundidad al marco de la cámara de color. Para cada píxel de la profundidad cruda:
 
-$$\text{esquina } 0 \to (-\tfrac{s}{2}, +\tfrac{s}{2}),\quad 1 \to (+\tfrac{s}{2}, +\tfrac{s}{2}),\quad 2 \to (+\tfrac{s}{2}, -\tfrac{s}{2}),\quad 3 \to (-\tfrac{s}{2}, -\tfrac{s}{2})$$
+1. Se lleva a un punto 3D en `camera_depth_frame` con el modelo pinhole inverso y los intrínsecos **de profundidad**.
+2. Se transforma a `camera_color_frame` con la transformación fija $T_{\text{color},\text{depth}}$, que el driver publica en tf2.
+3. Se proyecta en la imagen de color con los intrínsecos **de color**: ese es su píxel en la imagen registrada.
 
-Cuatro correspondencias definen una **homografía** $H$ (matriz de 3 × 3) que lleva **cualquier píxel del plano de la mesa** a metros en el marco del `tag_mesa`, aunque la cámara esté inclinada:
+Ese proceso se llama **registro de la profundidad**, y no hay que programarlo: la estación anfitriona lanza `kinova_vision` con `depth_registration:=true`, y el driver lo hace con tf2 y publica el resultado en `/camera/depth_registered/image_rect`. Esa imagen está en `camera_color_frame` y tiene la resolución del color: el píxel $(u, v)$ de la profundidad registrada corresponde al mismo píxel de la imagen RGB, y su $Z$ ya está medido desde la cámara de color. El grupo **comprueba** el registro antes de usarlo:
 
-$$\begin{bmatrix} x' \\ y' \\ w \end{bmatrix} = H \begin{bmatrix} u \\ v \\ 1 \end{bmatrix}, \qquad (x, y) = \left(\frac{x'}{w}, \frac{y'}{w}\right)$$
+- `ros2 run tf2_ros tf2_echo camera_color_frame camera_depth_frame` da una traslación de pocos centímetros y una rotación nula. Ese valor se anota en la Tabla 1 y se compara con el del URDF.
+- El `header.frame_id` de `/camera/depth_registered/image_rect` es `camera_color_frame`, y su ancho y su alto son los de `/camera/color/image_raw` (`ros2 topic echo --once … --field header` y `--field width`).
+- Se usan pares de imágenes de color y de profundidad con estampas cercanas.
 
-Aplicando $H$ a las cuatro esquinas del tag del carrito se obtiene su centro $(x_0, y_0)$ y su orientación $\theta$ (eje de la esquina 0 a la 1) en el marco del `tag_mesa`. $H$ se recalcula en **cada imagen**, así que el resultado no depende de dónde quedó el brazo. Es lo que hace el localizador del curso (`_to_reference_plane`, con `cv2.getPerspectiveTransform` y `cv2.perspectiveTransform`; ver el [taller de localización con AprilTag](../talleres/TALLER_LOCALIZACION_APRILTAG_KINOVA_MICROROS.md), Fase 3).
+> [!NOTE]
+> **Por qué importa.** A 0.75 m, los 3 cm entre las dos cámaras corren la imagen unos 25 píxeles, y el tag del carrito mide unos 50 píxeles. En una simulación de la escena, con la profundidad registrada el tag del carrito quedó a 6 mm de su posición real. Con la profundidad sin registrar, el error fue de 6 mm si el techo del carrito era mucho más grande que el tag, porque la máscara corrida seguía cayendo sobre el mismo plano, pero de **13 cm** cuando el techo era apenas más grande que el tag: la máscara caía sobre la mesa y el ajuste de plano se arruinaba. Además, en el robot real las dos imágenes tienen resoluciones distintas, y sin registro ni siquiera coinciden los índices de los píxeles.
 
-**Paso 2 — Corrección de paralaje.** La homografía sólo es exacta para puntos **sobre** la mesa. El tag del carrito está a una altura $h$ (`tag_height_m`) sobre el tablero, así que el punto $(x_0, y_0)$ que entrega es donde el rayo de la cámara que pasa por el tag **corta la mesa**, no la posición real del tag: queda desplazado hacia afuera, alejándose de la cámara. Se corrige con la posición de la cámara $C = (C_x, C_y, C_z)$ en el marco del `tag_mesa` y triángulos semejantes a lo largo de ese rayo:
+**Paso 1 — Esquinas del tag en la imagen RGB.** El detector AprilTag 36h11 de OpenCV entrega las cuatro esquinas de cada tag en píxeles, en orden: 0 arriba a la izquierda, 1 arriba a la derecha, 2 abajo a la derecha y 3 abajo a la izquierda.
 
-$$(x, y) = (C_x, C_y) + \frac{C_z - h}{C_z}\big((x_0, y_0) - (C_x, C_y)\big)$$
+**Paso 2 — El plano del tag con la profundidad.** Cada píxel dentro del tag (máscara con `cv2.fillConvexPoly`) que tenga profundidad válida se lleva a un punto 3D en `camera_color_frame` con el modelo pinhole inverso:
 
-$C$ sale de la misma detección del `tag_mesa`: con `cv2.solvePnP` se obtiene la pose del tag en la cámara $(R, t)$, y la cámara en el marco del tag es $C = -R^{\top} t$. La orientación $\theta$ no cambia: el techo del carrito es paralelo a la mesa.
+$$X = \frac{(u - c_x)\,Z}{f_x}, \qquad Y = \frac{(v - c_y)\,Z}{f_y}$$
+
+Con esos puntos se ajusta el **plano del tag** por mínimos cuadrados (SVD), descartando los atípicos: se obtiene su normal $\mathbf{n}$ y su distancia $d$ a la cámara ($\mathbf{n} \cdot \mathbf{X} = d$). Se usa un plano y no la profundidad de cada esquina porque las esquinas están justo en el borde del tag, donde la profundidad es menos confiable.
+
+**Paso 3 — Las cuatro esquinas en 3D y el marco del tag.** El rayo de cada esquina, $\mathbf{r} = K^{-1}(u, v, 1)^\top$, se intersecta con el plano: $\mathbf{P} = \frac{d}{\mathbf{n} \cdot \mathbf{r}}\,\mathbf{r}$. Con las cuatro esquinas 3D se arma el marco del tag:
+
+- **Origen:** el centro de las cuatro esquinas.
+- **Eje $x$:** del punto medio del borde izquierdo (esquinas 0 y 3) al del borde derecho (esquinas 1 y 2).
+- **Eje $z$:** la normal del plano, apuntando hacia la cámara (fuera de la mesa).
+- **Eje $y$:** $z \times x$.
+
+La misma convención para los dos tags hace que sus marcos sean comparables. Esta pose ya contiene la inclinación de la cámara: es ahí donde se resuelve la perspectiva.
+
+**Paso 4 — Publicar las dos detecciones como TF.** Con un `TransformBroadcaster` y la **estampa de la imagen**:
+
+- `camera_color_frame → tag_mesa_detectado`
+- `camera_color_frame → tag_carrito1_detectado`
+
+Los nombres llevan `_detectado` porque `tag_mesa` y `tag_carrito1` ya existen en el árbol con otro padre: un frame no puede tener dos padres en tf2.
+
+**Paso 5 — tf2 lleva el carrito al marco de la mesa.**
+```python
+t = tf_buffer.lookup_transform('tag_mesa_detectado', 'tag_carrito1_detectado', stamp_imagen)
+```
+tf2 calcula $T_{\text{mesa},\text{carrito}} = T_{\text{cam},\text{mesa}}^{-1}\,T_{\text{cam},\text{carrito}}$. Como los dos tags salen de la misma imagen, **la pose de la cámara se cancela**: el resultado es la pose del carrito en el marco de la mesa, sin importar dónde quedó el brazo ni cuánto se inclinó la cámara. Como es una pose **3D**, la altura del tag del carrito queda en $z$ y debe coincidir con `tag_height_m` medida con cinta: es la primera comprobación de que la profundidad está bien registrada.
+
+**Paso 6 — Publicar el carrito en el árbol oficial.** El nodo publica `tag_mesa → tag_carrito1` con la $x$, la $y$ y el giro alrededor de $z$ del paso 5 (el techo del carrito es paralelo a la mesa) y $z$ igual a la altura medida. Así el carrito queda colgado del `tag_mesa` del URDF, y tf2 encadena el URDF del carrito hasta `car1_delivery_tray_frame` y entrega su pose en `base_link` para la meta de entrega. Se usa la **mediana** de 20 lecturas para filtrar el ruido. Si el tag del carrito queda fuera de la zona de entrega, la misión aborta.
 
 > [!WARNING]
-> **El paralaje no es un detalle.** Con la cámara a $C_z = 0.60$ m sobre la mesa, un tag a $h = 0.15$ m y el carrito a 0.30 m (en horizontal) del punto bajo la cámara, el error sin corregir es $0.30 \cdot 0.15 / 0.60 = 7.5$ cm: la caja caería fuera de la bandeja. El error crece con la distancia horizontal: en una simulación con la cámara a 0.60 m de altura y el carrito a unos 0.60 m en horizontal, la homografía sola lo ubicó a 21 cm de su posición real, y la corrección lo llevó a menos de 1 mm. El localizador del curso publica $z = h$ en la TF, pero **no corrige** $x$ ni $y$. Esta corrección la implementa el grupo, en su propio nodo o extendiendo el localizador.
+> **Cuándo falla la profundidad.** El D410 mide con luz infrarroja: superficies negras brillantes, reflejos y bordes devuelven 0 (sin dato). Imprima los tags en papel mate, mantenga la cámara a más de 0.3 m de la mesa, y exija un mínimo de píxeles válidos dentro de cada tag (por ejemplo, el 60 %) y un residuo del ajuste de plano pequeño (por ejemplo, menos de 5 mm). Si no se cumplen, el nodo no publica la detección y la misión aborta en el estado 2.
 
-**Paso 3 — Pose de entrega.**
-- La TF corregida `tag_mesa → tag_carrito1` se encadena con el URDF del carrito hasta `car1_delivery_tray_frame`, y con tf2 se obtiene su pose en `base_link`.
-- Se usa la **mediana** de 20 lecturas para filtrar el ruido del detector.
-- Si el tag del carrito queda fuera de la zona de entrega, la misión aborta.
+**Validación.**
+- Con tres posiciones del tag del carrito marcadas con cinta, se compara la posición del método RGB-D con la de la cinta, y $z$ con `tag_height_m` (prueba P2).
+- `ros2 run tf2_ros tf2_echo tag_mesa_detectado tag_carrito1_detectado` y el `view_frames` deben mostrar las dos detecciones colgando de `camera_color_frame`.
+- Evidencia visual: la imagen RGB con las esquinas detectadas de los dos tags y la profundidad registrada en falso color de la misma escena.
 
-**Validación.** Con tres posiciones del carrito marcadas con cinta, se compara la posición medida con la homografía sola y con la corrección de paralaje (prueba P2). Como evidencia, se genera además la **vista cenital rectificada** de la mesa con `cv2.warpPerspective` y la homografía: en ella el `tag_mesa` debe verse cuadrado y los bordes de la mesa, paralelos.
+> [!NOTE]
+> En una simulación con la cámara a 0.60 m de altura, el carrito a unos 0.60 m en horizontal y ruido de 3 mm en la profundidad, este método ubicó el tag del carrito con un error de 2.9 mm en el marco de la mesa ($z$ = 0.153 m para un tag a 0.150 m). Con el robot real hay que medirlo: el ruido del D410 crece con la distancia.
 
 ### 6.4. Escena de MoveIt y pinza
 - La caja se agrega a la escena de planificación como una caja de colisión con sus medidas reales, en la zona de recogida.
@@ -166,7 +201,7 @@ $C$ sale de la misma detección del `tag_mesa`: con `cv2.solvePnP` se obtiene la
 | Prueba | Configuración | Comportamiento esperado | Métrica a reportar |
 |---|---|---|---|
 | **P1. Verificación del `tag_mesa`** | Pose de observación, 20 lecturas | Pose medida cercana a la del URDF | Error de posición (mm) y de orientación (°) |
-| **P2. Localización del carrito** | (a) Carrito quieto, 20 lecturas; (b) tres posiciones del tag del carrito marcadas con cinta | (a) Lecturas consistentes; (b) la corrección de paralaje acerca la medida a la cinta | (a) Media y desviación de $x$, $y$, $\theta$; (b) error frente a la cinta sin y con corrección de paralaje (mm) |
+| **P2. Localización del carrito** | (a) Carrito quieto, 20 lecturas; (b) tres posiciones del tag del carrito marcadas con cinta | (a) Lecturas consistentes; (b) la pose RGB-D coincide con la cinta en $x$ e $y$, y $z$ con la altura medida | (a) Media y desviación de $x$, $y$, $\theta$; (b) error frente a la cinta (mm), $z$ frente a `tag_height_m` y residuo del ajuste de plano |
 | **P3. Misión completa** | Tres posiciones del carrito elegidas por el docente | Caja dentro de la bandeja en los tres ensayos | Éxito del agarre y de la entrega, error de colocación con cinta (mm), tiempo de ciclo (s) |
 | **P4. Carrito no visible** | Tag del carrito tapado | La misión aborta en el estado 2 sin mover el brazo hacia la entrega | Estado en que abortó y mensaje |
 | **P5. Caja ausente** | Zona de recogida vacía | La pinza cierra completa y la misión aborta | Posición final reportada por la pinza y estado alcanzado |
@@ -213,7 +248,7 @@ Aporte a la Nota del Corte 3: E₃ = Nota Académica × 0,30 (30% de C3)
 
 | Criterio | Peso | SO Principal | Indicador | Nivel N3 (Umbral de Logro: 300–399 pts) | Nivel N5 (Excelente: 475–500 pts) |
 |---|:---:|:---:|---|---|---|
-| **C1. Percepción, corrección de perspectiva y árbol de transformaciones** | 25% | **SO1** | **1.1** | La TF `tag_mesa → tag_carrito1` se obtiene con la homografía al plano de la mesa y la corrección de paralaje, y la pose de la bandeja en `base_link` se obtiene con tf2. | Verificación del `tag_mesa` con error menor que 2 cm, vista cenital rectificada, corrección de paralaje con su efecto medido frente a la cinta, filtrado con mediana y análisis del efecto de cada error del árbol sobre la colocación. |
+| **C1. Percepción RGB-D, corrección de perspectiva con tf2 y árbol de transformaciones** | 25% | **SO1** | **1.1** | La pose 3D de los dos tags se obtiene con la imagen RGB-D, las detecciones se publican como TF desde `camera_color_frame` y la pose del carrito en el marco de la mesa se obtiene con `lookup_transform`; la pose de la bandeja en `base_link` se obtiene con tf2. | Verificación del `tag_mesa` con error menor que 2 cm, comparación con la cinta, $z$ coherente con la altura medida, criterios de calidad de la profundidad (píxeles válidos y residuo del plano), filtrado con mediana y análisis del efecto de cada error del árbol sobre la colocación. |
 | **C2. Pick and place con MoveIt 2 y la pinza** | 25% | **SO2** | **2.3** | La misión completa se ejecuta en el robot real al menos una vez, con todas las trayectorias a través de `moveit_safe_executor`. | Tres ensayos exitosos con el carrito en posiciones distintas, caja adjunta y separada en la escena, carrito como obstáculo y detección de agarre fallido por la posición de la pinza. |
 | **C3. Validación experimental y diagnóstico** | 20% | **SO6** | **6.1 / 6.4** | Se ejecutan P1 a P3 con sus métricas y se registran las bolsas. | P1 a P6 completas, error de colocación explicado por sus fuentes y reto en vivo resuelto por diagnóstico por capas. |
 | **C4. Seguridad en la operación del robot real** | 20% | **SO4** | **4.1** | Modo seco de la misión antes de cada ejecución real, turnos y parada de emergencia custodiada. | Además, la misión aborta en un estado seguro ante cada falla de P4 a P6 y ningún límite del ejecutor se modificó. |

@@ -105,6 +105,7 @@ Este documento centraliza las tareas pendientes, oportunidades de mejora identif
   - [ ] Una pose de observación desde la que la cámara vea el `tag_mesa` y toda la zona de entrega.
   - [ ] Alcance del brazo en la zona de recogida $(0.00, +0.25)$ m y en la zona de entrega del `tag_mesa`, con la pinza vertical.
   - [ ] Caja de prueba con lado de agarre de 75 mm o menos y posición final de la Robotiq al cerrarse sobre ella (umbral para detectar agarre fallido).
+  - [ ] Percepción RGB-D en la cámara real: `depth_registration:=true` publica `/camera/depth_registered/image_rect` en `camera_color_frame` a la resolución del color; valor de `tf2_echo camera_color_frame camera_depth_frame` frente al URDF; píxeles válidos dentro del tag del carrito (papel mate, distancia mínima del D410) y error frente a la cinta (en simulación: 6 mm).
 - [ ] **Integración Continua (CI/CD)**:
   - [ ] Configurar GitHub Actions para validación automática de URDFs (`xmllint`, `check_urdf`) en cada Pull Request.
   - [ ] Linteo automático de código Python y scripts bash.
