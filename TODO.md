@@ -101,6 +101,11 @@ Este documento centraliza las tareas pendientes, oportunidades de mejora identif
   - [x] Guía Lab 07: Razonamiento espacial con IA multimodal (Gemini) → publicada como [Guía IA 01](education/guias_laboratorio/GUIA_LAB_IA_01_EMBODIED_AI_GEMINI_ER2_KINOVA.md) para la asignatura de IA, con `gemini-robotics-er-2-preview`, ruta sin ROS 2 y plantilla de código/informe.
     - [ ] Validar en el robot real antes de la sesión: llamada a la API, `leer_calibracion_kortex.py` y el nodo ROS 2 contra `kinova_vision`.
     - [ ] Corregir o reemplazar `default_color_calib_1920x1080.ini` de `kinova_vision` (declara `cy = 96.97 px`): afecta a todo nodo ROS que desproyecte con `/camera/color/camera_info` a 1080p.
+- [ ] **Proyecto final del Corte 3** ([especificación](education/proyectos_evaluables/PROYECTO_FINAL_CORTE_3_PICK_AND_PLACE_MOVEIT.md) e instrumento ABET publicados el 2026-11-05): pick and place de la caja de hamburguesa con MoveIt 2, la pinza y la visión. Validar en la celda real antes de asignarlo:
+  - [ ] Una pose de observación desde la que la cámara vea el `tag_mesa` y toda la zona de entrega.
+  - [ ] Alcance del brazo en la zona de recogida $(0.00, +0.25)$ m y en la zona de entrega del `tag_mesa`, con la pinza vertical.
+  - [ ] Caja de prueba con lado de agarre de 75 mm o menos y posición final de la Robotiq al cerrarse sobre ella (umbral para detectar agarre fallido).
+  - [ ] Percepción RGB-D en la cámara real: `depth_registration:=true` publica `/camera/depth_registered/image_rect` en `camera_color_frame` a la resolución del color; valor de `tf2_echo camera_color_frame camera_depth_frame` frente al URDF; píxeles válidos dentro del tag del carrito (papel mate, distancia mínima del D410) y error frente a la cinta (en simulación: 6 mm).
 - [ ] **Integración Continua (CI/CD)**:
   - [ ] Configurar GitHub Actions para validación automática de URDFs (`xmllint`, `check_urdf`) en cada Pull Request.
   - [ ] Linteo automático de código Python y scripts bash.
