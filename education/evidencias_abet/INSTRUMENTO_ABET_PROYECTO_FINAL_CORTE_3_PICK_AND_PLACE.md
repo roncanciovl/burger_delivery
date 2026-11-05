@@ -80,7 +80,7 @@
 | **E2** | Las seis posiciones articulares de la pose de observación y una imagen de la cámara desde esa pose con el `tag_mesa` y el tag del carrito visibles. | |
 | **E3** | Salida de la verificación del `tag_mesa`: pose medida con la cámara en `base_link`, pose del URDF y error (Tabla 2). | |
 | **E4** | Imagen RGB con las esquinas detectadas de los dos tags y la profundidad registrada en falso color de la misma escena; `tf2_echo tag_mesa_detectado tag_carrito1_detectado`, `tf2_echo base_link car1_delivery_tray_frame`, el `frames_<fecha>.pdf` de `view_frames` con la cadena completa, las 20 lecturas de la Tabla 3 y las mediciones de la Tabla 3b. | |
-| **E5** | Captura de RViz con la caja en la zona de recogida y el carrito como obstáculos, y otra con la caja adjunta a la pinza durante el traslado. | |
+| **E5** | Captura de RViz con la caja en la zona de recogida y el carrito como obstáculos (en el modo hoja, sólo la caja), y otra con la caja adjunta a la pinza durante el traslado. | |
 | **E6** | Informe del ejecutor en modo seco de la misión completa de cada ensayo, revisado por el docente. | |
 | **E7** | Video de un ensayo completo con el robot real, desde la pose de observación hasta `home`. | |
 | **E8** | `ros2 bag info`, informe del ejecutor (`*.jsonl`) y `metas_mision_gNN.yaml` de cada uno de los tres ensayos de la P3. | |
@@ -99,16 +99,18 @@ Registra los valores medidos y elegidos por el grupo que la misión usa como par
 
 - **IDs y tamaños de los tags:** IDs detectados del `tag_mesa` y del tag del carrito, y lado del cuadro negro de cada uno, medido con calibrador.
 - **Registro de la profundidad:** traslación de `tf2_echo camera_color_frame camera_depth_frame` y el `frame_id` de `/camera/depth_registered/image_rect`, que debe ser `camera_color_frame`.
-- **Altura del tag del carrito:** `tag_height_m`, distancia vertical del tag a la cara de la mesa, medida con cinta.
+- **Modo de destino:** `destino:=carrito` o `destino:=hoja` (tag del carrito impreso en una hoja sobre la mesa, sección 4.1 de la especificación).
+- **Altura del tag del carrito:** `tag_height_m`, distancia vertical del tag a la cara de la mesa, medida con cinta. En el modo hoja es el grosor de la hoja, prácticamente 0.
 - **Caja:** largo, ancho (lado de agarre) y alto, en mm.
 - **Zona de recogida:** centro de la zona en el marco del `tag_mesa`, medido con cinta.
 - **Pose de observación:** las seis posiciones articulares en radianes.
-- **Alturas de la secuencia:** distancia de pre-agarre y de pre-entrega sobre la caja y la bandeja, y altura de suelta.
+- **Alturas de la secuencia:** distancia de pre-agarre y de pre-entrega sobre la caja y el destino (bandeja u hoja), y altura de suelta.
 
 | Ítem | Valor |
 |---|---|
 | **IDs del `tag_mesa` y del tag del carrito; lado de cada uno (m)** | |
 | **`camera_color_frame → camera_depth_frame` (m) y `frame_id` de la profundidad registrada** | |
+| **Modo de destino (`carrito` / `hoja`)** | |
 | **`tag_height_m` del tag del carrito (m)** | |
 | **Dimensiones de la caja: largo × ancho de agarre × alto (mm)** | |
 | **Centro de la zona de recogida en el marco del `tag_mesa` (m)** | |
@@ -137,7 +139,7 @@ Compara dónde dice el URDF que está el `tag_mesa` con dónde lo mide la cámar
 
 ### Tabla 3: Estabilidad de la TF del Carrito (Prueba P2, parte a)
 
-Con el carrito quieto, mide cuánto varía la pose que entrega la visión. Las tres primeras filas son de `tag_mesa → tag_carrito1`; la última, de la bandeja en `base_link`, que es la que usa la misión:
+Con el carrito quieto, mide cuánto varía la pose que entrega la visión. Las tres primeras filas son de `tag_mesa → tag_carrito1`; la última, de la meta de entrega en `base_link` (la bandeja, o el tag en el modo hoja), que es la que usa la misión:
 
 - **Media y desviación estándar:** sobre 20 lecturas consecutivas de `tf2_echo`.
 - **Mediana:** el valor que usa la misión para la meta de entrega.
@@ -147,7 +149,7 @@ Con el carrito quieto, mide cuánto varía la pose que entrega la visión. Las t
 | **x del carrito en `tag_mesa` (m)** | | | |
 | **y del carrito en `tag_mesa` (m)** | | | |
 | **θ del carrito en `tag_mesa` (°)** | | | |
-| **Bandeja en `base_link`: (x, y, z) (m)** | | | |
+| **Meta de entrega en `base_link`: (x, y, z) (m)** | | | |
 
 ---
 
@@ -198,18 +200,20 @@ Una fila por estado de la secuencia del proyecto (sección 5) que mueve el brazo
 
 ### Tabla 5: Ensayos de Pick and Place (Prueba P3)
 
-Una fila por ensayo; en cada uno el docente ubica el carrito en una posición distinta de la zona de entrega:
+Una fila por ensayo; en cada uno el docente ubica el carrito (o la hoja) en una posición distinta de la zona de entrega:
+
+- **Modo:** `carrito` u `hoja`.
 
 - **Posición del carrito:** la pose del tag del carrito en el marco del `tag_mesa` (mediana de la TF).
-- **Agarre y entrega:** «sí» si la caja quedó en la pinza y, después, dentro de la bandeja.
-- **Error de colocación (mm):** distancia, medida con cinta, entre el centro de la base de la caja y el centro de la bandeja.
+- **Agarre y entrega:** «sí» si la caja quedó en la pinza y, después, dentro de la bandeja (o sobre el contorno dibujado en la hoja).
+- **Error de colocación (mm):** distancia, medida con cinta, entre el centro de la base de la caja y el centro de la bandeja (en el modo hoja, el centro del tag).
 - **Tiempo de ciclo (s):** desde que sale de la pose de observación hasta que vuelve a `home`, según la bolsa.
 
-| Ensayo | Posición del Carrito (x, y, θ) en `tag_mesa` | ¿Agarre? | ¿Entrega? | Error de Colocación (mm) | Tiempo de Ciclo (s) |
-|:---:|---|:---:|:---:|:---:|:---:|
-| **1** | | | | | |
-| **2** | | | | | |
-| **3** | | | | | |
+| Ensayo | Modo | Posición del Carrito (x, y, θ) en `tag_mesa` | ¿Agarre? | ¿Entrega? | Error de Colocación (mm) | Tiempo de Ciclo (s) |
+|:---:|:---:|---|:---:|:---:|:---:|:---:|
+| **1** | | | | | | |
+| **2** | | | | | | |
+| **3** | | | | | | |
 
 ---
 
@@ -401,7 +405,7 @@ Marque con una **X** una sola casilla por criterio y registre el valor entero (0
 | Marque | Nivel | Evidencia Observable del Nivel |
 |:---:|---|---|
 | ☐ | **N5 — 475–500** | Además de N4, extiende la misión con criterio propio (por ejemplo, metas resueltas con tf2 dentro del ejecutor o detección de movimiento del carrito) y lo documenta en el `README.md`. |
-| ☐ | **N4 — 400–474** | Tres ensayos exitosos con el carrito en posiciones distintas, la caja adjunta y separada en la escena, el carrito como obstáculo y la detección de agarre fallido por la posición de la pinza. |
+| ☐ | **N4 — 400–474** | Tres ensayos exitosos con el carrito o la hoja en posiciones distintas, la caja adjunta y separada en la escena, el carrito como obstáculo en el modo carrito y la detección de agarre fallido por la posición de la pinza. |
 | ☐ | **N3 — 300–399** | La misión completa se ejecuta en el robot real al menos una vez, con todas las trayectorias a través de `moveit_safe_executor`. |
 | ☐ | **N2 — 150–299** | La misión se completa sólo con el driver fake, o en el robot real necesitó intervención manual en algún estado. |
 | ☐ | **N1 — 0–149** | No hay misión funcional, o se enviaron trayectorias al controlador sin pasar por el ejecutor. |
