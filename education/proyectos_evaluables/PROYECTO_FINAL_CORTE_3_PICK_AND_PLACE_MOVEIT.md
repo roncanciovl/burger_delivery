@@ -77,7 +77,7 @@ base_link (= world de la escena)
 | **Zona de recogida** | Rectángulo marcado con cinta, con centro en $(0.00,\ +0.25)$ m en el marco del `tag_mesa` (el grupo mide y documenta el valor real) | Fija y conocida: el agarre no depende de la visión |
 | **Zona de entrega** | El docente ubica el carrito con el centro de su tag dentro de $x \in [0.10,\ 0.35]$ m e $y \in [-0.30,\ -0.18]$ m en el marco del `tag_mesa`, con su lado largo (0.25 m) a menos de 30° del eje $x$ del `tag_mesa` | Dentro del alcance del brazo y del campo de visión; el carrito (0.25 × 0.20 m) queda al menos 5 cm dentro del borde de la mesa ($y = -0.45$ m en `base_link`) y sin tapar el `tag_mesa` |
 | **Carrito** | Detenido y con los motores apagados durante la misión; AprilTag 36h11 en el techo | El carrito es el destino, no participa del movimiento |
-| **Alturas** | La caja se suelta con su base a no más de 3 cm de la bandeja | Una caída mayor puede volcarla fuera de la bandeja |
+| **Alturas** | La caja se suelta con su base a no más de 3 cm de la bandeja (o de la hoja, sección 4.1) | Una caída mayor puede volcarla fuera de la bandeja |
 
 El grupo mide con cinta y calibrador las dimensiones de la caja, el lado del cuadro negro de cada tag, la altura del tag del carrito sobre la mesa (`tag_height_m`) y la de la bandeja, y las registra en la Tabla 1 del instrumento.
 
@@ -171,7 +171,7 @@ Con esos puntos se ajusta el **plano del tag** por mínimos cuadrados (SVD), des
 - **Eje $z$:** la normal del plano, apuntando hacia la cámara (fuera de la mesa).
 - **Eje $y$:** $z \times x$.
 
-La misma convención para los dos tags hace que sus marcos sean comparables. Esta pose ya contiene la inclinación de la cámara: es ahí donde se resuelve la perspectiva.
+La misma convención para los dos tags hace que sus marcos sean comparables. **Comprobación:** la distancia entre esquinas 3D vecinas debe coincidir con el lado del tag medido con calibrador (Tabla 1 del instrumento). Si difiere en más de unos milímetros, la profundidad o el ajuste de plano están mal. Esta pose ya contiene la inclinación de la cámara: es ahí donde se resuelve la perspectiva.
 
 **Paso 4 — Publicar las dos detecciones como TF.** Con un `TransformBroadcaster` y la **estampa de la imagen**:
 
@@ -201,7 +201,7 @@ tf2 calcula $T_{\text{mesa},\text{carrito}} = T_{\text{cam},\text{mesa}}^{-1}\,T
 
 ### 6.4. Escena de MoveIt y pinza
 - La caja se agrega a la escena de planificación como una caja de colisión con sus medidas reales, en la zona de recogida.
-- Al cerrar la pinza, la caja se **adjunta** al efector (`AttachedCollisionObject`, con los eslabones de la pinza como `touch_links`) para que MoveIt la tenga en cuenta al planificar el traslado. Al soltarla se **separa** y queda en la escena sobre la bandeja.
+- Al cerrar la pinza, la caja se **adjunta** al efector (`AttachedCollisionObject`, con los eslabones de la pinza como `touch_links`) para que MoveIt la tenga en cuenta al planificar el traslado. Al soltarla se **separa** y queda en la escena sobre el destino (la bandeja o la hoja).
 - En el modo carrito, el carrito se agrega a la escena como obstáculo (caja envolvente en `car1_base_link`), para que la trayectoria de entrega no lo atraviese. En el modo hoja no hay obstáculo que agregar.
 
 ### 6.5. Seguridad (no negociable)
@@ -248,7 +248,7 @@ Con cada bolsa se entregan el informe del ejecutor (`report_file`, `*.jsonl`) y 
 
 ## 9. Reto en Vivo de la Sustentación
 
-El docente ubica el carrito (o, si no está disponible, la hoja) en una posición nueva de la zona de entrega y, a su elección, introduce **una** falla: un tag tapado, un `tag_size_m` equivocado, la caja corrida 3 cm o el eslabón de la cámara sin publicar. El grupo debe:
+El docente ubica el carrito (o, si no está disponible, la hoja) en una posición nueva de la zona de entrega y, a su elección, introduce **una** falla: un tag tapado, la profundidad sin registrar (`depth_registration:=false`), un `destino` que no corresponde a lo que hay en la mesa, la caja corrida 3 cm o el eslabón de la cámara sin publicar. El grupo debe:
 
 1. Ejecutar la misión **sin editar el código**: sólo puede relanzar nodos y ajustar parámetros documentados.
 2. Si la misión aborta, diagnosticar la causa por capas (red y dominio → TF → percepción → planificación → ejecución), corregirla y repetir, en menos de 20 minutos.
@@ -264,7 +264,7 @@ Aporte a la Nota del Corte 3: E₃ = Nota Académica × 0,30 (30% de C3)
 
 | Criterio | Peso | SO Principal | Indicador | Nivel N3 (Umbral de Logro: 300–399 pts) | Nivel N5 (Excelente: 475–500 pts) |
 |---|:---:|:---:|---|---|---|
-| **C1. Percepción RGB-D, corrección de perspectiva con tf2 y árbol de transformaciones** | 25% | **SO1** | **1.1** | La pose 3D de los dos tags se obtiene con la imagen RGB-D, las detecciones se publican como TF desde `camera_color_frame` y la pose del carrito en el marco de la mesa se obtiene con `lookup_transform`; la pose de la bandeja en `base_link` se obtiene con tf2. | Verificación del `tag_mesa` con error menor que 2 cm, comparación con la cinta, $z$ coherente con la altura medida, criterios de calidad de la profundidad (píxeles válidos y residuo del plano), filtrado con mediana y análisis del efecto de cada error del árbol sobre la colocación. |
+| **C1. Percepción RGB-D, corrección de perspectiva con tf2 y árbol de transformaciones** | 25% | **SO1** | **1.1** | La pose 3D de los dos tags se obtiene con la imagen RGB-D, las detecciones se publican como TF desde `camera_color_frame` y la pose del carrito en el marco de la mesa se obtiene con `lookup_transform`; la pose de la meta de entrega en `base_link` se obtiene con tf2. | Verificación del `tag_mesa` con error menor que 2 cm, comparación con la cinta, $z$ coherente con la altura medida, criterios de calidad de la profundidad (píxeles válidos y residuo del plano), filtrado con mediana y análisis del efecto de cada error del árbol sobre la colocación. |
 | **C2. Pick and place con MoveIt 2 y la pinza** | 25% | **SO2** | **2.3** | La misión completa se ejecuta en el robot real al menos una vez, con todas las trayectorias a través de `moveit_safe_executor`. | Tres ensayos exitosos con el carrito o la hoja en posiciones distintas, caja adjunta y separada en la escena, carrito como obstáculo en el modo carrito y detección de agarre fallido por la posición de la pinza. |
 | **C3. Validación experimental y diagnóstico** | 20% | **SO6** | **6.1 / 6.4** | Se ejecutan P1 a P3 con sus métricas y se registran las bolsas. | P1 a P6 completas, error de colocación explicado por sus fuentes y reto en vivo resuelto por diagnóstico por capas. |
 | **C4. Seguridad en la operación del robot real** | 20% | **SO4** | **4.1** | Modo seco de la misión antes de cada ejecución real, turnos y parada de emergencia custodiada. | Además, la misión aborta en un estado seguro ante cada falla de P4 a P6 y ningún límite del ejecutor se modificó. |

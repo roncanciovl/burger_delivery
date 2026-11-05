@@ -61,8 +61,8 @@
 
 | Criterio | Peso | Student Outcome Principal | Indicador de Desempeño Literal del Programa | Evidencia Directa Obligatoria |
 |---|:---:|:---:|---|---|
-| **C1. Percepción RGB-D, corrección de perspectiva con tf2 y árbol de transformaciones** | 25% | **SO1** | **1.1.** Analiza las relaciones entre fenómenos físicos y modelos matemáticos de orientación y transformaciones, validando el árbol de transformaciones (TF2) en sistemas robóticos distribuidos. | Pose de observación, verificación del `tag_mesa`, pose 3D de los tags con RGB-D y tf2, TF del carrito y pose de la bandeja en `base_link` (E2, E3, E4; Tablas 1, 2, 3 y 3b). |
-| **C2. Pick and place con MoveIt 2 y la pinza** | 25% | **SO2** | **2.3.** Implementa y valida trayectorias libres de colisiones configurando pipelines de planificación de movimiento en MoveIt 2 sobre entornos industriales modelados experimentalmente. | Escena con la caja y el carrito, misión en modo seco y en el robot real, tres ensayos (E5, E6, E7; Tablas 4 y 5). |
+| **C1. Percepción RGB-D, corrección de perspectiva con tf2 y árbol de transformaciones** | 25% | **SO1** | **1.1.** Analiza las relaciones entre fenómenos físicos y modelos matemáticos de orientación y transformaciones, validando el árbol de transformaciones (TF2) en sistemas robóticos distribuidos. | Pose de observación, verificación del `tag_mesa`, pose 3D de los tags con RGB-D y tf2, TF del carrito y pose de la meta de entrega en `base_link` (E2, E3, E4; Tablas 1, 2, 3 y 3b). |
+| **C2. Pick and place con MoveIt 2 y la pinza** | 25% | **SO2** | **2.3.** Implementa y valida trayectorias libres de colisiones configurando pipelines de planificación de movimiento en MoveIt 2 sobre entornos industriales modelados experimentalmente. | Escena con la caja y, en el modo carrito, el carrito; misión en modo seco y en el robot real, tres ensayos (E5, E6, E7; Tablas 4 y 5). |
 | **C3. Validación experimental y diagnóstico** | 20% | **SO6** | **6.1.** Diseña y ejecuta pruebas de lazo cerrado, midiendo exactitud y respuesta del sistema.<br>**6.4.** Interpreta fallas y diagnósticos experimentales aplicando protocolos por capas. | Pruebas P1 a P6, bolsas e informes, reto en vivo (E8, E9, E10; Tablas 5 a 7). |
 | **C4. Seguridad en la operación del robot real** | 20% | **SO4** | **4.1.** Identifica riesgos de seguridad física, paradas de emergencia y celdas robóticas. | Modo seco de cada ensayo revisado por el docente, abortos seguros en P4 a P6, límites sin modificar (E6, E9; Tablas 4 y 6). |
 | **C5. Trazabilidad y trabajo en equipo** | 10% | **SO3 / SO5** | **3.1 - 3.3.** Elabora documentación técnica reproducible y registra evidencias.<br>**5.1.** Define roles técnicos y coordina la ejecución en equipo. | Paquete con `README.md`, commits de todos, video, bolsas y Anexo A individual (E1, E7, E8). |
@@ -79,7 +79,7 @@
 | **E1** | Enlace al paquete `burger_mision_gNN` y al commit evaluado, con el `README.md` (arquitectura, árbol de TF y cómo reproducir la misión). | |
 | **E2** | Las seis posiciones articulares de la pose de observación y una imagen de la cámara desde esa pose con el `tag_mesa` y el tag del carrito visibles. | |
 | **E3** | Salida de la verificación del `tag_mesa`: pose medida con la cámara en `base_link`, pose del URDF y error (Tabla 2). | |
-| **E4** | Imagen RGB con las esquinas detectadas de los dos tags y la profundidad registrada en falso color de la misma escena; `tf2_echo tag_mesa_detectado tag_carrito1_detectado`, `tf2_echo base_link car1_delivery_tray_frame`, el `frames_<fecha>.pdf` de `view_frames` con la cadena completa, las 20 lecturas de la Tabla 3 y las mediciones de la Tabla 3b. | |
+| **E4** | Imagen RGB con las esquinas detectadas de los dos tags y la profundidad registrada en falso color de la misma escena; `tf2_echo tag_mesa_detectado tag_carrito1_detectado`, `tf2_echo base_link car1_delivery_tray_frame` (en el modo hoja, `tf2_echo base_link tag_carrito1`), el `frames_<fecha>.pdf` de `view_frames` con la cadena completa, las 20 lecturas de la Tabla 3 y las mediciones de la Tabla 3b. | |
 | **E5** | Captura de RViz con la caja en la zona de recogida y el carrito como obstáculos (en el modo hoja, sólo la caja), y otra con la caja adjunta a la pinza durante el traslado. | |
 | **E6** | Informe del ejecutor en modo seco de la misión completa de cada ensayo, revisado por el docente. | |
 | **E7** | Video de un ensayo completo con el robot real, desde la pose de observación hasta `home`. | |
@@ -97,10 +97,11 @@
 
 Registra los valores medidos y elegidos por el grupo que la misión usa como parámetros. Cada fila es un dato:
 
-- **IDs y tamaños de los tags:** IDs detectados del `tag_mesa` y del tag del carrito, y lado del cuadro negro de cada uno, medido con calibrador.
+- **IDs y tamaños de los tags:** IDs detectados del `tag_mesa` y del tag del carrito, y lado del cuadro negro de cada uno, medido con calibrador y medido entre las esquinas 3D del método RGB-D (comprobación del paso 3 de la sección 6.3 de la especificación).
 - **Registro de la profundidad:** traslación de `tf2_echo camera_color_frame camera_depth_frame` y el `frame_id` de `/camera/depth_registered/image_rect`, que debe ser `camera_color_frame`.
+- **Calidad de la profundidad:** umbrales que usa el nodo de percepción para aceptar una detección: porcentaje mínimo de píxeles válidos dentro del tag y residuo máximo del ajuste de plano.
 - **Modo de destino:** `destino:=carrito` o `destino:=hoja` (tag del carrito impreso en una hoja sobre la mesa, sección 4.1 de la especificación).
-- **Altura del tag del carrito:** `tag_height_m`, distancia vertical del tag a la cara de la mesa, medida con cinta. En el modo hoja es el grosor de la hoja, prácticamente 0.
+- **Altura del tag del carrito:** `tag_height_m`, distancia vertical del tag a la cara de la mesa, medida con cinta. En el modo hoja es el grosor de la hoja, prácticamente 0. En el modo carrito se registra también la altura de la bandeja.
 - **Caja:** largo, ancho (lado de agarre) y alto, en mm.
 - **Zona de recogida:** centro de la zona en el marco del `tag_mesa`, medido con cinta.
 - **Pose de observación:** las seis posiciones articulares en radianes.
@@ -108,10 +109,12 @@ Registra los valores medidos y elegidos por el grupo que la misión usa como par
 
 | Ítem | Valor |
 |---|---|
-| **IDs del `tag_mesa` y del tag del carrito; lado de cada uno (m)** | |
+| **IDs del `tag_mesa` y del tag del carrito** | |
+| **Lado de cada tag: calibrador / entre esquinas 3D (mm)** | |
 | **`camera_color_frame → camera_depth_frame` (m) y `frame_id` de la profundidad registrada** | |
+| **Umbrales de calidad: píxeles válidos mínimos (%) y residuo máximo del plano (mm)** | |
 | **Modo de destino (`carrito` / `hoja`)** | |
-| **`tag_height_m` del tag del carrito (m)** | |
+| **`tag_height_m` del tag del carrito y, en el modo carrito, altura de la bandeja (m)** | |
 | **Dimensiones de la caja: largo × ancho de agarre × alto (mm)** | |
 | **Centro de la zona de recogida en el marco del `tag_mesa` (m)** | |
 | **Pose de observación: `joint_1` a `joint_6` (rad)** | |
@@ -139,7 +142,7 @@ Compara dónde dice el URDF que está el `tag_mesa` con dónde lo mide la cámar
 
 ### Tabla 3: Estabilidad de la TF del Carrito (Prueba P2, parte a)
 
-Con el carrito quieto, mide cuánto varía la pose que entrega la visión. Las tres primeras filas son de `tag_mesa → tag_carrito1`; la última, de la meta de entrega en `base_link` (la bandeja, o el tag en el modo hoja), que es la que usa la misión:
+Con el carrito (o la hoja) quieto, mide cuánto varía la pose que entrega la visión. La misión exige una desviación estándar menor que 5 mm para pasar del estado 2. Las tres primeras filas son de `tag_mesa → tag_carrito1`; la última, de la meta de entrega en `base_link` (la bandeja, o el tag en el modo hoja), que es la que usa la misión:
 
 - **Media y desviación estándar:** sobre 20 lecturas consecutivas de `tf2_echo`.
 - **Mediana:** el valor que usa la misión para la meta de entrega.
@@ -203,13 +206,12 @@ Una fila por estado de la secuencia del proyecto (sección 5) que mueve el brazo
 Una fila por ensayo; en cada uno el docente ubica el carrito (o la hoja) en una posición distinta de la zona de entrega:
 
 - **Modo:** `carrito` u `hoja`.
-
-- **Posición del carrito:** la pose del tag del carrito en el marco del `tag_mesa` (mediana de la TF).
+- **Posición del tag del carrito:** la pose del tag del carrito en el marco del `tag_mesa` (mediana de la TF).
 - **Agarre y entrega:** «sí» si la caja quedó en la pinza y, después, dentro de la bandeja (o sobre el contorno dibujado en la hoja).
 - **Error de colocación (mm):** distancia, medida con cinta, entre el centro de la base de la caja y el centro de la bandeja (en el modo hoja, el centro del tag).
 - **Tiempo de ciclo (s):** desde que sale de la pose de observación hasta que vuelve a `home`, según la bolsa.
 
-| Ensayo | Modo | Posición del Carrito (x, y, θ) en `tag_mesa` | ¿Agarre? | ¿Entrega? | Error de Colocación (mm) | Tiempo de Ciclo (s) |
+| Ensayo | Modo | Posición del Tag del Carrito (x, y, θ) en `tag_mesa` | ¿Agarre? | ¿Entrega? | Error de Colocación (mm) | Tiempo de Ciclo (s) |
 |:---:|:---:|---|:---:|:---:|:---:|:---:|
 | **1** | | | | | | |
 | **2** | | | | | | |
@@ -329,7 +331,7 @@ Registra la falla que introdujo el docente y cómo la diagnosticó el grupo:
 ---
 
 ### Pregunta 9: Corrección de Perspectiva con RGB-D y tf2
-*Explique por qué la profundidad debe transformarse del marco del sensor de profundidad al de la cámara de color antes de usar las esquinas del RGB, y qué comprobó para saber que estaba registrada. Explique por qué la cámara inclinada impide pasar de píxeles a metros con una escala fija, y cómo la profundidad registrada y el ajuste de plano convierten cada tag en una pose 3D. Luego explique por qué `lookup_transform('tag_mesa_detectado', 'tag_carrito1_detectado')` no depende de dónde estaba la cámara, por qué las detecciones no pueden llamarse `tag_mesa` y `tag_carrito1`, y qué le indica que $z$ coincida (o no) con `tag_height_m` en la Tabla 3b.*
+*Explique por qué la profundidad debe transformarse del marco del sensor de profundidad al de la cámara de color antes de usar las esquinas del RGB, y qué comprobó para saber que estaba registrada. Explique por qué la cámara inclinada impide pasar de píxeles a metros con una escala fija, y cómo la profundidad registrada y el ajuste de plano convierten cada tag en una pose 3D. Luego explique por qué `lookup_transform('tag_mesa_detectado', 'tag_carrito1_detectado')` no depende de dónde estaba la cámara, por qué las detecciones no pueden llamarse `tag_mesa` y `tag_carrito1`, y qué le indica que $z$ coincida (o no) con `tag_height_m` en la Tabla 3b, incluido cómo esa comprobación detecta un modo de destino equivocado.*
 
 > **Respuesta Técnica del Equipo:**
 > ________________________________________________________________________________________________________________________
@@ -357,7 +359,7 @@ Registra la falla que introdujo el docente y cómo la diagnosticó el grupo:
 | Pregunta Individual de Verificación | Respuesta y Evidencia Directa del Estudiante |
 |---|---|
 | **1. Rol y tareas técnicas desarrolladas:** Describa sus responsabilidades específicas (pose de observación, verificación del `tag_mesa`, percepción RGB-D, nodo de misión, escena de MoveIt, pinza, pruebas o registros). | |
-| **2. El árbol de transformaciones:** Recorra la cadena de `base_link` a `car1_delivery_tray_frame` e indique qué tramo sale del URDF, cuál de la visión y cuál del driver. | |
+| **2. El árbol de transformaciones:** Recorra la cadena de `base_link` a la meta de entrega (`car1_delivery_tray_frame`, o `tag_carrito1` en el modo hoja) e indique qué tramo sale del URDF, cuál de la visión y cuál del driver. | |
 | **3. La meta de entrega:** Explique cómo se calcula la pose de pre-entrega a partir de la TF del carrito y por qué no tiene coordenadas escritas en el código. | |
 | **4. Seguridad:** Elija una falla de la Tabla 6 que usted provocó y explique en qué estado abortó la misión y qué la detuvo. | |
 | **5. Autoría y reproducibilidad:** Identifique qué archivos del paquete, commits, filas de tablas, bolsas o partes del video son su trabajo directo. | |
@@ -372,7 +374,7 @@ Registra la falla que introdujo el docente y cómo la diagnosticó el grupo:
 | Pregunta Individual de Verificación | Respuesta y Evidencia Directa del Estudiante |
 |---|---|
 | **1. Rol y tareas técnicas desarrolladas:** Describa sus responsabilidades específicas (pose de observación, verificación del `tag_mesa`, percepción RGB-D, nodo de misión, escena de MoveIt, pinza, pruebas o registros). | |
-| **2. El árbol de transformaciones:** Recorra la cadena de `base_link` a `car1_delivery_tray_frame` e indique qué tramo sale del URDF, cuál de la visión y cuál del driver. | |
+| **2. El árbol de transformaciones:** Recorra la cadena de `base_link` a la meta de entrega (`car1_delivery_tray_frame`, o `tag_carrito1` en el modo hoja) e indique qué tramo sale del URDF, cuál de la visión y cuál del driver. | |
 | **3. La meta de entrega:** Explique cómo se calcula la pose de pre-entrega a partir de la TF del carrito y por qué no tiene coordenadas escritas en el código. | |
 | **4. Seguridad:** Elija una falla de la Tabla 6 que usted provocó y explique en qué estado abortó la misión y qué la detuvo. | |
 | **5. Autoría y reproducibilidad:** Identifique qué archivos del paquete, commits, filas de tablas, bolsas o partes del video son su trabajo directo. | |
@@ -391,8 +393,8 @@ Marque con una **X** una sola casilla por criterio y registre el valor entero (0
 | Marque | Nivel | Evidencia Observable del Nivel |
 |:---:|---|---|
 | ☐ | **N5 — 475–500** | Además de N4, analiza cómo cada tramo del árbol (URDF, visión RGB-D, driver) y la calidad de la profundidad se trasladan al error de colocación, y lo sustenta con las Tablas 2, 3, 3b y 5. |
-| ☐ | **N4 — 400–474** | Verifica el `tag_mesa` con la cámara (error menor que 2 cm o URDF corregido con medición), obtiene la pose 3D de los dos tags con RGB-D y la del carrito en el marco de la mesa con tf2, la compara con la cinta y con `tag_height_m` (Tabla 3b) con criterios de calidad de la profundidad, y filtra la pose de la bandeja en `base_link` con la mediana de 20 lecturas. |
-| ☐ | **N3 — 300–399** | La pose 3D de los tags se obtiene con RGB-D, la del carrito en el marco de la mesa con `lookup_transform`, y la pose de la bandeja en `base_link` con tf2. |
+| ☐ | **N4 — 400–474** | Verifica el `tag_mesa` con la cámara (error menor que 2 cm o URDF corregido con medición), obtiene la pose 3D de los dos tags con RGB-D y la del carrito en el marco de la mesa con tf2, la compara con la cinta y con `tag_height_m` (Tabla 3b) con criterios de calidad de la profundidad, y filtra la pose de la meta de entrega en `base_link` con la mediana de 20 lecturas. |
+| ☐ | **N3 — 300–399** | La pose 3D de los tags se obtiene con RGB-D, la del carrito en el marco de la mesa con `lookup_transform`, y la pose de la meta de entrega en `base_link` con tf2. |
 | ☐ | **N2 — 150–299** | La pose del carrito se obtiene sin profundidad o sin tf2 (por ejemplo, con una escala fija en píxeles), la entrega usa coordenadas escritas a mano, o no se verificó el `tag_mesa`. |
 | ☐ | **N1 — 0–149** | No hay localización del carrito por visión o no hay evidencia verificable. |
 
