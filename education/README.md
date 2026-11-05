@@ -53,6 +53,8 @@ Para evitar versiones incompatibles, cada responsabilidad debe tener una sola fu
 | Evidencia y nota del Laboratorio 05 | [`evidencias_abet/INSTRUMENTO_ABET_LAB_05_TF_DRON_CARRITO_MICROROS.docx`](evidencias_abet/INSTRUMENTO_ABET_LAB_05_TF_DRON_CARRITO_MICROROS.docx) | [`evidencias_abet/INSTRUMENTO_ABET_LAB_05_TF_DRON_CARRITO_MICROROS.md`](evidencias_abet/INSTRUMENTO_ABET_LAB_05_TF_DRON_CARRITO_MICROROS.md) es la fuente; el Word se regenera con `build_instrumento_lab_05.py` |
 | Proyecto del primer corte | [`proyectos_evaluables/PROYECTO_CORTE_1_CONEXION_KINOVA.md`](proyectos_evaluables/PROYECTO_CORTE_1_CONEXION_KINOVA.md) | No tiene archivo derivado; esta especificación es la fuente oficial |
 | Evidencia y nota del Proyecto Corte 1 | [`evidencias_abet/INSTRUMENTO_ABET_PROYECTO_CORTE_1_CONEXION_KINOVA.docx`](evidencias_abet/INSTRUMENTO_ABET_PROYECTO_CORTE_1_CONEXION_KINOVA.docx) | [`evidencias_abet/INSTRUMENTO_ABET_PROYECTO_CORTE_1_CONEXION_KINOVA.md`](evidencias_abet/INSTRUMENTO_ABET_PROYECTO_CORTE_1_CONEXION_KINOVA.md), representación auxiliar |
+| Proyecto final del tercer corte — pick and place con MoveIt 2, pinza y visión | [`proyectos_evaluables/PROYECTO_FINAL_CORTE_3_PICK_AND_PLACE_MOVEIT.md`](proyectos_evaluables/PROYECTO_FINAL_CORTE_3_PICK_AND_PLACE_MOVEIT.md) | No tiene archivo derivado; esta especificación es la fuente oficial |
+| Evidencia y nota del Proyecto Final Corte 3 | [`evidencias_abet/INSTRUMENTO_ABET_PROYECTO_FINAL_CORTE_3_PICK_AND_PLACE.docx`](evidencias_abet/INSTRUMENTO_ABET_PROYECTO_FINAL_CORTE_3_PICK_AND_PLACE.docx) | [`evidencias_abet/INSTRUMENTO_ABET_PROYECTO_FINAL_CORTE_3_PICK_AND_PLACE.md`](evidencias_abet/INSTRUMENTO_ABET_PROYECTO_FINAL_CORTE_3_PICK_AND_PLACE.md) es la fuente; el Word se regenera con `build_instrumento_proyecto_final_corte3.py` |
 | Actualizaciones y sincronización de base (Corte 1) | [`proyectos_evaluables/ACTUALIZACIONES_BASE_CORTE_1.md`](proyectos_evaluables/ACTUALIZACIONES_BASE_CORTE_1.md) | Sincronización con la rama `upstream/base-latest` mediante script de diagnóstico, ramas y PR |
 
 ## Recursos disponibles
@@ -87,6 +89,7 @@ Para evitar versiones incompatibles, cada responsabilidad debe tener una sola fu
 ### Proyectos y Control de Versiones
 
 - [Proyecto del primer corte — Conexión segura con Kinova Gen3](proyectos_evaluables/PROYECTO_CORTE_1_CONEXION_KINOVA.md).
+- [Proyecto final del tercer corte — Pick and place de la caja de hamburguesa con MoveIt 2, la pinza y la visión del Kinova](proyectos_evaluables/PROYECTO_FINAL_CORTE_3_PICK_AND_PLACE_MOVEIT.md).
 - [Guía de sincronización y actualizaciones de la base oficial (Corte 1)](proyectos_evaluables/ACTUALIZACIONES_BASE_CORTE_1.md).
 - [Guía de configuración de repositorios por equipo y arquitectura multi-remoto](proyectos_evaluables/CONFIGURACION_REPOSITORIOS_EQUIPOS.md).
 - [⭐ Guía Interactiva GitHub Organizations, Trabajo en Equipo y ABET](../git-fundamentals/equipos_organizaciones_abet.html): repositorios privados con historia compartida, ramas individuales `feat/...`, pull requests y entrega identificada por commit SHA.
@@ -103,6 +106,7 @@ Para evitar versiones incompatibles, cada responsabilidad debe tener una sola fu
 - [Instrumento ABET del Laboratorio 04 — MoveIt 2 con ejecución supervisada](evidencias_abet/INSTRUMENTO_ABET_LAB_04_MOVEIT2_EJECUCION_SEGURA.docx).
 - [Instrumento ABET del Laboratorio 05 — TF del dron como telemetría del carrito](evidencias_abet/INSTRUMENTO_ABET_LAB_05_TF_DRON_CARRITO_MICROROS.docx).
 - [Instrumento ABET del Proyecto Corte 1 — Conexión con Kinova](evidencias_abet/INSTRUMENTO_ABET_PROYECTO_CORTE_1_CONEXION_KINOVA.docx).
+- [Instrumento ABET del Proyecto Final Corte 3 — Pick and place con MoveIt 2](evidencias_abet/INSTRUMENTO_ABET_PROYECTO_FINAL_CORTE_3_PICK_AND_PLACE.docx).
 - [Guía de recolección y procesamiento de entregas Word](evidencias_abet/GUIA_RECOLECCION_Y_PROCESAMIENTO_ENTREGAS.md).
 
 ### Administración docente
