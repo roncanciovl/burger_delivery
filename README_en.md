@@ -70,7 +70,7 @@ Or manually:
 ros2 launch burger_description display.launch.py
 ```
 
-![Collaborative cell scene in RViz2 (Kinova Gen3, mobile carts, and TF frames)](visual/escena_rviz_default.jpg)
+![Collaborative cell scene in RViz2 (Kinova Gen3, mobile carts on table, and TF frames)](visual/escena_rviz_default.jpg)
 
 ### 🌐 Network & ROS 2 Telemetry Monitor (Web Dashboard)
 To monitor router-connected devices (AX12), WiFi latency/jitter, DDS domain traffic, and micro-ROS agent status (port 8888) in real-time:

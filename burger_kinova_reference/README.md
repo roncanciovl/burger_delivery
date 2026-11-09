@@ -368,7 +368,7 @@ visión, sin iniciar controladores ni conectarse al robot.
 Cuando el sistema real ya publique `camera_color_frame` y `camera_depth_frame`, omite
 `demo_tf:=true`.
 
-- 🎬 **Video demostrativo:** [`videos/kinova_frames_rgbd_demo.mp4`](videos/kinova_frames_rgbd_demo.mp4) (recorrido de 62 s: contexto 3D, zoom macro de sensores y verificación numérica de extrínsecas).
+- 🎬 **Video demostrativo:** [`videos/kinova_frames_rgbd_demo.mp4`](videos/kinova_frames_rgbd_demo.mp4) (recorrido de 74 s: contexto 3D, zoom macro, cámaras orientadas hacia abajo con nombres de frames visibles y verificación numérica).
 - 🖼️ **Hoja de contactos:** [`videos/contacto_video_final.png`](videos/contacto_video_final.png).
 - 📖 **Guía completa y guion de grabación:** [`DEMO_FRAMES_CAMARA_KINOVA.md`](docs/DEMO_FRAMES_CAMARA_KINOVA.md).
 

@@ -70,7 +70,7 @@ Esto lanza automáticamente:
 - En el panel izquierdo "Global Options" → **Fixed Frame** → Selecciona `map`
 - Verifica que estén habilitados: ✓ RobotModel, ✓ TF
 
-![Escena de visualización base en RViz2](../visual/escena_rviz_default.jpg)
+![Escena de visualización base en RViz2 (Kinova Gen3 y carritos sobre la mesa)](../visual/escena_rviz_default.jpg)
 
 ### Escena del laboratorio con el Kinova real
 

@@ -155,7 +155,7 @@ def generate_launch_description():
             package='tf2_ros',
             executable='static_transform_publisher',
             arguments=[
-                '--x', '0.35', '--y', '0.10', '--z', '0.00',
+                '--x', '0.35', '--y', '0.18', '--z', '0.168',
                 '--roll', '0', '--pitch', '0', '--yaw', '0',
                 '--frame-id', 'tag_mesa',
                 '--child-frame-id', 'tag_carrito1'],
@@ -165,7 +165,7 @@ def generate_launch_description():
             package='tf2_ros',
             executable='static_transform_publisher',
             arguments=[
-                '--x', '0.35', '--y', '-0.10', '--z', '0.00',
+                '--x', '0.35', '--y', '-0.18', '--z', '0.213',
                 '--roll', '0', '--pitch', '0', '--yaw', '0',
                 '--frame-id', 'tag_mesa',
                 '--child-frame-id', 'tag_carrito2'],

@@ -70,7 +70,7 @@ O manualmente:
 ros2 launch burger_description display.launch.py
 ```
 
-![Escena colaborativa en RViz2 (Kinova Gen3, carritos móviles y marcos TF)](visual/escena_rviz_default.jpg)
+![Escena colaborativa en RViz2 (Kinova Gen3, carritos móviles sobre la mesa y marcos TF)](visual/escena_rviz_default.jpg)
 
 ### 🌐 Monitor de Red y Telemetría ROS 2 (Dashboard Web)
 Para supervisar dispositivos conectados al router (AX12), latencia/jitter WiFi, tráfico de dominios DDS y estado del agente micro-ROS (puerto 8888) en tiempo real:

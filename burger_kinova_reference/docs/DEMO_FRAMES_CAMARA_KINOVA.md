@@ -90,15 +90,16 @@ estén sincronizadas, calibradas o correctamente registradas; eso requiere revis
 ## Grabación y video de demostración
 
 Video de demostración generado con esta escena:
-- 🎬 **Video MP4 (62 s, 1080p, H.264):** [`kinova_frames_rgbd_demo.mp4`](../videos/kinova_frames_rgbd_demo.mp4)
+- 🎬 **Video MP4 (74 s, 1080p, H.264):** [`kinova_frames_rgbd_demo.mp4`](../videos/kinova_frames_rgbd_demo.mp4)
 - 🖼️ **Hoja de contactos (previsualización de secuencias):** [`contacto_video_final.png`](../videos/contacto_video_final.png)
 
 ![Secuencia de la demostración visual](../videos/contacto_video_final.png)
 
-Es una demostración offline y explicativa de las extrínsecas nominales en tres secuencias:
-1. **0–18 s:** Contexto general del manipulador Kinova Gen3 de 6 GDL y ubicación del módulo de visión en la muñeca.
-2. **18–44 s:** Vista macro y zoom hacia los marcos ópticos `camera_color_frame` y `camera_depth_frame` sobre la rejilla métrica de 1 cm.
-3. **44–62 s:** Inspección de la traslación nominal con `tf2_echo` ($\Delta x = 19.5\text{ mm}$, $\Delta y = 5.0\text{ mm}$, rotación identidad).
+Es una demostración offline y explicativa de las extrínsecas nominales estructurada en cuatro secuencias principales:
+1. **0–18 s:** Contexto inicial en terminal y visualización física del manipulador Kinova Gen3 de 6 GDL con el módulo de visión en la muñeca.
+2. **18–46 s:** Vista macro y geometría de extrínsecas sobre rejilla métrica de 1 cm con inspección multi-ángulo 3D.
+3. **46–58 s:** **Cámaras orientadas hacia abajo (visión cenital / supervisión de mesa):** pose de operación para pick-and-place con los ejes ópticos $Z$ dirigidos verticalmente al plano de trabajo, mostrando los frames `camera_link`, `camera_color_frame` y `camera_depth_frame` con sus nombres y ejes tridimensionales claramente legibles.
+4. **58–74 s:** Evidencia numérica en terminal con `tf2_echo` ($\Delta x = 19.5\text{ mm}$, $\Delta y = 5.0\text{ mm}$, rotación identidad) y conclusiones críticas de ingeniería sobre calibración y pipeline RGB-D.
 
 ### Grabación manual en esta estación WSL
 
