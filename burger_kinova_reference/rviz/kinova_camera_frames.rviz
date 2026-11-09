@@ -1,0 +1,170 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /Global Options1
+        - /TF de la cámara1
+      Splitter Ratio: 0.55
+    Tree Height: 520
+  - Class: rviz_common/Views
+    Name: Views
+    Expanded:
+      - /Current View1
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Alpha: 0.35
+      Cell Size: 0.01
+      Class: rviz_default_plugins/Grid
+      Color: 120; 120; 120
+      Enabled: true
+      Line Style:
+        Line Width: 0.01
+        Value: Lines
+      Name: Rejilla de 1 cm
+      Normal Cell Count: 0
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Plane: XY
+      Plane Cell Count: 10
+      Reference Frame: camera_link
+      Value: true
+    - Alpha: 0.7
+      Class: rviz_default_plugins/RobotModel
+      Collision Enabled: false
+      Description File: ""
+      Description Source: Topic
+      Description Topic:
+        Depth: 5
+        Durability Policy: Transient Local
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /robot_description
+      Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+      Mass Properties:
+        Inertia: false
+        Mass: false
+      Name: Mesh Kinova Gen3
+      TF Prefix: ""
+      Update Interval: 0
+      Value: true
+      Visual Enabled: true
+    - Class: rviz_default_plugins/TF
+      Enabled: true
+      Filter (blacklist): ""
+      Filter (whitelist): camera_link|camera_color_frame|camera_depth_frame
+      Frame Timeout: 15
+      Frames:
+        All Enabled: false
+        camera_color_frame:
+          Value: true
+        camera_depth_frame:
+          Value: true
+        camera_link:
+          Value: true
+        demo_base_link:
+          Value: false
+        demo_bicep_link:
+          Value: false
+        demo_bracelet_link:
+          Value: false
+        demo_camera_color_frame:
+          Value: false
+        demo_camera_depth_frame:
+          Value: false
+        demo_camera_link:
+          Value: false
+        demo_end_effector_link:
+          Value: false
+        demo_forearm_link:
+          Value: false
+        demo_shoulder_link:
+          Value: false
+        demo_spherical_wrist_1_link:
+          Value: false
+        demo_spherical_wrist_2_link:
+          Value: false
+        demo_tool_frame:
+          Value: false
+        world:
+          Value: false
+      Marker Scale: 0.05
+      Name: TF de la cámara
+      Show Arrows: true
+      Show Axes: false
+      Show Names: false
+      Value: true
+    - Class: rviz_default_plugins/Axes
+      Enabled: true
+      Length: 0.04
+      Name: Ejes RGB
+      Radius: 0.002
+      Reference Frame: camera_color_frame
+      Value: true
+    - Class: rviz_default_plugins/Axes
+      Enabled: true
+      Length: 0.04
+      Name: Ejes profundidad
+      Radius: 0.002
+      Reference Frame: camera_depth_frame
+      Value: true
+  Enabled: true
+  Global Options:
+    Background Color: 28; 32; 38
+    Fixed Frame: camera_link
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz_default_plugins/Interact
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+    - Class: rviz_default_plugins/FocusCamera
+    - Class: rviz_default_plugins/Measure
+      Line color: 255; 220; 0
+  Transformation:
+    Current:
+      Class: rviz_default_plugins/TF
+  Value: true
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 1.4
+      Enable Stereo Rendering:
+        Stereo Eye Separation: 0.06
+        Stereo Focal Distance: 1
+        Swap Stereo Eyes: false
+        Value: false
+      Focal Point:
+        X: -0.00975
+        Y: -0.0025
+        Z: -0.58
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.005
+      Invert Z Axis: false
+      Name: Vista cámara y robot
+      Near Clip Distance: 0.001
+      Pitch: 0.45
+      Target Frame: camera_link
+      Value: Orbit (rviz)
+      Yaw: 0.8
+    Saved: ~
+Window Geometry:
+  Displays:
+    collapsed: false
+  Height: 720
+  Hide Left Dock: false
+  Hide Right Dock: true
+  Views:
+    collapsed: false
+  Width: 1280
+  X: 40
+  Y: 40

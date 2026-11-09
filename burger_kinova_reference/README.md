@@ -353,6 +353,25 @@ La validación y el visor compatible se explican en
 Esa sección también conserva un comando de compatibilidad que usa únicamente el package
 oficial `kinova_vision`, para estaciones que todavía no tengan este launch actualizado.
 
+### 6.6. Frames RGB y profundidad en RViz
+
+Para ensayar sin robot, usando las extrínsecas nominales del driver oficial:
+
+```bash
+ros2 launch burger_kinova_reference kinova_camera_frames_rviz.launch.py \
+  demo_tf:=true
+```
+
+El modo de demostración carga además el mesh oficial del Gen3 de 6 GDL con su módulo de
+visión, sin iniciar controladores ni conectarse al robot.
+
+Cuando el sistema real ya publique `camera_color_frame` y `camera_depth_frame`, omite
+`demo_tf:=true`.
+
+- 🎬 **Video demostrativo:** [`videos/kinova_frames_rgbd_demo.mp4`](videos/kinova_frames_rgbd_demo.mp4) (recorrido de 62 s: contexto 3D, zoom macro de sensores y verificación numérica de extrínsecas).
+- 🖼️ **Hoja de contactos:** [`videos/contacto_video_final.png`](videos/contacto_video_final.png).
+- 📖 **Guía completa y guion de grabación:** [`DEMO_FRAMES_CAMARA_KINOVA.md`](docs/DEMO_FRAMES_CAMARA_KINOVA.md).
+
 ---
 
 ## 7. Cómo interpretar `/burger/kinova/diagnostics`
@@ -713,12 +732,14 @@ burger_kinova_reference/
 │   └── flight_recorder.py          # caja negra: búfer circular y volcado post-mortem
 ├── launch/
 │   ├── kinova_connection.launch.py
+│   ├── kinova_camera_frames_rviz.launch.py  # extrínsecas RGB-D en vista macro
 │   ├── moveit_planificacion.launch.py      # move_group sin ejecución + RViz + escena
 │   └── kinova_vision_compressed.launch.py  # cámara sin publicador image_raw
 ├── config/kinova_connection.yaml
 ├── config/metas_moveit.yaml        # metas del Laboratorio 04
 ├── docs/
 │   ├── TEORIA_LOGGING_ROS2.md      # teoría del subsistema de logging de ROS 2
+│   ├── DEMO_FRAMES_CAMARA_KINOVA.md  # RViz y guion de grabación RGB-D
 │   ├── VALIDACION_CORTE_1.md       # registro de las pruebas de aceptación
 │   └── EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md   # A/B del enlace sobre el robot real
 ├── scripts/

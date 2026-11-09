@@ -22,6 +22,12 @@
   <exec_depend>std_srvs</exec_depend>
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>joint_state_publisher</exec_depend>
+  <exec_depend>xacro</exec_depend>
+  <exec_depend>kortex_description</exec_depend>
 
   <!-- MoveIt 2 (Laboratorio 04): planificación en move_group, ejecución en este package.
        moveit_safe_executor y escena_moveit usan los mensajes; el launch
@@ -41,7 +47,7 @@
   <!-- Driver oficial de Kinova: sólo se necesita cuando start_driver:=true -->
   <exec_depend>kortex_bringup</exec_depend>
 
-  <!-- Cámara de color con publicación exclusiva mediante image_transport -->
+  <!-- Cámara y visualización de sus extrínsecas -->
   <exec_depend>kinova_vision</exec_depend>
   <exec_depend>compressed_image_transport</exec_depend>
 

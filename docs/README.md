@@ -64,3 +64,4 @@ docs/
 - [**Mejoras de Movimiento y Ghost Visualizer**](manipulation/MEJORAS_MOVIMIENTO_KINOVA.md): Técnicas de mitigación de latencia y visualización de trayectorias.
 - [**Pruebas de Movimiento y Coordenadas Cartesianas CLI**](manipulation/PRUEBAS_MOVIMIENTO.md): Validación cinemática y límites articulares.
 - [**Tipos de Joints y Cinemática**](manipulation/joints.md): Análisis cinemático de articulaciones en ROS 2.
+- [**Demostración Visual TF: Sensores RGB-D Kinova Gen3**](../burger_kinova_reference/docs/DEMO_FRAMES_CAMARA_KINOVA.md): Verificación geométrica de extrínsecas nominales (`camera_link` a `camera_color_frame` y `camera_depth_frame`) con [video MP4](../burger_kinova_reference/videos/kinova_frames_rgbd_demo.mp4).

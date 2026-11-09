@@ -70,6 +70,8 @@ O manualmente:
 ros2 launch burger_description display.launch.py
 ```
 
+![Escena colaborativa en RViz2 (Kinova Gen3, carritos móviles y marcos TF)](visual/escena_rviz_default.jpg)
+
 ### 🌐 Monitor de Red y Telemetría ROS 2 (Dashboard Web)
 Para supervisar dispositivos conectados al router (AX12), latencia/jitter WiFi, tráfico de dominios DDS y estado del agente micro-ROS (puerto 8888) en tiempo real:
 
@@ -129,6 +131,7 @@ burger_delivery/
 - [**Visualizador Web URDF**](docs/architecture/VISUALIZAR_URDF_WEB.md)
 
 ### 🦾 3. Manipulación y Movimiento (Kinova & MoveIt 2)
+- [⭐ **Paquete de Referencia, Telemetría y Operación Segura (`burger_kinova_reference`)**](burger_kinova_reference/README.md)
 - [**Marco Conceptual MoveIt 2**](docs/manipulation/MARCO_CONCEPTUAL_MOVEIT2.md)
 - [**Mejoras de Movimiento MTC y Ghost Visualizer**](docs/manipulation/MEJORAS_MOVIMIENTO_KINOVA.md)
 - [**Pruebas de Movimiento y Coordenadas Cartesianas CLI**](docs/manipulation/PRUEBAS_MOVIMIENTO.md)
@@ -137,6 +140,7 @@ burger_delivery/
 
 ### 👁️ 4. Visión Computacional y Localización
 - [⭐ **Arquitectura del Sistema de Localización AprilTag**](vision_setup/LOCALIZACION_APRILTAG.md) *(Árbol TF dinámico y cancelación de perspectiva)*
+- [🎬 **Demostración Visual TF: Sensores RGB-D Kinova Gen3**](burger_kinova_reference/docs/DEMO_FRAMES_CAMARA_KINOVA.md) *(Extrínsecas nominales `camera_link → camera_color_frame / camera_depth_frame`; [video MP4](burger_kinova_reference/videos/kinova_frames_rgbd_demo.mp4))*
 - [**Verificación y Diagnóstico de Cámara Nativa**](vision_setup/VERIFICACION_CAMARA.md)
 - [**Aislamiento de Latencia Visual (TCP vs ROS 2)**](vision_setup/DIAGNOSTICO_RED_VISION.md)
 
