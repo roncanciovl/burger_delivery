@@ -1095,6 +1095,8 @@ desplazó la caja unos centímetros; lo que cambió fue la luz:
 | 13:28 | Mancha de sol a un lado | 10.8 % | 8.6 % | 11.0 % | 59 | 241.1 × 312.5 mm |
 | 13:39 | Pareja | 0.4 % | 13.6 % | 11.1 % | 27 | **240.4 × 302.8 mm** |
 | 13:47 | Sombra sobre dos tercios de la caja | 4.7 % | **50.8 %** | **18.2 %** | **135** | **297.7 × 319.1 mm** |
+| 13:52 | Mesa movida fuera del sol; zona muy clara junto a la caja | 15.6 % | 18.7 % | 10.1 % | 27 | 245.9 × 317.7 mm |
+| 13:55 | Mesa fuera del sol, luz pareja | **0.0 %** | 13.2 % | — | — | **237.7 × 304.1 mm** |
 
 Con luz pareja, la tapa midió lo que mide, con menos de 0.5 mm de error. Con la sombra, el ruido de
 la profundidad se sumó al contorno de la tapa como si fuera parte de la caja, y un lado salió 24 %
@@ -1128,8 +1130,13 @@ El verificador mide el movimiento como desplazamiento de la imagen, no como dife
 así que un cambio de luz no se confunde con un movimiento de la cámara. Lo que **no** hace es
 detectar la mala iluminación por sí mismo. Solo la delata indirectamente, con `NO CONCLUYENTE`.
 
-**Lo que no se midió.** Aún no se repitió la medición con la cortina cerrada, ni se comparó la luz
-artificial sola con la luz del día difusa.
+Con la mesa fuera del sol (13:55), la medida volvió a cuadrar con 1 % de error, y el verificador
+pudo dar un veredicto por primera vez. A las 13:52, con una zona muy clara aún junto a la caja, el
+lado largo salió 5 % más largo. Las dos capturas con luz pareja (13:39 y 13:55) dan una idea de la
+repetibilidad: unos 2 mm en el lado corto y 2 mm en el largo.
+
+**Lo que no se midió.** No se probó con la cortina cerrada (la solución fue mover la mesa), ni se
+comparó la luz artificial sola con la luz del día difusa.
 
 ---
 
