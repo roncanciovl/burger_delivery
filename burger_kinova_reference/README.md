@@ -43,6 +43,7 @@ negra** descrito en [`docs/TEORIA_LOGGING_ROS2.md`](docs/TEORIA_LOGGING_ROS2.md)
 | `rcl_interfaces`, `std_srvs` | ROS 2 Jazzy | Parámetros en caliente y servicios de la caja negra |
 | `launch`, `launch_ros` | ROS 2 Jazzy | Launch unificado |
 | `kortex_bringup` | [`ros2_kortex`](https://github.com/Kinovarobotics/ros2_kortex) | Sólo cuando `start_driver:=true` |
+| `kinova_vision`, `compressed_image_transport` | Kinova / ROS 2 Jazzy | Cámara de color sin publicar `image_raw` |
 | `rosbag2_py`, `rosbag2_storage_mcap`, `rqt_console` | ROS 2 Jazzy | Evidencia y análisis post-mortem |
 
 MoveIt 2 **no** es dependencia de este package: la planeación cartesiana está fuera del
@@ -307,6 +308,10 @@ ros2 launch burger_kinova_reference kinova_connection.launch.py \
 La IP anterior es un ejemplo del laboratorio: ajústala a la configuración verificada el
 día de la práctica.
 
+Con `launch_scene:=true` se abre además la escena del laboratorio (mesa, carritos, tags y
+cámara cenital) con la pose real del brazo. Es `burger_description/launch/display.launch.py`
+con `robot_real:=true`; ver el README de `burger_description`.
+
 ### 6.3. Monitor como cliente en una segunda estación
 
 ```bash
@@ -326,6 +331,46 @@ ros2 run burger_kinova_reference safe_trajectory_client --ros-args \
   --params-file $(ros2 pkg prefix burger_kinova_reference)/share/burger_kinova_reference/config/kinova_connection.yaml \
   -p dry_run:=true
 ```
+
+### 6.5. Cámara del Kinova: sólo imagen comprimida
+
+En la estación conectada al robot:
+
+```bash
+ros2 launch burger_kinova_reference kinova_vision_compressed.launch.py
+```
+
+El launch usa por defecto `device:=192.168.1.10` y publica únicamente
+`/camera/color/image_raw/compressed`; no anuncia `/camera/color/image_raw`. Para otra IP:
+
+```bash
+ros2 launch burger_kinova_reference kinova_vision_compressed.launch.py \
+  device:=<ip_del_kinova>
+```
+
+La validación y el visor compatible se explican en
+[`TROUBLESHOOTING.md` §3.5](../TROUBLESHOOTING.md#35-el-launch-estándar-anuncia-image_raw-lanzar-sólo-la-imagen-comprimida).
+Esa sección también conserva un comando de compatibilidad que usa únicamente el package
+oficial `kinova_vision`, para estaciones que todavía no tengan este launch actualizado.
+
+### 6.6. Frames RGB y profundidad en RViz
+
+Para ensayar sin robot, usando las extrínsecas nominales del driver oficial:
+
+```bash
+ros2 launch burger_kinova_reference kinova_camera_frames_rviz.launch.py \
+  demo_tf:=true
+```
+
+El modo de demostración carga además el mesh oficial del Gen3 de 6 GDL con su módulo de
+visión, sin iniciar controladores ni conectarse al robot.
+
+Cuando el sistema real ya publique `camera_color_frame` y `camera_depth_frame`, omite
+`demo_tf:=true`.
+
+- 🎬 **Video demostrativo:** [`videos/kinova_frames_rgbd_demo.mp4`](videos/kinova_frames_rgbd_demo.mp4) (recorrido de 74 s: contexto 3D, zoom macro, cámaras orientadas hacia abajo con nombres de frames visibles y verificación numérica).
+- 🖼️ **Hoja de contactos:** [`videos/contacto_video_final.png`](videos/contacto_video_final.png).
+- 📖 **Guía completa y guion de grabación:** [`DEMO_FRAMES_CAMARA_KINOVA.md`](docs/DEMO_FRAMES_CAMARA_KINOVA.md).
 
 ---
 
@@ -597,7 +642,71 @@ entorno y observaciones.
 
 ---
 
-## 13. Estructura del package
+## 13. MoveIt 2: planificar con MoveIt, ejecutar con este package
+
+Desde el Laboratorio 04 el package también es la **puerta de ejecución de MoveIt 2**.
+`move_group` se lanza con `allow_trajectory_execution: false`: planifica, pero no puede
+mover el robot (tampoco con el botón *Execute* de RViz). Cada plan pasa por
+`moveit_safe_executor`, que aplica las mismas reglas que los clientes anteriores más las
+propias de una trayectoria completa.
+
+```mermaid
+flowchart LR
+    D[burger_description<br/>escena de la celda] -->|mesa como obstáculo| E[escena_moveit]
+    E --> MG[move_group<br/>sólo planifica]
+    M[metas_moveit.yaml<br/>o botón Plan de RViz] --> X[moveit_safe_executor]
+    X -->|pide plan desde la pose medida| MG
+    MG -->|trayectoria| X
+    X -->|valida y, si pasa, envía| JTC[joint_trajectory_controller]
+    JS[/joint_states/] --> X
+```
+
+| Pieza | Qué hace |
+| :--- | :--- |
+| `launch/moveit_planificacion.launch.py` | `move_group` sin ejecución, RViz y la escena. **No** lanza el driver |
+| `escena_moveit` | Carga en MoveIt las cajas de colisión de `burger_description` (por defecto, `table_link`). Se niega si alguna invade la base del robot |
+| `moveit_safe_executor` | Planifica cada meta desde la pose medida, valida la trayectoria, pide confirmación, la ejecuta y la vigila |
+| `config/metas_moveit.yaml` | Metas articulares, poses en marcos de `burger_description` (`tag_mesa`...), tramos cartesianos y pinza |
+| `trajectory_validation.py` | Reglas sobre la trayectoria completa (lógica pura, con pruebas) |
+| `escena_urdf.py`, `metas_moveit.py` | Lectura de la escena y de las metas (lógica pura, con pruebas) |
+
+**Reglas que se aplican a cada plan** (`config/kinova_connection.yaml`, sección MoveIt):
+el primer punto coincide con la pose medida (`start_tolerance_rad`), todos los puntos
+están dentro de `joint_min_rad`/`joint_max_rad`, la velocidad entre puntos y la declarada
+no superan `max_velocity_rad_s`, no hay saltos de 2π en articulaciones continuas, el
+recorrido acumulado y la duración están acotados, la telemetría está fresca y
+`enable_motion` está habilitado. `max_joint_delta_rad` no se aplica: limita una meta única
+cercana, y un plan puede recorrer más de un radián rodeando la mesa.
+
+**Durante la ejecución**, si `/joint_states` vence se cancela la meta, y Ctrl+C también
+cancela la trayectoria en curso antes de cerrar (el controlador detiene el brazo).
+
+```bash
+# Terminal 1 — sin robot: driver en modo fake (con robot, lo tiene la anfitriona)
+ros2 launch burger_kinova_reference kinova_connection.launch.py \
+    start_driver:=true robot_ip:=0.0.0.0 use_fake_hardware:=true
+# Terminal 2 — MoveIt sólo planificación + mesa de burger_description
+ros2 launch burger_kinova_reference moveit_planificacion.launch.py
+# Terminal 3 — ejecutor (modo seco por defecto: planifica y valida, no mueve)
+SHARE=$(ros2 pkg prefix burger_kinova_reference)/share/burger_kinova_reference
+ros2 run burger_kinova_reference moveit_safe_executor --ros-args \
+    --params-file $SHARE/config/kinova_connection.yaml \
+    -p goals_file:=$SHARE/config/metas_moveit.yaml
+# ... y para ejecutar: -p dry_run:=false -p enable_motion:=true
+# Modo RViz: -p source:=rviz y planificar con el botón Plan del panel MotionPlanning
+```
+
+Códigos de salida: `0` éxito · `1` bloqueado por seguridad · `2` infraestructura (sin
+telemetría, sin controlador, telemetría perdida durante el movimiento) · `3` rechazado o
+abortado por el controlador · `4` MoveIt no encontró plan. Con `-p report_file:=<ruta>`
+cada plan queda registrado en una línea JSON (validación, recorrido, resultado).
+
+El procedimiento completo, con ejercicios, está en la
+[Guía de Laboratorio 04](../education/guias_laboratorio/GUIA_LAB_04_MOVEIT2_EJECUCION_SEGURA.md).
+
+---
+
+## 14. Estructura del package
 
 ```text
 burger_kinova_reference/
@@ -609,16 +718,28 @@ burger_kinova_reference/
 │   ├── __init__.py
 │   ├── kinova_monitor.py           # nodo monitor y publicador de diagnóstico
 │   ├── safe_trajectory_client.py   # cliente de acción con validación de seguridad
+│   ├── safe_sequence_client.py     # secuencia articular revalidada punto a punto
+│   ├── moveit_safe_executor.py     # MoveIt planifica, este nodo valida y ejecuta
+│   ├── escena_moveit.py            # mesa de burger_description como obstáculo de MoveIt
+│   ├── trajectory_validation.py    # reglas sobre una trayectoria completa (lógica pura)
+│   ├── escena_urdf.py              # lectura de la escena sin ROS (lógica pura)
+│   ├── metas_moveit.py             # metas del ejecutor desde YAML (lógica pura)
 │   ├── link_metrics.py             # métricas y clasificación del enlace (lógica pura)
 │   ├── station_identity.py         # ¿es esta máquina la anfitriona del driver?
 │   ├── station_announcer.py        # lo anuncia por broadcast al monitor del lab
 │   ├── safety.py                   # validación de metas y configuración (lógica pura)
 │   ├── logging_support.py          # niveles, throttling, nivel dinámico, transiciones
 │   └── flight_recorder.py          # caja negra: búfer circular y volcado post-mortem
-├── launch/kinova_connection.launch.py
+├── launch/
+│   ├── kinova_connection.launch.py
+│   ├── kinova_camera_frames_rviz.launch.py  # extrínsecas RGB-D en vista macro
+│   ├── moveit_planificacion.launch.py      # move_group sin ejecución + RViz + escena
+│   └── kinova_vision_compressed.launch.py  # cámara sin publicador image_raw
 ├── config/kinova_connection.yaml
+├── config/metas_moveit.yaml        # metas del Laboratorio 04
 ├── docs/
 │   ├── TEORIA_LOGGING_ROS2.md      # teoría del subsistema de logging de ROS 2
+│   ├── DEMO_FRAMES_CAMARA_KINOVA.md  # RViz y guion de grabación RGB-D
 │   ├── VALIDACION_CORTE_1.md       # registro de las pruebas de aceptación
 │   └── EXPERIMENTO_ENLACE_WIFI_VS_ETHERNET.md   # A/B del enlace sobre el robot real
 ├── scripts/
@@ -634,7 +755,7 @@ sin robot ni grafo ROS 2 activo.
 
 ---
 
-## 14. Licencia
+## 15. Licencia
 
 Apache-2.0. Parte del proyecto educativo `burger_delivery` — Universidad Militar Nueva
 Granada.

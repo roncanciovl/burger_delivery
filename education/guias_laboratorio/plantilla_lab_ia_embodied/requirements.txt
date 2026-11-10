@@ -1,0 +1,6 @@
+# Instalar DENTRO de un entorno virtual creado con --system-site-packages (ver README.md).
+# OpenCV NO va aquí: el de pip no trae GStreamer y sin él no abre el stream de
+# profundidad del Kinova. Use el de Ubuntu: sudo apt install python3-opencv
+google-genai>=2.0,<3   # probado con 2.25
+numpy
+pytest

@@ -11,6 +11,7 @@ Bienvenido a la sección de **documentación técnica, papers y reportes de inve
 
 ```text
 docs/
+├── INICIO_DESDE_CERO.md         # Ruta de inicio: de cero al primer movimiento del Kinova
 ├── research/                    # Experimentos, benchmarks e investigación en IA y Redes
 │   ├── EXPERIMENTO_IA_LOCALIZACION_GEMINI.md
 │   ├── EXPERIMENTO_IA_LOCALIZACION_GEMINI.pdf
@@ -32,6 +33,12 @@ docs/
     ├── PRUEBAS_MOVIMIENTO.md
     └── joints.md
 ```
+
+---
+
+## 🧭 Para empezar
+
+- [**Ruta de inicio desde cero**](INICIO_DESDE_CERO.md): Antigravity y Ubuntu en WSL, instalación, compilación, robot simulado y primer movimiento real del Kinova Gen3 con `burger_kinova_reference`, en diez etapas verificables.
 
 ---
 
@@ -57,3 +64,4 @@ docs/
 - [**Mejoras de Movimiento y Ghost Visualizer**](manipulation/MEJORAS_MOVIMIENTO_KINOVA.md): Técnicas de mitigación de latencia y visualización de trayectorias.
 - [**Pruebas de Movimiento y Coordenadas Cartesianas CLI**](manipulation/PRUEBAS_MOVIMIENTO.md): Validación cinemática y límites articulares.
 - [**Tipos de Joints y Cinemática**](manipulation/joints.md): Análisis cinemático de articulaciones en ROS 2.
+- [**Demostración Visual TF: Sensores RGB-D Kinova Gen3**](../burger_kinova_reference/docs/DEMO_FRAMES_CAMARA_KINOVA.md): Verificación geométrica de extrínsecas nominales (`camera_link` a `camera_color_frame` y `camera_depth_frame`) con [video MP4](../burger_kinova_reference/videos/kinova_frames_rgbd_demo.mp4).

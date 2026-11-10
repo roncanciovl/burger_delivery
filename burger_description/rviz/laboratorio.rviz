@@ -1,0 +1,487 @@
+Panels:
+- Class: rviz_common/Displays
+  Help Height: 70
+  Name: Displays
+  Property Tree Widget:
+    Expanded:
+    - /Global Options1
+    - /Status1
+    - /RobotModel1
+    - /TF1
+    Splitter Ratio: 0.5
+  Tree Height: 70
+- Class: rviz_common/Selection
+  Name: Selection
+- Class: rviz_common/Tool Properties
+  Expanded:
+  - /2D Goal Pose1
+  - /Publish Point1
+  Name: Tool Properties
+  Splitter Ratio: 0.5886790156364441
+- Class: rviz_common/Views
+  Expanded:
+  - /Current View1
+  Name: Views
+  Splitter Ratio: 0.5
+Visualization Manager:
+  Class: ''
+  Displays:
+  - Alpha: 0.5
+    Cell Size: 1
+    Class: rviz_default_plugins/Grid
+    Color: 160; 160; 164
+    Enabled: true
+    Line Style:
+      Line Width: 0.029999999329447746
+      Value: Lines
+    Name: Grid
+    Normal Cell Count: 0
+    Offset:
+      X: 0
+      Y: 0
+      Z: 0
+    Plane: XY
+    Plane Cell Count: 10
+    Reference Frame: <Fixed Frame>
+    Value: true
+  - Alpha: 1
+    Class: rviz_default_plugins/RobotModel
+    Collision Enabled: false
+    Description File: ''
+    Description Source: Topic
+    Description Topic:
+      Depth: 5
+      Durability Policy: Transient Local
+      History Policy: Keep Last
+      Reliability Policy: Reliable
+      Value: /scene/robot_description
+    Enabled: true
+    Links:
+      All Links Enabled: true
+      Expand Joint Details: false
+      Expand Link Details: false
+      Expand Tree: false
+      Link Tree Style: Links in Alphabetic Order
+      car1_Base_rueda_castor_Link:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+        Value: true
+      car1_Rueda_castor_Link:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+        Value: true
+      car1_Rueda_derecha_Link:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+        Value: true
+      car1_Rueda_izquierda_Link:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+        Value: true
+      car1_base_link:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+        Value: true
+      car2_base_link:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+        Value: true
+      car2_wheel1:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+        Value: true
+      car2_wheel2:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+        Value: true
+      car2_wheel3:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+        Value: true
+      car2_wheel4:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+        Value: true
+      delivery_slot_1:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+        Value: true
+      gen3_base_link:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+        Value: true
+      gen3_bracelet_link:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+        Value: true
+      gen3_end_effector_link:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+      gen3_forearm_link:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+        Value: true
+      gen3_bicep_link:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+        Value: true
+      gen3_robotiq_85_base_link:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+        Value: true
+      gen3_robotiq_85_left_finger_link:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+        Value: true
+      gen3_robotiq_85_left_finger_tip_link:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+        Value: true
+      gen3_robotiq_85_left_inner_knuckle_link:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+        Value: true
+      gen3_robotiq_85_left_knuckle_link:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+        Value: true
+      gen3_robotiq_85_right_finger_link:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+        Value: true
+      gen3_robotiq_85_right_finger_tip_link:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+        Value: true
+      gen3_robotiq_85_right_inner_knuckle_link:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+        Value: true
+      gen3_robotiq_85_right_knuckle_link:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+        Value: true
+      gen3_shoulder_link:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+        Value: true
+      gen3_spherical_wrist_1_link:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+        Value: true
+      gen3_spherical_wrist_2_link:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+        Value: true
+      map:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+        Value: true
+      staging_area:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+        Value: true
+      table_link:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+        Value: true
+      world:
+        Alpha: 1
+        Show Axes: false
+        Show Trail: false
+    Mass Properties:
+      Inertia: false
+      Mass: false
+    Name: RobotModel
+    TF Prefix: ''
+    Update Interval: 0
+    Value: true
+    Visual Enabled: true
+  - Class: rviz_default_plugins/MarkerArray
+    Enabled: true
+    Name: ColisionMesa
+    Namespaces:
+      table_link: true
+    Topic:
+      Depth: 5
+      Durability Policy: Transient Local
+      History Policy: Keep Last
+      Reliability Policy: Reliable
+      Value: /scene/collision_markers
+    Value: true
+  - Alpha: 1
+    Class: rviz_default_plugins/RobotModel
+    Collision Enabled: false
+    Description File: ''
+    Description Source: Topic
+    Description Topic:
+      Depth: 5
+      Durability Policy: Transient Local
+      History Policy: Keep Last
+      Reliability Policy: Reliable
+      Value: /car1/robot_description
+    Enabled: true
+    Links:
+      All Links Enabled: true
+      Expand Joint Details: false
+      Expand Link Details: false
+      Expand Tree: false
+      Link Tree Style: Links in Alphabetic Order
+    Mass Properties:
+      Inertia: false
+      Mass: false
+    Name: Car1Model
+    TF Prefix: ''
+    Update Interval: 0
+    Value: true
+    Visual Enabled: true
+  - Alpha: 1
+    Class: rviz_default_plugins/RobotModel
+    Collision Enabled: false
+    Description File: ''
+    Description Source: Topic
+    Description Topic:
+      Depth: 5
+      Durability Policy: Transient Local
+      History Policy: Keep Last
+      Reliability Policy: Reliable
+      Value: /car2/robot_description
+    Enabled: true
+    Links:
+      All Links Enabled: true
+      Expand Joint Details: false
+      Expand Link Details: false
+      Expand Tree: false
+      Link Tree Style: Links in Alphabetic Order
+    Mass Properties:
+      Inertia: false
+      Mass: false
+    Name: Car2Model
+    TF Prefix: ''
+    Update Interval: 0
+    Value: true
+    Visual Enabled: true
+  - Class: rviz_default_plugins/TF
+    Enabled: false
+    Filter (blacklist): ''
+    Filter (whitelist): ''
+    Frame Timeout: 15
+    Frames:
+      All Enabled: true
+      car1_Base_rueda_castor_Link:
+        Value: true
+      car1_Rueda_castor_Link:
+        Value: true
+      car1_Rueda_derecha_Link:
+        Value: true
+      car1_Rueda_izquierda_Link:
+        Value: true
+      car1_base_link:
+        Value: true
+      car2_base_link:
+        Value: true
+      car2_wheel1:
+        Value: true
+      car2_wheel2:
+        Value: true
+      car2_wheel3:
+        Value: true
+      car2_wheel4:
+        Value: true
+      delivery_slot_1:
+        Value: true
+      gen3_base_link:
+        Value: true
+      gen3_bracelet_link:
+        Value: true
+      gen3_end_effector_link:
+        Value: true
+      gen3_forearm_link:
+        Value: true
+      gen3_bicep_link:
+        Value: true
+      gen3_robotiq_85_base_link:
+        Value: true
+      gen3_robotiq_85_left_finger_link:
+        Value: true
+      gen3_robotiq_85_left_finger_tip_link:
+        Value: true
+      gen3_robotiq_85_left_inner_knuckle_link:
+        Value: true
+      gen3_robotiq_85_left_knuckle_link:
+        Value: true
+      gen3_robotiq_85_right_finger_link:
+        Value: true
+      gen3_robotiq_85_right_finger_tip_link:
+        Value: true
+      gen3_robotiq_85_right_inner_knuckle_link:
+        Value: true
+      gen3_robotiq_85_right_knuckle_link:
+        Value: true
+      gen3_shoulder_link:
+        Value: true
+      gen3_spherical_wrist_1_link:
+        Value: true
+      gen3_spherical_wrist_2_link:
+        Value: true
+      map:
+        Value: true
+      staging_area:
+        Value: true
+      table_link:
+        Value: true
+      world:
+        Value: true
+    Marker Scale: 1
+    Name: TF
+    Show Arrows: true
+    Show Axes: false
+    Show Names: false
+    Tree:
+      map:
+        staging_area:
+          delivery_slot_1: {}
+        table_link:
+          car1_base_link:
+            car1_Base_rueda_castor_Link:
+              car1_Rueda_castor_Link: {}
+            car1_Rueda_derecha_Link: {}
+            car1_Rueda_izquierda_Link: {}
+          car2_base_link:
+            car2_wheel1: {}
+            car2_wheel2: {}
+            car2_wheel3: {}
+            car2_wheel4: {}
+          world:
+            gen3_base_link:
+              gen3_shoulder_link:
+                gen3_bicep_link:
+                  gen3_forearm_link:
+                    gen3_spherical_wrist_1_link:
+                      gen3_spherical_wrist_2_link:
+                        gen3_bracelet_link:
+                          gen3_end_effector_link:
+                            gen3_robotiq_85_base_link:
+                              gen3_robotiq_85_left_inner_knuckle_link: {}
+                              gen3_robotiq_85_left_knuckle_link:
+                                gen3_robotiq_85_left_finger_link:
+                                  gen3_robotiq_85_left_finger_tip_link: {}
+                              gen3_robotiq_85_right_inner_knuckle_link: {}
+                              gen3_robotiq_85_right_knuckle_link:
+                                gen3_robotiq_85_right_finger_link:
+                                  gen3_robotiq_85_right_finger_tip_link: {}
+    Update Interval: 0
+    Value: false
+  Enabled: true
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: map
+    Frame Rate: 30
+  Name: root
+  Tools:
+  - Class: rviz_default_plugins/Interact
+    Hide Inactive Objects: true
+  - Class: rviz_default_plugins/MoveCamera
+  - Class: rviz_default_plugins/Select
+  - Class: rviz_default_plugins/FocusCamera
+  - Class: rviz_default_plugins/Measure
+    Line color: 128; 128; 0
+  - Class: rviz_default_plugins/SetInitialPose
+    Covariance x: 0.25
+    Covariance y: 0.25
+    Covariance yaw: 0.06853891909122467
+    Topic:
+      Depth: 5
+      Durability Policy: Volatile
+      History Policy: Keep Last
+      Reliability Policy: Reliable
+      Value: /initialpose
+  - Class: rviz_default_plugins/SetGoal
+    Topic:
+      Depth: 5
+      Durability Policy: Volatile
+      History Policy: Keep Last
+      Reliability Policy: Reliable
+      Value: /goal_pose
+  - Class: rviz_default_plugins/PublishPoint
+    Single click: true
+    Topic:
+      Depth: 5
+      Durability Policy: Volatile
+      History Policy: Keep Last
+      Reliability Policy: Reliable
+      Value: /clicked_point
+  Transformation:
+    Current:
+      Class: rviz_default_plugins/TF
+  Value: true
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 2.2
+      Enable Stereo Rendering:
+        Stereo Eye Separation: 0.05999999865889549
+        Stereo Focal Distance: 1
+        Swap Stereo Eyes: false
+        Value: false
+      Focal Point:
+        X: 0.2
+        Y: 0.0
+        Z: 0.3
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.05000000074505806
+      Invert Z Axis: false
+      Name: Current View
+      Near Clip Distance: 0.009999999776482582
+      Pitch: 0.45
+      Target Frame: world
+      Value: Orbit (rviz)
+      Yaw: 0.6
+    Saved: null
+Window Geometry:
+  Displays:
+    collapsed: false
+  Height: 687
+  Hide Left Dock: false
+  Hide Right Dock: false
+  QMainWindow State: 000000ff00000000fd0000000100000000000001c900000259fc0200000006fb000000100044006900730070006c006100790073010000003b00000083000000c700fffffffb0000001200530065006c0065006300740069006f006e01000000c40000005c0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007301000001260000005c0000005c00fffffffb0000000a00560069006500770073010000018800000083000000a000fffffffb00000044004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000003f00fffffffb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e00670100000211000000830000016900ffffff0000037b0000025900000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  Selection:
+    collapsed: false
+  Tool Properties:
+    collapsed: false
+  Views:
+    collapsed: false
+  Width: 1354
+  X: 0
+  Y: 0

@@ -1,0 +1,28 @@
+{
+  "_comentario": "Calibración del módulo de visión del Kinova Gen3. Valores iniciales tomados de ros2_kortex_vision/launch/calibration (default_*.ini) y de su kinova_vision.launch.py. Sustitúyalos por los del robot real con leer_calibracion_kortex.py o con la calibración rápida de la guía (Fase 2). La clave de 'color' es la resolución ANCHOxALTO.",
+  "color": {
+    "640x480": {
+      "fx": 653.68229,
+      "fy": 651.855994,
+      "cx": 311.753415,
+      "cy": 232.400954,
+      "ancho": 640,
+      "alto": 480,
+      "fuente": "default_color_calib_640x480.ini (kinova_vision)"
+    }
+  },
+  "profundidad": {
+    "fx": 360.01333,
+    "fy": 360.013366699,
+    "cx": 243.87228,
+    "cy": 137.9218444,
+    "ancho": 480,
+    "alto": 270,
+    "fuente": "default_depth_calib_480x270.ini (kinova_vision)"
+  },
+  "extrinsecos_depth_a_color": {
+    "_comentario": "p_color = R * p_profundidad + t, en metros. Valor del static_transform_publisher camera_link -> camera_depth_frame de kinova_vision.launch.py (el marco de color coincide con camera_link).",
+    "rotacion": [1, 0, 0, 0, 1, 0, 0, 0, 1],
+    "traslacion_m": [-0.0195, -0.005, 0.0]
+  }
+}

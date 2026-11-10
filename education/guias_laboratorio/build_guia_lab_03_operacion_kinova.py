@@ -380,6 +380,11 @@ def main():
             "Inclusión de rqt_graph para topología, rqt_console para logs /rosout y profundización de la validación matemática de trayectorias previas al envío físico.",
             "16/09/2026",
         ],
+        [
+            "Lectura de /joint_states por nombre y coherencia con el instrumento ABET",
+            "Con el robot real /joint_states incluye la articulación de la pinza y su orden no es necesariamente joint_1 a joint_6: la meta se arma leyendo el campo name, igual que en la ruta de inicio (docs/INICIO_DESDE_CERO.md). Se corrige la observación del turno (giro de la base, no de la pinza). El instrumento ABET pasa de joint_6 a joint_1 (versión 1.1).",
+            "21/10/2026",
+        ],
     ]
     for i, values in enumerate(change_rows, start=1):
         if i >= len(changes.rows):
@@ -641,9 +646,15 @@ def main():
     )
     add_body(doc, "Paso 3.1: Descubrir la pose articular actual real del robot en la mesa:")
     add_code_box(doc, [
-        "# Ver las 6 posiciones articulares actuales en radianes [j1, j2, j3, j4, j5, j6]",
-        "ros2 topic echo /joint_states --once --field position"
+        "# Nombres (campo name) y posiciones (campo position) de cada articulación",
+        "ros2 topic echo /joint_states --once"
     ])
+    add_body(doc,
+        "Anote la posición de cada articulación por su nombre: el orden del mensaje no tiene por qué ser 1, 2, 3..., "
+        "así que relacione cada valor de position con el de name en la misma posición. Con el robot real el mensaje trae "
+        "también la articulación de la pinza (robotiq_85_left_knuckle_joint): no la copie. La meta lleva sólo las 6 posiciones "
+        "del brazo, en el orden [j1, j2, j3, j4, j5, j6]."
+    )
     add_body(doc,
         "Construcción de la meta: Conserve los 5 valores restantes (joint_2 a joint_6) idénticos a los descubiertos en el robot, "
         "con todos sus decimales, y sume o reste entre 0.20 y 0.30 rad únicamente a joint_1. "

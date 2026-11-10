@@ -63,9 +63,13 @@ class FlightRecorderTelemetryDemo(Node):
             Trigger, f'/{self.ns}/dump_flight_recorder', self.dump_flight_recorder_callback
         )
 
-        # Estado cinemático interno del Kinova
-        self.joint_names = [f"joint_{i}" for i in range(1, 8)]
-        self.joint_positions = [0.0] * 7
+        # Estado cinemático interno del Kinova: los mismos nombres que publica el robot real en
+        # /joint_states, es decir las 6 articulaciones del Gen3 de 6 GDL más la de la pinza
+        # Robotiq 2F-85 (única actuada; las demás la imitan con mimic).
+        self.arm_joint_names = [f"joint_{i}" for i in range(1, 7)]
+        self.gripper_joint_name = "robotiq_85_left_knuckle_joint"
+        self.joint_names = self.arm_joint_names + [self.gripper_joint_name]
+        self.joint_positions = [0.0] * len(self.joint_names)
 
         # Control de anomalías
         self.anomaly_active = False
@@ -129,9 +133,11 @@ class FlightRecorderTelemetryDemo(Node):
         elapsed = time.time() - self.start_time
 
         # 1. Simular movimiento articular (Kinova Gen3)
-        # Movimiento sinusoidal normal
-        for i in range(7):
+        # Movimiento sinusoidal normal del brazo
+        for i in range(len(self.arm_joint_names)):
             self.joint_positions[i] = math.sin(elapsed * (0.5 + i * 0.1))
+        # La pinza abre y cierra lentamente dentro de su rango real (0 a 0.8 rad)
+        self.joint_positions[-1] = 0.4 + 0.4 * math.sin(elapsed * 0.2)
 
         # Si hay anomalía activa, introducimos ruido no Gaussiano y vibración en joint_4
         jitter_val = 0.002 * (math.sin(elapsed * 10.0))

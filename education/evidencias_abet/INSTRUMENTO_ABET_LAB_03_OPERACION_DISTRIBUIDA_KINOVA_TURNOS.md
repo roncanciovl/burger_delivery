@@ -23,7 +23,7 @@
 | **Fecha de Realización en Laboratorio** | |
 | **Fecha de Entrega del Documento** | |
 | **Docente Evaluador** | Ing. Henry Roncancio |
-| **Versión del Instrumento** | Versión 1.0 (2026-2) |
+| **Versión del Instrumento** | Versión 1.1 (2026-2) |
 | **Unidad de Análisis / Captura** | Equipo colaborativo con comprobación individual (Anexo A) |
 
 ---
@@ -62,7 +62,7 @@
 | **C1. Red DDS distribuida y conectividad (ROS_DOMAIN_ID=0)** | 25% | **SO2** | **2.1.** Diseña soluciones de software para control y monitoreo de robots, integrando contratos de comunicación (QoS) y redes DDS robustas.<br>**2.2.** Incorpora restricciones de red, latencia, ancho de banda y seguridad en hardware heterogéneo. | Ping ICMP a `192.168.1.10` con RTT $< 2\text{ ms}$, `ROS_DOMAIN_ID=0` verificado en todos los terminales, Tabla 1 diligenciada e inspección de topología en `rqt_graph`. |
 | **C2. Estación anfitriona, sesión Kortex y telemetría** | 25% | **SO2 / SO6** | **2.1.** Control y monitoreo de robots en tiempo real.<br>**6.4.** Interpreta fallas y diagnósticos experimentales aplicando protocolos por capas para aislar errores en hardware y software. | Lanzamiento exitoso del driver Kortex (puerto 10000 TCP), tasa de `/joint_states` a 100 Hz, Tabla 2 diligenciada y verificación de no duplicidad de drivers. |
 | **C3. Monitoreo remoto e introspección gráfica (RQT / RViz)** | 20% | **SO6 / SO3** | **6.4.** Diagnóstico experimental por capas.<br>**3.1.** Elabora documentación técnica reproducible del sistema ROS 2 y comunica resultados de inspección de grafos y tópicos. | Nodo `kinova_monitor_eqNN` activo, visualización en RViz sobre Wi-Fi vía `TRANSIENT_LOCAL`, auditoría de logs `/rosout` en `rqt_console` y Tabla 3 diligenciada. |
-| **C4. Protocolo de turnos, modo seco y seguridad física** | 20% | **SO4 / SO6** | **4.1.** Identifica y mitiga riesgos de seguridad física, paradas de emergencia y protocolos de operación en celdas robóticas.<br>**6.4.** Validación experimental en modo seco. | Validación matemática obligatoria en modo seco (`dry_run:=true`, código 0), autorización verbal, rotación visible de `joint_6` ($\pm 0.05$ a $\pm 0.08$ rad) y Tabla 4 llena. |
+| **C4. Protocolo de turnos, modo seco y seguridad física** | 20% | **SO4 / SO6** | **4.1.** Identifica y mitiga riesgos de seguridad física, paradas de emergencia y protocolos de operación en celdas robóticas.<br>**6.4.** Validación experimental en modo seco. | Validación matemática obligatoria en modo seco (`dry_run:=true`, código 0), autorización verbal, giro visible de la base con `joint_1` ($\pm 0.20$ a $\pm 0.30$ rad, por debajo de `max_joint_delta_rad` = 0.35 rad) y Tabla 4 llena. |
 | **C5. Trazabilidad en rosbag, trabajo en equipo y cierre** | 10% | **SO3 / SO5** | **3.1 - 3.3.** Documentación técnica y registro de telemetría reproducible.<br>**5.1.** Define roles técnicos y coordina la ejecución colaborativa en equipo. | Dataset MCAP `sesion_turnos_eqNN` con metadatos válidos, desconexión limpia del driver, registro de transición OK->ERROR, Tabla 5 llena y Anexo A individual. |
 | **TOTAL** | **100%** | | | |
 
@@ -78,7 +78,7 @@
 | **E4** | Captura de la estación monitora remota ejecutando `kinova_monitor_eqNN` y modelo del robot en RViz visualizado sobre Wi-Fi. | |
 | **E5** | Captura de `rqt_console` filtrando mensajes del dominio 0 y demostrando auditoría centralizada de eventos y advertencias. | |
 | **E6** | Captura de ejecución del envío de trayectoria en Modo Seco (`dry_run:=true`) mostrando salida exitosa (código 0) y validación de límites. | |
-| **E7** | Captura de envío real al Kinova Gen3, mostrando el cambio angular en `joint_6` y confirmación de recepción en el robot físico. | |
+| **E7** | Captura de envío real al Kinova Gen3, mostrando el giro de la base en `joint_1` ($\pm 0.20$ a $\pm 0.30$ rad), el cierre `SUCCESSFUL` y la pose final en `/joint_states`. | |
 | **E8** | Salida de `ros2 bag info` del dataset MCAP grabado y captura de la monitora mostrando la transición de estado OK -> ERROR al apagar el driver. | |
 
 ---
@@ -129,13 +129,13 @@
 
 ### Tabla 4: Registro de Turnos de Movimiento Articular y Prueba Final (Fase 3)
 
-| Turno # / Prueba | Grupo | Hora Inicio | Pose / joint_6 Inicial (rad) | Meta Solicitada | Validación Modo Seco (Código) | Envío Real al Robot (Resultado) | Pose Final (joint_6) | Diferencia Real vs Esp | Hora Cierre |
+| Turno # / Prueba | Grupo | Hora Inicio | Pose / `joint_1` Inicial (rad) | Meta Solicitada | Validación Modo Seco (Código) | Envío Real al Robot (Resultado) | Pose Final (`joint_1`) | Diferencia Real vs Esp | Hora Cierre |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **1** | | | | *(+0.05 a +0.08)* | Código: | | | | |
-| **2** | | | | *(-0.05 a -0.08)* | Código: | | | | |
-| **3** | | | | *(+0.05 a +0.08)* | Código: | | | | |
-| **4** | | | | *(-0.05 a -0.08)* | Código: | | | | |
-| **5** | | | | *(+0.05 a +0.08)* | Código: | | | | |
+| **1** | | | | *(+0.20 a +0.30)* | Código: | | | | |
+| **2** | | | | *(-0.20 a -0.30)* | Código: | | | | |
+| **3** | | | | *(+0.20 a +0.30)* | Código: | | | | |
+| **4** | | | | *(-0.20 a -0.30)* | Código: | | | | |
+| **5** | | | | *(+0.20 a +0.30)* | Código: | | | | |
 | **Prueba Final** | Todos | | Origen autodescubierto | Coreografía 25 deltas | Código 0 | SUCCESSFUL | Retorno a origen | 0.000 rad | OK |
 
 ---
@@ -230,7 +230,7 @@
 ---
 
 ### Pregunta 8: Posicionamiento Absoluto vs. Deltas Relativos y Autodescubrimiento de Pose
-*Compare la operación de `safe_trajectory_client` frente a `safe_sequence_client`. ¿Por qué en el cliente de trayectoria individual fue estrictamente necesario descubrir las posiciones absolutas reales de `/joint_states` antes de formular la meta para evitar el bloqueo por `max_joint_delta_rad` (0.10 rad), mientras que el cliente de secuencia pudo ejecutarse desde cualquier pose sin transcribir coordenadas a mano? ¿Qué riesgos y ventajas de seguridad introduce cada enfoque en entornos industriales colaborativos?*
+*Compare la operación de `safe_trajectory_client` frente a `safe_sequence_client`. ¿Por qué en el cliente de trayectoria individual fue estrictamente necesario descubrir las posiciones absolutas reales de `/joint_states` antes de formular la meta para evitar el bloqueo por `max_joint_delta_rad` (0.35 rad), mientras que el cliente de secuencia pudo ejecutarse desde cualquier pose sin transcribir coordenadas a mano? ¿Qué riesgos y ventajas de seguridad introduce cada enfoque en entornos industriales colaborativos?*
 
 > **Respuesta Técnica del Equipo:**  
 > ________________________________________________________________________________________________________________________  
@@ -250,7 +250,7 @@
 |---|---|
 | **1. Rol y tareas técnicas desarrolladas:** Describa sus responsabilidades específicas en la práctica (ej. configuración de red, ejecución de la anfitriona, monitoreo RQT, cálculo de trayectorias, validación en modo seco o gestión de rosbag). | |
 | **2. Justificación de ROS_DOMAIN_ID=0:** Explique por qué todos los equipos debieron converger al dominio 0 y qué sucede en el descubrimiento DDS cuando coinciden los dominios en la misma LAN. | |
-| **3. Explicación del Modo Seco y deltas angulares:** Justifique técnicamente qué valida el cliente en modo seco (`dry_run:=true`) y por qué se restringió el desplazamiento de `joint_6` a un rango de $\pm 0.05$ a $\pm 0.08$ rad. | |
+| **3. Explicación del Modo Seco y deltas angulares:** Justifique técnicamente qué valida el cliente en modo seco (`dry_run:=true`) y por qué el turno mueve `joint_1` entre $\pm 0.20$ y $\pm 0.30$ rad, con `max_joint_delta_rad` = 0.35 rad, y qué exige de la celda que ese giro desplace todo el brazo. | |
 | **4. Diagnóstico por capas de una anomalía:** Describa un incidente o advertencia observado durante la sesión (en `rqt_console`, consola o RViz) y cómo lo analizó mediante el protocolo por capas. | |
 | **5. Autoría y reproducibilidad:** Identifique qué comandos, filas de tablas, capturas o secciones del rosbag fueron ejecutados y documentados directamente por usted. | |
 
@@ -265,7 +265,7 @@
 |---|---|
 | **1. Rol y tareas técnicas desarrolladas:** Describa sus responsabilidades específicas en la práctica (ej. configuración de red, ejecución de la anfitriona, monitoreo RQT, cálculo de trayectorias, validación en modo seco o gestión de rosbag). | |
 | **2. Justificación de ROS_DOMAIN_ID=0:** Explique por qué todos los equipos debieron converger al dominio 0 y qué sucede en el descubrimiento DDS cuando coinciden los dominios en la misma LAN. | |
-| **3. Explicación del Modo Seco y deltas angulares:** Justifique técnicamente qué valida el cliente en modo seco (`dry_run:=true`) y por qué se restringió el desplazamiento de `joint_6` a un rango de $\pm 0.05$ a $\pm 0.08$ rad. | |
+| **3. Explicación del Modo Seco y deltas angulares:** Justifique técnicamente qué valida el cliente en modo seco (`dry_run:=true`) y por qué el turno mueve `joint_1` entre $\pm 0.20$ y $\pm 0.30$ rad, con `max_joint_delta_rad` = 0.35 rad, y qué exige de la celda que ese giro desplace todo el brazo. | |
 | **4. Diagnóstico por capas de una anomalía:** Describa un incidente o advertencia observado durante la sesión (en `rqt_console`, consola o RViz) y cómo lo analizó mediante el protocolo por capas. | |
 | **5. Autoría y reproducibilidad:** Identifique qué comandos, filas de tablas, capturas o secciones del rosbag fueron ejecutados y documentados directamente por usted. | |
 
@@ -325,7 +325,7 @@ Marque con una **X** una sola casilla por criterio y registre el valor entero (0
 | Marque | Nivel | Evidencia Observable del Nivel |
 |:---:|---|---|
 | ☐ | **N5 — 475–500** | Además de N4, justifica matemáticamente los límites de interpolación del controlador (`max_joint_delta_rad`), propone mecanismos de exclusión mutua por software y demuestra liderazgo en la coordinación segura de la celda. |
-| ☐ | **N4 — 400–474** | Ejecuta rigurosamente la validación en modo seco (`dry_run:=true`, código 0), solicita autorización verbal, supervisa la parada de emergencia, ejecuta el movimiento en `joint_6` ($\pm 0.05$ a $\pm 0.08$ rad) y llena la Tabla 4. |
+| ☐ | **N4 — 400–474** | Ejecuta rigurosamente la validación en modo seco (`dry_run:=true`, código 0), solicita autorización verbal, supervisa la parada de emergencia, verifica el radio libre de 1.2 m, ejecuta el giro de `joint_1` ($\pm 0.20$ a $\pm 0.30$ rad) y llena la Tabla 4. |
 | ☐ | **N3 — 300–399** | Realiza la validación en modo seco antes del envío real, respeta el turno asignado, ejecuta el movimiento dentro de límites y diligencia la Tabla 4. |
 | ☐ | **N2 — 150–299** | Envía metas al robot sin validación previa en modo seco, excede el ángulo sugerido o no coordina el turno verbalmente. |
 | ☐ | **N1 — 0–149** | Incurre en actos inseguros en la celda robótica, envía trayectorias no autorizadas o carece de registros de turnos. |

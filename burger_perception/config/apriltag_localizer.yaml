@@ -10,6 +10,8 @@ apriltag_fixed_camera_localizer:
     image_topic: "/camera/color/image_raw/compressed"
     simulated_mode: true
     publish_rate_hz: 10.0
+    publish_pose2d: true
     publish_tf: false
-    reference_frame: "tag_mesa"
-    child_frame: "tag_carrito1"
+    tf_parent_frame: "tag_mesa"
+    tf_child_frame: "tag_carrito1"
+    tag_height_m: 0.0

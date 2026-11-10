@@ -109,7 +109,7 @@ LAB_CRITERIA = [
         "indicator": f"{INDICATOR_41} / {INDICATOR_64}",
         "descriptors": [
             "Además de N4, justifica matemáticamente los límites de interpolación del controlador (max_joint_delta_rad), propone mecanismos de exclusión mutua por software y demuestra liderazgo en la coordinación segura de la celda.",
-            "Ejecuta rigurosamente la validación en modo seco (dry_run:=true, código 0), solicita autorización verbal, supervisa la parada de emergencia, ejecuta el movimiento en joint_6 (±0.05 a ±0.08 rad) y llena la Tabla 4.",
+            "Ejecuta rigurosamente la validación en modo seco (dry_run:=true, código 0), solicita autorización verbal, supervisa la parada de emergencia, verifica el radio libre de 1.2 m, ejecuta el giro de joint_1 (±0.20 a ±0.30 rad) y llena la Tabla 4.",
             "Realiza la validación en modo seco antes del envío real, respeta el turno asignado, ejecuta el movimiento dentro de límites y diligencia la Tabla 4.",
             "Envía metas al robot sin validación previa en modo seco, excede el ángulo sugerido o no coordina el turno verbalmente.",
             "Incurre en actos inseguros en la celda robótica, envía trayectorias no autorizadas o carece de registros de turnos.",
@@ -271,7 +271,7 @@ def build_instrument():
 
     add_note(
         doc,
-        "DOCUMENTO ÚNICO DE ENTREGA Y EVALUACIÓN ABET — Versión 1.0 (2026-2). "
+        "DOCUMENTO ÚNICO DE ENTREGA Y EVALUACIÓN ABET — Versión 1.1 (2026-2). "
         "Asociado a la Guía de Laboratorio 03 (GL-AA-F-1). Este instrumento contiene el informe técnico integral: "
         "las 5 tablas de registro experimental llenadas por el equipo, el cuestionario de análisis técnico respondido, "
         "el Anexo A de comprobación individual para certificar el logro de cada integrante y la rúbrica analítica "
@@ -298,7 +298,7 @@ def build_instrument():
             ["Fecha de Realización en Laboratorio", ""],
             ["Fecha de Entrega del Documento", ""],
             ["Docente Evaluador", "Ing. Henry Roncancio"],
-            ["Versión del Instrumento", "Versión 1.0 (2026-2)"],
+            ["Versión del Instrumento", "Versión 1.1 (2026-2)"],
             ["Unidad de Análisis / Captura", "Equipo colaborativo con comprobación individual (Anexo A)"],
         ],
         [5, 12],
@@ -340,7 +340,7 @@ def build_instrument():
                 "Ping ICMP, ROS_DOMAIN_ID=0, rqt_graph, Tabla 1" if c['code'] == 'C1' else
                 ("Sesión Kortex 1 kHz, /joint_states 100 Hz, Tabla 2" if c['code'] == 'C2' else
                 ("kinova_monitor_eqNN, RViz Wi-Fi, rqt_console, Tabla 3" if c['code'] == 'C3' else
-                ("Modo seco (dry_run:=true, cód 0), joint_6 visible, Tabla 4" if c['code'] == 'C4' else
+                ("Modo seco (dry_run:=true, cód 0), giro de joint_1 visible, Tabla 4" if c['code'] == 'C4' else
                 "Dataset MCAP, cierre ordenado OK->ERROR, Tabla 5, Anexo A")))
             ]
             for c in LAB_CRITERIA
@@ -360,7 +360,7 @@ def build_instrument():
             ["E4", "Captura de la monitora remota ejecutando kinova_monitor_eqNN y modelo del robot en RViz visualizado sobre Wi-Fi.", ""],
             ["E5", "Captura de rqt_console filtrando mensajes del dominio 0 y demostrando auditoría centralizada de eventos.", ""],
             ["E6", "Captura de ejecución del envío en Modo Seco (dry_run:=true) mostrando salida exitosa (código 0) y validación de límites.", ""],
-            ["E7", "Captura de envío real al Kinova Gen3, mostrando el cambio angular en joint_6 (±0.05 a ±0.08 rad) verificado.", ""],
+            ["E7", "Captura de envío real al Kinova Gen3, mostrando el giro de la base en joint_1 (±0.20 a ±0.30 rad), el cierre SUCCESSFUL y la pose final en /joint_states.", ""],
             ["E8", "Salida de ros2 bag info del dataset MCAP y captura de la monitora mostrando la transición de estado OK -> ERROR al apagar driver.", ""],
         ],
         [2, 11, 4.5],
@@ -423,13 +423,13 @@ def build_instrument():
     p.runs[0].bold = True
     add_table(
         doc,
-        ["Turno #", "Grupo", "Hora", "joint_6 Inicial (rad)", "Meta joint_6 (rad)", "Modo Seco (Código)", "Envío Real (Código)", "joint_6 Final (rad)", "Diff Real vs Esp", "Cierre"],
+        ["Turno #", "Grupo", "Hora", "joint_1 Inicial (rad)", "Meta joint_1 (rad)", "Modo Seco (Código)", "Envío Real (Código)", "joint_1 Final (rad)", "Diff Real vs Esp", "Cierre"],
         [
-            ["1", "G01", "", "", "(+0.05 a +0.08)", "0 (Éxito)", "0 (Éxito)", "", "", ""],
-            ["2", "G02", "", "", "(-0.05 a -0.08)", "0 (Éxito)", "0 (Éxito)", "", "", ""],
-            ["3", "G03", "", "", "(+0.05 a +0.08)", "0 (Éxito)", "0 (Éxito)", "", "", ""],
-            ["4", "G04", "", "", "(-0.05 a -0.08)", "0 (Éxito)", "0 (Éxito)", "", "", ""],
-            ["5", "G05", "", "", "(+0.05 a +0.08)", "0 (Éxito)", "0 (Éxito)", "", "", ""],
+            ["1", "G01", "", "", "(+0.20 a +0.30)", "0 (Éxito)", "0 (Éxito)", "", "", ""],
+            ["2", "G02", "", "", "(-0.20 a -0.30)", "0 (Éxito)", "0 (Éxito)", "", "", ""],
+            ["3", "G03", "", "", "(+0.20 a +0.30)", "0 (Éxito)", "0 (Éxito)", "", "", ""],
+            ["4", "G04", "", "", "(-0.20 a -0.30)", "0 (Éxito)", "0 (Éxito)", "", "", ""],
+            ["5", "G05", "", "", "(+0.20 a +0.30)", "0 (Éxito)", "0 (Éxito)", "", "", ""],
             ["Prueba Final", "Todos", "", "Origen autodescubierto", "Coreografía 25 deltas", "0 (Éxito)", "SUCCESSFUL", "Retorno origen", "0.000", "OK"],
         ],
         [1.2, 1.3, 1.4, 2.3, 2.4, 2.0, 2.0, 2.2, 1.7, 1.0],
@@ -518,7 +518,7 @@ def build_instrument():
         "Pregunta 8: Posicionamiento Absoluto vs. Deltas Relativos y Autodescubrimiento de Pose\n"
         "Compare la operación de safe_trajectory_client frente a safe_sequence_client. ¿Por qué en el cliente individual "
         "fue estrictamente necesario descubrir las posiciones absolutas reales de /joint_states antes de formular la meta "
-        "para evitar el bloqueo por max_joint_delta_rad (0.10 rad), mientras que el cliente de secuencia pudo ejecutarse desde "
+        "para evitar el bloqueo por max_joint_delta_rad (0.35 rad), mientras que el cliente de secuencia pudo ejecutarse desde "
         "cualquier pose sin transcribir coordenadas a mano? ¿Qué riesgos y ventajas de seguridad introduce cada enfoque en entornos industriales colaborativos?",
         lines=4,
     )
@@ -536,7 +536,7 @@ def build_instrument():
             [
                 ["1. Rol y tareas técnicas desarrolladas: Describa sus responsabilidades específicas en la práctica (ej. configuración de red, ejecución de la anfitriona, monitoreo RQT, cálculo de trayectorias, modo seco o rosbag).", ""],
                 ["2. Justificación de ROS_DOMAIN_ID=0: Explique por qué todos los equipos debieron converger al dominio 0 y qué sucede en el descubrimiento DDS cuando coinciden los dominios en la misma LAN.", ""],
-                ["3. Explicación del Modo Seco y deltas angulares: Justifique técnicamente qué valida el cliente en modo seco (dry_run:=true) y por qué se restringió el desplazamiento de joint_6 a un rango de ±0.05 a ±0.08 rad.", ""],
+                ["3. Explicación del Modo Seco y deltas angulares: Justifique técnicamente qué valida el cliente en modo seco (dry_run:=true) y por qué el turno mueve joint_1 entre ±0.20 y ±0.30 rad, con max_joint_delta_rad = 0.35 rad, y qué exige de la celda que ese giro desplace todo el brazo.", ""],
                 ["4. Diagnóstico por capas de una anomalía: Describa un incidente o advertencia observado durante la sesión (en rqt_console, consola o RViz) y cómo lo analizó mediante el protocolo por capas.", ""],
                 ["5. Autoría y reproducibilidad: Identifique qué comandos, filas de tablas, capturas o secciones del rosbag fueron ejecutados y documentados directamente por usted.", ""],
             ],
@@ -626,7 +626,7 @@ def build_instrument():
     doc.core_properties.title = "Instrumento ABET Laboratorio 03 — Operación Distribuida Kinova Gen3"
     doc.core_properties.subject = "ROBOT OPERATING SYSTEM - ROS · 2026-2"
     doc.core_properties.author = "Ing. Henry Roncancio"
-    doc.core_properties.comments = "Versión 1.0. Documento único de entrega estudiantil y evaluación ABET con tablas experimentales llenas, cuestionario técnico y Anexo A."
+    doc.core_properties.comments = "Versión 1.1. Documento único de entrega estudiantil y evaluación ABET con tablas experimentales llenas, cuestionario técnico y Anexo A."
     TARGET.parent.mkdir(parents=True, exist_ok=True)
     doc.save(str(TARGET))
     print(f"Instrumento ABET Word generado exitosamente en: {TARGET}")

@@ -95,8 +95,10 @@ si algo no se pudo aplicar lo dice y devuelve código de error, en lugar de repo
 > URDF con `use_internal_bus_gripper_comm` en `true` y en `false`: links y joints quedan
 > **idénticos**, y sólo cambian las interfaces `ros2_control` del gripper. Lo que
 > determina el árbol TF es `dof` y `prefix`. Si buscas una discrepancia de TF, está en
-> otro sitio: `burger_description` vendoriza un modelo de **7 GDL** con prefijo `gen3_`
-> que no corresponde al brazo real — ver el aviso en su README.
+> otro sitio. `burger_description` vendoriza la misma cadena de 6 GDL, con la pinza y el
+> módulo de visión, pero con el prefijo `gen3_`, y sólo la publica `display.launch.py`. Además,
+> el driver carga el brazo sin `vision:=true`: el árbol del robot real no conecta la cámara con
+> `end_effector_link` (ver `education/talleres/TALLER_URDF_TF.md` §11).
 
 > #### Qué reemplazó a `apply_kinova_smooth_movement.py`
 >

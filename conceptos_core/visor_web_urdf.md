@@ -1,24 +1,24 @@
 # Visualizar el URDF en el visor web (URDF-Loaders)
 
-> [!WARNING]
-> **Este modelo vendorizado es de 7 GDL; el robot del laboratorio es de 6.**
+> [!NOTE]
+> **El modelo vendorizado es el del robot del laboratorio: Gen3 de 6 GDL, pinza Robotiq 2F-85 y
+> módulo de visión** (re-vendorizado desde `kortex_description/arms/gen3/6dof` con
+> `scripts/revendorizar_gen3_6dof.py --vision`, que también regenera `visual/burger_delivery_gen3.urdf`).
+> Los frames de la cámara, `gen3_camera_link`, `gen3_camera_color_frame` y `gen3_camera_depth_frame`,
+> cuelgan de `gen3_end_effector_link`.
 >
 > Conviene no confundir dos modelos que coexisten en el workspace:
 >
 > | Modelo | Cadena cinemática | GDL |
 > | :--- | :--- | :---: |
-> | `kortex_description`, generado en vivo por el driver | `base_link → shoulder_link → **bicep_link** → forearm_link → …` | **6** |
-> | `burger_description` (este, vendorizado) | `gen3_base_link → … → **gen3_half_arm_1_link → gen3_half_arm_2_link** → …` | 7 |
+> | `kortex_description`, generado en vivo por el driver | `base_link → shoulder_link → bicep_link → forearm_link → …` | 6 |
+> | `burger_description` (vendorizado) | `gen3_base_link → gen3_shoulder_link → gen3_bicep_link → gen3_forearm_link → …` | 6 |
 >
-> El RViz que abre `kinova_connection.launch.py` con `launch_rviz:=true` usa el **primero**,
-> generado por `kortex_bringup` con `dof:=6`, y **sí es fiel al robot**: refleja la
-> posición articular real. El modelo de `burger_description` sólo lo usa
-> `display.launch.py`, un visor sin robot, y tiene una articulación de más
-> (`half_arm_1`/`half_arm_2` en lugar de `bicep`) y todos sus frames bajo el prefijo
-> `gen3_`, así que no colisiona con los del driver pero tampoco corresponde al hardware.
->
-> Úsalo para estudiar la estructura de un URDF, no como referencia cinemática del brazo.
-> La re-vendorización a 6 GDL está pendiente; ver `TODO.md`.
+> Tienen la misma cinemática, pero el de `burger_description` lleva todos sus frames bajo el
+> prefijo `gen3_` y lo publica `display.launch.py`, un visor sin robot. El RViz que abre
+> `kinova_connection.launch.py` con `launch_rviz:=true` usa el del driver, que refleja la
+> posición articular real. Los URDF de referencia de Kinova en `vendor/robots/` siguen siendo
+> los originales de 7 GDL.
 
 
 Este documento explica cómo abrir y revisar tu URDF en el visor online basado en three.js:
@@ -105,7 +105,8 @@ Cómo verlo solo:
 
 ## Escena compuesta (burger + Gen3)
 - Ruta: `ROS/visual/burger_delivery_gen3.urdf`
-- Contiene la escena de `burger_delivery_visual` y el robot Gen3 (2F-85) en la posición: `map -> world` a `xyz="1.20 0.30 1.00"` y de ahí `world -> gen3_base_link`.
+- Es una copia del URDF de `burger_description` (Gen3 de 6 GDL, pinza 2F-85 y módulo de visión) con rutas de malla relativas a `visual/`. No se edita a mano: la regenera `scripts/revendorizar_gen3_6dof.py --vision`.
+- Contiene la escena de `burger_delivery_visual` y el robot Gen3 (2F-85) en la posición: `map -> table_link` a `xyz="1.94 -0.70 0.895"`, `table_link -> world` a `xyz="-0.94 0.00 0.025"` y de ahí `world -> gen3_base_link`.
  - Las bases de `robot_a_base_link` y `robot_b_base_link` son joints `planar` (movimiento en XY y yaw sobre Z). Posición inicial al mismo lado (Y positivo) de la base del Kinova: `robot_a` en `xyz="1.20 0.80 0.00"`, `robot_b` en `xyz="1.20 1.30 0.00"`.
 
 Para cargarla en el visor:

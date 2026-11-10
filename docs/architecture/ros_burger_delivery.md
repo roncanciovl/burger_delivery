@@ -17,25 +17,28 @@ header-includes:
 
 # 1. Visión General
 
-> [!WARNING]
-> **Este modelo vendorizado es de 7 GDL; el robot del laboratorio es de 6.**
+> [!NOTE]
+> **El modelo vendorizado es el del robot del laboratorio: Gen3 de 6 GDL, pinza Robotiq 2F-85 y
+> módulo de visión** (re-vendorizado desde `kortex_description/arms/gen3/6dof` con
+> `scripts/revendorizar_gen3_6dof.py --vision`, que también regenera `visual/burger_delivery_gen3.urdf`).
+> Los frames de la cámara, `gen3_camera_link`, `gen3_camera_color_frame` y `gen3_camera_depth_frame`,
+> cuelgan de `gen3_end_effector_link`.
 >
 > Conviene no confundir dos modelos que coexisten en el workspace:
 >
 > | Modelo | Cadena cinemática | GDL |
 > | :--- | :--- | :---: |
-> | `kortex_description`, generado en vivo por el driver | `base_link → shoulder_link → **bicep_link** → forearm_link → …` | **6** |
-> | `burger_description` (este, vendorizado) | `gen3_base_link → … → **gen3_half_arm_1_link → gen3_half_arm_2_link** → …` | 7 |
+> | `kortex_description`, generado en vivo por el driver | `base_link → shoulder_link → bicep_link → forearm_link → …` | 6 |
+> | `burger_description` (vendorizado) | `gen3_base_link → gen3_shoulder_link → gen3_bicep_link → gen3_forearm_link → …` | 6 |
 >
-> El RViz que abre `kinova_connection.launch.py` con `launch_rviz:=true` usa el **primero**,
-> generado por `kortex_bringup` con `dof:=6`, y **sí es fiel al robot**: refleja la
-> posición articular real. El modelo de `burger_description` sólo lo usa
-> `display.launch.py`, un visor sin robot, y tiene una articulación de más
-> (`half_arm_1`/`half_arm_2` en lugar de `bicep`) y todos sus frames bajo el prefijo
-> `gen3_`, así que no colisiona con los del driver pero tampoco corresponde al hardware.
->
-> Úsalo para estudiar la estructura de un URDF, no como referencia cinemática del brazo.
-> La re-vendorización a 6 GDL está pendiente; ver `TODO.md`.
+> Tienen la misma cinemática, pero el de `burger_description` lleva todos sus frames bajo el
+> prefijo `gen3_` y lo publica `display.launch.py`. Sin argumentos es un visor sin robot,
+> movido por el deslizador. Con `robot_real:=true` muestra la escena completa del
+> laboratorio con la pose real del brazo: `scene_joint_relay.py` copia `/joint_states` del
+> driver a `/scene/joint_states` con el prefijo `gen3_`. El RViz que abre
+> `kinova_connection.launch.py` con `launch_rviz:=true` usa el modelo del driver, sin la
+> escena. Los URDF de referencia de Kinova en `vendor/robots/` siguen siendo
+> los originales de 7 GDL.
 
 
 Este documento describe cómo implementar, con **ROS 2 Jazzy**, una celda de entrega de hamburguesas donde un robot manipulador **Kinova Gen3** toma el producto desde una estación de armado y lo deposita en plataformas móviles diferenciales que funcionarán como repartidores terrestres. El mismo ecosistema integra visión artificial basada en AprilTags, nodos de coordinación de pedidos y control distribuido mediante micro-ROS para los robots del piso. El objetivo es contar con una referencia completa que cubra arquitectura de red, nodos requeridos y el uso de **tf2** para mantener coherencia espacial entre el brazo y los móviles.
@@ -152,11 +155,11 @@ El branch `world → gen3_*` corresponde al URDF oficial del Gen3 (articulacione
 
 ```bash
 ros2 run tf2_ros static_transform_publisher \
-  0.80 -1.00 0.80 0 0 0 \
+  1.94 -0.70 0.895 0 0 0 \
   map table_link
 
 ros2 run tf2_ros static_transform_publisher \
-  1.20 0.30 0.50 0 0 0 \
+  0.06 0.00 0.50 0 0 0 \
   table_link kinova_base_link
 
 ros2 run tf2_ros static_transform_publisher \
@@ -172,7 +175,7 @@ ros2 run tf2_ros static_transform_publisher \
   robot_X/base_link robot_X/tray_frame
 
 ros2 run tf2_ros static_transform_publisher \
-  0.20 0.30 0.00 0 0 0 \
+  -0.94 0.00 0.025 0 0 0 \
   table_link world
 ```
 
@@ -213,7 +216,7 @@ Un URDF mínimo que codifica este árbol de transformaciones puede lucir así (t
   <joint name="map_to_table" type="fixed">
     <parent link="map"/>
     <child link="table_link"/>
-    <origin xyz="0.80 -1.00 0.80" rpy="0 0 0"/>
+    <origin xyz="1.94 -0.70 0.895" rpy="0 0 0"/>
   </joint>
 
   <joint name="map_to_staging" type="fixed">
@@ -225,7 +228,7 @@ Un URDF mínimo que codifica este árbol de transformaciones puede lucir así (t
   <joint name="table_to_kinova_base" type="fixed">
     <parent link="table_link"/>
     <child link="kinova_base_link"/>
-    <origin xyz="1.20 0.30 0.50" rpy="0 0 0"/>
+    <origin xyz="0.06 0.00 0.50" rpy="0 0 0"/>
   </joint>
 
   <joint name="map_to_robot_a_base" type="fixed">
@@ -279,7 +282,7 @@ Un URDF mínimo que codifica este árbol de transformaciones puede lucir así (t
   <joint name="table_to_world" type="fixed">
     <parent link="table_link"/>
     <child link="world"/>
-    <origin xyz="0.20 0.30 0.00" rpy="0 0 0"/>
+    <origin xyz="-0.94 0.00 0.025" rpy="0 0 0"/>
   </joint>
 </robot>
 ```
@@ -304,7 +307,7 @@ La siguiente tabla resume cada frame del árbol y su función. Las poses indicad
 | `table_link` | `map` | fixed | Mesa física donde se monta Kinova y staging. | (0.80, -1.00, 0.80), (0,0,0) |
 | `staging_area` | `map` | fixed | Referencia de la mesa/zona de preparación. | (0.80, 0.00, 0.00), (0,0,0) |
 | `delivery_slot_1` | `staging_area` | fixed | Slot donde el Kinova deposita la bandeja. | (0.00, 0.40, 0.50), (0,0,0) |
-| `world` | `table_link` | fixed | Frame auxiliar del URDF oficial Kinova (solo escena compuesta). | (0.20, 0.30, 0.00), (0,0,0) |
+| `world` | `table_link` | fixed | Frame auxiliar del URDF oficial Kinova (solo escena compuesta). | (0.20, 0.30, 0.025), (0,0,0) |
 | `kinova_base_link` | `table_link` | fixed | Base del Kinova Gen3 (versión visual). | (1.20, 0.30, 0.50), (0,0,0) |
 | `kinova_tool_frame` | `kinova_base_link` | floating/fixed | Brida/herramienta del brazo. | En demo visual: fijo (0,0,0); en hardware: variable (cinemática). |
 | `burger_grip_frame` | `kinova_tool_frame` | fixed | Frame de pinzado; offset del tool para grasp/place. | (0, 0, 0.18), (0,0,0) |
@@ -321,20 +324,17 @@ Notas:
 
 ## 5.6. Frames internos del Kinova Gen3 (y gripper)
 
-Resumen de los links y joints más relevantes del Gen3 (7 DOF) según el URDF oficial vendorizado en `ROS/vendor/kortex_description/robots/gen3_2f85.urdf`. Nombres de joints: `gen3_joint_1` … `gen3_joint_7`.
-
-> ⚠ Esta tabla describe el **URDF vendorizado**, de 7 GDL. El brazo físico es de **6 GDL** y su cadena real, publicada por el driver, es `base_link → shoulder_link → bicep_link → forearm_link → …`, sin prefijo `gen3_` y sin los eslabones `half_arm`. Ver el aviso al inicio del documento.
+Resumen de los links y joints del Gen3 (6 DOF) según `burger_description/urdf/delivery_scene_fixed.urdf`, re-vendorizado desde el macro oficial de 6 GDL. Nombres de joints: `gen3_joint_1` … `gen3_joint_6`. El driver publica la misma cadena sin el prefijo `gen3_`.
 
 | Link | Joint (padre→hijo) | Tipo | Propósito |
 | :--- | :--- | :--- | :--- |
 | `gen3_base_link` | `world → gen3_base_link` | fixed | Base del brazo; origen de la cadena cinemática del Gen3. |
 | `gen3_shoulder_link` | `gen3_joint_1` | continuous | Hombro; primera rotación de la cadena. |
-| `gen3_half_arm_1_link` | `gen3_joint_2` | revolute | Primer segmento del brazo. |
-| `gen3_half_arm_2_link` | `gen3_joint_3` | revolute | Segundo segmento del brazo. |
-| `gen3_forearm_link` | `gen3_joint_4` | revolute | Antebrazo. |
-| `gen3_spherical_wrist_1_link` | `gen3_joint_5` | revolute | Muñeca 1. |
-| `gen3_spherical_wrist_2_link` | `gen3_joint_6` | revolute | Muñeca 2. |
-| `gen3_bracelet_link` | `gen3_joint_7` | revolute | Bracelete final; porta herramienta/gripper. |
+| `gen3_bicep_link` | `gen3_joint_2` | revolute (±2.24) | Brazo (bíceps). |
+| `gen3_forearm_link` | `gen3_joint_3` | revolute (±2.57) | Antebrazo. |
+| `gen3_spherical_wrist_1_link` | `gen3_joint_4` | continuous | Muñeca 1. |
+| `gen3_spherical_wrist_2_link` | `gen3_joint_5` | revolute (±2.09) | Muñeca 2. |
+| `gen3_bracelet_link` | `gen3_joint_6` | continuous | Bracelete final; porta herramienta/gripper. |
 | `end_effector_link` | (fijo a la brida) | fixed | Adaptador/placa de herramienta. |
 | `wrist_mounted_camera_*` | (fijos a brida) | fixed | Frames auxiliares para cámara en muñeca (si aplica). |
 

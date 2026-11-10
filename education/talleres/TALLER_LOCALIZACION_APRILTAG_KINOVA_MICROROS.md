@@ -140,7 +140,9 @@ cd ~/ros2_ws/src/burger_delivery
 rg -n "declare_parameter|topic_name|simulated_mode|radius|sim_time \+=|math.pi" burger_perception/burger_perception/
 ```
 
-Anota los ocho parámetros con sus valores por defecto, cómo se construye el nombre del tópico y la
+Anota los ocho primeros parámetros con sus valores por defecto (los cinco siguientes, de `publish_pose2d` a
+`tag_height_m`, eligen la salida como `Pose2D` o como TF y se usan en el [Laboratorio 05](../guias_laboratorio/GUIA_LAB_05_TF_DRON_CARRITO_MICROROS.md)),
+cómo se construye el nombre del tópico y la
 trayectoria simulada: radio `0.35` m, `0.05` rad por mensaje, `θ` tangente al círculo.
 
 ### 🛠️ Ejercicio
@@ -317,6 +319,22 @@ Relaciona cada línea con la teoría: el arreglo `reference_m` son las esquinas 
 `_to_image_center` es el modelo simple sin referencia (origen en el centro de la imagen y escala fija
 `pixels_per_meter`), que no se usa cuando `reference_tag_id ≥ 0`. En la definición del mensaje, ubica
 el aviso de obsolescencia y comprueba que no hay `header`.
+
+> [!TIP]
+> **💊 Píldora Metodológica — Carga Dinámica de Interfaces y Mensajes en Python (`rosidl_runtime_py`):**  
+> *En la sesión de micro-ROS se incluirá una píldora metodológica sobre cómo cargar tipos de mensajes de interfaces personalizadas con `rosidl_runtime_py`.*  
+>  
+> Al desarrollar o extender nodos de visión en Python que intercambian mensajes con micro-ROS o analizan telemetría de bolsas MCAP con `rosbag2_py`, es recomendable desacoplar la carga de interfaces. En lugar de importar clases estáticas que arrojan `ImportError` si el paquete no se construyó en el entorno local, utilice la utilidad de introspección dinámica de ROS 2:
+> ```python
+> from rosidl_runtime_py.utilities import get_message
+>
+> # Carga dinámica de Pose2D o interfaces estándar:
+> Pose2D = get_message('geometry_msgs/msg/Pose2D')
+> pose_msg = Pose2D(x=0.30, y=0.15, theta=0.0)
+>
+> # Carga dinámica de interfaces personalizadas (ej. detecciones o telemetría):
+> # TagArrayMsg = get_message('burger_interfaces/msg/AprilTagDetections')
+> ```
 
 ### 🛠️ Ejercicio 3.1: Cálculo a mano (cámara perpendicular)
 El `tag_mesa` ($s = 0.10$ m) aparece alineado con la imagen, centrado en $(u, v) = (500, 400)$ y con

@@ -19,4 +19,15 @@ install(
   DESTINATION share/${PROJECT_NAME}
 )
 
+install(
+  PROGRAMS scripts/scene_joint_relay.py scripts/scene_collision_markers.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+if(BUILD_TESTING)
+  find_package(ament_cmake_pytest REQUIRED)
+  ament_add_pytest_test(test_scene_joint_relay test/test_scene_joint_relay.py)
+  ament_add_pytest_test(test_scene_collision_markers test/test_scene_collision_markers.py)
+endif()
+
 ament_package()

@@ -166,6 +166,7 @@ def _setup(context, *args, **kwargs):
     robot_ip = arg('robot_ip')
     use_fake_hardware = _as_bool(arg('use_fake_hardware'))
     launch_rviz = _as_bool(arg('launch_rviz'))
+    launch_scene = _as_bool(arg('launch_scene'))
     enable_motion = _as_bool(arg('enable_motion'))
     start_trajectory_client = _as_bool(arg('start_trajectory_client'))
     dry_run = _as_bool(arg('dry_run'))
@@ -290,6 +291,18 @@ def _setup(context, *args, **kwargs):
         arguments=['--ros-args', '--log-level', f'kinova_monitor:={log_level}'],
     ))
 
+    # ------------------------------------------------------ escena del laboratorio --
+    # La escena de burger_description (mesa, carritos, tags, cámara cenital) con la pose
+    # real del brazo. Sólo lee /joint_states; vale también en una estación cliente.
+    if launch_scene:
+        actions.append(IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(os.path.join(
+                get_package_share_directory('burger_description'), 'launch',
+                'display.launch.py')),
+            launch_arguments={'robot_real': 'true', 'use_static_carts': 'true',
+                              'use_fake_hardware': str(use_fake_hardware).lower()}.items(),
+        ))
+
     # -------------------------------------------------- cliente de trayectoria -----
     if start_trajectory_client:
         actions.append(Node(
@@ -348,6 +361,12 @@ def generate_launch_description() -> LaunchDescription:
             'launch_rviz', default_value=str(defaults.get('launch_rviz', False)).lower(),
             choices=['true', 'false'],
             description='Abrir RViz como herramienta de observación.'),
+        DeclareLaunchArgument(
+            'launch_scene', default_value=str(defaults.get('launch_scene', False)).lower(),
+            choices=['true', 'false'],
+            description=(
+                'Abrir la escena del laboratorio (mesa, carritos, tags) movida por el '
+                'estado real del brazo (display.launch.py robot_real:=true).')),
         DeclareLaunchArgument(
             'enable_motion', default_value='false', choices=['true', 'false'],
             description='Habilitación explícita de comandos físicos. Siempre false por '

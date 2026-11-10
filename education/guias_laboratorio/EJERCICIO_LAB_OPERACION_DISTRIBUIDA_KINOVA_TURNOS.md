@@ -444,7 +444,7 @@ respecto a `base_link` de −180.00° a 174.27°, es decir 0.10 rad.
 > [!WARNING]
 > **No use otra vía para visualizar el robot en una estación monitora:**
 > - `kinova_connection.launch.py … launch_rviz:=true` o `kortex_bringup` **lanzan el driver**: sólo la anfitriona los ejecuta.
-> - `burger_description/display.launch.py` muestra **otro modelo** (el vendorizado de 7 GDL de la escena) y publica su propio `/joint_states` y `/robot_description` **en el dominio del robot**, mezclándose con la telemetría real ([`TALLER_URDF_TF.md`](../talleres/TALLER_URDF_TF.md)).
+> - `burger_description/display.launch.py` muestra **otro modelo** (el vendorizado de la escena, con frames `gen3_`) y publica su propio `/joint_states` y `/robot_description` **en el dominio del robot**, mezclándose con la telemetría real ([`TALLER_URDF_TF.md`](../talleres/TALLER_URDF_TF.md)).
 
 #### 🛠️ Ejercicio 2.4: Inspección gráfica con RQT — Grafo distribuido y Logs en tiempo real
 

@@ -38,6 +38,11 @@ This repository serves as the description package (`burger_description`), experi
 
 ## 🚀 Quick Start
 
+> [!TIP]
+> **New to the project?** Follow the [**from-scratch onboarding route**](docs/INICIO_DESDE_CERO.md)
+> (in Spanish): ten checked stages, from installing Antigravity and Ubuntu on WSL to the first safe motion of the
+> Kinova Gen3 with `burger_kinova_reference`, including a simulated robot run.
+
 ### Prerequisites
 - Ubuntu 24.04 with **ROS 2 Jazzy** installed. (Check `install_ros2.sh` and the guide in `ros2_setup/`).
 - `colcon` build tool and ROS 2 desktop packages (`rviz2`, `joint_state_publisher_gui`, `xacro`).
@@ -64,6 +69,8 @@ Or manually:
 ```bash
 ros2 launch burger_description display.launch.py
 ```
+
+![Collaborative cell scene in RViz2 (Kinova Gen3, mobile carts on table, and TF frames)](visual/escena_rviz_default.jpg)
 
 ### 🌐 Network & ROS 2 Telemetry Monitor (Web Dashboard)
 To monitor router-connected devices (AX12), WiFi latency/jitter, DDS domain traffic, and micro-ROS agent status (port 8888) in real-time:
@@ -124,6 +131,7 @@ burger_delivery/
 - [**Web URDF Visualizer**](docs/architecture/VISUALIZAR_URDF_WEB.md)
 
 ### 🦾 3. Manipulation & Motion (Kinova & MoveIt 2)
+- [⭐ **Kinova Gen3 Reference, Telemetry & Safe Operation Package (`burger_kinova_reference`)**](burger_kinova_reference/README.md)
 - [**MoveIt 2 Conceptual Framework**](docs/manipulation/MARCO_CONCEPTUAL_MOVEIT2.md)
 - [**MTC Motion Improvements & Ghost Visualizer**](docs/manipulation/MEJORAS_MOVIMIENTO_KINOVA.md)
 - [**Motion Tests & CLI Cartesian Coordinates**](docs/manipulation/PRUEBAS_MOVIMIENTO.md)
@@ -132,6 +140,7 @@ burger_delivery/
 
 ### 👁️ 4. Computer Vision & Localization
 - [⭐ **AprilTag Localization Architecture**](vision_setup/LOCALIZACION_APRILTAG.md) *(Dynamic TF tree & perspective cancellation)*
+- [🎬 **TF Visual Demo: Kinova Gen3 RGB-D Sensors**](burger_kinova_reference/docs/DEMO_FRAMES_CAMARA_KINOVA.md) *(Nominal extrinsics `camera_link → camera_color_frame / camera_depth_frame`; [MP4 video](burger_kinova_reference/videos/kinova_frames_rgbd_demo.mp4))*
 - [**Native Camera Diagnostics**](vision_setup/VERIFICACION_CAMARA.md)
 - [**Visual Latency Isolation (TCP vs ROS 2)**](vision_setup/DIAGNOSTICO_RED_VISION.md)
 

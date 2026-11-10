@@ -1,24 +1,27 @@
 # Burger Description Package
 
-> [!WARNING]
-> **Este modelo vendorizado es de 7 GDL; el robot del laboratorio es de 6.**
+> [!NOTE]
+> **El modelo vendorizado es el del robot del laboratorio: Gen3 de 6 GDL, pinza Robotiq 2F-85 y
+> módulo de visión** (re-vendorizado desde `kortex_description/arms/gen3/6dof` con
+> `scripts/revendorizar_gen3_6dof.py --vision`, que también regenera `visual/burger_delivery_gen3.urdf`).
+> Los frames de la cámara, `gen3_camera_link`, `gen3_camera_color_frame` y `gen3_camera_depth_frame`,
+> cuelgan de `gen3_end_effector_link`.
 >
 > Conviene no confundir dos modelos que coexisten en el workspace:
 >
 > | Modelo | Cadena cinemática | GDL |
 > | :--- | :--- | :---: |
-> | `kortex_description`, generado en vivo por el driver | `base_link → shoulder_link → **bicep_link** → forearm_link → …` | **6** |
-> | `burger_description` (este, vendorizado) | `gen3_base_link → … → **gen3_half_arm_1_link → gen3_half_arm_2_link** → …` | 7 |
+> | `kortex_description`, generado en vivo por el driver | `base_link → shoulder_link → bicep_link → forearm_link → …` | 6 |
+> | `burger_description` (vendorizado) | `gen3_base_link → gen3_shoulder_link → gen3_bicep_link → gen3_forearm_link → …` | 6 |
 >
-> El RViz que abre `kinova_connection.launch.py` con `launch_rviz:=true` usa el **primero**,
-> generado por `kortex_bringup` con `dof:=6`, y **sí es fiel al robot**: refleja la
-> posición articular real. El modelo de `burger_description` sólo lo usa
-> `display.launch.py`, un visor sin robot, y tiene una articulación de más
-> (`half_arm_1`/`half_arm_2` en lugar de `bicep`) y todos sus frames bajo el prefijo
-> `gen3_`, así que no colisiona con los del driver pero tampoco corresponde al hardware.
->
-> Úsalo para estudiar la estructura de un URDF, no como referencia cinemática del brazo.
-> La re-vendorización a 6 GDL está pendiente; ver `TODO.md`.
+> Tienen la misma cinemática, pero el de `burger_description` lleva todos sus frames bajo el
+> prefijo `gen3_` y lo publica `display.launch.py`. Sin argumentos es un visor sin robot,
+> movido por el deslizador. Con `robot_real:=true` muestra la escena completa del
+> laboratorio con la pose real del brazo: `scene_joint_relay.py` copia `/joint_states` del
+> driver a `/scene/joint_states` con el prefijo `gen3_`. El RViz que abre
+> `kinova_connection.launch.py` con `launch_rviz:=true` usa el modelo del driver, sin la
+> escena. Los URDF de referencia de Kinova en `vendor/robots/` siguen siendo
+> los originales de 7 GDL.
 
 
 This package contains the URDF description for the Burger Delivery Robot.
@@ -67,6 +70,35 @@ Esto lanza automáticamente:
 - En el panel izquierdo "Global Options" → **Fixed Frame** → Selecciona `map`
 - Verifica que estén habilitados: ✓ RobotModel, ✓ TF
 
+![Escena de visualización base en RViz2 (Kinova Gen3 y carritos sobre la mesa)](../visual/escena_rviz_default.jpg)
+
+### Escena del laboratorio con el Kinova real
+
+Con el driver corriendo en la estación anfitriona del mismo `ROS_DOMAIN_ID` (ver
+`burger_kinova_reference`), la misma escena se mueve con la pose real del brazo:
+
+```bash
+ros2 launch burger_description display.launch.py robot_real:=true use_static_carts:=true
+```
+
+En este modo no se abre el deslizador. `scene_joint_relay.py` copia `/joint_states` del
+driver a `/scene/joint_states` con el prefijo `gen3_`, y la escena se publica en
+`/scene/robot_description` para no pisar el `/robot_description` del driver. RViz abre
+`rviz/laboratorio.rviz`. Solo lee estado y no envía comandos, así que también funciona
+en una estación cliente. Con `use_static_carts:=false`, los TF `tag_mesa → tag_carrito{1,2}`
+quedan a cargo del localizador AprilTag.
+
+Con el driver fake, añade `use_fake_hardware:=true`. Ese driver se lanza sin la pinza, y sin
+este argumento RViz marca `Status: Error` porque sus eslabones no tienen TF. El relé la publica
+abierta en la escena. No lo uses con el robot real: ocultaría una pinza que no publica su estado.
+
+En los dos modos, el display `ColisionMesa` de RViz dibuja en rojo la caja de colisión de la
+mesa, tal como la lee `scene_collision_markers.py` del URDF de la escena. Es la misma caja que
+`escena_moveit` carga en MoveIt, y se oculta con su casilla. Tiene las medidas de la mesa real
+(2.0 × 0.9 m y 0.92 m de alto) y baja hasta el piso para cubrir las patas, aunque el tablero
+visible mida 5 cm. La base del brazo va al borde del lado de 0.9 m, aproximadamente en la mitad.
+Fuera de esa caja, MoveIt puede planificar por debajo de la superficie.
+
 ### Lanzar Tu Nodo de Control (Nodo 2: Controlador)
 
 **Opción A: Nodo Python simple**
@@ -87,8 +119,8 @@ class SimpleArmController(Node):
         msg = JointState()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.name = ['gen3_joint_1', 'gen3_joint_2', 'gen3_joint_3', 
-                    'gen3_joint_4', 'gen3_joint_5', 'gen3_joint_6', 'gen3_joint_7']
-        msg.position = [0.0, 0.5, 0.0, 1.0, 0.0, 0.5, 0.0]
+                    'gen3_joint_4', 'gen3_joint_5', 'gen3_joint_6']
+        msg.position = [0.0, 0.5, 0.0, 1.0, 0.0, 0.5]
         self.pub.publish(msg)
 
 def main():
@@ -139,8 +171,7 @@ This will launch:
 ## Robot Components
 
 This URDF includes:
-- **Kinova Gen3 (7 DOF)** - Ultra-lightweight robotic arm
-  ⚠ El modelo vendorizado es de 7 GDL; el brazo del laboratorio es de **6**. Ver el aviso al inicio de este documento.
+- **Kinova Gen3 (6 DOF)** - Ultra-lightweight robotic arm, igual que el brazo del laboratorio
 - **2F Adapter** - Pinza simple
 - **Scene elements** - Table, staging area, delivery slots, mobile robot bases
 
@@ -195,8 +226,8 @@ class SimpleArmController(Node):
         msg = JointState()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.name = ['gen3_joint_1', 'gen3_joint_2', 'gen3_joint_3', 
-                    'gen3_joint_4', 'gen3_joint_5', 'gen3_joint_6', 'gen3_joint_7']
-        msg.position = [0.0, 0.5, 0.0, 1.0, 0.0, 0.5, 0.0]  # Ángulos en radianes
+                    'gen3_joint_4', 'gen3_joint_5', 'gen3_joint_6']
+        msg.position = [0.0, 0.5, 0.0, 1.0, 0.0, 0.5]  # Ángulos en radianes
         self.pub.publish(msg)
 
 def main():

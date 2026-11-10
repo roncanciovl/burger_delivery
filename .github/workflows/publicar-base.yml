@@ -110,18 +110,9 @@ jobs:
           git tag -a "${NOMBRE}" -m "${MOTIVO}"
           git push origin "refs/tags/${NOMBRE}"
 
-      - name: Publicar Release marcado como latest
-        if: steps.publicacion.outputs.sin-novedad != 'si'
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-          NOMBRE: ${{ steps.tag.outputs.nombre }}
-        run: |
-          set -euo pipefail
-          gh release create "${NOMBRE}" \
-            --title "Base del curso ${NOMBRE}" \
-            --generate-notes \
-            --latest
+      # Sin GitHub Release a propósito: cada Release dispara el webhook de Zenodo
+      # y acuña un DOI. Las bases de clase quedan solo como tag; los Releases se
+      # reservan para versiones del software (v1.x).
 
       - name: Resumen de la publicación
         shell: bash

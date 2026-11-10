@@ -25,6 +25,7 @@ Este documento centraliza las tareas pendientes, oportunidades de mejora identif
 ## 📦 2. Modularización de Paquetes ROS 2
 
 - [ ] **Separación del Workspace en Paquetes Especializados**:
+  - [ ] `burger_kinova_reference` Convertir en el paquete principal para el movimiento del robot 
   - [ ] `burger_description`: Mantener exclusivamente URDFs, mallas 3D y configuraciones RViz.
   - [ ] `burger_perception`: Nodos de detección AprilTag y razonamiento espacial con IA.
   - [ ] `burger_control`: Scripts de MoveIt 2 Task Constructor (MTC) para pick & place colaborativo.
@@ -72,14 +73,16 @@ Este documento centraliza las tareas pendientes, oportunidades de mejora identif
   - Reemplazado por [`aplicar_compatibilidad_kortex.py`](file:///home/roncanciovl/ros2_ws/src/burger_delivery/scripts/aplicar_compatibilidad_kortex.py), que sí hace lo necesario, **verifica el resultado** y falla ruidosamente. Validado sobre un clon prístino de upstream: deja los URDF generándose en 6 y 7 GDL, y es idempotente.
   - Confirmado que **ninguno de estos ajustes toca el árbol TF**: con `use_internal_bus_gripper_comm` en true y en false, links y joints son idénticos.
 - [ ] **Cuantificar el residuo que aporta WSL2**: con el enlace ya por cable persisten 6 overruns en 120 s y el driver sigue avisando `Could not enable FIFO RT scheduling policy`. Repetir la rama `ethernet` en Linux nativo para separar la contribución de la capa WSL2 de la del enlace.
-- [ ] **🟠 Re-vendorizar `burger_description` a 6 GDL** *(restaurada el 2026-09-15: el commit `161dbf9` la borró sin cerrarla, y `TALLER_URDF_TF.md` remite aquí)*:
+- [x] **✅ Re-vendorizar `burger_description` a 6 GDL** (2026-10-14): `scripts/revendorizar_gen3_6dof.py --vision` escribe la cadena oficial de 6 GDL con la pinza Robotiq 2F-85 y el módulo de visión (`gen3_camera_link`, `gen3_camera_color_frame`, `gen3_camera_depth_frame`), y regenera la copia del visor web `visual/burger_delivery_gen3.urdf`. `TALLER_URDF_TF.md` §11 enseña la cadena de la cámara para el Lab IA 01. Historial de la tarea:
   - El URDF vendorizado modela un Gen3 de **siete** articulaciones (`gen3_joint_1`…`gen3_joint_7`, cadena `gen3_half_arm_1_link`/`gen3_half_arm_2_link`, mallas de `arms/gen3/7dof/`), mientras el brazo real es de 6 GDL (cadena `bicep_link`).
   - **No afecta al RViz que abre el driver**: ese usa `kortex_description` generado en vivo con `dof:=6` y sí refleja la posición real. El modelo vendorizado sólo lo consume `burger_description/launch/display.launch.py`, un visor sin robot.
   - Mientras tanto, los cuatro documentos que lo describen (`burger_description/README.md`, `conceptos_core/visor_web_urdf.md`, `docs/architecture/ros_burger_delivery.md`, `education/talleres/TALLER_URDF_TF.md`) llevan un aviso explicando la diferencia entre los dos modelos.
-  - [ ] Sustituir descripción y mallas por las de `arms/gen3/6dof/`, y revisar los TF que dependan de la cadena (localización con AprilTag, pick & place).
-  - [ ] Revisar `TALLER_URDF_TF.md`: la explicación de redundancia ya está matizada, pero el taller se apoya en el modelo de 7 GDL.
+  - [x] Sustituir descripción y mallas por las de `arms/gen3/6dof/`. La escena (mesa, tags, `burger_grip_frame`) no cambia: cuelga de frames que siguen existiendo.
+  - [x] Revisar `TALLER_URDF_TF.md` y su formato ABET (v1.1, evidencia E7 de la cámara).
+  - [ ] Validar en el robot real el eslabón `end_effector_link → camera_link` (el driver no carga `vision:=true`) y el sentido de los ejes de `camera_color_frame` frente a la imagen. Procedimiento: `TALLER_URDF_TF.md` §11, Ejercicio 3 (predecir con TF2 el píxel de un marcador medido sobre la mesa y compararlo con la imagen). Según el URDF de Kinova el marco es óptico (Z hacia donde mira, X a la derecha, Y hacia abajo); falta confirmarlo.
 - [ ] **Pendientes de la revisión de talleres (2026-09-15)**, documentados en `TROUBLESHOOTING.md` §4:
-  - [ ] `scripts/flight_recorder_telemetry_demo.py` publica 7 articulaciones simuladas; el taller ya advierte que el robot es de 6 GDL. Decidir si se pasa a 6 (cambiaría los valores de referencia medidos del taller de rosbag).
+  - [x] `scripts/flight_recorder_telemetry_demo.py` publica ahora los mismos nombres que el robot real: `joint_1..joint_6` y `robotiq_85_left_knuckle_joint` (2026-10-14). Cada `JointState` crece 24 bytes; el taller de rosbag explica el efecto estimado en sus tamaños de referencia.
+  - [ ] Volver a medir con ROS 2 Jazzy los tamaños de referencia del taller de rosbag (MCAP+Zstd y SQLite3) con el emulador nuevo.
   - [x] `scripts/apriltag_fixed_camera_localizer.py`: el modo real ya se suscribe a `/camera/color/image_raw/compressed`, es compatible con OpenCV 4.6 (antes el detector quedaba en `None` en silencio) y mide en el plano de `tag_mesa` por homografía. Validado con escena sintética en perspectiva (error ≈ 3 mm y 0.55°).
   - [ ] Validar el localizador con la cámara real y los tags de la mesa: requiere tags 36h11 en la mesa (en la verificación del 2026-09-15 no había tags instalados; la cámara sí transmitía, 1920×1080 a ≈ 29 FPS) y que la anfitriona lleve el brazo a la pose de observación. Documentar IDs y tamaño de los tags físicos, que no figuran en el repositorio.
   - [ ] `display.launch.py` publica `/joint_states`, `/tf` y `/robot_description` sin namespace: hoy sólo lo protege la regla de dominio de los talleres. Valorar un namespace o un aviso al arrancar.
@@ -89,10 +92,20 @@ Este documento centraliza las tareas pendientes, oportunidades de mejora identif
 ## 🎓 5. Ecosistema Docente y Living Lab (ABET)
 
 - [ ] **Ampliación de Guías de Laboratorio (`education/guias_laboratorio/`)**:
-  - [ ] Guía Lab 02: Modelado de robots y árboles TF con URDF/XACRO.
-  - [ ] Guía Lab 03: Localización visual con AprilTags y cancelación de perspectiva.
-  - [ ] Guía Lab 04: Planificación de trayectorias con MoveIt 2.
-  - [ ] Guía Lab 05: Razonamiento espacial con IA multimodal (Gemini).
+  - [ ] Guía Lab 04: Modelado de robots y árboles TF con URDF/XACRO.
+  - [x] Guía Lab 05: Localización visual con AprilTags y cancelación de perspectiva → publicada como [Guía 05](education/guias_laboratorio/GUIA_LAB_05_TF_DRON_CARRITO_MICROROS.md) (2026-10-28): el dron publica `tag_mesa → tag_carrito1` con `apriltag_fixed_camera_localizer.py --ros-args -p publish_tf:=true` y el carrito la usa en un ESP32 con micro-ROS (relevo tf2 y `/tf` directo), con su instrumento ABET.
+    - [ ] Compilar `carrito_tf_control.ino` para el ESP32 con `micro_ros_arduino` (jazzy) y probarlo con un carrito: sólo se revisó contra las cabeceras de micro-ROS y se simuló la ley de control en la PC.
+    - [ ] Regenerar `micro_ros_arduino` con `tf2_msgs` (la biblioteca precompilada no lo trae) y comprobar la Fase B; dejar la biblioteca regenerada disponible para los estudiantes.
+    - [ ] Probar `ros2 run image_transport republish` con `in_transport`/`out_transport` en Jazzy y llevar a ROS 2 la cámara de cada dron del curso.
+  - [ ] Guía Lab 06: Planificación de trayectorias con MoveIt 2.
+  - [x] Guía Lab 07: Razonamiento espacial con IA multimodal (Gemini) → publicada como [Guía IA 01](education/guias_laboratorio/GUIA_LAB_IA_01_EMBODIED_AI_GEMINI_ER2_KINOVA.md) para la asignatura de IA, con `gemini-robotics-er-2-preview`, ruta sin ROS 2 y plantilla de código/informe.
+    - [ ] Validar en el robot real antes de la sesión: llamada a la API, `leer_calibracion_kortex.py` y el nodo ROS 2 contra `kinova_vision`.
+    - [ ] Corregir o reemplazar `default_color_calib_1920x1080.ini` de `kinova_vision` (declara `cy = 96.97 px`): afecta a todo nodo ROS que desproyecte con `/camera/color/camera_info` a 1080p.
+- [ ] **Proyecto final del Corte 3** ([especificación](education/proyectos_evaluables/PROYECTO_FINAL_CORTE_3_PICK_AND_PLACE_MOVEIT.md) e instrumento ABET publicados el 2026-11-05): pick and place de la caja de hamburguesa con MoveIt 2, la pinza y la visión. Validar en la celda real antes de asignarlo:
+  - [ ] Una pose de observación desde la que la cámara vea el `tag_mesa` y toda la zona de entrega.
+  - [ ] Alcance del brazo en la zona de recogida $(0.00, +0.25)$ m y en la zona de entrega del `tag_mesa`, con la pinza vertical.
+  - [ ] Caja de prueba con lado de agarre de 75 mm o menos y posición final de la Robotiq al cerrarse sobre ella (umbral para detectar agarre fallido).
+  - [ ] Percepción RGB-D en la cámara real: `depth_registration:=true` publica `/camera/depth_registered/image_rect` en `camera_color_frame` a la resolución del color; valor de `tf2_echo camera_color_frame camera_depth_frame` frente al URDF; píxeles válidos dentro del tag del carrito (papel mate, distancia mínima del D410) y error frente a la cinta (en simulación: 6 mm).
 - [ ] **Integración Continua (CI/CD)**:
   - [ ] Configurar GitHub Actions para validación automática de URDFs (`xmllint`, `check_urdf`) en cada Pull Request.
   - [ ] Linteo automático de código Python y scripts bash.

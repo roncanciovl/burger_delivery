@@ -35,6 +35,9 @@ launch:
     robot_ip: "0.0.0.0"
     use_fake_hardware: true
     launch_rviz: false
+    # Escena del laboratorio (mesa, carritos, tags) movida por /joint_states del driver.
+    # Incluye burger_description/launch/display.launch.py con robot_real:=true.
+    launch_scene: false
     # Parámetros que se transfieren tal cual al bringup oficial de Kinova.
     robot_type: "gen3"
     # ⚠ El brazo del laboratorio es un Gen3 de SEIS grados de libertad con pinza
@@ -228,6 +231,28 @@ launch:
     # Publica una transición de estado (OK/WARN/ERROR) sólo cuando el estado CAMBIA, para
     # que /rosout y rqt_console contengan la línea de tiempo del incidente y no ruido.
     log_state_transitions: true
+
+    # =================================================================================
+    # MOVEIT 2 — moveit_safe_executor (Laboratorio 04)
+    # =================================================================================
+    # MoveIt planifica; este package valida la trayectoria COMPLETA y la ejecuta
+    # (trajectory_validation.py). Las mismas reglas de arriba siguen valiendo:
+    # enable_motion, dry_run, joint_min_rad/joint_max_rad y la telemetría fresca.
+    # max_joint_delta_rad NO se aplica a un plan: limita una meta única cercana.
+    #
+    # Escalado que se pide a MoveIt al planificar (fracción de los límites del robot).
+    velocity_scaling: 0.1
+    acceleration_scaling: 0.1
+    # Reglas sobre la trayectoria planificada. Nunca se amplían para "hacer pasar" un plan.
+    start_tolerance_rad: 0.02         # el plan debe arrancar donde está el brazo
+    max_velocity_rad_s: 0.35          # ~20 °/s; con escalado 0.1 un plan normal no pasa de 0.14
+    max_joint_travel_rad: 3.0         # recorrido acumulado máximo por articulación
+    max_trajectory_duration_s: 60.0
+    continuous_joints: ["joint_1", "joint_4", "joint_6"]   # se vigilan saltos de 2π
+    final_tolerance_rad: 0.02         # aviso si la pose final medida se aleja del plan
+    # Escena de burger_description: obstáculos y marcos para las metas tipo "pose".
+    anchor_link: "world"              # en la escena, "world" es la base del brazo
+    planning_frame: "base_link"
 
 # -------------------------------------------------------------------------------------
 # Parámetros exclusivos del monitor.

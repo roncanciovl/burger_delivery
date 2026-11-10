@@ -1,0 +1,48 @@
+# =====================================================================================
+# Metas del ejecutor seguro de MoveIt (moveit_safe_executor) — Laboratorio 04
+# =====================================================================================
+# MoveIt PLANIFICA cada meta; burger_kinova_reference la VALIDA y la EJECUTA con las reglas
+# del laboratorio (trajectory_validation.py). Formato en metas_moveit.py.
+#
+# Marcos de las metas tipo "pose": cualquier eslabón de burger_description
+# (delivery_scene_fixed.urdf). "world" en la escena es la base del brazo (base_link del
+# driver), así que tag_mesa queda 0.30 m delante de la base, sobre la cara de la mesa.
+#
+# Orientación rpy [pi, 0, 0]: el eje z del efector (dirección de aproximación de la pinza)
+# apunta hacia abajo. La pinza mide ~0.15 m desde end_effector_link hasta las puntas: una
+# meta a 0.30 m sobre la mesa deja ~0.15 m de holgura.
+# =====================================================================================
+
+metas:
+  # Estados con nombre del SRDF de kinova_gen3_6dof_robotiq_2f_85_moveit_config
+  home:
+    tipo: articular
+    posiciones: [0.0, 0.261, -2.27, 0.0, 0.96, 1.5708]
+  retract:
+    tipo: articular
+    posiciones: [0.0, -0.35, -2.54, 0.0, -0.87, 1.5708]
+
+  # Pinza vertical 0.30 m sobre el tag de la mesa
+  sobre_tag_mesa:
+    tipo: pose
+    marco: tag_mesa
+    posicion: [0.0, 0.0, 0.30]
+    rpy: [3.14159, 0.0, 0.0]
+
+  # Ajustes finos en línea recta (marco base_link)
+  bajar_5cm:
+    tipo: cartesiana
+    desplazamiento: [0.0, 0.0, -0.05]
+  subir_5cm:
+    tipo: cartesiana
+    desplazamiento: [0.0, 0.0, 0.05]
+
+  # Pinza Robotiq 2F-85 (no existe en modo fake: el launch la omite)
+  abrir_pinza:
+    tipo: pinza
+    posicion: 0.0
+  cerrar_pinza:
+    tipo: pinza
+    posicion: 0.8
+
+secuencia: [home, sobre_tag_mesa, bajar_5cm, subir_5cm, home]

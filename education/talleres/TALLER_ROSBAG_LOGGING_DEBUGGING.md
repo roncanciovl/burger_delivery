@@ -371,6 +371,14 @@ Valores de referencia medidos en el laboratorio (3 tópicos, 20 Hz):
 | MCAP + Zstd | 11.5 s | 692 | 33.6 KB | **48.5** |
 | SQLite3 sin compresión | 11.5 s | 693 | 113.4 KB | **163.7** |
 
+> [!NOTE]
+> **Los tamaños se midieron con la versión anterior del emulador**, que publicaba 7 articulaciones
+> simuladas (`joint_1..joint_7`). Ahora publica lo mismo que el robot real: `joint_1..joint_6` y
+> `robotiq_85_left_knuckle_joint`. Cada `JointState` serializado pasa de 188 a 212 bytes (+24, por el
+> nombre más largo) y sólo un tercio de los mensajes es `joint_states`. Espera en SQLite3 unos
+> **+8 B/mensaje** (≈ 171 B/mensaje y ≈ 119 KB); en MCAP+Zstd la diferencia es casi nula, porque el
+> nombre repetido se comprime. Cadencias, conteos y jitter no cambian.
+
 > [!TIP]
 > Comparar los dos formatos es la forma más rápida de **demostrar** la ventaja de MCAP+Zstd con
 > evidencia propia: graba el mismo experimento dos veces (una con `-s mcap --compression-mode file
@@ -647,16 +655,27 @@ Valores obtenidos al ejecutar este taller completo en ROS 2 Jazzy (RMW CycloneDD
 | Volumen de log con `--log-level flight_recorder_telemetry_demo:=debug` | ≈ 90 líneas en 5 s (una por ciclo de telemetría) |
 | Volumen de log con `--log-level DEBUG` global | ≈ 490 líneas en 5 s (≈ 400 de `rcl` / `rmw_cyclonedds_cpp`) |
 
+> [!NOTE]
+> **Los tamaños de las grabaciones se midieron con la versión anterior del emulador**, que publicaba 7 articulaciones
+> simuladas (`joint_1..joint_7`). Ahora publica lo mismo que el robot real: `joint_1..joint_6` y
+> `robotiq_85_left_knuckle_joint`. Cada `JointState` serializado pasa de 188 a 212 bytes (+24, por el
+> nombre más largo) y sólo un tercio de los mensajes es `joint_states`. Espera en SQLite3 unos
+> **+8 B/mensaje** (≈ 171 B/mensaje y ≈ 119 KB); en MCAP+Zstd la diferencia es casi nula, porque el
+> nombre repetido se comprime. Cadencias, conteos y jitter no cambian.
+
 > [!TIP]
-> Si tu jitter máximo nominal sale muy por encima de `0.002`, o tu `joint_states` no trae las 7
-> articulaciones simuladas `joint_1..joint_7`, revisa la configuración del nodo y tu `ROS_DOMAIN_ID`
-> antes de concluir nada: primero descarta la capa de transporte y de registro.
+> Si tu jitter máximo nominal sale muy por encima de `0.002`, o tu `joint_states` no trae
+> `joint_1..joint_6` y `robotiq_85_left_knuckle_joint`, revisa la configuración del nodo y tu
+> `ROS_DOMAIN_ID` antes de concluir nada: primero descarta la capa de transporte y de registro.
 
 > [!WARNING]
-> **Las 7 articulaciones son del emulador, no del robot.** El Kinova Gen3 del laboratorio es de
-> **6 GDL** y en `/joint_states` publica `joint_1..joint_6` más la articulación de la pinza
-> (`robotiq_85_left_knuckle_joint`). No uses este taller como referencia del número de
-> articulaciones reales: ver [`TROUBLESHOOTING.md`](../../TROUBLESHOOTING.md) §3.1.
+> **El emulador imita los nombres del robot, no su dinámica.** El Kinova Gen3 del laboratorio es de
+> **6 GDL**, y el emulador publica en `/burger/kinova/joint_states` las mismas siete entradas que el
+> driver en `/joint_states`: `joint_1..joint_6` más la articulación de la pinza
+> (`robotiq_85_left_knuckle_joint`). La pinza no suma un grado de libertad del brazo. Las posiciones
+> son sinusoides sintéticas, así que no sirven como referencia de movimiento real. Si con el robot
+> ves una séptima articulación del brazo (`joint_7`), el driver corre con `dof:=7`: ver
+> [`TROUBLESHOOTING.md`](../../TROUBLESHOOTING.md) §3.1.
 
 ---
 
@@ -698,7 +717,7 @@ Valores obtenidos al ejecutar este taller completo en ROS 2 Jazzy (RMW CycloneDD
 > (verás `Decompressing …` en el arranque). Para tener tiempo de inspeccionar, reproduce a la mitad de
 > velocidad: `ros2 bag play dataset_incidente_mcap --rate 0.5 --remap /burger/kinova/joint_states:=/burger/kinova/joint_states_replay`.
 > Entonces `ros2 topic list` debe mostrar `/burger/kinova/joint_states_replay` y `ros2 topic echo`
-> un `JointState` con `frame_id: base_link` y las 7 articulaciones simuladas del emulador.
+> un `JointState` con `frame_id: base_link`, las 6 articulaciones del brazo y la de la pinza.
 >
 > Si el bag **ya terminó**, el tópico desaparece y `ros2 topic echo` responde
 > `topic [...] does not appear to be published yet`: vuelve a lanzar el `play` y verifica de inmediato.

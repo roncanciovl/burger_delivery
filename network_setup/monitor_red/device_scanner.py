@@ -381,7 +381,7 @@ class DeviceScanner:
                 f"ROS 2 configurado (Domain {configured_domain}); sin RTPS observado",
             )
         elif ip == "192.168.1.10" or "kinova" in h_lower or "kortex" in h_lower:
-            label = "Robot Kinova Gen3 (Brazo 7-DOF)"
+            label = "Robot Kinova Gen3 (Brazo 6-DOF)"
             if host_domains:
                 return observed_dds("robot", label, "robot")
             return inactive_device("robot", label, "robot", "Sin tráfico RTPS observado")

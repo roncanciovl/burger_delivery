@@ -7,7 +7,7 @@
     <visual name="table_top">
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="meshes/cube_1m.stl" scale="1.2 0.8 0.05"/>
+        <mesh filename="meshes/cube_1m.stl" scale="2.0 0.9 0.05"/>
       </geometry>
       <material name="table_brown">
         <color rgba="0.45 0.25 0.10 1.0"/>
@@ -783,7 +783,7 @@
     <parent link="map"/>
     <!-- table thickness = 0.05, top at z=1.0 -> center at 0.975 -->
     <child link="table_link"/>
-    <origin xyz="0.80 -1.00 0.80" rpy="0 0 0"/>
+    <origin xyz="1.94 -0.70 0.895" rpy="0 0 0"/>
   </joint>
 
   <joint name="map_to_staging" type="fixed">
@@ -801,7 +801,7 @@
   <joint name="table_to_kinova_base" type="fixed">
     <parent link="table_link"/>
     <child link="kinova_base_link"/>
-    <origin xyz="1.20 0.30 0.5" rpy="0 0 0"/>
+    <origin xyz="0.06 0.00 0.5" rpy="0 0 0"/>
   </joint>
 
   <!-- Use fixed for visualization to ensure it's visible in viewer -->
@@ -850,7 +850,9 @@
   <joint name="table_to_world" type="fixed">
     <parent link="table_link"/>
     <child link="world"/>
-    <origin xyz="0.20 0.30 0.00" rpy="0 0 0"/>
+    <!-- z = 0.025: la base del Gen3 se apoya en la cara SUPERIOR de la mesa (tablero de 0.05 m centrado en table_link). Con z = 0 quedaba 25 mm dentro de la mesa y MoveIt declaraba
+         en colisión el estado inicial. Misma altura que tag_mesa. -->
+    <origin xyz="-0.94 0.00 0.025" rpy="0 0 0"/>
   </joint>
   <!-- create link fixed to the "world" -->
   <link name="world"/>
@@ -964,270 +966,242 @@
       <state_interface name="velocity"/>
       <state_interface name="effort"/>
     </joint>
-    <joint name="gen3_joint_7">
-      <command_interface name="position">
-        <param name="min">${-2*pi}</param>
-        <param name="max">${2*pi}</param>
-      </command_interface>
-      <command_interface name="velocity">
-        <param name="min">-3.2</param>
-        <param name="max">3.2</param>
-      </command_interface>
-      <state_interface name="position">
-        <param name="initial_value">0.0</param>
-      </state_interface>
-      <state_interface name="velocity"/>
-      <state_interface name="effort"/>
-    </joint>
   </ros2_control>
   <joint name="gen3_base_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0 0 0"/>
-    <parent link="world"/>
-    <child link="gen3_base_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <parent link="world" />
+    <child link="gen3_base_link" />
   </joint>
   <link name="gen3_base_link">
     <inertial>
-      <origin rpy="0 0 0" xyz="-0.000648 -0.000166 0.084487"/>
-      <mass value="1.697"/>
-      <inertia ixx="0.004622" ixy="9E-06" ixz="6E-05" iyy="0.004495" iyz="9E-06" izz="0.002079"/>
+      <origin xyz="-0.000648 -0.000166 0.084487" rpy="0 0 0" />
+      <mass value="1.697" />
+      <inertia ixx="0.004622" ixy="9E-06" ixz="6E-05" iyy="0.004495" iyz="9E-06" izz="0.002079" />
     </inertial>
     <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="vendor/kortex_description/arms/gen3/7dof/meshes/base_link.dae"/>
+        <mesh filename="vendor/kortex_description/arms/gen3/6dof/meshes/base_link.STL" />
       </geometry>
       <material name="">
-        <color rgba="0.75294 0.75294 0.75294 1"/>
+        <color rgba="0.75294 0.75294 0.75294 1" />
       </material>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="vendor/kortex_description/arms/gen3/7dof/meshes/base_link.dae"/>
+        <mesh filename="vendor/kortex_description/arms/gen3/6dof/meshes/base_link.STL" />
       </geometry>
     </collision>
   </link>
   <link name="gen3_shoulder_link">
     <inertial>
-      <origin rpy="0 0 0" xyz="-2.3E-05 -0.010364 -0.07336"/>
-      <mass value="1.3773"/>
-      <inertia ixx="0.00457" ixy="1E-06" ixz="2E-06" iyy="0.004831" iyz="0.000448" izz="0.001409"/>
+      <origin xyz="-2.3E-05 -0.010364 -0.07336" rpy="0 0 0" />
+      <mass value="1.377" />
+      <inertia ixx="0.00457" ixy="1E-06" ixz="2E-06" iyy="0.004831" iyz="0.000448" izz="0.001409" />
     </inertial>
     <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="vendor/kortex_description/arms/gen3/7dof/meshes/shoulder_link.dae"/>
+        <mesh filename="vendor/kortex_description/arms/gen3/6dof/meshes/shoulder_link.STL" />
       </geometry>
       <material name="">
-        <color rgba="0.75294 0.75294 0.75294 1"/>
+        <color rgba="0.75294 0.75294 0.75294 1" />
       </material>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="vendor/kortex_description/arms/gen3/7dof/meshes/shoulder_link.dae"/>
+        <mesh filename="vendor/kortex_description/arms/gen3/6dof/meshes/shoulder_link.STL" />
       </geometry>
     </collision>
   </link>
   <joint name="gen3_joint_1" type="continuous">
-    <origin rpy="3.1416 2.7629E-18 -4.9305E-36" xyz="0 0 0.15643"/>
-    <parent link="gen3_base_link"/>
-    <child link="gen3_shoulder_link"/>
-    <axis xyz="0 0 1"/>
-    <limit effort="39" velocity="1.3963"/>
+    <origin xyz="0 0 0.15643" rpy="-3.1416 0.0 0.0" />
+    <parent link="gen3_base_link" />
+    <child link="gen3_shoulder_link" />
+    <axis xyz="0 0 1" />
+    <limit effort="39" velocity="1.3963" />
   </joint>
-  <link name="gen3_half_arm_1_link">
+  <link name="gen3_bicep_link">
     <inertial>
-      <origin rpy="0 0 0" xyz="-4.4E-05 -0.09958 -0.013278"/>
-      <mass value="1.1636"/>
-      <inertia ixx="0.011088" ixy="5E-06" ixz="0" iyy="0.001072" iyz="-0.000691" izz="0.011255"/>
+      <origin xyz="3.5E-05 -0.208207 -0.01889" rpy="0 0 0" />
+      <mass value="1.262" />
+      <inertia ixx="0.046752" ixy="-9E-06" ixz="0" iyy="0.00085" iyz="-9.8E-05" izz="0.047188" />
     </inertial>
     <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="vendor/kortex_description/arms/gen3/7dof/meshes/half_arm_1_link.dae"/>
+        <mesh filename="vendor/kortex_description/arms/gen3/6dof/meshes/bicep_link.STL" />
       </geometry>
       <material name="">
-        <color rgba="0.75294 0.75294 0.75294 1"/>
+        <color rgba="0.75294 0.75294 0.75294 1" />
       </material>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="vendor/kortex_description/arms/gen3/7dof/meshes/half_arm_1_link.dae"/>
+        <mesh filename="vendor/kortex_description/arms/gen3/6dof/meshes/bicep_link.STL" />
       </geometry>
     </collision>
   </link>
   <joint name="gen3_joint_2" type="revolute">
-    <origin rpy="1.5708 2.1343E-17 -1.1102E-16" xyz="0 0.005375 -0.12838"/>
-    <parent link="gen3_shoulder_link"/>
-    <child link="gen3_half_arm_1_link"/>
-    <axis xyz="0 0 1"/>
-    <limit effort="39" lower="-2.41" upper="2.41" velocity="1.3963"/>
-  </joint>
-  <link name="gen3_half_arm_2_link">
-    <inertial>
-      <origin rpy="0 0 0" xyz="-4.4E-05 -0.006641 -0.117892"/>
-      <mass value="1.1636"/>
-      <inertia ixx="0.010932" ixy="0" ixz="-7E-06" iyy="0.011127" iyz="0.000606" izz="0.001043"/>
-    </inertial>
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="vendor/kortex_description/arms/gen3/7dof/meshes/half_arm_2_link.dae"/>
-      </geometry>
-      <material name="">
-        <color rgba="0.75294 0.75294 0.75294 1"/>
-      </material>
-    </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="vendor/kortex_description/arms/gen3/7dof/meshes/half_arm_2_link.dae"/>
-      </geometry>
-    </collision>
-  </link>
-  <!-- Prueba temporal descartada: se evaluo limitar este joint a [-3.0, 3.0] rad.
-       Se conserva como continuous para mantener el comportamiento original del Gen3. -->
-  <joint name="gen3_joint_3" type="continuous">
-    <origin rpy="-1.5708 1.2326E-32 -2.9122E-16" xyz="0 -0.21038 -0.006375"/>
-    <parent link="gen3_half_arm_1_link"/>
-    <child link="gen3_half_arm_2_link"/>
-    <axis xyz="0 0 1"/>
-    <limit effort="39" velocity="1.3963"/>
+    <origin xyz="0 0.005375 -0.12838" rpy="1.5708 0.0 0.0" />
+    <parent link="gen3_shoulder_link" />
+    <child link="gen3_bicep_link" />
+    <axis xyz="0 0 1" />
+    <limit lower="-2.24" upper="2.24" effort="39" velocity="1.3963" />
   </joint>
   <link name="gen3_forearm_link">
     <inertial>
-      <origin rpy="0 0 0" xyz="-1.8E-05 -0.075478 -0.015006"/>
-      <mass value="0.9302"/>
-      <inertia ixx="0.008147" ixy="-1E-06" ixz="0" iyy="0.000631" iyz="-0.0005" izz="0.008316"/>
+      <origin xyz="1.8E-05 0.076168 -0.01397" rpy="0 0 0" />
+      <mass value="0.93" />
+      <inertia ixx="0.008292" ixy="-1E-06" ixz="0" iyy="0.000628" iyz="0.000432" izz="0.008464" />
     </inertial>
     <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="vendor/kortex_description/arms/gen3/7dof/meshes/forearm_link.dae"/>
+        <mesh filename="vendor/kortex_description/arms/gen3/6dof/meshes/forearm_link.STL" />
       </geometry>
       <material name="">
-        <color rgba="0.75294 0.75294 0.75294 1"/>
+        <color rgba="0.75294 0.75294 0.75294 1" />
       </material>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="vendor/kortex_description/arms/gen3/7dof/meshes/forearm_link.dae"/>
+        <mesh filename="vendor/kortex_description/arms/gen3/6dof/meshes/forearm_link.STL" />
       </geometry>
     </collision>
   </link>
-  <joint name="gen3_joint_4" type="revolute">
-    <origin rpy="1.5708 -6.6954E-17 -1.6653E-16" xyz="0 0.006375 -0.21038"/>
-    <parent link="gen3_half_arm_2_link"/>
-    <child link="gen3_forearm_link"/>
-    <axis xyz="0 0 1"/>
-    <limit effort="39" lower="-2.66" upper="2.66" velocity="1.3963"/>
+  <joint name="gen3_joint_3" type="revolute">
+    <origin xyz="0 -0.41 0" rpy="3.1416 0 0" />
+    <parent link="gen3_bicep_link" />
+    <child link="gen3_forearm_link" />
+    <axis xyz="0 0 1" />
+    <limit lower="-2.57" upper="2.57" effort="39" velocity="1.3963" />
   </joint>
   <link name="gen3_spherical_wrist_1_link">
     <inertial>
-      <origin rpy="0 0 0" xyz="1E-06 -0.009432 -0.063883"/>
-      <mass value="0.6781"/>
-      <inertia ixx="0.001596" ixy="0" ixz="0" iyy="0.001607" iyz="0.000256" izz="0.000399"/>
+      <origin xyz="-1E-06 0.008486 -0.062937" rpy="0 0 0" />
+      <mass value="0.6781" />
+      <inertia ixx="0.001645" ixy="0" ixz="0" iyy="0.001666" iyz="-0.000234" izz="0.000389" />
     </inertial>
     <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="vendor/kortex_description/arms/gen3/7dof/meshes/spherical_wrist_1_link.dae"/>
+        <mesh filename="vendor/kortex_description/arms/gen3/6dof/meshes/spherical_wrist_1_link.STL" />
       </geometry>
       <material name="">
-        <color rgba="0.75294 0.75294 0.75294 1"/>
+        <color rgba="0.75294 0.75294 0.75294 1" />
       </material>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="vendor/kortex_description/arms/gen3/7dof/meshes/spherical_wrist_1_link.dae"/>
+        <mesh filename="vendor/kortex_description/arms/gen3/6dof/meshes/spherical_wrist_1_link.STL" />
       </geometry>
     </collision>
   </link>
-  <joint name="gen3_joint_5" type="continuous">
-    <origin rpy="-1.5708 2.2204E-16 -6.373E-17" xyz="0 -0.20843 -0.006375"/>
-    <parent link="gen3_forearm_link"/>
-    <child link="gen3_spherical_wrist_1_link"/>
-    <axis xyz="0 0 1"/>
-    <limit effort="9" velocity="1.2218"/>
+  <joint name="gen3_joint_4" type="continuous">
+    <origin xyz="0 0.20843 -0.006375" rpy="1.5708 0.0 0.0" />
+    <parent link="gen3_forearm_link" />
+    <child link="gen3_spherical_wrist_1_link" />
+    <axis xyz="0 0 1" />
+    <limit effort="9" velocity="1.2218" />
   </joint>
   <link name="gen3_spherical_wrist_2_link">
     <inertial>
-      <origin rpy="0 0 0" xyz="1E-06 -0.045483 -0.00965"/>
-      <mass value="0.6781"/>
-      <inertia ixx="0.001641" ixy="0" ixz="0" iyy="0.00041" iyz="-0.000278" izz="0.001641"/>
+      <origin xyz="-1E-06 0.046429 -0.008704" rpy="0 0 0" />
+      <mass value="0.678" />
+      <inertia ixx="0.001685" ixy="0" ixz="0" iyy="0.0004" iyz="0.000255" izz="0.001696" />
     </inertial>
     <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="vendor/kortex_description/arms/gen3/7dof/meshes/spherical_wrist_2_link.dae"/>
+        <mesh filename="vendor/kortex_description/arms/gen3/6dof/meshes/spherical_wrist_2_link.STL" />
       </geometry>
       <material name="">
-        <color rgba="0.75294 0.75294 0.75294 1"/>
+        <color rgba="0.75294 0.75294 0.75294 1" />
       </material>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="vendor/kortex_description/arms/gen3/7dof/meshes/spherical_wrist_2_link.dae"/>
+        <mesh filename="vendor/kortex_description/arms/gen3/6dof/meshes/spherical_wrist_2_link.STL" />
       </geometry>
     </collision>
   </link>
-  <joint name="gen3_joint_6" type="revolute">
-    <origin rpy="1.5708 9.2076E-28 -8.2157E-15" xyz="0 0.00017505 -0.10593"/>
-    <parent link="gen3_spherical_wrist_1_link"/>
-    <child link="gen3_spherical_wrist_2_link"/>
-    <axis xyz="0 0 1"/>
-    <limit effort="9" lower="-2.23" upper="2.23" velocity="1.2218"/>
+  <joint name="gen3_joint_5" type="revolute">
+    <origin xyz="0 -0.00017505 -0.10593" rpy="-1.5708 0.0 0.0" />
+    <parent link="gen3_spherical_wrist_1_link" />
+    <child link="gen3_spherical_wrist_2_link" />
+    <axis xyz="0 0 1" />
+    <limit lower="-2.09" upper="2.09" effort="9" velocity="1.2218" />
   </joint>
   <link name="gen3_bracelet_link">
     <inertial>
-      <origin rpy="0 0 0" xyz="-9.3E-05 0.000132 -0.022905"/>
-      <mass value="0.364"/>
-      <inertia ixx="0.000214" ixy="0" ixz="1E-06" iyy="0.000223" iyz="-2E-06" izz="0.00024"/>
+      <origin xyz="0.000281 0.011402 -0.029798" rpy="0 0 0" />
+      <mass value="0.5" />
+      <inertia ixx="0.000587" ixy="3E-06" ixz="3E-06" iyy="0.000369" iyz="-0.000118" izz="0.000609" />
     </inertial>
     <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="vendor/kortex_description/arms/gen3/7dof/meshes/bracelet_no_vision_link.dae"/>
+        <mesh filename="vendor/kortex_description/arms/gen3/6dof/meshes/bracelet_with_vision_link.STL" />
       </geometry>
       <material name="">
-        <color rgba="0.75294 0.75294 0.75294 1"/>
+        <color rgba="0.75294 0.75294 0.75294 1" />
       </material>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="vendor/kortex_description/arms/gen3/7dof/meshes/bracelet_no_vision_link.dae"/>
+        <mesh filename="vendor/kortex_description/arms/gen3/6dof/meshes/bracelet_with_vision_link.STL" />
       </geometry>
     </collision>
   </link>
-  <joint name="gen3_joint_7" type="continuous">
-    <origin rpy="-1.5708 -5.5511E-17 9.6396E-17" xyz="0 -0.10593 -0.00017505"/>
-    <parent link="gen3_spherical_wrist_2_link"/>
-    <child link="gen3_bracelet_link"/>
-    <axis xyz="0 0 1"/>
-    <limit effort="9" velocity="1.2218"/>
+  <joint name="gen3_joint_6" type="continuous">
+    <origin xyz="0 0.10593 -0.00017505" rpy="1.5708 0.0 0.0" />
+    <parent link="gen3_spherical_wrist_2_link" />
+    <child link="gen3_bracelet_link" />
+    <axis xyz="0 0 1" />
+    <limit effort="9" velocity="1.2218" />
   </joint>
-  <link name="gen3_end_effector_link"/>
+  <link name="gen3_end_effector_link" />
   <joint name="gen3_end_effector" type="fixed">
-    <origin rpy="3.14159265358979 1.09937075168372E-32 0" xyz="0 0 -0.0615250000000001"/>
-    <parent link="gen3_bracelet_link"/>
-    <child link="gen3_end_effector_link"/>
-    <axis xyz="0 0 0"/>
+    <origin xyz="0 0 -0.0615250000000001" rpy="3.14159265358979 1.09937075168372E-32 3.14159265358979" />
+    <parent link="gen3_bracelet_link" />
+    <child link="gen3_end_effector_link" />
+    <axis xyz="0 0 0" />
+  </joint>
+  <link name="gen3_camera_link" />
+  <joint name="gen3_camera_module" type="fixed">
+    <origin xyz="0 0.05639 -0.00305" rpy="3.14159265358979 3.14159265358979 0" />
+    <parent link="gen3_end_effector_link" />
+    <child link="gen3_camera_link" />
+  </joint>
+  <link name="gen3_camera_depth_frame" />
+  <joint name="gen3_depth_module" type="fixed">
+    <origin xyz="0.0275 0.066 -0.00305" rpy="3.14159265358979 3.14159265358979 0" />
+    <parent link="gen3_end_effector_link" />
+    <child link="gen3_camera_depth_frame" />
+  </joint>
+  <link name="gen3_camera_color_frame" />
+  <joint name="gen3_color_module" type="fixed">
+    <origin xyz="0 0.05639 -0.00305" rpy="3.14159265358979 3.14159265358979 0" />
+    <parent link="gen3_end_effector_link" />
+    <child link="gen3_camera_color_frame" />
   </joint>
   <link name="gen3_robotiq_85_base_link">
     <visual>
       <geometry>
-        <mesh filename="vendor/robotiq_description/meshes/visual/robotiq_base.dae"/>
+        <mesh filename="vendor/robotiq_description/meshes/visual/2f_85/robotiq_base.dae"/>
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="vendor/robotiq_description/meshes/collision/robotiq_base.stl"/>
+        <mesh filename="vendor/robotiq_description/meshes/collision/2f_85/robotiq_base.stl"/>
       </geometry>
     </collision>
     <inertial>
@@ -1239,12 +1213,12 @@
   <link name="gen3_robotiq_85_left_knuckle_link">
     <visual>
       <geometry>
-        <mesh filename="vendor/robotiq_description/meshes/visual/left_knuckle.dae"/>
+        <mesh filename="vendor/robotiq_description/meshes/visual/2f_85/left_knuckle.dae"/>
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="vendor/robotiq_description/meshes/collision/left_knuckle.stl"/>
+        <mesh filename="vendor/robotiq_description/meshes/collision/2f_85/left_knuckle.stl"/>
       </geometry>
     </collision>
     <inertial>
@@ -1256,12 +1230,12 @@
   <link name="gen3_robotiq_85_right_knuckle_link">
     <visual>
       <geometry>
-        <mesh filename="vendor/robotiq_description/meshes/visual/right_knuckle.dae"/>
+        <mesh filename="vendor/robotiq_description/meshes/visual/2f_85/right_knuckle.dae"/>
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="vendor/robotiq_description/meshes/collision/right_knuckle.stl"/>
+        <mesh filename="vendor/robotiq_description/meshes/collision/2f_85/right_knuckle.stl"/>
       </geometry>
     </collision>
     <inertial>
@@ -1273,12 +1247,12 @@
   <link name="gen3_robotiq_85_left_finger_link">
     <visual>
       <geometry>
-        <mesh filename="vendor/robotiq_description/meshes/visual/left_finger.dae"/>
+        <mesh filename="vendor/robotiq_description/meshes/visual/2f_85/left_finger.dae"/>
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="vendor/robotiq_description/meshes/collision/left_finger.stl"/>
+        <mesh filename="vendor/robotiq_description/meshes/collision/2f_85/left_finger.stl"/>
       </geometry>
     </collision>
     <inertial>
@@ -1290,12 +1264,12 @@
   <link name="gen3_robotiq_85_right_finger_link">
     <visual>
       <geometry>
-        <mesh filename="vendor/robotiq_description/meshes/visual/right_finger.dae"/>
+        <mesh filename="vendor/robotiq_description/meshes/visual/2f_85/right_finger.dae"/>
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="vendor/robotiq_description/meshes/collision/right_finger.stl"/>
+        <mesh filename="vendor/robotiq_description/meshes/collision/2f_85/right_finger.stl"/>
       </geometry>
     </collision>
     <inertial>
@@ -1307,12 +1281,12 @@
   <link name="gen3_robotiq_85_left_inner_knuckle_link">
     <visual>
       <geometry>
-        <mesh filename="vendor/robotiq_description/meshes/visual/left_inner_knuckle.dae"/>
+        <mesh filename="vendor/robotiq_description/meshes/visual/2f_85/left_inner_knuckle.dae"/>
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="vendor/robotiq_description/meshes/collision/left_inner_knuckle.stl"/>
+        <mesh filename="vendor/robotiq_description/meshes/collision/2f_85/left_inner_knuckle.stl"/>
       </geometry>
     </collision>
     <inertial>
@@ -1324,12 +1298,12 @@
   <link name="gen3_robotiq_85_right_inner_knuckle_link">
     <visual>
       <geometry>
-        <mesh filename="vendor/robotiq_description/meshes/visual/right_inner_knuckle.dae"/>
+        <mesh filename="vendor/robotiq_description/meshes/visual/2f_85/right_inner_knuckle.dae"/>
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="vendor/robotiq_description/meshes/collision/right_inner_knuckle.stl"/>
+        <mesh filename="vendor/robotiq_description/meshes/collision/2f_85/right_inner_knuckle.stl"/>
       </geometry>
     </collision>
     <inertial>
@@ -1341,12 +1315,12 @@
   <link name="gen3_robotiq_85_left_finger_tip_link">
     <visual>
       <geometry>
-        <mesh filename="vendor/robotiq_description/meshes/visual/left_finger_tip.dae"/>
+        <mesh filename="vendor/robotiq_description/meshes/visual/2f_85/left_finger_tip.dae"/>
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="vendor/robotiq_description/meshes/collision/left_finger_tip.stl"/>
+        <mesh filename="vendor/robotiq_description/meshes/collision/2f_85/left_finger_tip.stl"/>
       </geometry>
       <surface>
         <friction>
@@ -1376,12 +1350,12 @@
   <link name="gen3_robotiq_85_right_finger_tip_link">
     <visual>
       <geometry>
-        <mesh filename="vendor/robotiq_description/meshes/visual/right_finger_tip.dae"/>
+        <mesh filename="vendor/robotiq_description/meshes/visual/2f_85/right_finger_tip.dae"/>
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="vendor/robotiq_description/meshes/collision/right_finger_tip.stl"/>
+        <mesh filename="vendor/robotiq_description/meshes/collision/2f_85/right_finger_tip.stl"/>
       </geometry>
       <surface>
         <friction>
@@ -1465,121 +1439,5 @@
     <axis xyz="0 -1 0"/>
     <origin rpy="0 0 0" xyz="-0.00563134 0.0 0.04718515"/>
     <mimic joint="gen3_robotiq_85_left_knuckle_joint"/>
-  </joint>
-  <link name="wrist_camera_link"/>
-  <joint name="wrist_camera_joint" type="fixed">
-    <parent link="gen3_bracelet_link"/>
-    <child link="wrist_camera_link"/>
-    <origin rpy="0 1.7444444444444447 -1.5708" xyz="0 -0.06841 -0.05044"/>
-  </joint>
-  <!-- camera body, with origin at bottom screw mount -->
-  <joint name="wrist_mounted_camera_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0 0 0"/>
-    <parent link="wrist_camera_link"/>
-    <child link="wrist_mounted_camera_bottom_screw_frame"/>
-  </joint>
-  <link name="wrist_mounted_camera_bottom_screw_frame"/>
-  <joint name="wrist_mounted_camera_link_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0 0.02 0.0115"/>
-    <parent link="wrist_mounted_camera_bottom_screw_frame"/>
-    <child link="wrist_mounted_camera_link"/>
-  </joint>
-  <link name="wrist_mounted_camera_link">
-    <visual>
-      <origin rpy="0 0 0" xyz="0.00987 -0.02 0"/>
-      <geometry>
-        <box size="0.020 0.099 0.023"/>
-      </geometry>
-      <material name="aluminum"/>
-    </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 -0.02 0"/>
-      <geometry>
-        <box size="0.02005 0.099 0.023"/>
-      </geometry>
-    </collision>
-    <inertial>
-      <mass value="0.072"/>
-      <!-- The following are not reliable values, and should not be used for modeling -->
-      <origin xyz="0 0 0"/>
-      <inertia ixx="0.003881243" ixy="0.0" ixz="0.0" iyy="0.000498940" iyz="0.0" izz="0.003879257"/>
-    </inertial>
-  </link>
-  <!-- camera depth joints and links -->
-  <joint name="wrist_mounted_camera_depth_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0 0 0"/>
-    <parent link="wrist_mounted_camera_link"/>
-    <child link="wrist_mounted_camera_depth_frame"/>
-  </joint>
-  <link name="wrist_mounted_camera_depth_frame"/>
-  <joint name="wrist_mounted_camera_depth_optical_joint" type="fixed">
-    <origin rpy="-1.5707963267948966 0 -1.5707963267948966" xyz="0 0 0"/>
-    <parent link="wrist_mounted_camera_depth_frame"/>
-    <child link="wrist_mounted_camera_depth_optical_frame"/>
-  </joint>
-  <link name="wrist_mounted_camera_depth_optical_frame"/>
-  <!-- camera left IR joints and links -->
-  <joint name="wrist_mounted_camera_infra1_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0 0.0 0"/>
-    <parent link="wrist_mounted_camera_link"/>
-    <child link="wrist_mounted_camera_infra1_frame"/>
-  </joint>
-  <link name="wrist_mounted_camera_infra1_frame"/>
-  <joint name="wrist_mounted_camera_infra1_optical_joint" type="fixed">
-    <origin rpy="-1.5707963267948966 0 -1.5707963267948966" xyz="0 0 0"/>
-    <parent link="wrist_mounted_camera_infra1_frame"/>
-    <child link="wrist_mounted_camera_infra1_optical_frame"/>
-  </joint>
-  <link name="wrist_mounted_camera_infra1_optical_frame"/>
-  <!-- camera right IR joints and links -->
-  <joint name="wrist_mounted_camera_infra2_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0 -0.055 0"/>
-    <parent link="wrist_mounted_camera_link"/>
-    <child link="wrist_mounted_camera_infra2_frame"/>
-  </joint>
-  <link name="wrist_mounted_camera_infra2_frame"/>
-  <joint name="wrist_mounted_camera_infra2_optical_joint" type="fixed">
-    <origin rpy="-1.5707963267948966 0 -1.5707963267948966" xyz="0 0 0"/>
-    <parent link="wrist_mounted_camera_infra2_frame"/>
-    <child link="wrist_mounted_camera_infra2_optical_frame"/>
-  </joint>
-  <link name="wrist_mounted_camera_infra2_optical_frame"/>
-  <!-- camera color joints and links -->
-  <joint name="wrist_mounted_camera_color_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0 0.015 0"/>
-    <parent link="wrist_mounted_camera_link"/>
-    <child link="wrist_mounted_camera_color_frame"/>
-  </joint>
-  <link name="wrist_mounted_camera_color_frame"/>
-  <joint name="wrist_mounted_camera_color_optical_joint" type="fixed">
-    <origin rpy="-1.5707963267948966 0 -1.5707963267948966" xyz="0 0 0"/>
-    <parent link="wrist_mounted_camera_color_frame"/>
-    <child link="wrist_mounted_camera_color_optical_frame"/>
-  </joint>
-  <link name="wrist_mounted_camera_color_optical_frame"/>
-  <!-- Wrist Camera Bracket -->
-  <link name="wrist_camera_mount_link">
-    <inertial>
-      <origin rpy="0 0 0" xyz="0.000281 0.011402 -0.029798"/>
-      <mass value="0.5"/>
-      <inertia ixx="0.000587" ixy="3E-06" ixz="3E-06" iyy="0.000369" iyz="-0.000118" izz="0.000609"/>
-    </inertial>
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="vendor/kortex_description/arms/gen3/7dof/meshes/realsense_bracket_for_kinova.dae"/>
-      </geometry>
-    </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="vendor/kortex_description/arms/gen3/7dof/meshes/realsense_bracket_for_kinova.dae"/>
-      </geometry>
-    </collision>
-  </link>
-  <joint name="wrist_camera_mount_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0 0 0.0"/>
-    <parent link="gen3_bracelet_link"/>
-    <child link="wrist_camera_mount_link"/>
   </joint>
 </robot>

@@ -1,5 +1,9 @@
 # 🎓 Guía Paso a Paso: Fundamentos de GitHub — Cuenta, Perfil Profesional y Exploración de Repositorios
 
+> [!IMPORTANT]
+> **Actualización del Repositorio Privado del Equipo:**
+> Si su equipo ya tiene repositorio privado, antes de iniciar o continuar con este taller asegúrese de haberlo sincronizado con los últimos cambios de la base del curso. Consulte la [Guía Oficial de Sincronización y Actualizaciones](../proyectos_evaluables/ACTUALIZACIONES_BASE_CORTE_1.md) para realizar este proceso correctamente. Si aún no lo tiene, complete primero este taller y después la [configuración de repositorios por equipo](../proyectos_evaluables/CONFIGURACION_REPOSITORIOS_EQUIPOS.md).
+
 ¡Bienvenido! En este taller práctico darás tus primeros pasos en **GitHub**, la plataforma líder a nivel mundial para el desarrollo colaborativo de software, robótica e ingeniería.
 
 Aprenderás a crear y blindar tu cuenta, estructurar un **perfil profesional de ingeniería**, y dominar las herramientas para **explorar, auditar y navegar repositorios** de otras organizaciones y desarrolladores dentro del ecosistema de **ROS 2**.

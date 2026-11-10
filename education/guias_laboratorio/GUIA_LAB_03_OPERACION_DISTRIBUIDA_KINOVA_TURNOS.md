@@ -17,6 +17,7 @@
 | Integración de herramientas RQT y profundización en Modo Seco | Incorporación de `rqt_graph` para el grafo distribuido, `rqt_console` para logging centralizado y formalización del concepto de modo seco (*dry run*). | 16/09/2026 |
 | Guarda contra segundo driver y convención `eqNN` | Incidente del 16/09/2026: una estación monitora lanzó un segundo driver y le quitó el control a la anfitriona (`WRONG_SERVOING_MODE`, movimiento a tirones). Se corrige la explicación de la sesión Kortex, se documenta la comprobación automática del launch (`check_existing_driver`) con sus límites, se define cómo se configura el sufijo `eqNN` y se corrige la frecuencia del ciclo de control (100 Hz). | 17/09/2026 |
 | Ampliación del rango del turno individual: de `joint_6` a `joint_1` | En la sesión del 16/09/2026 el giro de pinza de `joint_6` acotado a 0.10 rad (~12 mm en las puntas) no era visible desde las mesas de trabajo y los grupos no podían verificar el efecto de su meta sobre el robot real. El turno pasa a mover `joint_1` (giro de base) con 0.20 a 0.30 rad —arco de ~150 mm a 4 °/s— y `max_joint_delta_rad` sube de 0.10 a 0.35 rad. Los límites de carrera (`joint_min_rad`/`joint_max_rad`, tomados del URDF) y la secuencia autónoma del 3.4 no se modifican. | 17/09/2026 |
+| Lectura de `/joint_states` por nombre y coherencia con el instrumento ABET | Con el robot real `/joint_states` incluye la articulación de la pinza y su orden no es necesariamente `joint_1` a `joint_6`: la meta se arma leyendo el campo `name`, igual que en la [ruta de inicio](../../docs/INICIO_DESDE_CERO.md). Se corrige la referencia al radio libre (regla 3 de §6) y la observación del turno (giro de la base, no de la pinza). El instrumento ABET pasa de `joint_6` a `joint_1` (versión 1.1). | 21/10/2026 |
 
 ---
 
@@ -396,7 +397,7 @@ Filtre por nodo (`kinova_monitor_eqNN` o `kinova_monitor`) y observe los eventos
 > **Por qué se cambió de `joint_6` a `joint_1` (17/09/2026).** Hasta la sesión del 16/09 el turno movía `joint_6`, que gira la pinza sobre su propio eje: con el techo anterior de `0.10 rad` el desplazamiento máximo en las puntas era de $\sim 12\text{ mm}$ y desde las mesas de trabajo no se distinguía del ruido. El límite no era incorrecto, sino invisible. Si necesita un ensayo de mínimo riesgo antes del turno real, `joint_6` con $0.10\text{ rad}$ sigue siendo válido: el brazo no se desplaza, solo rota la pinza.
 
 > [!WARNING]
-> **`joint_1` barre volumen; `joint_6` no.** Al girar la base, **todo** el brazo se desplaza lateralmente. El radio libre de 1.2 m de la regla 4 de seguridad (§6) deja de ser una formalidad: es la condición que hace seguro este ejercicio. Antes de cada turno, verifique que nadie ni nada (cables, portátiles, sillas, la mesa del anfitrión) esté dentro del arco que va a recorrer el brazo.
+> **`joint_1` barre volumen; `joint_6` no.** Al girar la base, **todo** el brazo se desplaza lateralmente. El radio libre de 1.2 m de la regla 3 de seguridad (§6) deja de ser una formalidad: es la condición que hace seguro este ejercicio. Antes de cada turno, verifique que nadie ni nada (cables, portátiles, sillas, la mesa del anfitrión) esté dentro del arco que va a recorrer el brazo.
 
 ##### ¿Qué es el Modo Seco (`dry_run:=true`)?
 Consiste en ejecutar toda la validación matemática sobre la telemetría viva de `/joint_states` (límites de carrera, deltas por articulación, tasa de actualización y frescura temporal), pero **inhibiendo por software el envío de la meta al servidor de acción**. El robot físico permanece 100% inmóvil y el cliente retorna en Linux el código de éxito `0` (`echo $?` = 0). Es un requisito mandatorio de seguridad antes de autorizar cualquier movimiento en hardware real.
@@ -413,14 +414,11 @@ Consiste en ejecutar toda la validación matemática sobre la telemetría viva d
 Para descubrir la pose actual exacta del manipulador en tu mesa:
 
 ```bash
-# Opción 1: Extraer directamente el vector numérico de las 6 articulaciones
-ros2 topic echo /joint_states --once --field position
-
-# Opción 2: Ver el desglose completo de nombres y posiciones
+# Nombres (campo name) y posiciones (campo position) de cada articulación
 ros2 topic echo /joint_states --once
 ```
 
-Al ejecutar la lectura, obtendrás las 6 posiciones vivas en radianes `[j1, j2, j3, j4, j5, j6]` (por ejemplo: `[-0.1944, -0.5010, -1.9547, -0.0058, -0.6803, -1.5982]`).
+Anote la posición de cada articulación **por su nombre**: el orden del mensaje no tiene por qué ser 1, 2, 3…, así que relacione cada valor de `position` con el de `name` en la misma posición. Con el robot real el mensaje trae también la articulación de la pinza (`robotiq_85_left_knuckle_joint`): **no la copie**. La meta lleva sólo las 6 posiciones del brazo, en el orden `[j1, j2, j3, j4, j5, j6]` (por ejemplo: `[-0.1944, -0.5010, -1.9547, -0.0058, -0.6803, -1.5982]`).
 
 **Construcción de la Meta Articular:**
 1. Mantén las 5 articulaciones restantes (`joint_2` a `joint_6`) **exactamente idénticas** a las leídas, con todos sus decimales.
@@ -499,7 +497,7 @@ Vector meta resultante: `[0.0556, -0.5010, -1.9547, -0.0058, -0.6803, -1.5982]`
    ```text
    ¿Enviar meta al servidor de acción? [si/no]: si
    ```
-   Observe el movimiento físico de la pinza y el cierre con código `SUCCESSFUL`.
+   Observe el giro del brazo sobre su base y el cierre con código `SUCCESSFUL`.
 7. **Verificación y Liberación:** Todos los grupos verifican la nueva pose en RViz y el anfitrión asienta el cierre del turno en la Tabla 4.
 
 ---

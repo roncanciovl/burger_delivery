@@ -521,6 +521,23 @@ Conecta `vel_izq` y `vel_der` a un puente H mediante PWM (`ledcWrite`) en los pi
 Documenta la saturación aplicada y qué ocurre con los motores si se pierde el agente (conviene
 detenerlos en `destroy_entities()`).
 
+> [!TIP]
+> **💊 Píldora Metodológica — Carga Dinámica de Interfaces y Mensajes en Python (`rosidl_runtime_py`):**  
+> *En la sesión de micro-ROS se incluirá una píldora metodológica sobre cómo cargar tipos de mensajes de interfaces personalizadas con `rosidl_runtime_py`.*  
+>  
+> Al interactuar mediante scripts de Python con los tópicos del ESP32 o deserializar telemetría de micro-ROS (ej. grabada en bags MCAP), evite acoplarse rígidamente a imports estáticos que fallan si el entorno no los tiene en el `PYTHONPATH`. La biblioteca `rosidl_runtime_py` permite resolver e instanciar dinámicamente cualquier tipo de mensaje en tiempo de ejecución:
+> ```python
+> from rosidl_runtime_py.utilities import get_message
+>
+> # Carga dinámica de tipo estándar:
+> TwistMsg = get_message('geometry_msgs/msg/Twist')
+> cmd = TwistMsg()
+> cmd.linear.x = 0.5
+>
+> # Carga dinámica de interfaces personalizadas creadas en el workspace:
+> # BatteryMsg = get_message('burger_interfaces/msg/BatteryStatus')
+> ```
+
 ### ✅ Criterios de éxito
 - La persona participante puede validar con `ros2 topic info` que el ESP32 está suscrito antes de enviar comandos.
 - La persona participante puede interpretar la espera de `ros2 topic pub --once` como un diagnóstico de conexión o de nombres.

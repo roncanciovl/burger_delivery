@@ -17,6 +17,7 @@ setup(
         ('share/' + package_name, ['package.xml', 'README.md']),
         (os.path.join('share', package_name, 'launch'), glob('launch/*.launch.py')),
         (os.path.join('share', package_name, 'config'), glob('config/*.yaml')),
+        (os.path.join('share', package_name, 'rviz'), glob('rviz/*.rviz')),
         (os.path.join('share', package_name, 'docs'), glob('docs/*.md')),
         (os.path.join('share', package_name, 'scripts'),
             glob('scripts/*.sh') + glob('scripts/*.py')),
@@ -38,6 +39,9 @@ setup(
             'burger_kinova_reference.safe_trajectory_client:main',
             'safe_sequence_client = '
             'burger_kinova_reference.safe_sequence_client:main',
+            'moveit_safe_executor = '
+            'burger_kinova_reference.moveit_safe_executor:main',
+            'escena_moveit = burger_kinova_reference.escena_moveit:main',
         ],
     },
 )

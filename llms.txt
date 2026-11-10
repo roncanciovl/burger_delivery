@@ -121,6 +121,7 @@ map → table_link → world → gen3_base_link → ... → kinova_tool_frame �
 
 ### Research & AI Spatial Reasoning
 - `docs/research/EXPERIMENTO_IA_LOCALIZACION_GEMINI.md` — AI experiment: 3D spatial reasoning with Gemini Robotics-ER 1.6
+- `education/guias_laboratorio/GUIA_LAB_IA_01_EMBODIED_AI_GEMINI_ER2_KINOVA.md` — AI-course lab guide: Embodied AI with Gemini Robotics-ER 2 and the Kinova RGB-D camera (with and without ROS 2); starter code in `education/guias_laboratorio/plantilla_lab_ia_embodied/`
 - `ros2_setup/PROPUESTA_GEMINI_ER.md` — Gemini Robotics-ER integration proposal
 
 ### Educational Ecosystem (Living Lab / ABET)
