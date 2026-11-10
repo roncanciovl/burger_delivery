@@ -1,6 +1,9 @@
 r"""
 Nodo de razonamiento espacial con Gemini Robotics-ER.
 
+Antes, en la anfitriona: ``ros2 launch burger_perception camera.launch.py`` y
+``ros2 run burger_perception verify_rgbd_alignment`` (debe responder ALINEADA).
+
     export GEMINI_API_KEY=...
     ros2 launch burger_perception gemini.launch.py
     ros2 service call /gemini_spatial_reasoning/locate std_srvs/srv/Trigger

@@ -29,6 +29,7 @@ setup(
             'apriltag_localizer = burger_perception.apriltag_localizer:main',
             'gemini_spatial_reasoning_node = '
             'burger_perception.gemini_spatial_reasoning_node:main',
+            'verify_rgbd_alignment = burger_perception.verify_rgbd_alignment:main',
         ],
     },
 )
