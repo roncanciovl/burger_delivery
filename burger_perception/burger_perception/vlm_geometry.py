@@ -112,3 +112,8 @@ def ray_from_intrinsics(u: float, v: float, fx: float, fy: float,
     x, y = (u - cx) / fx, (v - cy) / fy
     norm = math.sqrt(x * x + y * y + 1.0)
     return x / norm, y / norm, 1.0 / norm
+
+
+def nearest_stamp_index(stamps: Sequence[float], target: float) -> int:
+    """Índice del tiempo de ``stamps`` (no vacío) más cercano a ``target``."""
+    return min(range(len(stamps)), key=lambda i: abs(stamps[i] - target))

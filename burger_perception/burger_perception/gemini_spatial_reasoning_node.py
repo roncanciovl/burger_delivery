@@ -32,12 +32,14 @@ Modos de profundidad (``depth_mode``):
 La clave va en ``GEMINI_API_KEY``, nunca como parámetro.
 """
 
+from collections import deque
 import json
 import threading
 
 from burger_perception.gemini_client import build_prompt, DEFAULT_MODEL, GeminiPointer
 from burger_perception.vlm_geometry import (
     depth_at,
+    nearest_stamp_index,
     normalized_to_pixel,
     scale_pixel,
     scale_ray_to_depth,
@@ -51,7 +53,7 @@ from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 from rclpy.duration import Duration
 from rclpy.executors import ExternalShutdownException, MultiThreadedExecutor
 from rclpy.node import Node
-from rclpy.qos import qos_profile_sensor_data
+from rclpy.qos import qos_profile_sensor_data, QoSProfile, ReliabilityPolicy
 from rclpy.time import Time
 from sensor_msgs.msg import CameraInfo, CompressedImage, Image
 from std_msgs.msg import String
@@ -74,6 +76,8 @@ class GeminiSpatialReasoningNode(Node):
         p('depth_topic', '/camera/depth_registered/image_rect')
         p('depth_info_topic', '/camera/depth/camera_info')
         p('depth_mode', 'registered')
+        p('depth_reliable', True)
+        p('max_depth_skew_s', 0.05)
         p('plane_distance_m', 0.5)
         p('depth_window_px', 7)
         p('target', 'cardboard burger box')
@@ -96,7 +100,8 @@ class GeminiSpatialReasoningNode(Node):
         self.target_frame = g('target_frame').value
 
         self.lock = threading.Lock()
-        self.image = None
+        # Unos 1.3 s de imágenes: la profundidad registrada llega después que su color.
+        self.images = deque(maxlen=30)
         self.info = None
         self.depth = None
         self.depth_info = None
@@ -110,8 +115,10 @@ class GeminiSpatialReasoningNode(Node):
         self.create_subscription(CameraInfo, g('camera_info_topic').value,
                                  self._on_info, 10)
         if self.depth_mode != 'plane':
-            self.create_subscription(Image, g('depth_topic').value,
-                                     self._on_depth, qos_profile_sensor_data)
+            # Una imagen registrada son 4 MB: en best effort, perder un fragmento la descarta.
+            depth_qos = (QoSProfile(depth=1, reliability=ReliabilityPolicy.RELIABLE)
+                         if g('depth_reliable').value else qos_profile_sensor_data)
+            self.create_subscription(Image, g('depth_topic').value, self._on_depth, depth_qos)
             self.create_subscription(CameraInfo, g('depth_info_topic').value,
                                      self._on_depth_info, 10)
 
@@ -137,7 +144,7 @@ class GeminiSpatialReasoningNode(Node):
     # --- captura asíncrona -------------------------------------------------------------
     def _on_image(self, msg):
         with self.lock:
-            self.image = msg
+            self.images.append(msg)
 
     def _on_info(self, msg):
         with self.lock:
@@ -165,22 +172,34 @@ class GeminiSpatialReasoningNode(Node):
     def locate(self):
         """Ejecutar una inferencia completa; devuelve (éxito, mensaje)."""
         with self.lock:
-            image, info, depth, depth_info = self.image, self.info, self.depth, self.depth_info
-        if image is None or info is None:
+            images, info, depth, depth_info = (
+                list(self.images), self.info, self.depth, self.depth_info)
+        if not images or info is None:
             return False, 'sin imagen o sin camera_info todavía'
-        if self.depth_mode != 'plane' and depth is None:
-            return False, f'sin profundidad (depth_mode={self.depth_mode})'
+        image, skew_s = images[-1], None
+        if self.depth_mode != 'plane':
+            if depth is None:
+                return False, f'sin profundidad (depth_mode={self.depth_mode})'
+            # El brazo puede moverse: color y profundidad deben ser del mismo instante.
+            target = Time.from_msg(depth.header.stamp).nanoseconds * 1e-9
+            stamps = [Time.from_msg(i.header.stamp).nanoseconds * 1e-9 for i in images]
+            index = nearest_stamp_index(stamps, target)
+            image, skew_s = images[index], abs(stamps[index] - target)
+            limit = self.get_parameter('max_depth_skew_s').value
+            if skew_s > limit:
+                return False, (f'color y profundidad desfasados {skew_s * 1000:.0f} ms '
+                               f'(máximo {limit * 1000:.0f} ms)')
 
         self.busy.set()
         try:
-            return self._locate(image, info, depth, depth_info)
+            return self._locate(image, info, depth, depth_info, skew_s)
         except Exception as error:  # la red o el SDK pueden fallar de muchas formas
             self.get_logger().error(f'Inferencia fallida: {error}')
             return False, str(error)
         finally:
             self.busy.clear()
 
-    def _locate(self, image, info, depth, depth_info):
+    def _locate(self, image, info, depth, depth_info, skew_s=None):
         bgr = cv2.imdecode(np.frombuffer(image.data, dtype=np.uint8), cv2.IMREAD_COLOR)
         if bgr is None:
             return False, f'no se pudo decodificar la imagen ({image.format})'
@@ -189,7 +208,8 @@ class GeminiSpatialReasoningNode(Node):
         points, latency_ms, raw = self.pointer.point(jpeg, self.prompt)
         metrics = {'stamp': Time.from_msg(image.header.stamp).nanoseconds * 1e-9,
                    'latency_ms': latency_ms, 'jpeg_bytes': len(jpeg),
-                   'image_size': [width, height], 'points': points, 'ok': False}
+                   'image_size': [width, height], 'points': points, 'ok': False,
+                   'depth_skew_ms': None if skew_s is None else skew_s * 1000.0}
         if not points:
             metrics['raw'] = raw[:500]
             self._publish_metrics(metrics)

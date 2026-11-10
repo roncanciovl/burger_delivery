@@ -7,6 +7,9 @@ gemini_spatial_reasoning:
     # registered: kinova_vision con depth_registration:=true (profundidad alineada al color)
     # scaled: profundidad sin registrar (aproximado); plane: sin profundidad, z fija
     depth_mode: "registered"
+    # reliable en la anfitriona (4 MB por imagen); false en una estación por WiFi
+    depth_reliable: true
+    max_depth_skew_s: 0.05    # rechaza pares color/profundidad más separados que esto
     depth_topic: "/camera/depth_registered/image_rect"
     depth_info_topic: "/camera/depth/camera_info"
     plane_distance_m: 0.5

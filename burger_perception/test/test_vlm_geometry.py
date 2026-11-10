@@ -6,6 +6,7 @@ from burger_perception.gemini_client import build_prompt
 from burger_perception.vlm_geometry import (
     deproject,
     depth_at,
+    nearest_stamp_index,
     normalized_to_pixel,
     parse_points,
     ray_from_intrinsics,
@@ -14,6 +15,12 @@ from burger_perception.vlm_geometry import (
 )
 import numpy as np
 import pytest
+
+
+def test_imagen_mas_cercana_a_la_profundidad():
+    """La profundidad registrada llega tarde: se elige la imagen de su mismo instante."""
+    assert nearest_stamp_index([10.00, 10.04, 10.08, 10.12], 10.05) == 1
+    assert nearest_stamp_index([10.00], 99.0) == 0
 
 
 def test_parse_respuesta_con_bloque_json():
