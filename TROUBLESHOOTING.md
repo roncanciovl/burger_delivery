@@ -13,6 +13,7 @@ Esta guía cubre los fallos que más tiempo consumen en el laboratorio:
 | Mi código parece correcto y aun así el driver no arranca, o publica datos absurdos | [3. Fallos de plataforma ajenos a tu código](#3-fallos-de-plataforma-ajenos-a-tu-código) |
 | La cámara del Kinova da `Failed to start stream`, o `kinova_vision` no se detiene con `Ctrl+C` | [3.4 El driver de visión no se detiene limpiamente](#34-el-driver-de-visión-no-se-detiene-limpiamente-y-deja-la-cámara-bloqueada) |
 | Debe publicarse sólo la imagen comprimida, pero aparece `image_raw` o RViz no ofrece `/compressed` | [3.5 Lanzar sólo la imagen comprimida del Kinova](#35-el-launch-estándar-anuncia-image_raw-lanzar-sólo-la-imagen-comprimida) |
+| El nodo Gemini da un punto 3D que no coincide con el objeto, o responde `color y profundidad desfasados` | [3.8 Color y profundidad de instantes distintos](#38-el-nodo-gemini-combina-color-y-profundidad-de-instantes-distintos) |
 | Un comando de un taller "funciona" (no da error) pero no produce lo que la guía promete | [4. Fallos silenciosos al ejecutar los talleres](#4-fallos-silenciosos-al-ejecutar-los-talleres) |
 
 ---
@@ -1013,6 +1014,61 @@ normal. Aun así, con el brazo en movimiento los ciclos de más de 20 ms subiero
 en las mismas condiciones. El residuo viene de WSL, que no da tiempo real al ciclo. Por eso
 el driver corre a 100 Hz en lugar del 1 kHz para el que está pensada la API Kortex.
 Eliminarlo exige Linux nativo con planificación de tiempo real.
+
+### 3.8 El nodo Gemini combina color y profundidad de instantes distintos
+
+**Síntoma.** Con `depth_mode: registered`, el nodo `gemini_spatial_reasoning` (paquete
+`burger_perception`) entrega un punto 3D que no coincide con el objeto. Con la corrección de esta
+sección, ese par ya no se usa y el servicio `~/locate` lo rechaza con este mensaje:
+
+```text
+color y profundidad desfasados <N> ms (máximo 50 ms)
+```
+
+**La causa, medida.** Sobre el robot real (2026-11-10), desde la estación anfitriona, con
+`kinova_vision.launch.py depth_registration:=true` y 20 s por medición:
+
+| Tópico | Tamaño de cada mensaje | Recibido en *best effort* | Recibido en *reliable* |
+| :--- | :--- | :--- | :--- |
+| `/camera/depth_registered/image_rect` (1920×1080, `16UC1`) | 4.1 MB | **5.85 Hz** | **21.93 Hz** |
+| `/camera/color/image_raw/compressed` | unos 310 KB | 19.42 Hz | 23.03 Hz |
+| `/camera/depth/image_raw` (480×270, `16UC1`) | 259 KB | 30.00 Hz | 29.95 Hz |
+
+Hay dos efectos que se suman:
+
+1. Cada imagen registrada ocupa más de mil fragmentos DDS, y en *best effort* perder uno descarta
+   la imagen entera (sección 4.8). El nodo se suscribía así, y guardaba la última imagen de cada
+   flujo sin comparar sus estampas. En una captura de 25 s, la última profundidad quedó **24 s**
+   más vieja que el color; en otra, 1.3 s.
+2. Aun en *reliable*, la profundidad registrada llega más tarde que su color: la mediana de
+   antigüedad al recibirla fue de 80 ms, frente a 19 ms del color. Tomar el último mensaje de cada
+   flujo empareja instantes distintos.
+
+Con la cámara quieta, el error pasa inadvertido. Con la cámara en la muñeca y el brazo en
+movimiento, la profundidad corresponde a otra posición.
+
+**La corrección** (en `burger_perception/config/gemini.yaml`):
+
+| Parámetro | Valor | Efecto |
+| :--- | :--- | :--- |
+| `depth_reliable` | `true` | Suscribe la profundidad en *reliable*, con cola de una imagen |
+| `max_depth_skew_s` | `0.05` | Rechaza el par si color y profundidad difieren más de 50 ms |
+
+El nodo guarda además las últimas 30 imágenes de color (unos 1.3 s) y usa la más cercana a la
+estampa de la profundidad, no la más reciente.
+
+**Cómo comprobarlo.** Cada inferencia publica el desfase usado en el campo `depth_skew_ms`:
+
+```bash
+ros2 topic echo /gemini_spatial_reasoning/inference --field data
+```
+
+Con la corrección, y con la respuesta de Gemini sustituida por una fija, 8 de 8 inferencias
+sobre la cámara real se completaron con un desfase de 1 a 16 ms.
+
+**Lo que no se midió.** La prueba se hizo con la cámara quieta y desde la estación anfitriona. En
+una estación por WiFi, *reliable* retransmite imágenes de 4 MB y puede saturar el enlace
+(sección 4.8): ahí usa `depth_reliable: false` y espera más rechazos.
 
 ---
 
