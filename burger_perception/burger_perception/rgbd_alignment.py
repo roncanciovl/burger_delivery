@@ -220,19 +220,27 @@ def search_translation(field: np.ndarray, u: np.ndarray, v: np.ndarray, z: np.nd
     return {'t': (best[1], best[2], 0.0), 'score': best[0], 'xs': xs, 'ys': ys, 'scores': scores}
 
 
-def search_shift(field: np.ndarray, u: np.ndarray, v: np.ndarray, range_px: int = 90,
-                 cap_px: float = 30.0) -> Dict:
-    """Buscar el desplazamiento en píxeles que mejor lleva una silueta a los bordes de color."""
+def search_shift(field: np.ndarray, u: np.ndarray, v: np.ndarray, range_px: int = 200,
+                 cap_px: float = 30.0, step_px: int = 5) -> Dict:
+    """
+    Buscar el desplazamiento en píxeles que mejor lleva una silueta a los bordes de color.
+
+    En 1080p un error de pocos centímetros ya son más de 100 px: un rango corto encuentra un
+    mínimo falso. ``at_limit`` avisa si el mejor quedó en el borde del rango.
+    """
     u, v = _subsample(4000, u, v)
 
     def score(du, dv):
         return chamfer_score(field, u + du, v + dv, cap_px)
 
-    best = min(((score(du, dv), du, dv) for dv in range(-range_px, range_px + 1, 3)
-                for du in range(-range_px, range_px + 1, 3)), key=lambda item: item[0])
+    steps = range(-range_px, range_px + 1, step_px)
+    best = min(((score(du, dv), du, dv) for dv in steps for du in steps),
+               key=lambda item: item[0])
     best = min(((score(best[1] + du, best[2] + dv), best[1] + du, best[2] + dv)
-                for dv in range(-3, 4) for du in range(-3, 4)), key=lambda item: item[0])
-    return {'du': best[1], 'dv': best[2], 'score': best[0], 'score_at_zero': score(0, 0)}
+                for dv in range(-step_px, step_px + 1) for du in range(-step_px, step_px + 1)),
+               key=lambda item: item[0])
+    return {'du': best[1], 'dv': best[2], 'score': best[0], 'score_at_zero': score(0, 0),
+            'at_limit': max(abs(best[1]), abs(best[2])) >= range_px}
 
 
 def direction_spread(u: np.ndarray, v: np.ndarray) -> float:
@@ -247,20 +255,25 @@ def direction_spread(u: np.ndarray, v: np.ndarray) -> float:
     return float(np.sqrt(max(eigen[0], 0.0) / eigen[1])) if eigen[1] > 0 else 0.0
 
 
-def _ambiguity(search: Dict, exclusion_m: float) -> float:
-    """Puntaje del mejor mínimo lejano dividido entre el del global (cerca de 1 = ambiguo)."""
+def plausible_distances(search: Dict, t: Sequence[float], margin: float) -> Tuple[float, float]:
+    """
+    Distancias mínima y máxima (m) de ``t`` a las traslaciones casi igual de buenas que la mejor.
+
+    "Casi igual de buenas" son las de puntaje hasta ``(1 + margin)`` veces el mejor. Si todas
+    quedan del mismo lado de la tolerancia, el veredicto no depende de cuál sea la correcta.
+    """
     x_grid, y_grid = np.meshgrid(search['xs'], search['ys'])
-    far = np.hypot(x_grid - search['t'][0], y_grid - search['t'][1]) > exclusion_m
-    if not far.any() or search['score'] <= 0.0:
-        return float('inf')
-    return float(search['scores'][far].min() / search['score'])
+    near = search['scores'] <= search['score'] * (1.0 + margin)
+    best = np.hypot(search['t'][0] - t[0], search['t'][1] - t[1])
+    distance = np.append(np.hypot(x_grid[near] - t[0], y_grid[near] - t[1]), best)
+    return float(distance.min()), float(distance.max())
 
 
 def evaluate_alignment(field: np.ndarray, u: np.ndarray, v: np.ndarray, z: np.ndarray,
                        depth_k: Intrinsics, color_k: Intrinsics,
                        hypotheses: Dict[str, Translation], reference: str,
                        tol_mm: float = 3.0, min_points: int = 200, min_contrast: float = 0.25,
-                       min_ambiguity: float = 1.05, exclusion_m: float = 0.005,
+                       plausible_margin: float = 0.05,
                        min_spread: float = 0.2, margin_px: int = 40) -> Dict:
     """
     Comparar los extrínsecos candidatos con los que mejor explican la imagen.
@@ -294,9 +307,10 @@ def evaluate_alignment(field: np.ndarray, u: np.ndarray, v: np.ndarray, z: np.nd
         'best_t_mm': [round(c * 1000.0, 2) for c in search['t']],
         'best_chamfer_px': search['score'],
         'contrast': (mean_score - search['score']) / mean_score if mean_score > 0 else 0.0,
-        'ambiguity': _ambiguity(search, exclusion_m),
         'direction_spread': direction_spread(u, v),
     })
+    nearest, farthest = plausible_distances(search, hypotheses[reference], plausible_margin)
+    report['reference_range_mm'] = [round(nearest * 1000.0, 1), round(farthest * 1000.0, 1)]
     for name, t in hypotheses.items():
         error_m = float(np.hypot(t[0] - search['t'][0], t[1] - search['t'][1]))
         projected = project_points(u, v, z, depth_k, color_k, t)
@@ -314,13 +328,13 @@ def evaluate_alignment(field: np.ndarray, u: np.ndarray, v: np.ndarray, z: np.nd
     elif report['contrast'] < min_contrast:
         report['reason'] = (f'el puntaje casi no cambia con los extrínsecos (contraste '
                             f'{report["contrast"]:.2f}, mínimo {min_contrast:.2f})')
-    elif report['ambiguity'] < min_ambiguity:
-        report['reason'] = (f'hay otro mínimo casi igual de bueno (razón '
-                            f'{report["ambiguity"]:.2f}, mínimo {min_ambiguity:.2f}); use un '
-                            'objeto sin textura impresa y con bordes en dos direcciones')
+    elif nearest * 1000.0 <= tol_mm < farthest * 1000.0:
+        report['reason'] = (f'las soluciones casi igual de buenas quedan a {nearest * 1000:.1f}-'
+                            f'{farthest * 1000:.1f} mm de "{reference}", a ambos lados de la '
+                            f'tolerancia ({tol_mm:.1f} mm); use un objeto con menos texto impreso')
     else:
-        error_mm = report['hypotheses'][reference]['error_mm']
-        report['verdict'] = ALIGNED if error_mm <= tol_mm else MISALIGNED
-        report['reason'] = (f'"{reference}" difiere {error_mm:.1f} mm de la mejor estimación '
+        report['verdict'] = ALIGNED if farthest * 1000.0 <= tol_mm else MISALIGNED
+        report['reason'] = (f'"{reference}" queda a {nearest * 1000:.1f}-{farthest * 1000:.1f} mm '
+                            f'de las soluciones compatibles con la imagen '
                             f'(tolerancia {tol_mm:.1f} mm)')
     return report

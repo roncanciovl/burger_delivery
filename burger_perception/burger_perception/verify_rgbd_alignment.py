@@ -199,7 +199,8 @@ def print_report(report):
     if 'best_t_mm' in report:
         print(f'  mejor estimación t (mm): {report["best_t_mm"]}, '
               f'chamfer {report["best_chamfer_px"]:.2f} px, '
-              f'contraste {report["contrast"]:.2f}, ambigüedad {report["ambiguity"]:.2f}, '
+              f'contraste {report["contrast"]:.2f}, '
+              f'distancia del sistema {report["reference_range_mm"]} mm, '
               f'z mediana {report["median_depth_m"]:.3f} m')
     for name, item in report['hypotheses'].items():
         print(f'  {name:7s} t={item["t_mm"]} mm, chamfer {item["chamfer_px"]:.2f} px, '
@@ -208,6 +209,8 @@ def print_report(report):
     if shift:
         print(f'  profundidad registrada: desplazamiento residual ({shift["du"]}, {shift["dv"]}) '
               f'px, chamfer {shift["score"]:.2f} px (en cero: {shift["score_at_zero"]:.2f})')
+        if shift.get('at_limit'):
+            print('    (el mejor quedó en el borde del rango de búsqueda: no es fiable)')
         if shift['direction_spread'] < 0.2:
             print('    (silueta casi recta: este desplazamiento no es fiable)')
 
