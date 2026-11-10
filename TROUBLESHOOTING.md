@@ -14,6 +14,7 @@ Esta guía cubre los fallos que más tiempo consumen en el laboratorio:
 | La cámara del Kinova da `Failed to start stream`, o `kinova_vision` no se detiene con `Ctrl+C` | [3.4 El driver de visión no se detiene limpiamente](#34-el-driver-de-visión-no-se-detiene-limpiamente-y-deja-la-cámara-bloqueada) |
 | Debe publicarse sólo la imagen comprimida, pero aparece `image_raw` o RViz no ofrece `/compressed` | [3.5 Lanzar sólo la imagen comprimida del Kinova](#35-el-launch-estándar-anuncia-image_raw-lanzar-sólo-la-imagen-comprimida) |
 | El nodo Gemini da un punto 3D que no coincide con el objeto, o responde `color y profundidad desfasados` | [3.8 Color y profundidad de instantes distintos](#38-el-nodo-gemini-combina-color-y-profundidad-de-instantes-distintos) |
+| **Crítico:** la imagen de color sale quemada o con sombras duras, la profundidad se llena de huecos, o `verify_rgbd_alignment` responde `NO CONCLUYENTE` | [3.9 El sol del ventanal arruina la medición RGB-D](#39-el-sol-del-ventanal-arruina-la-medición-rgb-d) |
 | Un comando de un taller "funciona" (no da error) pero no produce lo que la guía promete | [4. Fallos silenciosos al ejecutar los talleres](#4-fallos-silenciosos-al-ejecutar-los-talleres) |
 
 ---
@@ -1069,6 +1070,66 @@ sobre la cámara real se completaron con un desfase de 1 a 16 ms.
 **Lo que no se midió.** La prueba se hizo con la cámara quieta y desde la estación anfitriona. En
 una estación por WiFi, *reliable* retransmite imágenes de 4 MB y puede saturar el enlace
 (sección 4.8): ahí usa `depth_reliable: false` y espera más rechazos.
+
+### 3.9 El sol del ventanal arruina la medición RGB-D
+
+> [!CAUTION]
+> **Problema crítico.** La mesa del robot queda expuesta al sol que entra por un ventanal grande.
+> Con sol directo o sombras duras sobre la escena, **ninguna medición con la cámara del Kinova es
+> fiable**: ni la verificación de alineación, ni la localización AprilTag, ni el nodo Gemini. El
+> fallo no da error. Los programas siguen publicando puntos, solo que equivocados.
+
+**Síntoma.** Cualquiera de estos, y casi siempre varios a la vez:
+
+- La imagen de color tiene una zona quemada (blanca) junto a otra en sombra casi negra.
+- La profundidad muestra más zonas sin medida y un salpicado de huecos pequeños en la zona afectada.
+- Un objeto de tamaño conocido deja de medir lo que mide.
+- `verify_rgbd_alignment` responde `NO CONCLUYENTE`.
+
+**Lo medido.** El 2026-11-10, entre las 13:28 y las 13:47, con una caja de 240 × 303 mm sobre la
+mesa y la cámara a unos 0.7 m, inclinada unos 18°. Entre la segunda y la tercera captura solo se
+desplazó la caja unos centímetros; lo que cambió fue la luz:
+
+| Captura | Iluminación | Color quemado (≥ 250) | Color oscuro (< 40) | Profundidad sin medida | Huecos pequeños | Tapa medida |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 13:28 | Mancha de sol a un lado | 10.8 % | 8.6 % | 11.0 % | 59 | 241.1 × 312.5 mm |
+| 13:39 | Pareja | 0.4 % | 13.6 % | 11.1 % | 27 | **240.4 × 302.8 mm** |
+| 13:47 | Sombra sobre dos tercios de la caja | 4.7 % | **50.8 %** | **18.2 %** | **135** | **297.7 × 319.1 mm** |
+
+Con luz pareja, la tapa midió lo que mide, con menos de 0.5 mm de error. Con la sombra, el ruido de
+la profundidad se sumó al contorno de la tapa como si fuera parte de la caja, y un lado salió 24 %
+más largo. Además, los bordes de la caja desaparecieron de la imagen de color, y el verificador no
+tuvo contra qué comparar. En la captura de las 13:28, la mancha de sol coincidió con un error de
+3 % en el lado largo, pero la caja estaba en otra posición, así que ese efecto no quedó aislado.
+
+**Por qué ocurre.**
+
+- **Color:** la cámara ajusta la exposición a toda la imagen. Con sol y sombra a la vez, una parte
+  se quema o se oscurece y sus bordes desaparecen. Gemini, el detector AprilTag y el verificador
+  dependen de esos bordes.
+- **Profundidad:** en la zona sombreada aumentaron los huecos y el ruido. No se aisló el mecanismo
+  dentro del sensor; lo medido es el efecto.
+- **Cambia con la hora:** con el robot quieto, la escena pasó de luz pareja a sombra en ocho
+  minutos. Un resultado válido por la mañana no garantiza el de la tarde.
+
+**Qué hacer.**
+
+1. **Cierra la cortina o persiana del ventanal** y trabaja con la luz artificial del laboratorio.
+   La meta es una luz pareja, sin manchas de sol ni sombras duras sobre la mesa.
+2. **Que nadie se pare entre el ventanal y la mesa** durante una captura, y revisa que el propio
+   brazo no proyecte sombra sobre la escena.
+3. **Verifica antes de medir.** Con un objeto de referencia completo a la vista, ejecuta
+   `ros2 run burger_perception verify_rgbd_alignment`. Si responde `NO CONCLUYENTE`, abre
+   `alineacion_rgbd.png` y busca zonas quemadas o sombras antes de sospechar de la calibración.
+4. **Registra la hora y el estado de la cortina** junto a cada medición o evidencia, para poder
+   descartar la luz al comparar resultados de sesiones distintas.
+
+El verificador mide el movimiento como desplazamiento de la imagen, no como diferencia de brillo,
+así que un cambio de luz no se confunde con un movimiento de la cámara. Lo que **no** hace es
+detectar la mala iluminación por sí mismo. Solo la delata indirectamente, con `NO CONCLUYENTE`.
+
+**Lo que no se midió.** Aún no se repitió la medición con la cortina cerrada, ni se comparó la luz
+artificial sola con la luz del día difusa.
 
 ---
 
