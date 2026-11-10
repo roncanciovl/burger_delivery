@@ -11,6 +11,7 @@ from burger_perception.rgbd_alignment import (
     project_points,
     search_shift,
     silhouette_points,
+    top_face_contour,
 )
 import cv2
 import numpy as np
@@ -117,6 +118,27 @@ def test_un_solo_borde_recto_no_permite_concluir():
     report = _evaluate(depth, gray, TRUE_T)
     assert report['verdict'] == INCONCLUSIVE
     assert report['direction_spread'] < 0.2
+
+
+def test_cara_superior_con_la_mesa_inclinada():
+    """Con la cámara inclinada 18°, la caja se separa por su altura sobre el plano de la mesa."""
+    fx, fy, cx, cy = DEPTH_K
+    rows, cols = np.mgrid[0:270, 0:480].astype(np.float64)
+    rays = np.stack([(cols - cx) / fx, (rows - cy) / fy, np.ones_like(cols)], axis=-1)
+    tilt = np.radians(18.0)
+    normal = np.array([0.0, np.sin(tilt), -np.cos(tilt)])   # mesa vista desde arriba, inclinada
+    depth = (0.70 / -(rays @ normal)).astype(np.float32)    # z de la mesa: n·p + 0.70 = 0
+    box = (rows >= 90) & (rows < 180) & (cols >= 180) & (cols < 320)
+    depth[box] = (0.62 / -(rays[box] @ normal)).astype(np.float32)   # tapa 8 cm más alta
+    u, v, z = top_face_contour(depth, DEPTH_K)
+    assert u.size > 300
+    assert u.min() == 180 and u.max() == 319 and v.min() == 90 and v.max() == 179
+
+
+def test_sin_objeto_sobre_la_mesa_no_hay_contorno():
+    """Una mesa vacía no produce contorno."""
+    depth = np.full((270, 480), TABLE_Z, dtype=np.float32)
+    assert top_face_contour(depth, DEPTH_K)[0].size == 0
 
 
 def test_desplazamiento_residual_en_pixeles():

@@ -74,6 +74,81 @@ def silhouette_points(depth_m: np.ndarray, jump_m: float = 0.02, max_gap_px: int
     return cols.astype(np.float64), rows.astype(np.float64), depth_m[rows, cols].astype(np.float64)
 
 
+def _cloud(depth_m: np.ndarray, k: Intrinsics):
+    """Puntos 3D (marco de la cámara) de los píxeles con medida, y sus columnas y filas."""
+    fx, fy, cx, cy = k
+    rows, cols = np.nonzero(np.isfinite(depth_m) & (depth_m > 0))
+    z = depth_m[rows, cols].astype(np.float64)
+    return cols, rows, np.column_stack([(cols - cx) * z / fx, (rows - cy) * z / fy, z])
+
+
+def fit_table_plane(points: np.ndarray, iters: int = 400, tol_m: float = 0.008,
+                    seed: int = 0) -> Tuple[np.ndarray, float, float]:
+    """
+    Ajustar por RANSAC el plano dominante (la mesa) y refinarlo con sus puntos de apoyo.
+
+    :returns: normal unitaria orientada hacia la cámara, ``d`` (``n·p + d`` es la altura sobre
+        el plano) y la fracción de puntos que lo apoyan.
+    """
+    rng = np.random.default_rng(seed)
+    sample = points[rng.choice(len(points), min(len(points), 20000), replace=False)]
+    best_count, best = 0, None
+    for _ in range(iters):
+        a, b, c = sample[rng.choice(len(sample), 3, replace=False)]
+        normal = np.cross(b - a, c - a)
+        norm = np.linalg.norm(normal)
+        if norm < 1e-12:
+            continue
+        normal /= norm
+        count = int((np.abs(sample @ normal - normal @ a) < tol_m).sum())
+        if count > best_count:
+            best_count, best = count, (normal, -normal @ a)
+    normal, d = best
+    support = sample[np.abs(sample @ normal + d) < tol_m]
+    center = support.mean(axis=0)
+    normal = np.linalg.svd(support - center, full_matrices=False)[2][2]
+    d = -normal @ center
+    if d < 0:  # la cámara (origen) queda del lado positivo: altura > 0 sobre la mesa
+        normal, d = -normal, -d
+    return normal, float(d), best_count / len(sample)
+
+
+def top_face_contour(depth_m: np.ndarray, k: Intrinsics, min_height_m: float = 0.03,
+                     band_m: float = 0.015, min_area_px: int = 300
+                     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Contorno de la cara superior del objeto más grande sobre la mesa.
+
+    Separa el objeto por su altura sobre el plano de la mesa, así que funciona aunque la cámara
+    esté inclinada y los costados del objeto se vean en rampa (sin salto de distancia).
+
+    :param k: intrínsecos de la imagen ``depth_m`` (los del color si está registrada).
+    :returns: columnas, filas y profundidades (m) del borde de la cara superior; vacíos si no
+        hay un objeto que sobresalga ``min_height_m``.
+    """
+    empty = (np.array([]), np.array([]), np.array([]))
+    cols, rows, points = _cloud(depth_m, k)
+    if len(points) < 100:
+        return empty
+    normal, d, _ = fit_table_plane(points)
+    height = np.zeros(depth_m.shape, dtype=np.float64)
+    height[rows, cols] = points @ normal + d
+    count, labels, stats, _ = cv2.connectedComponentsWithStats(
+        (height > min_height_m).astype(np.uint8), connectivity=8)
+    if count < 2 or stats[1:, cv2.CC_STAT_AREA].max() < min_area_px:
+        return empty
+    raised = labels == 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
+    top = raised & (np.abs(height - np.median(height[raised])) < band_m)
+    top = cv2.morphologyEx(top.astype(np.uint8), cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
+    count, labels, stats, _ = cv2.connectedComponentsWithStats(top, connectivity=8)
+    if count < 2:
+        return empty
+    top = labels == 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
+    edge = top & ~cv2.erode(top.astype(np.uint8), np.ones((3, 3), np.uint8)).astype(bool)
+    r, c = np.nonzero(edge)
+    return c.astype(np.float64), r.astype(np.float64), depth_m[r, c].astype(np.float64)
+
+
 def edge_distance_field(gray: np.ndarray, canny_low: int = 40,
                         canny_high: int = 120) -> np.ndarray:
     """Devolver, para cada píxel, la distancia en píxeles al borde de color más cercano."""

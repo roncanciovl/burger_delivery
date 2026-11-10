@@ -29,6 +29,7 @@ from burger_perception.rgbd_alignment import (
     project_points,
     search_shift,
     silhouette_points,
+    top_face_contour,
 )
 import cv2
 import numpy as np
@@ -81,7 +82,7 @@ class AlignmentProbe(Node):
         p('frames', 30)
         p('timeout_s', 30.0)
         p('tol_mm', 3.0)
-        p('max_motion', 6.0)
+        p('max_motion_px', 2.0)
         p('output_dir', '.')
 
         g = self.get_parameter
@@ -134,28 +135,37 @@ def decode_gray(msg):
 def analyze(probe):
     """Analizar lo capturado y devolver (reporte, imagen de color, proyecciones)."""
     gray = decode_gray(probe.last_color)
-    motion = float(np.mean(cv2.absdiff(decode_gray(probe.first_color), gray)))
+    # Desplazamiento real de la imagen (correlación de fase): un cambio de luz no cuenta.
+    (dx, dy), _ = cv2.phaseCorrelate(decode_gray(probe.first_color).astype(np.float32),
+                                     gray.astype(np.float32))
+    motion = float(np.hypot(dx, dy))
     depth = median_depth(probe.depth_frames)
-    u, v, z = silhouette_points(depth)
     color_k, depth_k = intrinsics(probe.color_info), intrinsics(probe.depth_info)
+    # Contorno de la cara superior sobre el plano de la mesa; si no hay objeto, saltos.
+    u, v, z = top_face_contour(depth, depth_k)
+    method = 'cara superior sobre la mesa'
+    if u.size == 0:
+        u, v, z = silhouette_points(depth)
+        method = 'saltos de profundidad'
     field = edge_distance_field(gray)
     tol = probe.get_parameter('tol_mm').value
     report = evaluate_alignment(field, u, v, z, depth_k, color_k,
                                 {'launch': LAUNCH_T, 'urdf': URDF_T}, 'launch', tol)
-    report.update({'motion': motion, 'frames': len(probe.depth_frames),
+    report.update({'motion_px': motion, 'silhouette_method': method,
+                   'frames': len(probe.depth_frames),
                    'color_size': [gray.shape[1], gray.shape[0]],
                    'color_P': list(color_k), 'depth_P': list(depth_k)})
 
-    limit = probe.get_parameter('max_motion').value
+    limit = probe.get_parameter('max_motion_px').value
     if motion > limit:
         report['verdict'] = INCONCLUSIVE
         report['reason'] = (f'la cámara o la escena se movió durante la captura '
-                            f'(diferencia {motion:.1f}, máximo {limit:.1f})')
+                            f'({motion:.1f} px, máximo {limit:.1f} px)')
 
     if probe.registered is not None:
         registered = to_meters(probe.registered)
         if registered.shape == gray.shape:
-            ru, rv, _ = silhouette_points(registered, max_gap_px=100, min_component_px=40)
+            ru, rv, _ = top_face_contour(registered, color_k, min_area_px=5000)
             if ru.size >= 200:
                 report['registered_shift_px'] = search_shift(field, ru, rv)
                 report['registered_shift_px']['direction_spread'] = direction_spread(ru, rv)
@@ -184,7 +194,8 @@ def print_report(report):
     print(f'\nVEREDICTO: {report["verdict"]}\n  {report["reason"]}')
     print(f'  puntos de silueta: {report["points"]} dentro del color '
           f'({report.get("points_outside_color", 0)} fuera), '
-          f'movimiento: {report.get("motion", 0):.1f}')
+          f'método: {report.get("silhouette_method", "")}, '
+          f'movimiento: {report.get("motion_px", 0):.1f} px')
     if 'best_t_mm' in report:
         print(f'  mejor estimación t (mm): {report["best_t_mm"]}, '
               f'chamfer {report["best_chamfer_px"]:.2f} px, '
