@@ -20,7 +20,7 @@ Módulos opcionales: ``use_apriltag`` (true), ``use_vlm`` (false; nodo Gemini, n
 
 import os
 
-from ament_index_python.packages import get_package_share_directory
+from ament_index_python.packages import get_package_share_directory, PackageNotFoundError
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, LogInfo
 from launch.actions import OpaqueFunction
@@ -77,10 +77,15 @@ def _setup(context, *args, **kwargs):
         acciones.append(_include('burger_perception', 'gemini.launch.py'))
 
     if flag('use_moveit'):
-        acciones.append(_include('burger_control', 'pick_place.launch.py',
-                                 robot_ip=arg('robot_ip'),
-                                 use_fake_hardware=arg('use_fake_hardware'),
-                                 execute='false'))
+        try:
+            acciones.append(_include('burger_control', 'pick_place.launch.py',
+                                     robot_ip=arg('robot_ip'),
+                                     use_fake_hardware=arg('use_fake_hardware'),
+                                     execute='false'))
+        except PackageNotFoundError:
+            acciones.append(LogInfo(msg='⚠ use_moveit:=true pero burger_control no está '
+                                        'compilado: está desactivado en la base del curso. '
+                                        'Ver burger_control/COLCON_IGNORE para activarlo.'))
 
     if flag('use_telemetry'):
         acciones.append(_include('burger_telemetry', 'telemetry.launch.py',
