@@ -99,6 +99,7 @@ Registra los valores medidos y elegidos por el grupo que la misión usa como par
 
 - **IDs y tamaños de los tags:** IDs detectados del `tag_mesa` y del tag del carrito, y lado del cuadro negro de cada uno, medido con calibrador y medido entre las esquinas 3D del método RGB-D (comprobación del paso 3 de la sección 6.3 de la especificación).
 - **Registro de la profundidad:** traslación de `tf2_echo camera_color_frame camera_depth_frame` y el `frame_id` de `/camera/depth_registered/image_rect`, que debe ser `camera_color_frame`.
+- **Alineación color-profundidad:** componente vertical (la segunda) de la «mejor estimación t» de `verify_rgbd_alignment` y la del sistema, en mm; deben diferir menos de 10 mm (sección 6.3 de la especificación). Se adjunta `alineacion_rgbd.png`.
 - **Calidad de la profundidad:** umbrales que usa el nodo de percepción para aceptar una detección: porcentaje mínimo de píxeles válidos dentro del tag y residuo máximo del ajuste de plano.
 - **Modo de destino:** `destino:=carrito` o `destino:=hoja` (tag del carrito impreso en una hoja sobre la mesa, sección 4.1 de la especificación).
 - **Altura del tag del carrito:** `tag_height_m`, distancia vertical del tag a la cara de la mesa, medida con cinta. En el modo hoja es el grosor de la hoja, prácticamente 0. En el modo carrito se registra también la altura de la bandeja.
@@ -112,6 +113,7 @@ Registra los valores medidos y elegidos por el grupo que la misión usa como par
 | **IDs del `tag_mesa` y del tag del carrito** | |
 | **Lado de cada tag: calibrador / entre esquinas 3D (mm)** | |
 | **`camera_color_frame → camera_depth_frame` (m) y `frame_id` de la profundidad registrada** | |
+| **Alineación: componente vertical de `verify_rgbd_alignment`, mejor estimación / sistema (mm)** | |
 | **Umbrales de calidad: píxeles válidos mínimos (%) y residuo máximo del plano (mm)** | |
 | **Modo de destino (`carrito` / `hoja`)** | |
 | **`tag_height_m` del tag del carrito y, en el modo carrito, altura de la bandeja (m)** | |
