@@ -1,0 +1,26 @@
+# Parámetros del pick & place (burger_control/pick_place_node).
+# Distancias en metros, en planning_frame (base_link del Gen3).
+burger_pick_place:
+  ros__parameters:
+    arm_group: "manipulator"
+    hand_group: "gripper"
+    hand_frame: "end_effector_link"
+    planning_frame: "base_link"
+    # TF de la caja. Lo publica el nodo Gemini (use_vlm) o se puede publicar a mano:
+    #   ros2 run tf2_ros static_transform_publisher --x 0.45 --y -0.2 --z 0.03 \
+    #       --frame-id base_link --child-frame-id target_burger_box_frame
+    object_frame: "target_burger_box_frame"
+    object_tf_timeout_s: 2.0
+    object_xyz: [0.45, -0.20, 0.03]      # si no hay TF
+    object_size: [0.10, 0.10, 0.06]      # caja de hamburguesa
+    place_xyz: [0.45, 0.20, 0.03]        # delivery slot
+    # Distancia de end_effector_link al punto medio entre los dedos de la 2F-85.
+    # PENDIENTE de medir en el robot; 0.15 m es la cota del modelo.
+    tcp_offset_m: 0.15
+    hand_open_state: "Open"
+    hand_close_state: "Close"
+    arm_home_state: "Home"
+    velocity_scaling: 0.1
+    max_solutions: 5
+    # false = sólo planificar y mostrar en RViz. true = MOVER EL ROBOT.
+    execute: false

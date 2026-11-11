@@ -13,6 +13,9 @@ Esta guía cubre los fallos que más tiempo consumen en el laboratorio:
 | Mi código parece correcto y aun así el driver no arranca, o publica datos absurdos | [3. Fallos de plataforma ajenos a tu código](#3-fallos-de-plataforma-ajenos-a-tu-código) |
 | La cámara del Kinova da `Failed to start stream`, o `kinova_vision` no se detiene con `Ctrl+C` | [3.4 El driver de visión no se detiene limpiamente](#34-el-driver-de-visión-no-se-detiene-limpiamente-y-deja-la-cámara-bloqueada) |
 | Debe publicarse sólo la imagen comprimida, pero aparece `image_raw` o RViz no ofrece `/compressed` | [3.5 Lanzar sólo la imagen comprimida del Kinova](#35-el-launch-estándar-anuncia-image_raw-lanzar-sólo-la-imagen-comprimida) |
+| El nodo Gemini da un punto 3D que no coincide con el objeto, o responde `color y profundidad desfasados` | [3.8 Color y profundidad de instantes distintos](#38-el-nodo-gemini-combina-color-y-profundidad-de-instantes-distintos) |
+| **Crítico:** la imagen de color sale quemada o con sombras duras, la profundidad se llena de huecos, o `verify_rgbd_alignment` responde `NO CONCLUYENTE` | [3.9 El sol del ventanal arruina la medición RGB-D](#39-el-sol-del-ventanal-arruina-la-medición-rgb-d) |
+| La profundidad registrada no calza con el color (unos 3-4 cm en 1080p), o `verify_rgbd_alignment` responde `DESALINEADA` | [3.10 Calibración de fábrica de la cámara](#310-la-calibración-de-fábrica-de-la-cámara-del-kinova-desalinea-color-y-profundidad) |
 | Un comando de un taller "funciona" (no da error) pero no produce lo que la guía promete | [4. Fallos silenciosos al ejecutar los talleres](#4-fallos-silenciosos-al-ejecutar-los-talleres) |
 
 ---
@@ -1013,6 +1016,170 @@ normal. Aun así, con el brazo en movimiento los ciclos de más de 20 ms subiero
 en las mismas condiciones. El residuo viene de WSL, que no da tiempo real al ciclo. Por eso
 el driver corre a 100 Hz en lugar del 1 kHz para el que está pensada la API Kortex.
 Eliminarlo exige Linux nativo con planificación de tiempo real.
+
+### 3.8 El nodo Gemini combina color y profundidad de instantes distintos
+
+**Síntoma.** Con `depth_mode: registered`, el nodo `gemini_spatial_reasoning` (paquete
+`burger_perception`) entrega un punto 3D que no coincide con el objeto. Con la corrección de esta
+sección, ese par ya no se usa y el servicio `~/locate` lo rechaza con este mensaje:
+
+```text
+color y profundidad desfasados <N> ms (máximo 50 ms)
+```
+
+**La causa, medida.** Sobre el robot real (2026-11-10), desde la estación anfitriona, con
+`kinova_vision.launch.py depth_registration:=true` y 20 s por medición:
+
+| Tópico | Tamaño de cada mensaje | Recibido en *best effort* | Recibido en *reliable* |
+| :--- | :--- | :--- | :--- |
+| `/camera/depth_registered/image_rect` (1920×1080, `16UC1`) | 4.1 MB | **5.85 Hz** | **21.93 Hz** |
+| `/camera/color/image_raw/compressed` | unos 310 KB | 19.42 Hz | 23.03 Hz |
+| `/camera/depth/image_raw` (480×270, `16UC1`) | 259 KB | 30.00 Hz | 29.95 Hz |
+
+Hay dos efectos que se suman:
+
+1. Cada imagen registrada ocupa más de mil fragmentos DDS, y en *best effort* perder uno descarta
+   la imagen entera (sección 4.8). El nodo se suscribía así, y guardaba la última imagen de cada
+   flujo sin comparar sus estampas. En una captura de 25 s, la última profundidad quedó **24 s**
+   más vieja que el color; en otra, 1.3 s.
+2. Aun en *reliable*, la profundidad registrada llega más tarde que su color: la mediana de
+   antigüedad al recibirla fue de 80 ms, frente a 19 ms del color. Tomar el último mensaje de cada
+   flujo empareja instantes distintos.
+
+Con la cámara quieta, el error pasa inadvertido. Con la cámara en la muñeca y el brazo en
+movimiento, la profundidad corresponde a otra posición.
+
+**La corrección** (en `burger_perception/config/gemini.yaml`):
+
+| Parámetro | Valor | Efecto |
+| :--- | :--- | :--- |
+| `depth_reliable` | `true` | Suscribe la profundidad en *reliable*, con cola de una imagen |
+| `max_depth_skew_s` | `0.05` | Rechaza el par si color y profundidad difieren más de 50 ms |
+
+El nodo guarda además las últimas 30 imágenes de color (unos 1.3 s) y usa la más cercana a la
+estampa de la profundidad, no la más reciente.
+
+**Cómo comprobarlo.** Cada inferencia publica el desfase usado en el campo `depth_skew_ms`:
+
+```bash
+ros2 topic echo /gemini_spatial_reasoning/inference --field data
+```
+
+Con la corrección, y con la respuesta de Gemini sustituida por una fija, 8 de 8 inferencias
+sobre la cámara real se completaron con un desfase de 1 a 16 ms.
+
+**Lo que no se midió.** La prueba se hizo con la cámara quieta y desde la estación anfitriona. En
+una estación por WiFi, *reliable* retransmite imágenes de 4 MB y puede saturar el enlace
+(sección 4.8): ahí usa `depth_reliable: false` y espera más rechazos.
+
+### 3.9 El sol del ventanal arruina la medición RGB-D
+
+> [!CAUTION]
+> **Problema crítico.** La mesa del robot queda expuesta al sol que entra por un ventanal grande.
+> Con sol directo o sombras duras sobre la escena, **ninguna medición con la cámara del Kinova es
+> fiable**: ni la verificación de alineación, ni la localización AprilTag, ni el nodo Gemini. El
+> fallo no da error. Los programas siguen publicando puntos, solo que equivocados.
+
+**Síntoma.** Cualquiera de estos, y casi siempre varios a la vez:
+
+- La imagen de color tiene una zona quemada (blanca) junto a otra en sombra casi negra.
+- La profundidad muestra más zonas sin medida y un salpicado de huecos pequeños en la zona afectada.
+- Un objeto de tamaño conocido deja de medir lo que mide.
+- `verify_rgbd_alignment` responde `NO CONCLUYENTE`.
+
+**Lo medido.** El 2026-11-10, entre las 13:28 y las 13:47, con una caja de 240 × 303 mm sobre la
+mesa y la cámara a unos 0.7 m, inclinada unos 18°. Entre la segunda y la tercera captura solo se
+desplazó la caja unos centímetros; lo que cambió fue la luz:
+
+| Captura | Iluminación | Color quemado (≥ 250) | Color oscuro (< 40) | Profundidad sin medida | Huecos pequeños | Tapa medida |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 13:28 | Mancha de sol a un lado | 10.8 % | 8.6 % | 11.0 % | 59 | 241.1 × 312.5 mm |
+| 13:39 | Pareja | 0.4 % | 13.6 % | 11.1 % | 27 | **240.4 × 302.8 mm** |
+| 13:47 | Sombra sobre dos tercios de la caja | 4.7 % | **50.8 %** | **18.2 %** | **135** | **297.7 × 319.1 mm** |
+| 13:52 | Mesa movida fuera del sol; zona muy clara junto a la caja | 15.6 % | 18.7 % | 10.1 % | 27 | 245.9 × 317.7 mm |
+| 13:55 | Mesa fuera del sol, luz pareja | **0.0 %** | 13.2 % | — | — | **237.7 × 304.1 mm** |
+
+Con luz pareja, la tapa midió lo que mide, con menos de 0.5 mm de error. Con la sombra, el ruido de
+la profundidad se sumó al contorno de la tapa como si fuera parte de la caja, y un lado salió 24 %
+más largo. Además, los bordes de la caja desaparecieron de la imagen de color, y el verificador no
+tuvo contra qué comparar. En la captura de las 13:28, la mancha de sol coincidió con un error de
+3 % en el lado largo, pero la caja estaba en otra posición, así que ese efecto no quedó aislado.
+
+**Por qué ocurre.**
+
+- **Color:** la cámara ajusta la exposición a toda la imagen. Con sol y sombra a la vez, una parte
+  se quema o se oscurece y sus bordes desaparecen. Gemini, el detector AprilTag y el verificador
+  dependen de esos bordes.
+- **Profundidad:** en la zona sombreada aumentaron los huecos y el ruido. No se aisló el mecanismo
+  dentro del sensor; lo medido es el efecto.
+- **Cambia con la hora:** con el robot quieto, la escena pasó de luz pareja a sombra en ocho
+  minutos. Un resultado válido por la mañana no garantiza el de la tarde.
+
+**Qué hacer.**
+
+1. **Cierra la cortina o persiana del ventanal** y trabaja con la luz artificial del laboratorio.
+   La meta es una luz pareja, sin manchas de sol ni sombras duras sobre la mesa.
+2. **Que nadie se pare entre el ventanal y la mesa** durante una captura, y revisa que el propio
+   brazo no proyecte sombra sobre la escena.
+3. **Verifica antes de medir.** Con un objeto de referencia completo a la vista, ejecuta
+   `ros2 run burger_perception verify_rgbd_alignment`. Si responde `NO CONCLUYENTE`, abre
+   `alineacion_rgbd.png` y busca zonas quemadas o sombras antes de sospechar de la calibración.
+4. **Registra la hora y el estado de la cortina** junto a cada medición o evidencia, para poder
+   descartar la luz al comparar resultados de sesiones distintas.
+
+El verificador mide el movimiento como desplazamiento de la imagen, no como diferencia de brillo,
+así que un cambio de luz no se confunde con un movimiento de la cámara. Lo que **no** hace es
+detectar la mala iluminación por sí mismo. Solo la delata indirectamente, con `NO CONCLUYENTE`.
+
+Con la mesa fuera del sol (13:55), la medida volvió a cuadrar con 1 % de error, y el verificador
+pudo dar un veredicto por primera vez. A las 13:52, con una zona muy clara aún junto a la caja, el
+lado largo salió 5 % más largo. Las dos capturas con luz pareja (13:39 y 13:55) dan una idea de la
+repetibilidad: unos 2 mm en el lado corto y 2 mm en el largo.
+
+**Lo que no se midió.** No se probó con la cortina cerrada (la solución fue mover la mesa), ni se
+comparó la luz artificial sola con la luz del día difusa.
+
+### 3.10 La calibración de fábrica de la cámara del Kinova desalinea color y profundidad
+
+**Síntoma.** Con `kinova_vision.launch.py` y `depth_registration:=true`, la profundidad registrada
+cae unos 140 px por encima del color en 1920 × 1080: a 0.75 m son unos 4 cm. Un punto elegido en la
+imagen de color, por ejemplo por Gemini, toma la profundidad de otro lugar; en el borde de un objeto,
+la de la mesa. `verify_rgbd_alignment` responde `DESALINEADA`.
+
+**Causa medida.** Los intrínsecos de fábrica del color en 1080p no corresponden a la cámara:
+`cy` = 97 y `fx` = 2612. Con 68 tomas de un tablero salen `cy` ≈ 200 y `fx` = 2531. La Kortex API
+del robot devuelve los mismos valores de fábrica, así que leerlos del robot no lo corrige.
+
+**Corrección.** `ros2 launch burger_perception camera.launch.py` usa la calibración medida del color
+(`burger_perception/config/camara_kinova/`, cuyo README describe el método) y conserva los
+extrínsecos de fábrica, que con el color corregido son los que mejor validan. Con
+`calibracion:=kinova` se vuelve a los valores de fábrica para comparar.
+
+**Validación** con una caja de 240 × 303 mm, en capturas que no se usaron en el ajuste. Distancia
+entre los extrínsecos del sistema y los que mejor explican la imagen:
+
+| Distancia cámara-caja | Fábrica | Color corregido |
+| :--- | :--- | :--- |
+| 0.73 m | 26 mm | 4-6 mm |
+| 0.74 m | 39 mm | 11-17 mm |
+| 1.03-1.04 m, tres capturas en vivo de la misma escena (2026-11-11) | 42-46 mm | 9-12, 5-12 y 33-36 mm |
+
+La componente vertical, la que fallaba, quedó corregida: su residuo se mantuvo entre −7 y −9 mm en
+las tres capturas en vivo. La horizontal no se puede afirmar por debajo de unos ±15 mm con esta caja
+a 1 m: sin que nada se moviera, la mejor solución saltó entre −13 y +15 mm, porque el contorno de la
+tapa que da la profundidad sale más angosto que la tapa real.
+
+Con la `fx` de profundidad de fábrica (360), la tapa de la caja midió 238-245 × 302-304 mm. Con la
+que devuelve el robot (338.7), 249-259 × 320-324 mm: esa no corresponde al stream de 480 × 270.
+
+**Lo que no se adoptó.** Un ajuste de extrínsecos comparando el plano del tablero visto por las dos
+cámaras dio un giro de unos 1.8° entre sensores, pero la validación con la caja no lo distingue de
+los extrínsecos de fábrica (README de `camara_kinova`).
+
+**Lo que queda.** Una desalineación horizontal entre 0.4 y 3.6 cm según la captura, sin medir con
+precisión. Alcanza para localizar una caja de este tamaño con Gemini, no para objetos pequeños. El verificador sigue respondiendo `DESALINEADA` porque
+su tolerancia por defecto es de 3 mm. La calibración sólo vale para 1920 × 1080, con la luz
+controlada de la sección 3.9.
 
 ---
 

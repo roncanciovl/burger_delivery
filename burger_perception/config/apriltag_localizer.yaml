@@ -1,0 +1,17 @@
+# Parámetros por defecto del localizador AprilTag (burger_perception).
+# Los IDs y el tamaño REAL de los tags de la mesa se registran en
+# vision_setup/tags_fisicos.yaml cuando se validen con la cámara (TODO.md §4.1).
+apriltag_fixed_camera_localizer:
+  ros__parameters:
+    robot_namespace: "burger_car_01"
+    tag_id: 0
+    reference_tag_id: -1
+    tag_size_m: 0.0
+    image_topic: "/camera/color/image_raw/compressed"
+    simulated_mode: true
+    publish_rate_hz: 10.0
+    publish_pose2d: true
+    publish_tf: false
+    tf_parent_frame: "tag_mesa"
+    tf_child_frame: "tag_carrito1"
+    tag_height_m: 0.0

@@ -1,0 +1,9 @@
+# burger_control está desactivado en la base del curso (2026-11-11).
+# Necesita MoveIt Task Constructor, que no viene instalado en las estaciones del laboratorio;
+# sin él, `colcon build` de todo el workspace falla en este paquete.
+#
+# Para activarlo en una estación:
+#   sudo apt install ros-jazzy-moveit-task-constructor-core \
+#        ros-jazzy-moveit-task-constructor-capabilities ros-jazzy-moveit-task-constructor-visualization
+#   rm ~/ros2_ws/src/burger_delivery/burger_control/COLCON_IGNORE
+#   cd ~/ros2_ws && colcon build --packages-select burger_control

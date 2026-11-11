@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>burger_telemetry</name>
+  <version>0.1.0</version>
+  <description>
+    Telemetría de Burger-Cell: lanza el monitor de red web (network_setup/monitor_red), el
+    agente micro-ROS y la grabación MCAP de los tópicos de telemetría.
+  </description>
+  <maintainer email="henry.roncancio@unimilitar.edu.co">Henry Roncancio</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>rosbag2_storage_mcap</exec_depend>
+  <!-- micro_ros_agent no tiene paquete apt en Jazzy: se compila desde fuente
+       (TALLER_MICROROS_ESP32_ROBOTICA_MOVIL.md) y sólo hace falta con microros:=true. -->
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

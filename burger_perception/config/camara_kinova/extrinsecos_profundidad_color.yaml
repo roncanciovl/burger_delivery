@@ -1,0 +1,12 @@
+# Transformación camera_link (= marco óptico del color) -> camera_depth_frame:
+# p_color = R * p_profundidad + t.
+#
+# Valores de kinova_vision.launch.py. Con la calibración nueva del color, son los que mejor
+# alinean la profundidad con el color en la validación con una caja (README.md de esta carpeta).
+# Un ajuste por planos de tablero dio (-34.0, -11.3, +4.4) mm y un giro de unos 1.8°, pero no
+# mejoró esa validación; se conserva en el README como medición no confirmada.
+translation: [-0.0195, -0.005, 0.0]   # metros
+quaternion_xyzw: [0.0, 0.0, 0.0, 1.0]
+rpy_rad: [0.0, 0.0, 0.0]   # roll, pitch, yaw (ejes fijos xyz)
+fuente: "kinova_vision.launch.py (camera_link -> camera_depth_frame)"
+fecha_validacion: "2026-11-11"
