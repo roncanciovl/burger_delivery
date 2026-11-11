@@ -15,6 +15,7 @@ Esta guía cubre los fallos que más tiempo consumen en el laboratorio:
 | Debe publicarse sólo la imagen comprimida, pero aparece `image_raw` o RViz no ofrece `/compressed` | [3.5 Lanzar sólo la imagen comprimida del Kinova](#35-el-launch-estándar-anuncia-image_raw-lanzar-sólo-la-imagen-comprimida) |
 | El nodo Gemini da un punto 3D que no coincide con el objeto, o responde `color y profundidad desfasados` | [3.8 Color y profundidad de instantes distintos](#38-el-nodo-gemini-combina-color-y-profundidad-de-instantes-distintos) |
 | **Crítico:** la imagen de color sale quemada o con sombras duras, la profundidad se llena de huecos, o `verify_rgbd_alignment` responde `NO CONCLUYENTE` | [3.9 El sol del ventanal arruina la medición RGB-D](#39-el-sol-del-ventanal-arruina-la-medición-rgb-d) |
+| La profundidad registrada no calza con el color (unos 3-4 cm en 1080p), o `verify_rgbd_alignment` responde `DESALINEADA` | [3.10 Calibración de fábrica de la cámara](#310-la-calibración-de-fábrica-de-la-cámara-del-kinova-desalinea-color-y-profundidad) |
 | Un comando de un taller "funciona" (no da error) pero no produce lo que la guía promete | [4. Fallos silenciosos al ejecutar los talleres](#4-fallos-silenciosos-al-ejecutar-los-talleres) |
 
 ---
@@ -1137,6 +1138,48 @@ repetibilidad: unos 2 mm en el lado corto y 2 mm en el largo.
 
 **Lo que no se midió.** No se probó con la cortina cerrada (la solución fue mover la mesa), ni se
 comparó la luz artificial sola con la luz del día difusa.
+
+### 3.10 La calibración de fábrica de la cámara del Kinova desalinea color y profundidad
+
+**Síntoma.** Con `kinova_vision.launch.py` y `depth_registration:=true`, la profundidad registrada
+cae unos 140 px por encima del color en 1920 × 1080: a 0.75 m son unos 4 cm. Un punto elegido en la
+imagen de color, por ejemplo por Gemini, toma la profundidad de otro lugar; en el borde de un objeto,
+la de la mesa. `verify_rgbd_alignment` responde `DESALINEADA`.
+
+**Causa medida.** Los intrínsecos de fábrica del color en 1080p no corresponden a la cámara:
+`cy` = 97 y `fx` = 2612. Con 68 tomas de un tablero salen `cy` ≈ 200 y `fx` = 2531. La Kortex API
+del robot devuelve los mismos valores de fábrica, así que leerlos del robot no lo corrige.
+
+**Corrección.** `ros2 launch burger_perception camera.launch.py` usa la calibración medida del color
+(`burger_perception/config/camara_kinova/`, cuyo README describe el método) y conserva los
+extrínsecos de fábrica, que con el color corregido son los que mejor validan. Con
+`calibracion:=kinova` se vuelve a los valores de fábrica para comparar.
+
+**Validación** con una caja de 240 × 303 mm, en capturas que no se usaron en el ajuste. Distancia
+entre los extrínsecos del sistema y los que mejor explican la imagen:
+
+| Distancia cámara-caja | Fábrica | Color corregido |
+| :--- | :--- | :--- |
+| 0.73 m | 26 mm | 4-6 mm |
+| 0.74 m | 39 mm | 11-17 mm |
+| 1.03-1.04 m, tres capturas en vivo de la misma escena (2026-11-11) | 42-46 mm | 9-12, 5-12 y 33-36 mm |
+
+La componente vertical, la que fallaba, quedó corregida: su residuo se mantuvo entre −7 y −9 mm en
+las tres capturas en vivo. La horizontal no se puede afirmar por debajo de unos ±15 mm con esta caja
+a 1 m: sin que nada se moviera, la mejor solución saltó entre −13 y +15 mm, porque el contorno de la
+tapa que da la profundidad sale más angosto que la tapa real.
+
+Con la `fx` de profundidad de fábrica (360), la tapa de la caja midió 238-245 × 302-304 mm. Con la
+que devuelve el robot (338.7), 249-259 × 320-324 mm: esa no corresponde al stream de 480 × 270.
+
+**Lo que no se adoptó.** Un ajuste de extrínsecos comparando el plano del tablero visto por las dos
+cámaras dio un giro de unos 1.8° entre sensores, pero la validación con la caja no lo distingue de
+los extrínsecos de fábrica (README de `camara_kinova`).
+
+**Lo que queda.** Una desalineación horizontal entre 0.4 y 3.6 cm según la captura, sin medir con
+precisión. Alcanza para localizar una caja de este tamaño con Gemini, no para objetos pequeños. El verificador sigue respondiendo `DESALINEADA` porque
+su tolerancia por defecto es de 3 mm. La calibración sólo vale para 1920 × 1080, con la luz
+controlada de la sección 3.9.
 
 ---
 
