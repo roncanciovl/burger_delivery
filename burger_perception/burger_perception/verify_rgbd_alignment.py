@@ -9,6 +9,9 @@ vista de ambas cámaras. No mueve el robot ni llama a ningún servicio externo.
     ros2 launch burger_perception camera.launch.py
     ros2 run burger_perception verify_rgbd_alignment --ros-args -p output_dir:=/tmp/rgbd
 
+La referencia del veredicto son los extrínsecos profundidad -> color que publica el árbol TF
+(los que usa el registro); también informa los de ``kinova_vision.launch.py`` y los del robot.
+
 Escribe ``alineacion_rgbd.json`` y ``alineacion_rgbd.png`` (silueta con los extrínsecos del
 sistema en rojo y con los estimados en verde). Código de salida: 0 alineada, 1 desalineada,
 2 no concluyente o sin datos.
@@ -37,10 +40,20 @@ import rclpy
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data, QoSProfile, ReliabilityPolicy
 from sensor_msgs.msg import CameraInfo, CompressedImage, Image
+from tf2_ros import Buffer, TransformException, TransformListener
 
-# camera_link -> camera_depth_frame en cada fuente de Kinova (el color coincide con camera_link).
-LAUNCH_T = (-0.0195, -0.005, 0.0)   # kinova_vision.launch.py: lo que usa el registro
-URDF_T = (-0.0275, -0.00961, 0.0)   # macro oficial gen3_macro.xacro
+# camera_link -> camera_depth_frame según cada fuente de Kinova (el color define camera_link).
+# La referencia del veredicto es lo que publica el árbol TF (lo que usa el registro).
+LAUNCH_T = (-0.0195, -0.005, 0.0)                 # kinova_vision.launch.py
+ROBOT_T = (-0.02706, -0.00997, -0.004706)         # Kortex API GetExtrinsicParameters
+
+
+def quaternion_matrix(q):
+    """Matriz de rotación de un cuaternión (x, y, z, w)."""
+    x, y, z, w = q
+    return np.array([[1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w)],
+                     [2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w)],
+                     [2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y)]])
 
 
 def intrinsics(info):
@@ -102,6 +115,21 @@ class AlignmentProbe(Node):
                                  QoSProfile(depth=1, reliability=ReliabilityPolicy.RELIABLE))
         self.create_subscription(CameraInfo, g('color_info_topic').value, self._on_color_info, 10)
         self.create_subscription(CameraInfo, g('depth_info_topic').value, self._on_depth_info, 10)
+        self.tf_buffer = Buffer()
+        self.tf_listener = TransformListener(self.tf_buffer, self)
+
+    def system_extrinsics(self):
+        """Extrínsecos profundidad -> color que publica el árbol TF, o None."""
+        if self.color_info is None or self.depth_info is None:
+            return None
+        try:
+            tf = self.tf_buffer.lookup_transform(
+                self.color_info.header.frame_id, self.depth_info.header.frame_id,
+                rclpy.time.Time())
+        except TransformException:
+            return None
+        tr, q = tf.transform.translation, tf.transform.rotation
+        return {'t': (tr.x, tr.y, tr.z), 'R': quaternion_matrix((q.x, q.y, q.z, q.w))}
 
     def _on_color(self, msg):
         self.first_color = self.first_color or msg
@@ -141,16 +169,32 @@ def analyze(probe):
     motion = float(np.hypot(dx, dy))
     depth = median_depth(probe.depth_frames)
     color_k, depth_k = intrinsics(probe.color_info), intrinsics(probe.depth_info)
+    # Sólo la zona que también ve el color: la profundidad cubre un campo mucho más amplio y,
+    # con la cámara alta, ve otras superficies (piso, otras mesas) que no están en el color.
+    system = probe.system_extrinsics()
+    ref = system or {'t': LAUNCH_T, 'R': None}
+    rows, cols = np.nonzero(depth > 0)
+    pu, pv = project_points(cols.astype(float), rows.astype(float),
+                            depth[rows, cols].astype(float), depth_k, color_k, ref['t'], ref['R'])
+    keep = (pu >= 0) & (pu < gray.shape[1]) & (pv >= 0) & (pv < gray.shape[0])
+    roi = np.zeros(depth.shape, dtype=bool)
+    roi[rows[keep], cols[keep]] = True
     # Contorno de la cara superior sobre el plano de la mesa; si no hay objeto, saltos.
-    u, v, z = top_face_contour(depth, depth_k)
+    u, v, z = top_face_contour(depth, depth_k, roi=roi)
     method = 'cara superior sobre la mesa'
     if u.size == 0:
         u, v, z = silhouette_points(depth)
         method = 'saltos de profundidad'
     field = edge_distance_field(gray)
     tol = probe.get_parameter('tol_mm').value
-    report = evaluate_alignment(field, u, v, z, depth_k, color_k,
-                                {'launch': LAUNCH_T, 'urdf': URDF_T}, 'launch', tol)
+    hypotheses = {'kinova_launch': LAUNCH_T, 'robot_kortex': ROBOT_T}
+    reference = 'kinova_launch'
+    if system is not None:
+        hypotheses = {'sistema_tf': system, **hypotheses}
+        reference = 'sistema_tf'
+    report = evaluate_alignment(field, u, v, z, depth_k, color_k, hypotheses, reference, tol)
+    report['referencia'] = reference if system is not None else (
+        'kinova_launch (sin TF profundidad -> color: ¿está corriendo camera.launch.py?)')
     report.update({'motion_px': motion, 'silhouette_method': method,
                    'frames': len(probe.depth_frames),
                    'color_size': [gray.shape[1], gray.shape[0]],
@@ -171,10 +215,10 @@ def analyze(probe):
                 report['registered_shift_px']['direction_spread'] = direction_spread(ru, rv)
 
     best = report.get('best_t_mm')
-    projections = {'launch': project_points(u, v, z, depth_k, color_k, LAUNCH_T)}
+    projections = {'launch': project_points(u, v, z, depth_k, color_k, ref['t'], ref['R'])}
     if best is not None:
         projections['best'] = project_points(u, v, z, depth_k, color_k,
-                                             [c / 1000.0 for c in best])
+                                             [c / 1000.0 for c in best], ref['R'])
     return report, cv2.imdecode(np.frombuffer(probe.last_color.data, np.uint8),
                                 cv2.IMREAD_COLOR), projections
 
@@ -202,9 +246,11 @@ def print_report(report):
               f'contraste {report["contrast"]:.2f}, '
               f'distancia del sistema {report["reference_range_mm"]} mm, '
               f'z mediana {report["median_depth_m"]:.3f} m')
+    print(f'  referencia: {report.get("referencia", "")}')
     for name, item in report['hypotheses'].items():
-        print(f'  {name:7s} t={item["t_mm"]} mm, chamfer {item["chamfer_px"]:.2f} px, '
-              f'error {item["error_mm"]:.1f} mm ({item["error_px_at_median_depth"]:.0f} px)')
+        error = ('' if item['error_mm'] is None else
+                 f', error {item["error_mm"]:.1f} mm ({item["error_px_at_median_depth"]:.0f} px)')
+        print(f'  {name:14s} t={item["t_mm"]} mm, chamfer {item["chamfer_px"]:.2f} px{error}')
     shift = report.get('registered_shift_px')
     if shift:
         print(f'  profundidad registrada: desplazamiento residual ({shift["du"]}, {shift["dv"]}) '

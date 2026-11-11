@@ -1,0 +1,25 @@
+# Calibración de la cámara de color del Kinova Gen3 a 1920x1080, medida en el laboratorio.
+# Sustituye a default_color_calib_1920x1080.ini de kinova_vision (fx 2612, cy 97), que no
+# corresponde a este stream. Origen, método y validación: README.md de esta carpeta.
+# La imagen publicada NO se rectifica: projection_matrix = [K | 0] y la distorsión (hasta
+# unos 10 px en el borde inferior) sólo la usa quien llame a undistort.
+image_width: 1920
+image_height: 1080
+camera_name: color
+camera_matrix:
+  rows: 3
+  cols: 3
+  data: [2531.387986, 0.0, 960.799651, 0.0, 2530.870446, 199.570023, 0.0, 0.0, 1.0]
+distortion_model: plumb_bob
+distortion_coefficients:
+  rows: 1
+  cols: 5
+  data: [0.070245, -0.500307, 0.006079, -0.001552, 0.608414]
+rectification_matrix:
+  rows: 3
+  cols: 3
+  data: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+projection_matrix:
+  rows: 3
+  cols: 4
+  data: [2531.387986, 0.0, 960.799651, 0.0, 0.0, 2530.870446, 199.570023, 0.0, 0.0, 0.0, 1.0, 0.0]

@@ -153,3 +153,24 @@ def test_desplazamiento_residual_en_pixeles():
     assert shift['du'] == pytest.approx(20, abs=2)
     assert shift['dv'] == pytest.approx(-15, abs=2)
     assert shift['score'] < shift['score_at_zero']
+
+
+def test_rotacion_conocida_entre_sensores():
+    """Con la rotación del sistema, el veredicto es ALINEADA."""
+    angle = np.radians(1.5)
+    rot = np.array([[np.cos(angle), 0, np.sin(angle)], [0, 1, 0],
+                    [-np.sin(angle), 0, np.cos(angle)]])
+    depth = _depth_scene()
+    u0, u1, v0, v1 = BOX
+    corners_u = np.array([u0 - 0.5, u1 - 0.5])
+    corners_v = np.array([v0 - 0.5, v1 - 0.5])
+    us, vs = project_points(corners_u, corners_v, np.full(2, BOX_Z), DEPTH_K, COLOR_K,
+                            TRUE_T, rot)
+    gray = np.full((1080, 1920), 200, dtype=np.uint8)
+    cv2.rectangle(gray, (int(us[0]), int(vs[0])), (int(us[1]), int(vs[1])), 60, -1)
+    u, v, z = silhouette_points(depth)
+    report = evaluate_alignment(edge_distance_field(gray), u, v, z, DEPTH_K, COLOR_K,
+                                {'sistema': {'t': TRUE_T, 'R': rot}, 'sin_rotacion': TRUE_T},
+                                'sistema')
+    assert report['verdict'] == ALIGNED
+    assert report['hypotheses']['sin_rotacion']['error_mm'] is None

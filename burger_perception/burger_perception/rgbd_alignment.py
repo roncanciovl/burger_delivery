@@ -18,7 +18,7 @@ búsqueda sólo es fiable si la escena tiene siluetas claras en varias direccion
 existe el veredicto ``NO CONCLUYENTE``.
 """
 
-from typing import Dict, Sequence, Tuple
+from typing import Dict, Optional, Sequence, Tuple
 
 import cv2
 import numpy as np
@@ -114,7 +114,8 @@ def fit_table_plane(points: np.ndarray, iters: int = 400, tol_m: float = 0.008,
 
 
 def top_face_contour(depth_m: np.ndarray, k: Intrinsics, min_height_m: float = 0.03,
-                     band_m: float = 0.015, min_area_px: int = 300
+                     band_m: float = 0.015, min_area_px: int = 300,
+                     roi: Optional[np.ndarray] = None
                      ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Contorno de la cara superior del objeto más grande sobre la mesa.
@@ -123,10 +124,14 @@ def top_face_contour(depth_m: np.ndarray, k: Intrinsics, min_height_m: float = 0
     esté inclinada y los costados del objeto se vean en rampa (sin salto de distancia).
 
     :param k: intrínsecos de la imagen ``depth_m`` (los del color si está registrada).
+    :param roi: máscara opcional de los píxeles a considerar (por ejemplo, los que también ve la
+        cámara de color); fuera de ella no se ajusta la mesa ni se buscan objetos.
     :returns: columnas, filas y profundidades (m) del borde de la cara superior; vacíos si no
         hay un objeto que sobresalga ``min_height_m``.
     """
     empty = (np.array([]), np.array([]), np.array([]))
+    if roi is not None:
+        depth_m = np.where(roi, depth_m, 0)
     cols, rows, points = _cloud(depth_m, k)
     if len(points) < 100:
         return empty
@@ -157,12 +162,14 @@ def edge_distance_field(gray: np.ndarray, canny_low: int = 40,
 
 
 def project_points(u: np.ndarray, v: np.ndarray, z: np.ndarray, depth_k: Intrinsics,
-                   color_k: Intrinsics, t: Sequence[float]) -> Tuple[np.ndarray, np.ndarray]:
-    """Llevar puntos de la imagen de profundidad a la de color: ``p_color = p_depth + t``."""
+                   color_k: Intrinsics, t: Sequence[float],
+                   rotation: Optional[np.ndarray] = None) -> Tuple[np.ndarray, np.ndarray]:
+    """Llevar puntos de la imagen de profundidad a la de color: ``p_color = R p_depth + t``."""
     fx, fy, cx, cy = depth_k
-    x = (u - cx) * z / fx + t[0]
-    y = (v - cy) * z / fy + t[1]
-    zc = z + t[2]
+    x, y = (u - cx) * z / fx, (v - cy) * z / fy
+    if rotation is not None:
+        x, y, z = (rotation @ np.vstack([x, y, z]))
+    x, y, zc = x + t[0], y + t[1], z + t[2]
     fx, fy, cx, cy = color_k
     return x * fx / zc + cx, y * fy / zc + cy
 
@@ -191,7 +198,8 @@ def search_translation(field: np.ndarray, u: np.ndarray, v: np.ndarray, z: np.nd
                        x_range_m: Tuple[float, float] = (-0.06, 0.02),
                        y_range_m: Tuple[float, float] = (-0.04, 0.03),
                        cap_px: float = 30.0, step_m: float = 0.001,
-                       refine_step_m: float = 0.00025) -> Dict:
+                       refine_step_m: float = 0.00025, rotation: Optional[np.ndarray] = None,
+                       tz: float = 0.0) -> Dict:
     """
     Buscar la traslación profundidad → color (z = 0) con menor puntaje.
 
@@ -202,8 +210,8 @@ def search_translation(field: np.ndarray, u: np.ndarray, v: np.ndarray, z: np.nd
     u, v, z = _subsample(4000, u, v, z)
 
     def score(tx, ty):
-        return chamfer_score(field, *project_points(u, v, z, depth_k, color_k, (tx, ty, 0.0)),
-                             cap_px)
+        return chamfer_score(field, *project_points(u, v, z, depth_k, color_k, (tx, ty, tz),
+                                                    rotation), cap_px)
 
     xs = np.arange(x_range_m[0], x_range_m[1] + step_m / 2.0, step_m)
     ys = np.arange(y_range_m[0], y_range_m[1] + step_m / 2.0, step_m)
@@ -217,7 +225,7 @@ def search_translation(field: np.ndarray, u: np.ndarray, v: np.ndarray, z: np.nd
             candidate = score(xs[i] + dx, ys[j] + dy)
             if candidate < best[0]:
                 best = (candidate, float(xs[i] + dx), float(ys[j] + dy))
-    return {'t': (best[1], best[2], 0.0), 'score': best[0], 'xs': xs, 'ys': ys, 'scores': scores}
+    return {'t': (best[1], best[2], tz), 'score': best[0], 'xs': xs, 'ys': ys, 'scores': scores}
 
 
 def search_shift(field: np.ndarray, u: np.ndarray, v: np.ndarray, range_px: int = 200,
@@ -278,15 +286,20 @@ def evaluate_alignment(field: np.ndarray, u: np.ndarray, v: np.ndarray, z: np.nd
     """
     Comparar los extrínsecos candidatos con los que mejor explican la imagen.
 
-    :param hypotheses: extrínsecos a evaluar, por nombre (metros).
+    :param hypotheses: extrínsecos a evaluar, por nombre: una traslación (metros) o un
+        diccionario ``{'t': traslación, 'R': matriz 3x3}``. La búsqueda usa la rotación de la
+        referencia; el error en mm sólo se informa para hipótesis con esa misma rotación.
     :param reference: nombre de la hipótesis que usa el sistema; define el veredicto.
     :param tol_mm: diferencia máxima aceptada entre la referencia y la mejor estimación.
     :param margin_px: margen del borde de la imagen de color que no se usa.
     :returns: diccionario con el veredicto, su motivo, la estimación y cada hipótesis.
     """
+    hyp = {name: (tuple(h['t']), h.get('R')) if isinstance(h, dict) else (tuple(h), None)
+           for name, h in hypotheses.items()}
+    ref_t, ref_r = hyp[reference]
     # La profundidad ve un campo más amplio que el color (en 1080p, unos 67° frente a 40°):
     # sólo cuenta la silueta que cae dentro de la imagen de color.
-    pu, pv = project_points(u, v, z, depth_k, color_k, hypotheses[reference])
+    pu, pv = project_points(u, v, z, depth_k, color_k, ref_t, ref_r)
     rows, cols = field.shape
     inside = ((pu >= margin_px) & (pu < cols - margin_px)
               & (pv >= margin_px) & (pv < rows - margin_px))
@@ -298,7 +311,7 @@ def evaluate_alignment(field: np.ndarray, u: np.ndarray, v: np.ndarray, z: np.nd
                             'coloque un objeto de bordes rectos con salto de altura')
         return report
 
-    search = search_translation(field, u, v, z, depth_k, color_k)
+    search = search_translation(field, u, v, z, depth_k, color_k, rotation=ref_r, tz=ref_t[2])
     median_z = float(np.median(z))
     fx = color_k[0]
     mean_score = float(search['scores'].mean())
@@ -309,16 +322,18 @@ def evaluate_alignment(field: np.ndarray, u: np.ndarray, v: np.ndarray, z: np.nd
         'contrast': (mean_score - search['score']) / mean_score if mean_score > 0 else 0.0,
         'direction_spread': direction_spread(u, v),
     })
-    nearest, farthest = plausible_distances(search, hypotheses[reference], plausible_margin)
+    nearest, farthest = plausible_distances(search, ref_t, plausible_margin)
     report['reference_range_mm'] = [round(nearest * 1000.0, 1), round(farthest * 1000.0, 1)]
-    for name, t in hypotheses.items():
-        error_m = float(np.hypot(t[0] - search['t'][0], t[1] - search['t'][1]))
-        projected = project_points(u, v, z, depth_k, color_k, t)
+    for name, (t, rot) in hyp.items():
+        same = (rot is None and ref_r is None) or (
+            rot is not None and ref_r is not None and np.allclose(rot, ref_r))
+        error_m = float(np.hypot(t[0] - search['t'][0], t[1] - search['t'][1])) if same else None
+        projected = project_points(u, v, z, depth_k, color_k, t, rot)
         report['hypotheses'][name] = {
             't_mm': [round(c * 1000.0, 2) for c in t],
             'chamfer_px': chamfer_score(field, *projected, 30.0),
-            'error_mm': error_m * 1000.0,
-            'error_px_at_median_depth': error_m * fx / median_z,
+            'error_mm': None if error_m is None else error_m * 1000.0,
+            'error_px_at_median_depth': None if error_m is None else error_m * fx / median_z,
         }
 
     if report['direction_spread'] < min_spread:
