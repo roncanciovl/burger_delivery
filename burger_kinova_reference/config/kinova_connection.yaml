@@ -249,7 +249,7 @@ launch:
     max_joint_travel_rad: 3.0         # recorrido acumulado máximo por articulación
     max_trajectory_duration_s: 60.0
     continuous_joints: ["joint_1", "joint_4", "joint_6"]   # se vigilan saltos de 2π
-    final_tolerance_rad: 0.02         # aviso si la pose final medida se aleja del plan
+    final_tolerance_rad: 0.02         # si la pose final medida se aleja más, se detiene la secuencia
     # Escena de burger_description: obstáculos y marcos para las metas tipo "pose".
     anchor_link: "world"              # en la escena, "world" es la base del brazo
     planning_frame: "base_link"

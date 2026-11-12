@@ -22,6 +22,18 @@ metas:
     tipo: articular
     posiciones: [0.0, -0.35, -2.54, 0.0, -0.87, 1.5708]
 
+  # Pose de observación de la escena (registrada en el robot el 2026-11-12, mesa fuera del sol).
+  # Desde aquí la cámara de muñeca ve la bandeja y la zona de trabajo; la usó el experimento
+  # de localización del celular con Gemini. Referencia, en base_link:
+  #   end_effector_link   p = (-0.0188, 0.0014, 0.8039) m, q_xyzw = (0.5874, 0.7241, 0.2277, 0.2807)
+  #   camera_color_frame  p = ( 0.0199, 0.0130, 0.8434) m, q_xyzw = (0.7241, -0.5874, 0.2807, -0.2277)
+  #   (la cámara mira hacia abajo y adelante, unos 42° desde la vertical)
+  # joint_5 se registró en −2.1001 rad, fuera del límite del modelo de MoveIt (±2.090): MoveIt no
+  # planifica hacia ni desde ahí. Se guarda en −2.080 rad (1.2° de diferencia en la vista).
+  vista_escena:
+    tipo: articular
+    posiciones: [0.0, -0.5812, -0.8831, 0.0, -2.080, 1.7784]
+
   # Pinza vertical 0.30 m sobre el tag de la mesa
   sobre_tag_mesa:
     tipo: pose

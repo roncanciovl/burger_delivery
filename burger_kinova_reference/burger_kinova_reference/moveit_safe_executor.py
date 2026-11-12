@@ -38,7 +38,8 @@ Dos fuentes de metas (``source``):
 Modo seco (``dry_run:=true``, por defecto): planifica y valida, nunca envía nada.
 
 Códigos de salida: 0 éxito · 1 bloqueado por seguridad · 2 infraestructura · 3 rechazado o
-abortado por el controlador · 4 MoveIt no encontró plan.
+abortado por el controlador · 4 MoveIt no encontró plan · 5 el brazo no llegó a la meta
+(desvío final mayor que ``final_tolerance_rad``).
 
 Uso::
 
@@ -117,6 +118,7 @@ EXIT_BLOCKED = 1
 EXIT_INFRASTRUCTURE = 2
 EXIT_REJECTED = 3
 EXIT_NO_PLAN = 4
+EXIT_DEVIATION = 5   # el controlador dio la meta por cumplida, pero el brazo no llegó
 
 
 def _segundos(duration) -> float:
@@ -538,12 +540,19 @@ class MoveItSafeExecutor(Node):
         final, _ = self._snapshot()
         desvio = max((abs(final[j] - resumen.final[j]) for j in self._joints
                       if j in final), default=float('nan'))
-        if codigo == EXIT_OK:
-            nivel = (self.get_logger().info
-                     if desvio <= float(g('final_tolerance_rad').value)
-                     else self.get_logger().warn)
-            nivel(f'[RESULTADO] "{nombre}" completada; desvío final máximo '
-                  f'{desvio:.4f} rad respecto al plan')
+        tolerancia = float(g('final_tolerance_rad').value)
+        if codigo == EXIT_OK and desvio <= tolerancia:
+            self.get_logger().info(f'[RESULTADO] "{nombre}" completada; desvío final máximo '
+                                   f'{desvio:.4f} rad respecto al plan')
+        elif codigo == EXIT_OK:
+            # El controlador avisa "Goal reached" por tiempo aunque el robot no se haya movido:
+            # pasa cuando otra estación o la Web App de Kinova le quitó el control al driver.
+            self.get_logger().error(
+                f'[RESULTADO] "{nombre}": el brazo terminó a {desvio:.4f} rad del plan '
+                f'(tolerancia {tolerancia:.3f}). El controlador dio la meta por cumplida, pero '
+                'el robot no la siguió: ¿otra estación o la Web App tomó el control? '
+                '(TROUBLESHOOTING.md §2.6). Se detiene la secuencia.')
+            codigo, detalle = EXIT_DEVIATION, 'DESVIO_FINAL'
         self._registrar(dict(registro, resultado=detalle, desvio_final_rad=desvio))
         return codigo
 
