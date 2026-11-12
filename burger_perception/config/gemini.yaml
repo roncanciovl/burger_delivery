@@ -16,8 +16,8 @@ gemini_spatial_reasoning:
     depth_window_px: 7
     target: "cardboard burger box"
     context: "It must be resting on the table, not held by a person."
-    model: "gemini-robotics-er-1.6-preview"
-    thinking_budget: 0
+    model: "gemini-robotics-er-2-preview"
+    thinking_level: "high"     # "low" responde más rápido pero falló con el celular sobre la bandeja
     max_image_side: 1024      # la imagen se reduce antes de enviarla (latencia y costo)
     jpeg_quality: 85
     inference_period_s: 0.0   # 0 = sólo con: ros2 service call /gemini_spatial_reasoning/locate std_srvs/srv/Trigger

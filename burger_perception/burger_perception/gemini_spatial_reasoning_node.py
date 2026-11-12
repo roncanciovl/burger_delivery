@@ -83,7 +83,7 @@ class GeminiSpatialReasoningNode(Node):
         p('target', 'cardboard burger box')
         p('context', 'It must be resting on the table, not held by a person.')
         p('model', DEFAULT_MODEL)
-        p('thinking_budget', 0)
+        p('thinking_level', 'low')
         p('max_image_side', 1024)
         p('jpeg_quality', 85)
         p('inference_period_s', 0.0)
@@ -108,7 +108,7 @@ class GeminiSpatialReasoningNode(Node):
         self.last_tf = None
         self.busy = threading.Event()
 
-        self.pointer = GeminiPointer(g('model').value, thinking_budget=g('thinking_budget').value)
+        self.pointer = GeminiPointer(g('model').value, thinking_level=g('thinking_level').value)
 
         self.create_subscription(CompressedImage, g('image_topic').value,
                                  self._on_image, qos_profile_sensor_data)

@@ -15,7 +15,7 @@ from typing import Dict, List, Tuple
 
 from burger_perception.vlm_geometry import parse_points
 
-DEFAULT_MODEL = 'gemini-robotics-er-1.6-preview'
+DEFAULT_MODEL = 'gemini-robotics-er-2-preview'
 
 PROMPT_TEMPLATE = (
     'Point to the {target}. {context}\n'
@@ -35,7 +35,7 @@ class GeminiPointer:
     """Envoltorio de ``google.genai.Client`` que devuelve puntos y latencia."""
 
     def __init__(self, model: str = DEFAULT_MODEL, temperature: float = 0.0,
-                 thinking_budget: int = 0):
+                 thinking_level: str = 'low'):
         """Crear el cliente; falla con un mensaje claro si falta el SDK o la clave."""
         if not (os.environ.get('GEMINI_API_KEY') or os.environ.get('GOOGLE_API_KEY')):
             raise RuntimeError('Falta GEMINI_API_KEY en el entorno del nodo '
@@ -50,7 +50,7 @@ class GeminiPointer:
         self.model = model
         self._config = types.GenerateContentConfig(
             temperature=temperature,
-            thinking_config=types.ThinkingConfig(thinking_budget=thinking_budget))
+            thinking_config=types.ThinkingConfig(thinking_level=thinking_level))
 
     def point(self, jpeg: bytes, prompt: str) -> Tuple[List[Dict], float, str]:
         """
